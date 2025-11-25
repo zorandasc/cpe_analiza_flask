@@ -1,0 +1,249 @@
+{% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  /* Modern table header */
+  .table-custom-head th {
+    background: linear-gradient(145deg, #acd4f7, #8ec8f7); /* gradient */
+    color: #000; /* black text */
+    font-weight: 600;
+    text-align: center;
+    border-top-left-radius: 8px; /* top-left corner */
+    border-top-right-radius: 8px; /* top-right corner */
+  }
+
+  /* Remove border radius from inner th cells to avoid overlapping */
+  .table-custom-head th:first-child {
+    border-top-left-radius: 8px;
+  }
+  .table-custom-head th:last-child {
+    border-top-right-radius: 8px;
+  }
+  .date-column {
+    min-width: 120px; /* adjust as needed */
+    text-align: center; /* optional */
+  }
+  .btn-edit {
+    background-color: #f7bbe0;
+    color: #000; /* text color */
+    border: none; /* remove default border */
+  }
+  .btn-custom-save {
+    background-color: #8be0b8;
+  }
+  .custom-modal-header {
+    background-color: #acd4f7;
+  }
+</style>
+{% endblock %} {% block content%}
+<div class="container py-5">
+  <h1 class="mb-4 text-center">Zadnje stanje CPE Opreme</h1>
+
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle">
+      <thead class="table-custom-head">
+        <tr>
+          <th>Grad</th>
+          <th class="date-column">Datum</th>
+          <th>IAD267</th>
+          <th>STB ARR 4205</th>
+          <th>STB ARR 5305</th>
+          <th>STB EKT 4805</th>
+          <th>STB EKT 7005</th>
+          <th>STB SKY 44</th>
+          <th>ONT HW</th>
+          <th>ONT NO</th>
+          <th>DTH</th>
+          <th>ANTENA</th>
+          <th>LNB</th>
+          <th>Updated At</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.city.name }}</td>
+          <td>{{ r.record_date }}</td>
+          <td>{{ r.iad267 }}</td>
+          <td>{{ r.stb_arr_4205 }}</td>
+          <td>{{ r.stb_arr_5305 }}</td>
+          <td>{{ r.stb_ekt_4805 }}</td>
+          <td>{{ r.stb_ekt_7005 }}</td>
+          <td>{{ r.stb_sky_44 }}</td>
+          <td>{{ r.ont_hw }}</td>
+          <td>{{ r.ont_no }}</td>
+          <td>{{ r.dth }}</td>
+          <td>{{ r.antena }}</td>
+          <td>{{ r.lnb }}</td>
+          <td>{{ r.created_at }}</td>
+          <td>
+            <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
+            <!-- data-bs-target="#editModal" → tells which modal to open.-->
+            <!-- data-* attributes → store all the values of that row.-->
+            <button
+              type="button"
+              class="btn btn-edit w-100"
+              data-bs-toggle="modal"
+              data-bs-target="#editModal"
+              data-id="{{ r.id }}"
+              data-city-id="{{ r.city.id }}"
+              data-city="{{ r.city.name }}"
+              data-iad267="{{ r.iad267 }}"
+              data-4205="{{ r.stb_arr_4205 }}"
+              data-5305="{{ r.stb_arr_5305 }}"
+              data-ekt4805="{{ r.stb_ekt_4805 }}"
+              data-ekt7005="{{ r.stb_ekt_7005 }}"
+              data-sky44="{{ r.stb_sky_44 }}"
+              data-onthw="{{ r.ont_hw }}"
+              data-ontno="{{ r.ont_no }}"
+              data-dth="{{ r.dth }}"
+              data-antena="{{ r.antena }}"
+              data-lnb="{{ r.lnb }}"
+            >
+              ➕
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL OPENED BY EDIT BUTTON-->
+<!-- Inputs inside modal have ids like modal-iad267, modal-id.N-->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <form method="POST" action="{{url_for('update_cpe')}}">
+        <div class="modal-header custom-modal-header">
+          <h5 class="modal-title">
+            Dodaj novo stanje CPE opreme za datum: {{ today }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <!-- record_id hidden input tells backend which record is being edited.-->
+          <input type="hidden" id="modal-id" name="record_id" />
+          <input type="hidden" name="city_id" id="modal-city-id" />
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label>City</label>
+              <input
+                class="form-control"
+                id="modal-city"
+                name="city"
+                readonly
+              />
+            </div>
+            <div class="col-md-4">
+              <label>IAD267</label>
+              <input class="form-control" id="modal-iad267" name="iad267" />
+            </div>
+
+            <div class="col-md-4">
+              <label>STB ARR 4205</label>
+              <input class="form-control" id="modal-4205" name="stb_arr_4205" />
+            </div>
+
+            <div class="col-md-4">
+              <label>STB ARR 5305</label>
+              <input class="form-control" id="modal-5305" name="stb_arr_5305" />
+            </div>
+
+            <div class="col-md-4">
+              <label>STB EKT 4805</label>
+              <input
+                class="form-control"
+                id="modal-ekt4805"
+                name="stb_ekt_4805"
+              />
+            </div>
+
+            <div class="col-md-4">
+              <label>STB EKT 7005</label>
+              <input
+                class="form-control"
+                id="modal-ekt7005"
+                name="stb_ekt_7005"
+              />
+            </div>
+
+            <div class="col-md-4">
+              <label>STB SKY 44</label>
+              <input class="form-control" id="modal-sky44" name="stb_sky_44" />
+            </div>
+
+            <div class="col-md-4">
+              <label>ONT HW</label>
+              <input class="form-control" id="modal-onthw" name="ont_hw" />
+            </div>
+
+            <div class="col-md-4">
+              <label>ONT NO</label>
+              <input class="form-control" id="modal-ontno" name="ont_no" />
+            </div>
+
+            <div class="col-md-4">
+              <label>DTH</label>
+              <input class="form-control" id="modal-dth" name="dth" />
+            </div>
+
+            <div class="col-md-4">
+              <label>ANTENA</label>
+              <input class="form-control" id="modal-antena" name="antena" />
+            </div>
+
+            <div class="col-md-4">
+              <label>LNB</label>
+              <input class="form-control" id="modal-lnb" name="lnb" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-custom-save">💾 Sačuvaj</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script>
+  //event.relatedTarget → gives TO MODAL the Edit button that triggered this modal .
+  //.getAttribute('data-*') → reads values from button attributes.
+  //document.getElementById(...).value = ... → fills the modal inputs with current row values.
+  document
+    .getElementById("editModal")
+    .addEventListener("show.bs.modal", function () {
+      const btn = event.relatedTarget; // the Edit button that triggered modal
+      document.getElementById("modal-id").value = btn.getAttribute("data-id");
+      document.getElementById("modal-city-id").value =
+        btn.getAttribute("data-city-id");
+      document.getElementById("modal-city").value =
+        btn.getAttribute("data-city");
+      document.getElementById("modal-iad267").value =
+        btn.getAttribute("data-iad267");
+      document.getElementById("modal-4205").value =
+        btn.getAttribute("data-4205");
+      document.getElementById("modal-5305").value =
+        btn.getAttribute("data-5305");
+      document.getElementById("modal-ekt4805").value =
+        btn.getAttribute("data-ekt4805");
+      document.getElementById("modal-ekt7005").value =
+        btn.getAttribute("data-ekt7005");
+      document.getElementById("modal-sky44").value =
+        btn.getAttribute("data-sky44");
+      document.getElementById("modal-onthw").value =
+        btn.getAttribute("data-onthw");
+      document.getElementById("modal-ontno").value =
+        btn.getAttribute("data-ontno");
+      document.getElementById("modal-dth").value = btn.getAttribute("data-dth");
+      document.getElementById("modal-antena").value =
+        btn.getAttribute("data-antena");
+      document.getElementById("modal-lnb").value = btn.getAttribute("data-lnb");
+    });
+</script>
+{% endblock %}
