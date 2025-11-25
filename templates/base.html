@@ -107,13 +107,7 @@
           {% else %}
           <!-- RIGHT SIDE: LOGIN WHEN NOT AUTH -->
           <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a
-                class="nav-link {% if request.path == url_for('login') %}active{% endif %}"
-                href="{{ url_for('login') }}"
-                >Login</a
-              >
-            </li>
+           
           </ul>
           {% endif %}
         </div>
