@@ -1,12 +1,18 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request
 from sqlalchemy import func
-from models import db, CpeRecords, Users
+from models import db, CpeRecords, Users, Cities
 from datetime import date
 import datetime
 
 
-from flask_login import LoginManager, login_required, login_user, logout_user
+from flask_login import (
+    LoginManager,
+    login_required,
+    login_user,
+    logout_user,
+    current_user,
+)
 from werkzeug.security import check_password_hash
 
 # --Import the command function and register it ---
@@ -190,10 +196,91 @@ def logout():
     return redirect(url_for("login"))
 
 
+# AUTHORIZATION
+def admin_required():
+    if not current_user.is_authenticated or current_user.role != "admin":
+        return False
+    return True
+
+
 @app.route("/admin/")
 @login_required
 def admin_dashboard():
     return render_template("admin.html")
+
+
+# ---CITIES CRUD----
+@app.route("/admin/cities")
+@login_required
+def admin_cities():
+    if not admin_required():
+        return "Forbidden", 403
+    cities = Cities.query.order_by(Cities.id).all()
+    return render_template("admin/cities_list.html", cities=cities)
+
+
+@app.route("/admin/cities/add", methods=["GET", "POST"])
+@login_required
+def admin_add_city():
+    if not admin_required():
+        return "Forbidden", 403
+
+    # THIS IS FOR SUMBITING REQUEST
+    if request.method == "POST":
+        name = request.form.get("name")
+        db.session.add(Cities(name=name))
+        db.session.commit()
+        return redirect(url_for("admin_cities"))
+
+    # THIS IS FOR GET REQUEST WHEN OPENING ADD FORM
+    return render_template("admin/cities_add.html")
+
+
+@app.route("/admin/cities/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def admin_edit_city(id):
+    if not admin_required():
+        return "Forbidden", 403
+
+    city = Cities.query.get_or_404(id)
+
+    if request.method == "POST":
+        city.name = request.form.get("name")
+        db.session.commit()
+        return redirect(url_for("admin_cities"))
+
+    return render_template("admin/cities_edit.html", city=city)
+
+
+@app.route("/admin/cities/delete/<int:id>")
+@login_required
+def admin_delete_city(id):
+    if not admin_required():
+        return "Forbidden", 403
+
+    city = Cities.query.get_or_404(id)
+
+    # PROTECT CITY DELETE: block if related rows exist
+    if city.cpe_records or city.users:
+        return ("Cannot delete city because it has related CPE records or users.", 400)
+
+    db.session.delete(city)
+    db.session.commit()
+    return redirect(url_for("admin_cities"))
+
+
+# ---USERS CRUD----
+@app.route("/admin/users")
+@login_required
+def admin_users():
+    pass
+
+
+# ---CPE RECORDS CRUD----
+@app.route("/admin/cpe_records")
+@login_required
+def admin_cpe_records():
+    pass
 
 
 # -----MAIN LOOP-----------
