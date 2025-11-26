@@ -190,7 +190,7 @@ def logout():
     return redirect(url_for("login"))
 
 
-@app.route("/admin")
+@app.route("/admin/")
 @login_required
 def admin_dashboard():
     return render_template("admin.html")
