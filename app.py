@@ -1,11 +1,9 @@
 import os
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, flash
 from sqlalchemy import func
 from models import db, CpeRecords, Users, Cities
 from datetime import date
 import datetime
-
-
 from flask_login import (
     LoginManager,
     login_required,
@@ -13,7 +11,7 @@ from flask_login import (
     logout_user,
     current_user,
 )
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 # --Import the command function and register it ---
 from create_admin_cli import create_initial_admin
@@ -209,7 +207,7 @@ def admin_dashboard():
     return render_template("admin.html")
 
 
-# ---CITIES CRUD----
+# -----------------CITIES CRUD---------------------
 @app.route("/admin/cities")
 @login_required
 def admin_cities():
@@ -262,10 +260,10 @@ def admin_delete_city(id):
 
     # PROTECT CITY DELETE: block if related rows exist
     if city.cpe_records or city.users:
+        flash("Cannot delete this city because it has related data.", "danger")
         return render_template(
             "admin/cities_list.html",
             cities=Cities.query.all(),
-            error="Cannot delete this city because it has related data.",
         )
 
     db.session.delete(city)
@@ -273,14 +271,101 @@ def admin_delete_city(id):
     return redirect(url_for("admin_cities"))
 
 
-# ---USERS CRUD----
+# ------------------USERS CRUD-----------------------------------------
 @app.route("/admin/users")
 @login_required
 def admin_users():
-    pass
+    if not admin_required():
+        return "Forbidden", 403
+    users = Users.query.order_by(Users.id).all()
+    return render_template("admin/users_list.html", users=users)
 
 
-# ---CPE RECORDS CRUD----
+@app.route("/admin/users/add", methods=["GET", "POST"])
+@login_required  # AUTHENTICATE
+def admin_add_user():
+    if not admin_required():  # AUTHORIZE
+        return "Forbidden", 403
+
+    # THIS IS FOR SUMBITING A NEW REQUEST
+    if request.method == "POST":
+        username = request.form.get("username")
+        plain_password = request.form.get("password")
+        # CHOOSED FROM SELECTION IN ADD FORM
+        city_id = request.form.get("city_id", type=int)
+        # CHOOSED FROM SELECTION IN ADD FORM
+        role = request.form.get("role")
+
+        # Validation: username must be unique
+        existing_user = Users.query.filter_by(username=username).first()
+        if existing_user:
+            flash("Username already exists", "danger")
+            return redirect(url_for("admin_add_user"))
+
+        # Validation: city must be real (if provided)
+        if city_id:
+            city = Cities.query.get(city_id)
+            if not city:
+                flash("Invalid city selected", "danger")
+                return redirect(url_for("admin_add_user"))
+
+        # Validation: role must be valid
+        if role not in ["admin", "user"]:
+            flash("Invalid role", "danger")
+            return redirect(url_for("admin_add_user"))
+
+        password_hash = generate_password_hash(plain_password)
+
+        user = Users(
+            username=username,
+            password_hash=password_hash,
+            city_id=city_id,
+            role=role,
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now(),
+        )
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash("User created successfully", "success")
+            return redirect(url_for("admin_users"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error creating user: {e}", "danger")
+            return redirect(url_for("admin_add_user"))
+
+    # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
+    cities = Cities.query.order_by(Cities.name).all()
+    roles = ["admin", "user"]
+    return render_template("admin/users_add.html", cities=cities, roles=roles)
+
+
+@app.route("/admin/users/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def admin_edit_user(id):
+    if not admin_required():
+        return "Forbidden", 403
+
+    user = Users.query.get_or_404(id)
+
+    if request.method == "POST":
+        pass
+
+    return render_template("admin/users_edit.html", user=user)
+
+
+@app.route("/admin/users/delete/<int:id>")
+@login_required
+def admin_delete_user(id):
+    if not admin_required():
+        return "Forbidden", 403
+
+    user = Users.query.get_or_404(id)
+
+    return redirect(url_for("admin_users"))
+
+
+# -------------CPE RECORDS CRUD----------------------------------------
 @app.route("/admin/cpe_records")
 @login_required
 def admin_cpe_records():

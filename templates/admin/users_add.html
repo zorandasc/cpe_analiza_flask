@@ -1,0 +1,38 @@
+{% extends "base.html" %} {% block title %}Add City{% endblock %} {% block
+content %}
+<div class="container py-4">
+  <h2>Add User</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label class="form-label">Username</label>
+      <input type="text" name="username" class="form-control" required />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" name="password" class="form-control" required />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Role</label>
+      <select name="role" class="form-control" required>
+        {% for r in roles %}
+        <option value="{{ r }}">{{ r|capitalize }}</option>
+
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">City</label>
+      <select name="city_id" class="form-control" required>
+        <option value="">-- Select city --</option>
+        {% for city in cities %}
+        <option value="{{ city.id }}">{{ city.name }}</option>
+
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="{{ url_for('admin_users') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+</div>
+
+{% endblock %}
