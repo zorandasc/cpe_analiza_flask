@@ -70,7 +70,7 @@ Servers
 
 # EXPORT DOCKER IMAGES:
 
-# docker save -o ~/Desktop/cpe-sip-nextjs-app.tar cpe-anliza-flask:latest
+# docker save -o ~/Desktop/cpe-analiza-flask.tar cpe-analiza-flask:latest
 
 # scp docker-compose.prod.yml
 
