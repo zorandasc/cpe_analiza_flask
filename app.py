@@ -17,6 +17,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from create_admin_cli import create_initial_admin
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
+# KADA NAPRAVIMO python app.py UNUTAR MOG VS CODA, ODNOSNO IZ VANA 
+# DOCKER MREZE GADJAMO DOKERIZOVANI POSTGRES 5431
+# MEDJUTIM KADA DOKERIZUJEMO FLASK APP MI SMO U INTERNOM DOCKER
+# OKRUZENJU I ONDA TREBA DA GADJAMAO 5342
 DB_PORT = os.environ.get("DB_PORT", "5431")  # <-- add port variable
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASS = os.environ.get("DB_PASSWORD", "mypassword")

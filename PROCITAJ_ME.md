@@ -70,13 +70,46 @@ Servers
 
 # EXPORT DOCKER IMAGES:
 
-# docker save -o ~/Desktop/cpe-sip-nextjs-app.tar cpe-sip-nextjs-app:latest
+# docker save -o ~/Desktop/cpe-sip-nextjs-app.tar cpe-anliza-flask:latest
 
-# docker compose -f docker-compose.prod.yml up --build -d
+# scp docker-compose.prod.yml
+
+# scp cpe-sip-nextjs-app.tar
 
 # docker compose -f docker-compose.prod.yml up -d
 
-# RESTART
+# --------entrypoint.sh----------------------
+
+entrypoint.sh JE BASH SCRIT KOJI SE KORISTI U PRODUKCIJISKOJ
+VERZIJI DOCKER COMPOSA.
+
+IT IS REFERNCED INSIDE Dockerfile:
+
+# Set the Entrypoint to run your script first
+
+ENTRYPOINT ["entrypoint.sh"]
+
+The ENTRYPOINT defined in your Dockerfile specifies the program that runs when a container starts. Think of it as the main executable for your container.
+
+In summary, the sequence will be:
+
+docker compose up is run.
+
+The flask container starts.
+
+The entrypoint.sh script executes.
+
+The script waits for the database (db).
+
+The script runs flask create-admin.
+
+First time: The user is created and committed to the persistent pgdata volume.
+
+Subsequent times: The script checks the persistent data, finds the user, and skips the insertion.
+
+The script runs exec gunicorn..., which starts the main Flask application.
+
+# --------------RESTART DOCKER AND DOCKER NETWORKS----------------
 
 # docker compose -f docker-compose.dev.yml down -v
 
@@ -276,7 +309,6 @@ current_user.id
 current_user.is_authenticated
 current_user.is_active
 current_user.is_anonymous
-
 
 When you successfully log a user in using flask_login.login_user(user_object), Flask-Login takes the user's ID (user_object.id) and stores it securely in the session.
 

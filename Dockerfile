@@ -31,6 +31,19 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# 1. Install necessary system utilities in the FINAL image (netcat for entrypoint.sh)
+# Since you build locally WITH internet, this works.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    netcat-openbsd \
+    # libpq5 is the PostgreSQL client library needed at runtime
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Add the entrypoint scrip
+COPY entrypoint.sh /usr/local/bin/
+# make the script exsecutable
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Copy installed Python packages from builder
 COPY --from=builder /install /usr/local
 
@@ -39,9 +52,12 @@ COPY . .
 
 # Default port Flask/Gunicorn will listen on
 EXPOSE 5000
-
 # Environment variable for Flask
 ENV FLASK_APP=app.py
 
+# Set the Entrypoint to run your script first
+ENTRYPOINT ["entrypoint.sh"]
+
+# Set the default command (will be run by exec in the entrypoint script)
 # Command for production (Gunicorn)
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

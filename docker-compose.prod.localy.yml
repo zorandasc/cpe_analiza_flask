@@ -1,10 +1,6 @@
 services:
   flask:
-    # --- CHANGE THIS LINE ---
-    # build: . 
-    # --- TO THIS LINE ---
-    image: cpe-anliza-flask:latest # <--- Use the locally loaded image tag
-    # ----------------------
+    build: .
     ports:
       - "5000:5000"
     environment:
@@ -17,8 +13,6 @@ services:
       - db
 
   db:
-    # Since postgres:16 is likely already deployed/locally available,
-    # keep 'image: postgres:16'
     image: postgres:16
     environment:
       POSTGRES_USER: postgres
@@ -30,8 +24,6 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   pgadmin:
-    # Since dpage/pgadmin4 is likely already deployed/locally available,
-    # keep 'image: dpage/pgadmin4'
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
