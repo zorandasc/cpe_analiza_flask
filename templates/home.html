@@ -23,15 +23,31 @@ styles %} {{ super() }}
     text-align: center; /* optional */
   }
   .btn-edit {
-    background-color: #f7bbe0;
+    background-color: #fcc200;
     color: #000; /* text color */
     border: none; /* remove default border */
+  }
+  .btn-edit:hover {
+    background-color: #d8c589;
   }
   .btn-custom-save {
     background-color: #8be0b8;
   }
   .custom-modal-header {
     background-color: #acd4f7;
+  }
+  .red_bcg {
+    background-color: #ff9999 !important;
+  }
+  .green_bcg {
+    background-color: #8ee880 !important;
+  }
+  .plus-icon-bg {
+    color: white;
+    background-color: #0d6efd; /* Bootstrap primary */
+    padding: 4px 6px;
+    border-radius: 50%;
+    font-size: 18px;
   }
 </style>
 {% endblock %} {% block content%}
@@ -63,7 +79,11 @@ styles %} {{ super() }}
         {% for r in records %}
         <tr>
           <td>{{ r.city.name }}</td>
-          <td>{{ r.record_date }}</td>
+          <td
+            class="{% if r.record_date < monday %}red_bcg{% else %}green_bcg{% endif %}"
+          >
+            {{ r.record_date }}
+          </td>
           <td>{{ r.iad267 }}</td>
           <td>{{ r.stb_arr_4205 }}</td>
           <td>{{ r.stb_arr_5305 }}</td>
@@ -100,7 +120,7 @@ styles %} {{ super() }}
               data-antena="{{ r.antena }}"
               data-lnb="{{ r.lnb }}"
             >
-              ➕
+              <span class="text-white fw-bold fs-3">+</span>
             </button>
           </td>
         </tr>

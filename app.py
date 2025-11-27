@@ -2,7 +2,7 @@ import os
 from flask import Flask, render_template, redirect, url_for, request, flash
 from sqlalchemy import func
 from models import db, CpeRecords, Users, Cities
-from datetime import date
+from datetime import date, timedelta
 import datetime
 from flask_login import (
     LoginManager,
@@ -107,8 +107,16 @@ def get_latest_cpe_records():
 @login_required  # <-- This is the protection decorator!
 def home():
     latest_records = get_latest_cpe_records()
-    today = date.today().strftime("%d-%m-%Y")
-    return render_template("home.html", records=latest_records, today=today)
+    today = date.today()
+    # today.weekday() gives 0 for Monday, 6 for Sunday
+    # Subtracting gives the date for this week's Monday
+    monday = today - timedelta(days=today.weekday())  # Monday of this week
+    return render_template(
+        "home.html",
+        records=latest_records,
+        today=today.strftime("%d-%m-%Y"),
+        monday=monday,
+    )
 
 
 @app.route("/update_cpe", methods=["POST"])
@@ -369,6 +377,8 @@ def admin_delete_user(id):
 @app.route("/admin/cpe_records")
 @login_required
 def admin_cpe_records():
+    if not admin_required():
+        return "Niste Autorizovani.", 403
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
     page = request.args.get("page", 1, type=int)

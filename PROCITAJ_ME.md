@@ -204,7 +204,7 @@ class Users(db.Model, UserMixin):
 
 # --------------------------------------------------------
 
-1. CREATE CLI FLASK COMMAND INSIDE create_admin_cli.py
+1. CREATE CLI FLASK FILE create_admin_cli.py
 
 ```python
 @click.command("create-admin")  # Define the command name
