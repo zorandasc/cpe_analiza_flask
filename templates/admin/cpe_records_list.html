@@ -1,0 +1,97 @@
+{% extends "base.html" %} {% block title %}Cities{% endblock %} {% block
+content%}
+<div class="container py-4">
+  <h2>CPE Records</h2>
+  <div class="table-responsive">
+    <nav>
+      <ul class="pagination">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin_cpe_records', page=pagination.prev_num, sort=sort_by, direction=direction) }}"
+            >Previus</a
+          >
+        </li>
+        {% endif %} {% for p in pagination.iter_pages() %} {% if p %}
+        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+          <a
+            class="page-link"
+            href="{{ url_for('admin_cpe_records', page=p, sort=sort_by, direction=direction) }}"
+            >{{ p }}</a
+          >
+        </li>
+        {% else%}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif%} {% endfor %} {% if pagination.has_next %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <table class="table table-bordered table-striped table-hover align-middle">
+      <thead class="table-custom-head">
+        <tr>
+          <td>
+            <a
+              href="{{ url_for('admin_cpe_records', sort='id', direction='asc' if direction=='desc' else 'desc') }}"
+              >Id</a
+            >
+          </td>
+          <th>Grad</th>
+          <th class="date-column">
+            <a
+              href="{{ url_for('admin_cpe_records', sort='record_date', direction='asc' if direction=='desc' else 'desc') }}"
+              >Datum</a
+            >
+          </th>
+          <th>IAD267</th>
+          <th>STB ARR 4205</th>
+          <th>STB ARR 5305</th>
+          <th>STB EKT 4805</th>
+          <th>STB EKT 7005</th>
+          <th>STB SKY 44</th>
+          <th>ONT HW</th>
+          <th>ONT NO</th>
+          <th>DTH</th>
+          <th>ANTENA</th>
+          <th>LNB</th>
+          <th>
+            <a
+              href="{{ url_for('admin_cpe_records', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              >Updated At</a
+            >
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>{{ r.city.name }}</td>
+          <td>{{ r.record_date }}</td>
+          <td>{{ r.iad267 }}</td>
+          <td>{{ r.stb_arr_4205 }}</td>
+          <td>{{ r.stb_arr_5305 }}</td>
+          <td>{{ r.stb_ekt_4805 }}</td>
+          <td>{{ r.stb_ekt_7005 }}</td>
+          <td>{{ r.stb_sky_44 }}</td>
+          <td>{{ r.ont_hw }}</td>
+          <td>{{ r.ont_no }}</td>
+          <td>{{ r.dth }}</td>
+          <td>{{ r.antena }}</td>
+          <td>{{ r.lnb }}</td>
+          <td>{{ r.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

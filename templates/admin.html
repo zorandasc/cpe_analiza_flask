@@ -1,48 +1,96 @@
-{% extends "base.html" %}
-{% block title %}Admin Dashboard{% endblock %}
+{% extends "base.html" %} {% block title %}Admin Dashboard{% endblock %} {%
+block styles %} {{ super() }}
 
-{% block content %}
-<div class="container py-5">
-    <h1 class="mb-4 text-center">Admin Dashboard</h1>
+<style>
+  body {
+   background: url("{{ url_for('static', filename='bg-login1.jpg') }}")
+      no-repeat right bottom fixed;
+    background-size: contain;
+  }
 
-    <div class="row g-4">
+  /* Main container */
+  .admin-wrapper {
+    margin-top: 4rem;
+  }
 
-        <!-- Cities -->
-        <div class="col-md-4">
-            <a href="{{ url_for('admin_cities') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <h4 class="card-title">Cities</h4>
-                        <p class="text-muted">Manage all cities</p>
-                    </div>
-                </div>
-            </a>
+  /* Title */
+  .admin-title {
+    font-weight: 700;
+    color: #2b3a55;
+    letter-spacing: 1px;
+  }
+
+  /* Dashboard cards */
+  .dashboard-card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: white;
+    border-top: 4px solid #acd4f7; /* match login button color */
+    
+  }
+
+  .dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .dashboard-card .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #234a6f;
+  }
+
+  .dashboard-card p {
+    color: #6c7a89;
+  }
+
+  /* Link cleanup */
+  .dashboard-link {
+    text-decoration: none;
+  }
+</style>
+
+{% endblock %} {% block content %}
+<div class="container admin-wrapper">
+  <h1 class="text-center mb-5 admin-title">Admin Dashboard</h1>
+
+  <div class="row g-4 justify-content-center">
+    <!-- Users -->
+    <div class="col-md-4">
+      <a href="{{ url_for('admin_users') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow-lg p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Korisnici</h4>
+            <p>Kreiraj, izmijeni, obriši korisnika</p>
+          </div>
         </div>
-
-        <!-- Users -->
-        <div class="col-md-4">
-            <a href="{{ url_for('admin_users') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <h4 class="card-title">Users</h4>
-                        <p class="text-muted">Create, edit, delete users</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <!-- CPE Records -->
-        <div class="col-md-4">
-            <a href="{{ url_for('admin_cpe_records') }}" class="text-decoration-none">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <h4 class="card-title">CPE Records</h4>
-                        <p class="text-muted">View or modify CPE inventory records</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
+      </a>
     </div>
+
+    <!-- CPE Records -->
+    <div class="col-md-4">
+      <a href="{{ url_for('admin_cpe_records') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow-lg p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">CPE Stanje</h4>
+            <p>Pregled i upravljanje CPE opremom</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Cities -->
+    <div class="col-md-4">
+      <a href="{{ url_for('admin_cities') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow-lg p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Regije</h4>
+            <p>Upravljanje regijama i gradovima</p>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
 </div>
 {% endblock %}

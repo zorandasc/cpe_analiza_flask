@@ -262,7 +262,11 @@ def admin_delete_city(id):
 
     # PROTECT CITY DELETE: block if related rows exist
     if city.cpe_records or city.users:
-        return ("Cannot delete city because it has related CPE records or users.", 400)
+        return render_template(
+            "admin/cities_list.html",
+            cities=Cities.query.all(),
+            error="Cannot delete this city because it has related data.",
+        )
 
     db.session.delete(city)
     db.session.commit()
@@ -280,7 +284,33 @@ def admin_users():
 @app.route("/admin/cpe_records")
 @login_required
 def admin_cpe_records():
-    pass
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    sort_by = request.args.get("sort", "id")
+    direction = request.args.get("direction", "asc")
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = ["id", "record_date", "created_at"]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    order_column = getattr(CpeRecords, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = CpeRecords.query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return render_template(
+        "admin/cpe_records_list.html",
+        records=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        direction=direction,
+    )
 
 
 # -----MAIN LOOP-----------
