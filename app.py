@@ -17,7 +17,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from create_admin_cli import create_initial_admin
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
-# KADA NAPRAVIMO python app.py UNUTAR MOG VS CODA, ODNOSNO IZ VANA 
+# KADA NAPRAVIMO python app.py UNUTAR MOG VS CODA, ODNOSNO IZ VANA
 # DOCKER MREZE GADJAMO DOKERIZOVANI POSTGRES 5431
 # MEDJUTIM KADA DOKERIZUJEMO FLASK APP MI SMO U INTERNOM DOCKER
 # OKRUZENJU I ONDA TREBA DA GADJAMAO 5342
@@ -159,6 +159,7 @@ def update_cpe():
         .first()
     )
 
+    info_message = "Novi unos kreiran."
     # 3. Handle Update vs. Create Logic
     if existing_record:
         # if city_id and  record_date combination already exsist just update exsisting row
@@ -166,6 +167,7 @@ def update_cpe():
             setattr(existing_record, key, value)
         # Update the timestamp
         existing_record.created_at = datetime.datetime.now()
+        info_message = "Izmijenjen postojeći unos!"
     else:
         # --- CREATE LOGIC ---
         # If record does NOT exist, create a new one
@@ -176,7 +178,11 @@ def update_cpe():
             created_at=datetime.datetime.now(),
             **cpe_data,
         )
+
         db.session.add(new_cpe_record)
+
+    flash(info_message, "success")
+
     db.session.commit()
 
     # 4. Redirect to Home (Post-Redirect-Get Pattern)
@@ -192,8 +198,10 @@ def login():
         user = Users.query.filter_by(username=username).first()
         if user and check_password_hash(user.password_hash, password):
             # Flask will store user session in browser
-            login_user(user)
+            login_user(user)  # from flask-login packet
+            flash("Login successfully", "success")
             return redirect(url_for("home"))
+        flash("Invalid credentials", "danger")
         return render_template("login.html", message="Invalid credentials")
 
     return render_template("login.html")
@@ -203,12 +211,14 @@ def login():
 @login_required
 def logout():
     logout_user()
+    flash("Logout successfully", "success")
     return redirect(url_for("login"))
 
 
 # AUTHORIZATION
 def admin_required():
     if not current_user.is_authenticated or current_user.role != "admin":
+        flash("Niste Autorizovani!", "warning")
         return False
     return True
 
@@ -224,7 +234,8 @@ def admin_dashboard():
 @login_required
 def admin_cities():
     if not admin_required():
-        return "Forbidden", 403
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
     cities = Cities.query.order_by(Cities.id).all()
     return render_template("admin/cities_list.html", cities=cities)
 
@@ -272,7 +283,7 @@ def admin_delete_city(id):
 
     # PROTECT CITY DELETE: block if related rows exist
     if city.cpe_records or city.users:
-        flash("Cannot delete this city because it has related data.", "danger")
+        flash("Cannot delete this city because it has related data.", "warning")
         return render_template(
             "admin/cities_list.html",
             cities=Cities.query.all(),
@@ -288,7 +299,8 @@ def admin_delete_city(id):
 @login_required
 def admin_users():
     if not admin_required():
-        return "Forbidden", 403
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
     users = Users.query.order_by(Users.id).all()
     return render_template("admin/users_list.html", users=users)
 
@@ -382,7 +394,8 @@ def admin_delete_user(id):
 @login_required
 def admin_cpe_records():
     if not admin_required():
-        return "Niste Autorizovani.", 403
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
     page = request.args.get("page", 1, type=int)

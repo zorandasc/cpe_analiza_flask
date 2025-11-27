@@ -112,26 +112,65 @@
       </div>
     </nav>
 
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %}
-    <div class="container mt-3">
-      {% for category, message in messages %}
-      <div
-        class="alert alert-{{ category }} alert-dismissible fade show"
-        role="alert"
-      >
-        {{ message }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-        ></button>
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %} {% endwith %}
-
     <!-- MAIN PAGE CONTENT -->
     <div class="container mt-4">{% block content %}{% endblock %}</div>
+
+    <!-- Toast Container -->
+    <div
+      aria-live="polite"
+      aria-atomic="true"
+      class="position-fixed top-0 end-0 p-3"
+      style="z-index: 9999"
+    >
+      <div id="toast-container"></div>
+    </div>
+
+    <!-- Toast Template (hidden) -->
+    <div
+      id="toast-template"
+      class="toast align-items-center text-bg-primary border-0"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      style="display: none"
+    >
+      <div class="d-flex">
+        <div class="toast-body"></div>
+        <button
+          type="button"
+          class="btn-close btn-close-white me-2 m-auto"
+          data-bs-dismiss="toast"
+        ></button>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Jinja renders this as a valid JS array — VS Code is happy ✔
+        const flashMessages = JSON.parse(
+          `{{ get_flashed_messages(with_categories=True) | tojson | safe }}`
+        );
+
+        const container = document.getElementById("toast-container");
+        const template = document.getElementById("toast-template");
+
+        flashMessages.forEach(([category, message]) => {
+          const toastEl = template.cloneNode(true);
+          toastEl.id = "";
+          toastEl.style.display = "block";
+          toastEl.querySelector(".toast-body").innerText = message;
+
+          // category-based styling
+          toastEl.classList.remove("text-bg-primary");
+          if (category === "success") toastEl.classList.add("text-bg-success");
+          if (category === "danger") toastEl.classList.add("text-bg-danger");
+          if (category === "warning") toastEl.classList.add("text-bg-warning");
+          if (category === "info") toastEl.classList.add("text-bg-info");
+
+          container.appendChild(toastEl);
+          new bootstrap.Toast(toastEl, { delay: 4000 }).show();
+        });
+      });
+    </script>
   </body>
 </html>
