@@ -283,12 +283,12 @@ def admin_delete_city(id):
 
     # PROTECT CITY DELETE: block if related rows exist
     if city.cpe_records or city.users:
-        flash("Cannot delete this city because it has related data.", "warning")
+        flash("Cannot delete this city because it has related data.", "danger")
         return render_template(
             "admin/cities_list.html",
             cities=Cities.query.all(),
         )
-
+    flash("City deleted!", "success")
     db.session.delete(city)
     db.session.commit()
     return redirect(url_for("admin_cities"))
@@ -385,7 +385,16 @@ def admin_delete_user(id):
         return "Forbidden", 403
 
     user = Users.query.get_or_404(id)
-
+    # PROTECT CITY DELETE: block if related rows exist
+    if user.username == "admin":
+        flash("Cannot delete admin user.", "danger")
+        return render_template(
+            "admin/users_list.html",
+            users=Users.query.all(),
+        )
+    flash("User deleted", "success")
+    db.session.delete(user)
+    db.session.commit()
     return redirect(url_for("admin_users"))
 
 
