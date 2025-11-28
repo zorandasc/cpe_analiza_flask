@@ -9,6 +9,10 @@ while ! nc -z db 5432; do
 done
 echo "PostgreSQL started."
 
+# --- NEW STEP: INITIALIZE DATABASE SCHEMA ---
+echo "Running database initialization (creating tables)..."
+flask init-db
+
 # 2. Run your initial setup command
 # 'flask' is the main executable, 'create-admin' is your custom command.
 echo "Running create-admin command..."

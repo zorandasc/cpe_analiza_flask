@@ -15,6 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 # --Import the command function and register it ---
 from create_admin_cli import create_initial_admin
+from create_db_tables_cli import create_initial_db
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
 # KADA NAPRAVIMO python app.py UNUTAR MOG VS CODA, ODNOSNO IZ VANA
@@ -67,6 +68,7 @@ def load_user(user_id):
 
 # Register the command function with the Flask CLI
 app.cli.add_command(create_initial_admin)
+app.cli.add_command(create_initial_db)
 
 # ---------------HELPER FUNCTION--------------------------
 

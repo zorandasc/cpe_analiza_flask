@@ -1,6 +1,6 @@
 services:
   flask:
-    image: cpe-anliza-flask:latest # <--- Use the locally loaded image tag
+    image: cpe-analiza-flask:latest # <--- Use the locally loaded image tag
     ports:
       - "5000:5000"
     environment:

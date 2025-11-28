@@ -56,6 +56,7 @@ EXPOSE 5000
 ENV FLASK_APP=app.py
 
 # Set the Entrypoint to run your script first
+# specifies the program that runs when a container starts.
 ENTRYPOINT ["entrypoint.sh"]
 
 # Set the default command (will be run by exec in the entrypoint script)
