@@ -31,7 +31,7 @@ styles %} {{ super() }}
     background-color: #d8c589;
   }
   .btn-custom-save {
-    background-color: #8be0b8;
+    background: linear-gradient(145deg, #acd4f7, #8ec8f7);;
   }
   .custom-modal-header {
     background-color: #acd4f7;
@@ -77,13 +77,11 @@ styles %} {{ super() }}
 
       <tbody>
         {% for r in records %}
-        <tr>
-          <td>{{ r.city.name }}</td>
-          <td
-            class="{% if r.record_date < monday %}red_bcg{% else %}green_bcg{% endif %}"
-          >
-            {{ r.record_date }}
-          </td>
+        <tr
+          class="{% if r.record_date < monday %}table-danger{% else %}table-success{% endif %}"
+        >
+          <td class="table-light">{{ r.city.name }}</td>
+          <td>{{ r.record_date }}</td>
           <td>{{ r.iad267 }}</td>
           <td>{{ r.stb_arr_4205 }}</td>
           <td>{{ r.stb_arr_5305 }}</td>
