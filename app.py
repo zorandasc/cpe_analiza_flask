@@ -109,22 +109,38 @@ def get_latest_cpe_records():
 
 
 # -------------------------------- ROUTES------
+# HOME PAGE
 @app.route("/")
 @login_required  # <-- This is the protection decorator!
 def home():
-    latest_records = get_latest_cpe_records()
     today = date.today()
     # today.weekday() gives 0 for Monday, 6 for Sunday
     # Subtracting gives the date for this week's Monday
     monday = today - timedelta(days=today.weekday())  # Monday of this week
+    if current_user.role == "admin":
+        records = get_latest_cpe_records()
+    else:
+        records = (
+            CpeRecords.query.filter_by(city_id=current_user.city_id)
+            .order_by(CpeRecords.record_date.desc())
+            .all()
+        )
     return render_template(
         "home.html",
-        records=latest_records,
+        records=records,
         today=today.strftime("%d-%m-%Y"),
         monday=monday,
     )
 
 
+# ADMIN DASHBOARD PAGE
+@app.route("/admin/")
+@login_required
+def admin_dashboard():
+    return render_template("admin.html")
+
+
+# UPDATE ROUTE HOME TABLE, CALLED FROM INSIDE UPDATE FORM
 @app.route("/update_cpe", methods=["POST"])
 @login_required
 def update_cpe():
@@ -192,6 +208,7 @@ def update_cpe():
     return redirect(url_for("home"))
 
 
+# AUTENTIFIKACIJA
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -209,26 +226,21 @@ def login():
     return render_template("login.html")
 
 
+# AUTHORIZATION
+def admin_required():
+    if not current_user.is_authenticated or current_user.role != "admin":
+        flash("Niste Autorizovani!", "danger")
+        return False
+    return True
+
+
+# LOGGOUT
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     flash("Logout successfully", "success")
     return redirect(url_for("login"))
-
-
-# AUTHORIZATION
-def admin_required():
-    if not current_user.is_authenticated or current_user.role != "admin":
-        flash("Niste Autorizovani!", "warning")
-        return False
-    return True
-
-
-@app.route("/admin/")
-@login_required
-def admin_dashboard():
-    return render_template("admin.html")
 
 
 # -----------------CITIES CRUD---------------------

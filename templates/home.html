@@ -23,7 +23,7 @@ styles %} {{ super() }}
     text-align: center; /* optional */
   }
   .btn-edit {
-    background-color: #fcc200;
+    background-color: yellow;
     color: #000; /* text color */
     border: none; /* remove default border */
   }
@@ -31,7 +31,7 @@ styles %} {{ super() }}
     background-color: #d8c589;
   }
   .btn-custom-save {
-    background: linear-gradient(145deg, #acd4f7, #8ec8f7);;
+    background: linear-gradient(145deg, #acd4f7, #8ec8f7);
   }
   .custom-modal-header {
     background-color: #acd4f7;
@@ -55,7 +55,7 @@ styles %} {{ super() }}
   <h1 class="mb-4 text-center">Zadnje stanje CPE Opreme</h1>
 
   <div class="table-responsive">
-    <table class="table table-striped table-hover align-middle">
+    <table class="table table-striped table-bordered table-hover align-middle">
       <thead class="table-custom-head">
         <tr>
           <th>Grad</th>
@@ -77,10 +77,11 @@ styles %} {{ super() }}
 
       <tbody>
         {% for r in records %}
+        <!-- ZA ADMIN USERA OBOJI SVE REDOVE NEVEZANO ZA PRVI ROW, ZA NEADMIN USERE OBOJI SAMO PRVI ROW-->
         <tr
-          class="{% if r.record_date < monday %}table-danger{% else %}table-success{% endif %}"
+          class="{% if (current_user.role == 'admin' or loop.first) %}{% if r.record_date < monday %}table-danger{% else %}table-success{% endif %}{% endif %}"
         >
-          <td class="table-light">{{ r.city.name }}</td>
+          <td>{{ r.city.name }}</td>
           <td>{{ r.record_date }}</td>
           <td>{{ r.iad267 }}</td>
           <td>{{ r.stb_arr_4205 }}</td>
@@ -94,6 +95,9 @@ styles %} {{ super() }}
           <td>{{ r.antena }}</td>
           <td>{{ r.lnb }}</td>
           <td>{{ r.created_at }}</td>
+          <!-- PRIKAZI SVA DUGMAD ZA UPDATE ZA ADMIN USERAA
+           AKO JE USER NEADMIN ONDA PRIKAZI SAMO ZA PRVI ROW-->
+          {% if current_user.role == "admin" or loop.first %}
           <td>
             <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
             <!-- data-bs-target="#editModal" → tells which modal to open.-->
@@ -118,9 +122,10 @@ styles %} {{ super() }}
               data-antena="{{ r.antena }}"
               data-lnb="{{ r.lnb }}"
             >
-              <span class="text-white fw-bold fs-3">+</span>
+              <span class="text-black fw-bold fs-4">+</span>
             </button>
           </td>
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
