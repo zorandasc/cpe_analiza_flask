@@ -1,15 +1,15 @@
 {% extends "base.html" %} {% block title %}Users{% endblock %} {% block content
 %}
 <div class="container py-4">
-  <h2>Users</h2>
+  <h2>Korisnici</h2>
 
   <a href="{{ url_for('admin_add_user') }}" class="btn btn-primary my-3"
-    >Add User</a
+    >Dodaj korisnika</a
   >
   {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
-  <table class="table table-striped table-bordered">
+  <table class="table table-striped table-bordered shadow-lg">
     <tr>
       <th>ID</th>
       <th>UserName</th>
