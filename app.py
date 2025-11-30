@@ -105,6 +105,14 @@ def get_latest_cpe_records():
     return latest_records
 
 
+# AUTHORIZATION
+def admin_required():
+    if not current_user.is_authenticated or current_user.role != "admin":
+        flash("Niste Autorizovani!", "danger")
+        return False
+    return True
+
+
 # -------------------------------------------------------
 
 
@@ -118,12 +126,16 @@ def home():
     # Subtracting gives the date for this week's Monday
     monday = today - timedelta(days=today.weekday())  # Monday of this week
     if current_user.role == "admin":
+        # ZA ADMIN USERA DOBAVI POSLJEDNJI DATUM ZA SVAKI GRAD
         records = get_latest_cpe_records()
     else:
+        # ZA NE ADMI USERA POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
+        page = request.args.get("page", 1, type=int)
+        per_page = 10
         records = (
             CpeRecords.query.filter_by(city_id=current_user.city_id)
             .order_by(CpeRecords.record_date.desc())
-            .all()
+            .paginate(page=page, per_page=per_page, error_out=False)
         )
     return render_template(
         "home.html",
@@ -218,7 +230,7 @@ def login():
         if user and check_password_hash(user.password_hash, password):
             # Flask will store user session in browser
             login_user(user)  # from flask-login packet
-            flash("Login successfully", "success")
+            flash(f"Dobrodošli, {username}", "success")
             return redirect(url_for("home"))
         flash("Invalid credentials", "danger")
         return render_template("login.html", message="Invalid credentials")
@@ -226,20 +238,13 @@ def login():
     return render_template("login.html")
 
 
-# AUTHORIZATION
-def admin_required():
-    if not current_user.is_authenticated or current_user.role != "admin":
-        flash("Niste Autorizovani!", "danger")
-        return False
-    return True
-
-
 # LOGGOUT
 @app.route("/logout")
 @login_required
 def logout():
+    username_to_flash = current_user.username
     logout_user()
-    flash("Logout successfully", "success")
+    flash(f"Doviđenja, {username_to_flash}", "success")
     return redirect(url_for("login"))
 
 
