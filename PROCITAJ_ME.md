@@ -21,8 +21,10 @@
 # set DB_HOST=localhost
 
 # docker compose -f docker-compose.dev.yml up -d
+THIS RUN POSTGRES AND PGADMIN ON LOCAL DOCKER
 
 # python app.py
+THIS RUN FLASK APP LOCALO ON PC
 
 # localhost:5000 (Flask)
 
@@ -40,8 +42,6 @@
 
 # Right-click Servers → Register → Server
 
-![alt text](image.png)
-
 ```
 Host: db (if using Docker compose) or localhost (if local install)
 
@@ -55,6 +55,7 @@ Database: mydb (the one you used in Flask)
 ```
 
 ```bash
+TABELE UNUTAR PGADMINA
 Servers
  └─ Local Postgres
       └─ Databases
