@@ -34,14 +34,8 @@
         padding: 0.5rem 1rem;
       }
       .logo {
-        font-size: 22px;
-        font-weight: 600;
-        padding: 6px 16px;
-        border-radius: 50px;
-        background: linear-gradient(to right, #acd4f7, #8bc4f0);
-        color: #000 !important;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        margin-right: 1rem;
+        margin-left: 1rem;
       }
       .navbar-username {
         background: #acd4f7;
@@ -57,8 +51,12 @@
     <nav class="navbar navbar-expand-lg navbar-custom">
       <div class="container-fluid">
         <a class="navbar-brand logo" href="{{ url_for('home') }}"
-          >CPE-ANALIZA</a
-        >
+          ><img
+            src="{{ url_for('static', filename='logo.png') }}"
+            alt="CPE-ANALIZA Logo"
+            height="60"
+            class="d-inline-block align-text-top"
+        /></a>
 
         <button
           class="navbar-toggler"
