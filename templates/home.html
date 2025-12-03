@@ -87,6 +87,7 @@ styles %} {{ super() }}
     /* Set a specific maximum width for the small number fields */
     max-width: 80px;
     /* Ensures they don't stretch beyond this point */
+    margin: 0 auto;
   }
   .cpe-label-wrap {
     /* Set max width slightly wider than the input (80px) to accommodate text */
@@ -194,14 +195,14 @@ styles %} {{ super() }}
               data-city-id="{{ r.city.id }}"
               data-city="{{ r.city.name }}"
               data-iads="{{ r.iads }}"
-              data-4205="{{ r.stb_arr_4205 }}"
-              data-5305="{{ r.stb_arr_5305 }}"
-              data-ekt4805="{{ r.stb_ekt_4805 }}"
-              data-ekt7005="{{ r.stb_ekt_7005 }}"
-              data-sky44h="{{ r.stb_sky_44h }}"
+              data-stbarr4205="{{ r.stb_arr_4205 }}"
+              data-stbarr530="{{ r.stb_arr_5305 }}"
+              data-stbekt4805="{{ r.stb_ekt_4805 }}"
+              data-stbekt7005="{{ r.stb_ekt_7005 }}"
+              data-stbsky44h="{{ r.stb_sky_44h }}"
               data-onthuaw="{{ r.ont_huaw }}"
               data-ontnok="{{ r.ont_nok }}"
-              data-dthstb="{{ r.dth_stb }}"
+              data-stbdth="{{ r.stb_dth}}"
               data-antenadth="{{ r.antena_dth }}"
               data-lnbduo="{{ r.lnb_duo }}"
             >
@@ -237,9 +238,11 @@ styles %} {{ super() }}
           <input type="hidden" name="city_id" id="modal-city-id" />
 
           <div
-            class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-start"
+            class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"
           >
-            <div class="col-auto me-2 d-flex flex-column">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between"
+            >
               <label class="mb-1">City</label>
               <input
                 class="form-control"
@@ -250,73 +253,87 @@ styles %} {{ super() }}
               />
             </div>
 
-            <div class="col-auto me-2 d-flex flex-column">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between iad-column"
+            >
               <label class="mb-1 cpe-label-wrap"
                 >IAD H267N / HG658V2 / Zyxel /Skyworth</label
               >
               <input
                 class="form-control input-cpe-count"
-                id="modal-iad267"
+                id="modal-iads"
                 name="iad267"
                 type="number"
               />
             </div>
 
-            <div class="col-auto me-2 d-flex flex-column">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between stb-column"
+            >
               <label class="mb-1 cpe-label-wrap"
                 >STB ARRIS VIP4205 / VIP4302 / 1113</label
               >
               <input
                 class="form-control input-cpe-count"
-                id="modal-4205"
+                id="modal-stbarr4205"
                 name="stb_arr_4205"
                 type="number"
               />
             </div>
 
-            <div class="col-auto me-2 d-flex flex-column">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between stb-column"
+            >
               <label class="mb-1 cpe-label-wrap">STB ARRIS VIP5305</label>
               <input
                 class="form-control input-cpe-count"
-                id="modal-5305"
+                id="modal-stbarr530"
                 name="stb_arr_5305"
                 type="number"
               />
             </div>
 
-            <div class="col-auto me-2 d-flex flex-column">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between stb-column"
+            >
               <label class="mb-1 cpe-label-wrap">STB EKT DIN4805V 4K</label>
               <input
                 class="form-control input-cpe-count"
-                id="modal-ekt4805"
+                id="modal-stbekt4805"
                 name="stb_ekt_4805"
                 type="number"
               />
             </div>
 
-            <div class="col-auto me-2">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between stb-column"
+            >
               <label class="mb-1 cpe-label-wrap">STB EKT DIN7005V HD</label>
               <input
                 class="form-control input-cpe-count"
-                id="modal-ekt7005"
+                id="modal-stbekt7005"
                 name="stb_ekt_7005"
                 type="number"
               />
             </div>
 
-            <div class="col-auto me-2">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between stb-column"
+            >
               <label class="mb-1 cpe-label-wrap"
                 >STB SKYWORTH HD/4K HP44H</label
               >
               <input
                 class="form-control input-cpe-count"
-                id="modal-sky44h"
+                id="modal-stbsky44h"
                 name="stb_sky_44h"
                 type="number"
               />
             </div>
 
-            <div class="col-auto me-2">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between ont-column"
+            >
               <label class="mb-1 cpe-label-wrap">ONT (HUAWEI)</label>
               <input
                 class="form-control input-cpe-count"
@@ -326,7 +343,9 @@ styles %} {{ super() }}
               />
             </div>
 
-            <div class="col-auto me-2">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between ont-column"
+            >
               <label class="mb-1 cpe-label-wrap">ONT (NOKIA)</label>
               <input
                 class="form-control input-cpe-count"
@@ -336,17 +355,21 @@ styles %} {{ super() }}
               />
             </div>
 
-            <div class="col-auto me-2">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between antena-column"
+            >
               <label class="mb-1 cpe-label-wrap">UREĐAJ STB DTH</label>
               <input
                 class="form-control input-cpe-count"
-                id="modal-dthstb"
-                name="dth_stb"
+                id="modal-stbdth"
+                name="stb_dth"
                 type="number"
               />
             </div>
 
-            <div class="col-auto me-2">
+            <div
+              class="col-auto me-2 d-flex flex-column justify-content-between antena-column"
+            >
               <label class="mb-1 cpe-label-wrap">ANTENA SATELITSKA DTH</label>
               <input
                 class="form-control input-cpe-count"
@@ -356,7 +379,9 @@ styles %} {{ super() }}
               />
             </div>
 
-            <div class="col-auto">
+            <div
+              class="col-auto d-flex flex-column justify-content-between antena-column"
+            >
               <label class="mb-1 cpe-label-wrap">LNB DUO TWIN</label>
               <input
                 class="form-control input-cpe-count"
@@ -387,28 +412,28 @@ styles %} {{ super() }}
         btn.getAttribute("data-city-id");
       document.getElementById("modal-city").value =
         btn.getAttribute("data-city");
-      document.getElementById("modal-iad267").value =
-        btn.getAttribute("data-iad267");
-      document.getElementById("modal-4205").value =
-        btn.getAttribute("data-4205");
-      document.getElementById("modal-5305").value =
-        btn.getAttribute("data-5305");
-      document.getElementById("modal-ekt4805").value =
-        btn.getAttribute("data-ekt4805");
-      document.getElementById("modal-ekt7005").value =
-        btn.getAttribute("data-ekt7005");
-      document.getElementById("modal-sky44h").value =
-        btn.getAttribute("data-sky44");
+      document.getElementById("modal-iads").value =
+        btn.getAttribute("data-iads");
+      document.getElementById("modal-stbarr4205").value =
+        btn.getAttribute("data-stbarr4205");
+      document.getElementById("modal-stbarr530").value =
+        btn.getAttribute("data-stbarr530");
+      document.getElementById("modal-stbekt4805").value =
+        btn.getAttribute("data-stbekt4805");
+      document.getElementById("modal-stbekt7005").value =
+        btn.getAttribute("data-stbekt7005");
+      document.getElementById("modal-stbsky44h").value =
+        btn.getAttribute("data-stbsky44h");
       document.getElementById("modal-onthuaw").value =
-        btn.getAttribute("modal-onthuaw");
+        btn.getAttribute("data-onthuaw");
       document.getElementById("modal-ontnok").value =
         btn.getAttribute("data-ontnok");
-      document.getElementById("modal-dthstb").value =
-        btn.getAttribute("modal-dthstb");
+      document.getElementById("modal-stbdth").value =
+        btn.getAttribute("data-stbdth");
       document.getElementById("modal-antenadth").value =
-        btn.getAttribute("modal-antenadth");
+        btn.getAttribute("data-antenadth");
       document.getElementById("modal-lnbduo").value =
-        btn.getAttribute("modal-lnbduo");
+        btn.getAttribute("data-lnbduo");
     });
 </script>
 {% endblock %}
