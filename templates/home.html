@@ -3,12 +3,15 @@ styles %} {{ super() }}
 <style>
   /* Modern table header */
   .table-custom-head th {
-    background: linear-gradient(145deg, #acd4f7, #8ec8f7); /* gradient */
+    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
     color: #000; /* black text */
-    font-weight: 600;
+    font-weight: 400;
     text-align: center;
+    vertical-align: middle;
     border-top-left-radius: 8px; /* top-left corner */
     border-top-right-radius: 8px; /* top-right corner */
+    font-size: 14px;
+    border-bottom: 1px solid black;
   }
 
   /* Remove border radius from inner th cells to avoid overlapping */
@@ -18,12 +21,29 @@ styles %} {{ super() }}
   .table-custom-head th:last-child {
     border-top-right-radius: 8px;
   }
-  .date-column {
-    min-width: 120px; /* adjust as needed */
-    text-align: center; /* optional */
+  .stanje-column {
+    min-width: 140px;
+    text-align: center;
+    background-color: #e4eef7 !important;
+  }
+  .iad-column {
+    background-color: #f0d6f2 !important;
+  }
+  .stb-column {
+    background-color: #cbd7f1 !important;
+  }
+  .ont-column {
+    background-color: #c6e0b4 !important;
+  }
+  .antena-column {
+    background-color: #fce4d6 !important;
+    min-width: 80px;
+  }
+  .azur-column {
+    background-color: #ddebf7 !important;
   }
   .btn-edit {
-    background-color: yellow;
+    background-color: #f7f7a6;
     color: #000; /* text color */
     border: none; /* remove default border */
   }
@@ -36,12 +56,7 @@ styles %} {{ super() }}
   .custom-modal-header {
     background-color: #acd4f7;
   }
-  .red_bcg {
-    background-color: #ff9999 !important;
-  }
-  .green_bcg {
-    background-color: #8ee880 !important;
-  }
+
   .plus-icon-bg {
     color: white;
     background-color: #0d6efd; /* Bootstrap primary */
@@ -53,10 +68,38 @@ styles %} {{ super() }}
   .active .page-link {
     background-color: #8ec8f7 !important;
   }
+
+  /* Custom class for an extra-extra large modal */
+  .modal-xxl {
+    /* Set the max-width of the entire modal dialog. 
+       90% of the viewport width is generally a safe large size. */
+    --bs-modal-width: 90vw;
+    /* The modal-dialog will take up 90% of the screen width */
+    max-width: var(--bs-modal-width);
+  }
+
+  /* Optional: Ensure the content (modal-content) also respects this width */
+  .modal-xxl .modal-content {
+    width: 100%;
+  }
+
+  .input-cpe-count {
+    /* Set a specific maximum width for the small number fields */
+    max-width: 80px;
+    /* Ensures they don't stretch beyond this point */
+  }
+  .cpe-label-wrap {
+    /* Set max width slightly wider than the input (80px) to accommodate text */
+    max-width: 90px;
+    /* Allows the text to flow to the next line */
+    white-space: normal;
+    /* Centers the label text if desired (optional) */
+    text-align: center;
+  }
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
-  <h1 class="mb-4 text-center">Zadnje stanje CPE Opreme</h1>
+  <h1 class="mb-4 text-center">Zadnje stanje CPE opreme za: {{ today }}</h1>
 
   <div class="table-responsive">
     <!--AKO JE ADMIN USER NEMA PAGINACIJE-->
@@ -89,23 +132,24 @@ styles %} {{ super() }}
       </ul>
     </nav>
     {% endif %}
-    <table class="table table-striped table-bordered table-hover align-middle">
+    <table
+      class="table table-striped table-bordered table-hover align-middle table-sm"
+    >
       <thead class="table-custom-head">
         <tr>
-          <th>Grad</th>
-          <th class="date-column">Datum</th>
-          <th>IAD267</th>
-          <th>STB ARR 4205</th>
-          <th>STB ARR 5305</th>
-          <th>STB EKT 4805</th>
-          <th>STB EKT 7005</th>
-          <th>STB SKY 44</th>
-          <th>ONT HW</th>
-          <th>ONT NO</th>
-          <th>DTH</th>
-          <th>ANTENA</th>
-          <th>LNB</th>
-          <th>Updated At</th>
+          <th class="stanje-column">STANJE</th>
+          <th class="iad-column">IAD H267N / HG658V2 / Zyxel /Skyworth</th>
+          <th class="stb-column">STB ARRIS VIP4205 / VIP4302 / 1113</th>
+          <th class="stb-column">STB ARRIS VIP5305</th>
+          <th class="stb-column">STB EKT DIN4805V 4K</th>
+          <th class="stb-column">STB EKT DIN7005V HD</th>
+          <th class="stb-column">STB SKYWORTH HD/4K HP44H</th>
+          <th class="ont-column">ONT (HUAWEI)</th>
+          <th class="ont-column">ONT (NOKIA)</th>
+          <th class="antena-column">UREĐAJ STB DTH</th>
+          <th class="antena-column">ANTENA SATELITSKA DTH</th>
+          <th class="antena-column">LNB DUO TWIN</th>
+          <th class="azur-column">AŽURIRANO</th>
         </tr>
       </thead>
 
@@ -118,22 +162,21 @@ styles %} {{ super() }}
         <!-- ZA NE ADMIN current_user.role == 'admin' JE FALSE, PA CE PRVA IF PETLJA BITI ISTINA SAMO
          ONDA KADA JE PRVA ITERACIJA loop.first= TRUE I record.page=1 -->
         <tr
-          class="{% if (current_user.role == 'admin' or (loop.first and records.page==1)) %}{% if r.record_date < monday %}table-danger{% else %}table-success{% endif %}{% endif %}"
+          class="{% if (current_user.role == 'admin' or (loop.first and records.page==1)) %}{% if r.updated_at.date() < monday %}table-danger{% else %}table-success{% endif %}{% endif %}"
         >
           <td>{{ r.city.name }}</td>
-          <td>{{ r.record_date }}</td>
-          <td>{{ r.iad267 }}</td>
+          <td>{{ r.iads }}</td>
           <td>{{ r.stb_arr_4205 }}</td>
           <td>{{ r.stb_arr_5305 }}</td>
           <td>{{ r.stb_ekt_4805 }}</td>
           <td>{{ r.stb_ekt_7005 }}</td>
-          <td>{{ r.stb_sky_44 }}</td>
-          <td>{{ r.ont_hw }}</td>
-          <td>{{ r.ont_no }}</td>
-          <td>{{ r.dth }}</td>
-          <td>{{ r.antena }}</td>
-          <td>{{ r.lnb }}</td>
-          <td>{{ r.created_at }}</td>
+          <td>{{ r.stb_sky_44h }}</td>
+          <td>{{ r.ont_huaw }}</td>
+          <td>{{ r.ont_nok }}</td>
+          <td>{{ r.stb_dth }}</td>
+          <td>{{ r.antena_dth }}</td>
+          <td>{{ r.lnb_duo }}</td>
+          <td>{{ r.updated_at }}</td>
           <!-- PRIKAZI SVA DUGMAD ZA UPDATE ZA ADMIN USERAA
            AKO JE USER NEADMIN ONDA PRIKAZI SAMO ZA PRVI ROW I SAMO NA PRVOJ PAGINACIJI-->
           {% if current_user.role == "admin" or (loop.first and records.page==1)
@@ -150,19 +193,19 @@ styles %} {{ super() }}
               data-id="{{ r.id }}"
               data-city-id="{{ r.city.id }}"
               data-city="{{ r.city.name }}"
-              data-iad267="{{ r.iad267 }}"
+              data-iads="{{ r.iads }}"
               data-4205="{{ r.stb_arr_4205 }}"
               data-5305="{{ r.stb_arr_5305 }}"
               data-ekt4805="{{ r.stb_ekt_4805 }}"
               data-ekt7005="{{ r.stb_ekt_7005 }}"
-              data-sky44="{{ r.stb_sky_44 }}"
-              data-onthw="{{ r.ont_hw }}"
-              data-ontno="{{ r.ont_no }}"
-              data-dth="{{ r.dth }}"
-              data-antena="{{ r.antena }}"
-              data-lnb="{{ r.lnb }}"
+              data-sky44h="{{ r.stb_sky_44h }}"
+              data-onthuaw="{{ r.ont_huaw }}"
+              data-ontnok="{{ r.ont_nok }}"
+              data-dthstb="{{ r.dth_stb }}"
+              data-antenadth="{{ r.antena_dth }}"
+              data-lnbduo="{{ r.lnb_duo }}"
             >
-              <span class="text-black fw-bold fs-4">+</span>
+              <span class="text-black fw-bold fs-4">➕</span>
             </button>
           </td>
           {% endif %}
@@ -176,7 +219,7 @@ styles %} {{ super() }}
 <!-- MODAL OPENED BY EDIT BUTTON-->
 <!-- Inputs inside modal have ids like modal-iad267, modal-id.N-->
 <div class="modal fade" id="editModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
       <form method="POST" action="{{url_for('update_cpe')}}">
         <div class="modal-header custom-modal-header">
@@ -190,125 +233,135 @@ styles %} {{ super() }}
           ></button>
         </div>
         <div class="modal-body">
-          <!-- record_id hidden input tells backend which record is being edited.-->
           <input type="hidden" id="modal-id" name="record_id" />
           <input type="hidden" name="city_id" id="modal-city-id" />
-          <div class="row g-3">
-            <div class="col-md-4">
-              <label>City</label>
+
+          <div
+            class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-start"
+          >
+            <div class="col-auto me-2 d-flex flex-column">
+              <label class="mb-1">City</label>
               <input
                 class="form-control"
                 id="modal-city"
                 name="city"
                 readonly
+                style="min-width: 150px"
               />
             </div>
-            <div class="col-md-4">
-              <label>IAD267</label>
+
+            <div class="col-auto me-2 d-flex flex-column">
+              <label class="mb-1 cpe-label-wrap"
+                >IAD H267N / HG658V2 / Zyxel /Skyworth</label
+              >
               <input
-                class="form-control"
+                class="form-control input-cpe-count"
                 id="modal-iad267"
                 name="iad267"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>STB ARR 4205</label>
+            <div class="col-auto me-2 d-flex flex-column">
+              <label class="mb-1 cpe-label-wrap"
+                >STB ARRIS VIP4205 / VIP4302 / 1113</label
+              >
               <input
-                class="form-control"
+                class="form-control input-cpe-count"
                 id="modal-4205"
                 name="stb_arr_4205"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>STB ARR 5305</label>
+            <div class="col-auto me-2 d-flex flex-column">
+              <label class="mb-1 cpe-label-wrap">STB ARRIS VIP5305</label>
               <input
-                class="form-control"
+                class="form-control input-cpe-count"
                 id="modal-5305"
                 name="stb_arr_5305"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>STB EKT 4805</label>
+            <div class="col-auto me-2 d-flex flex-column">
+              <label class="mb-1 cpe-label-wrap">STB EKT DIN4805V 4K</label>
               <input
-                class="form-control"
+                class="form-control input-cpe-count"
                 id="modal-ekt4805"
                 name="stb_ekt_4805"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>STB EKT 7005</label>
+            <div class="col-auto me-2">
+              <label class="mb-1 cpe-label-wrap">STB EKT DIN7005V HD</label>
               <input
-                class="form-control"
+                class="form-control input-cpe-count"
                 id="modal-ekt7005"
                 name="stb_ekt_7005"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>STB SKY 44</label>
+            <div class="col-auto me-2">
+              <label class="mb-1 cpe-label-wrap"
+                >STB SKYWORTH HD/4K HP44H</label
+              >
               <input
-                class="form-control"
-                id="modal-sky44"
-                name="stb_sky_44"
+                class="form-control input-cpe-count"
+                id="modal-sky44h"
+                name="stb_sky_44h"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>ONT HW</label>
+            <div class="col-auto me-2">
+              <label class="mb-1 cpe-label-wrap">ONT (HUAWEI)</label>
               <input
-                class="form-control"
-                id="modal-onthw"
-                name="ont_hw"
+                class="form-control input-cpe-count"
+                id="modal-onthuaw"
+                name="ont_huaw"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>ONT NO</label>
+            <div class="col-auto me-2">
+              <label class="mb-1 cpe-label-wrap">ONT (NOKIA)</label>
               <input
-                class="form-control"
-                id="modal-ontno"
-                name="ont_no"
+                class="form-control input-cpe-count"
+                id="modal-ontnok"
+                name="ont_nok"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>DTH</label>
+            <div class="col-auto me-2">
+              <label class="mb-1 cpe-label-wrap">UREĐAJ STB DTH</label>
               <input
-                class="form-control"
-                id="modal-dth"
-                name="dth"
+                class="form-control input-cpe-count"
+                id="modal-dthstb"
+                name="dth_stb"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>ANTENA</label>
+            <div class="col-auto me-2">
+              <label class="mb-1 cpe-label-wrap">ANTENA SATELITSKA DTH</label>
               <input
-                class="form-control"
-                id="modal-antena"
-                name="antena"
+                class="form-control input-cpe-count"
+                id="modal-antenadth"
+                name="antena_dth"
                 type="number"
               />
             </div>
 
-            <div class="col-md-4">
-              <label>LNB</label>
+            <div class="col-auto">
+              <label class="mb-1 cpe-label-wrap">LNB DUO TWIN</label>
               <input
-                class="form-control"
-                id="modal-lnb"
-                name="lnb"
+                class="form-control input-cpe-count"
+                id="modal-lnbduo"
+                name="lnb_duo"
                 type="number"
               />
             </div>

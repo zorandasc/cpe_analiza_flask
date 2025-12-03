@@ -75,14 +75,14 @@ app.cli.add_command(create_initial_db)
 
 # Function to get the latest CPE records for all cities
 def get_latest_cpe_records():
-    # Subquery: find latest record_date per city
+    # Subquery: find latest updated_at per city
     # Select two fields:
     # the city id
-    # the maximum record_date for that city
-    # SELECT MAX(record_date)
+    # the maximum updated_at for that city
+    # SELECT MAX(updated_at)
     subquery = (
         db.session.query(
-            CpeRecords.city_id, func.max(CpeRecords.record_date).label("max_date")
+            CpeRecords.city_id, func.max(CpeRecords.updated_at).label("max_date")
         )
         # This finds the newest date for each city.
         # Group results by each city, so every city returns one row
@@ -97,7 +97,7 @@ def get_latest_cpe_records():
         .join(
             subquery,
             (CpeRecords.city_id == subquery.c.city_id)
-            & (CpeRecords.record_date == subquery.c.max_date),
+            & (CpeRecords.updated_at == subquery.c.max_date),
         )
         .order_by(CpeRecords.city_id)
         .all()
@@ -134,7 +134,7 @@ def home():
         per_page = 10
         records = (
             CpeRecords.query.filter_by(city_id=current_user.city_id)
-            .order_by(CpeRecords.record_date.desc())
+            .order_by(CpeRecords.updated_at.desc())
             .paginate(page=page, per_page=per_page, error_out=False)
         )
     return render_template(
@@ -169,34 +169,38 @@ def update_cpe():
     # Extract CPE fields and safely convert to integer (or use validation library like WTForms)
     # Extract CPE fields and safely convert to integer (or use validation library like WTForms)
     cpe_data = {
-        "iad267": int(request.form.get("iad267", 0)),
+        "iads": int(request.form.get("iads", 0)),
         "stb_arr_4205": int(request.form.get("stb_arr_4205", 0)),
         "stb_arr_5305": int(request.form.get("stb_arr_5305", 0)),
         "stb_ekt_4805": int(request.form.get("stb_ekt_4805", 0)),
         "stb_ekt_7005": int(request.form.get("stb_ekt_7005", 0)),
-        "stb_sky_44": int(request.form.get("stb_sky_44", 0)),
-        "ont_hw": int(request.form.get("ont_hw", 0)),
-        "ont_no": int(request.form.get("ont_no", 0)),
-        "dth": int(request.form.get("dth", 0)),
-        "antena": int(request.form.get("antena", 0)),
-        "lnb": int(request.form.get("lnb", 0)),
+        "stb_sky_44h": int(request.form.get("stb_sky_44h", 0)),
+        "ont_huaw": int(request.form.get("ont_huaw", 0)),
+        "ont_nok": int(request.form.get("ont_nok", 0)),
+        "stb_dth": int(request.form.get("stb_dth", 0)),
+        "antena_dth": int(request.form.get("antena_dth", 0)),
+        "lnb_duo": int(request.form.get("lnb_duo", 0)),
     }
 
     # 2. Query for Existing Record
     existing_record = (
         db.session.query(CpeRecords)
-        .filter(CpeRecords.city_id == city_id, CpeRecords.record_date == current_date)
+        .filter(
+            CpeRecords.city_id == city_id,
+            # Cast the TIMESTAMP column (updated_at) to DATE for a correct comparison
+            func.date(CpeRecords.updated_at) == current_date,
+        )
         .first()
     )
 
     info_message = "Novi unos kreiran."
     # 3. Handle Update vs. Create Logic
     if existing_record:
-        # if city_id and  record_date combination already exsist just update exsisting row
+        # if city_id and  updated_at combination already exsist just update exsisting row
         for key, value in cpe_data.items():
             setattr(existing_record, key, value)
         # Update the timestamp
-        existing_record.created_at = datetime.datetime.now()
+        existing_record.updated_at = datetime.datetime.now()
         info_message = "Izmijenjen postojeći unos!"
     else:
         # --- CREATE LOGIC ---
@@ -204,8 +208,6 @@ def update_cpe():
         # if not append new row in Cperecordes table for city and Date
         new_cpe_record = CpeRecords(
             city_id=city_id,
-            record_date=current_date,  # Use today's date
-            created_at=datetime.datetime.now(),
             **cpe_data,
         )
 
@@ -268,12 +270,14 @@ def admin_add_city():
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
         name = request.form.get("name")
-        db.session.add(Cities(name=name))
+        type = request.form.get("type")
+        db.session.add(Cities(name=name, type=type))
         db.session.commit()
         return redirect(url_for("admin_cities"))
 
     # THIS IS FOR GET REQUEST WHEN OPENING ADD FORM
-    return render_template("admin/cities_add.html")
+    types = ["IJ", "Skladiste"]
+    return render_template("admin/cities_add.html", types=types)
 
 
 @app.route("/admin/cities/edit/<int:id>", methods=["GET", "POST"])
@@ -353,7 +357,7 @@ def admin_add_user():
                 return redirect(url_for("admin_add_user"))
 
         # Validation: role must be valid
-        if role not in ["admin", "user"]:
+        if role not in ["admin", "user", "view"]:
             flash("Invalid role", "danger")
             return redirect(url_for("admin_add_user"))
 
@@ -379,7 +383,7 @@ def admin_add_user():
 
     # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
     cities = Cities.query.order_by(Cities.name).all()
-    roles = ["admin", "user"]
+    roles = ["admin", "user", "view"]
     return render_template("admin/users_add.html", cities=cities, roles=roles)
 
 
@@ -433,7 +437,7 @@ def admin_cpe_records():
     direction = request.args.get("direction", "asc")
 
     # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "record_date", "created_at"]
+    allowed_sorts = ["id", "updated_at", "created_at"]
     if sort_by not in allowed_sorts:
         sort_by = "id"
 

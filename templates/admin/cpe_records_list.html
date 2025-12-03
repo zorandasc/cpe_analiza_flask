@@ -34,7 +34,9 @@ content%}
         {% endif %}
       </ul>
     </nav>
-    <table class="table table-bordered table-striped table-hover align-middle shadow-lg">
+    <table
+      class="table table-bordered table-striped table-hover align-middle shadow-lg"
+    >
       <thead class="table-custom-head">
         <tr>
           <td>
@@ -44,12 +46,6 @@ content%}
             >
           </td>
           <th>Grad</th>
-          <th class="date-column">
-            <a
-              href="{{ url_for('admin_cpe_records', sort='record_date', direction='asc' if direction=='desc' else 'desc') }}"
-              >Datum</a
-            >
-          </th>
           <th>IAD267</th>
           <th>STB ARR 4205</th>
           <th>STB ARR 5305</th>
@@ -64,6 +60,12 @@ content%}
           <th>
             <a
               href="{{ url_for('admin_cpe_records', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              >Created At</a
+            >
+          </th>
+          <th>
+            <a
+              href="{{ url_for('admin_cpe_records', sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Updated At</a
             >
           </th>
@@ -75,19 +77,19 @@ content%}
         <tr>
           <td>{{ r.id }}</td>
           <td>{{ r.city.name }}</td>
-          <td>{{ r.record_date }}</td>
-          <td>{{ r.iad267 }}</td>
+          <td>{{ r.iads }}</td>
           <td>{{ r.stb_arr_4205 }}</td>
           <td>{{ r.stb_arr_5305 }}</td>
           <td>{{ r.stb_ekt_4805 }}</td>
           <td>{{ r.stb_ekt_7005 }}</td>
-          <td>{{ r.stb_sky_44 }}</td>
-          <td>{{ r.ont_hw }}</td>
-          <td>{{ r.ont_no }}</td>
-          <td>{{ r.dth }}</td>
-          <td>{{ r.antena }}</td>
-          <td>{{ r.lnb }}</td>
+          <td>{{ r.stb_sky_44h }}</td>
+          <td>{{ r.ont_huaw }}</td>
+          <td>{{ r.ont_nok }}</td>
+          <td>{{ r.stb_dth }}</td>
+          <td>{{ r.antena_dth }}</td>
+          <td>{{ r.lnb_duo }}</td>
           <td>{{ r.created_at }}</td>
+          <td>{{ r.updated_at }}</td>
         </tr>
         {% endfor %}
       </tbody>

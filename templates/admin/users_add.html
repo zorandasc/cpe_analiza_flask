@@ -22,7 +22,7 @@ content %}
     </div>
     <div class="mb-3">
       <label class="form-label">City</label>
-      <select name="city_id" class="form-control" required>
+      <select name="city_id" class="form-control" >
         <option value="">-- Select city --</option>
         {% for city in cities %}
         <option value="{{ city.id }}">{{ city.name }}</option>

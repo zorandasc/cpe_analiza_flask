@@ -3,7 +3,6 @@ import datetime
 
 from sqlalchemy import (
     CheckConstraint,
-    Date,
     DateTime,
     ForeignKeyConstraint,
     Integer,
@@ -23,12 +22,17 @@ db = SQLAlchemy()
 class Cities(db.Model):
     __tablename__ = "cities"
     __table_args__ = (
+        CheckConstraint(
+            "type::text = ANY (ARRAY['IJ'::character varying, 'Skladiste'::character varying]::text[])",
+            name="cities_type_check",
+        ),
         PrimaryKeyConstraint("id", name="cities_pkey"),
         UniqueConstraint("name", name="cities_name_key"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    type: Mapped[Optional[str]] = mapped_column(String(100))
 
     cpe_records: Mapped[list["CpeRecords"]] = relationship(
         "CpeRecords", back_populates="city"
@@ -46,20 +50,22 @@ class CpeRecords(db.Model):
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    record_date: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     city_id: Mapped[Optional[int]] = mapped_column(Integer)
-    iad267: Mapped[Optional[int]] = mapped_column(Integer)
+    iads: Mapped[Optional[int]] = mapped_column(Integer)
     stb_arr_4205: Mapped[Optional[int]] = mapped_column(Integer)
     stb_arr_5305: Mapped[Optional[int]] = mapped_column(Integer)
     stb_ekt_4805: Mapped[Optional[int]] = mapped_column(Integer)
     stb_ekt_7005: Mapped[Optional[int]] = mapped_column(Integer)
-    stb_sky_44: Mapped[Optional[int]] = mapped_column(Integer)
-    ont_hw: Mapped[Optional[int]] = mapped_column(Integer)
-    ont_no: Mapped[Optional[int]] = mapped_column(Integer)
-    dth: Mapped[Optional[int]] = mapped_column(Integer)
-    antena: Mapped[Optional[int]] = mapped_column(Integer)
-    lnb: Mapped[Optional[int]] = mapped_column(Integer)
+    stb_sky_44h: Mapped[Optional[int]] = mapped_column(Integer)
+    ont_huaw: Mapped[Optional[int]] = mapped_column(Integer)
+    ont_nok: Mapped[Optional[int]] = mapped_column(Integer)
+    stb_dth: Mapped[Optional[int]] = mapped_column(Integer)
+    antena_dth: Mapped[Optional[int]] = mapped_column(Integer)
+    lnb_duo: Mapped[Optional[int]] = mapped_column(Integer)
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("now()")
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime, server_default=text("now()")
     )
 
@@ -68,17 +74,11 @@ class CpeRecords(db.Model):
     )
 
 
-# UserMixin automatically provides:
-# is_authenticated
-# is_active
-# is_anonymous
-# get_id()
-# Exactly what Flask-Login needs.
 class Users(db.Model, UserMixin):
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint(
-            "role::text = ANY (ARRAY['admin'::character varying, 'user'::character varying]::text[])",
+            "role::text = ANY (ARRAY['admin'::character varying, 'user'::character varying, 'view'::character varying]::text[])",
             name="chk_user_role",
         ),
         ForeignKeyConstraint(["city_id"], ["cities.id"], name="fk_city"),
