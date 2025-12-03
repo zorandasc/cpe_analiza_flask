@@ -44,6 +44,7 @@ styles %} {{ super() }}
   }
   .btn-edit {
     background-color: #f7f7a6;
+    background: linear-gradient(to right, #e4c8a0, #efc135);
     color: #000; /* text color */
     border: none; /* remove default border */
   }
@@ -51,10 +52,12 @@ styles %} {{ super() }}
     background-color: #d8c589;
   }
   .btn-custom-save {
-    background: linear-gradient(145deg, #acd4f7, #8ec8f7);
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+
+    color: whitesmoke;
   }
   .custom-modal-header {
-    background-color: #acd4f7;
+    background: linear-gradient(to right, #7bc6cc, #be93c5);
   }
 
   .plus-icon-bg {
@@ -206,7 +209,7 @@ styles %} {{ super() }}
               data-antenadth="{{ r.antena_dth }}"
               data-lnbduo="{{ r.lnb_duo }}"
             >
-              <span class="text-black fw-bold fs-4">➕</span>
+              <span class="text-black fw-bold fs-4">🖉</span>
             </button>
           </td>
           {% endif %}
@@ -262,7 +265,7 @@ styles %} {{ super() }}
               <input
                 class="form-control input-cpe-count"
                 id="modal-iads"
-                name="iad267"
+                name="iads"
                 type="number"
               />
             </div>
@@ -393,7 +396,7 @@ styles %} {{ super() }}
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-custom-save">💾 Sačuvaj</button>
+          <button type="submit" class="btn btn-custom-save">🖫 Sačuvaj</button>
         </div>
       </form>
     </div>
