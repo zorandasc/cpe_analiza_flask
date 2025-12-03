@@ -190,7 +190,7 @@ styles %} {{ super() }}
           <td>{{ r.stb_dth }}</td>
           <td>{{ r.antena_dth }}</td>
           <td>{{ r.lnb_duo }}</td>
-          <td>{{ r.updated_at }}</td>
+          <td>{{ r.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
           <!-- PRIKAZI SVA DUGMAD ZA UPDATE ZA ADMIN USERAA
            AKO JE USER NEADMIN ONDA PRIKAZI SAMO ZA PRVI ROW I SAMO NA PRVOJ PAGINACIJI-->
           {% if current_user.role == "admin" or (loop.first and records.page==1)
