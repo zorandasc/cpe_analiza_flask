@@ -44,7 +44,7 @@ styles %} {{ super() }}
   }
   .btn-edit {
     background-color: #f7f7a6;
-    background: linear-gradient(to right, #e4c8a0, #efc135);
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
     color: #000; /* text color */
     border: none; /* remove default border */
   }
@@ -99,6 +99,17 @@ styles %} {{ super() }}
     white-space: normal;
     /* Centers the label text if desired (optional) */
     text-align: center;
+  }
+  .table tr.red-row,
+  .table tr.red-row td {
+    background-color: #f8d7da !important;
+    /* Optional: Set a darker text color for contrast */
+  }
+
+  .table tr.green-row,
+  .table tr.green-row td {
+    background-color: #d1e7dd !important;
+    /* Optional: Set a darker text color for contrast */
   }
 </style>
 {% endblock %} {% block content%}
@@ -166,7 +177,7 @@ styles %} {{ super() }}
         <!-- ZA NE ADMIN current_user.role == 'admin' JE FALSE, PA CE PRVA IF PETLJA BITI ISTINA SAMO
          ONDA KADA JE PRVA ITERACIJA loop.first= TRUE I record.page=1 -->
         <tr
-          class="{% if (current_user.role == 'admin' or (loop.first and records.page==1)) %}{% if r.updated_at.date() < monday %}table-danger{% else %}table-success{% endif %}{% endif %}"
+          class="{% if (current_user.role == 'admin' or (loop.first and records.page==1)) %}{% if r.updated_at.date() < monday %}red-row{% else %}green-row{% endif %}{% endif %}"
         >
           <td>{{ r.city.name }}</td>
           <td>{{ r.iads }}</td>
@@ -209,7 +220,24 @@ styles %} {{ super() }}
               data-antenadth="{{ r.antena_dth }}"
               data-lnbduo="{{ r.lnb_duo }}"
             >
-              <span class="text-black fw-bold fs-4">🖉</span>
+              <span class="text-white fw-bold fs-4 btn-icon-light"
+                ><svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="1em"
+                  height="1em"
+                  fill="currentColor"
+                  class="bi bi-pencil-square"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"
+                  />
+                  <path
+                    fill-rule="evenodd"
+                    d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"
+                  />
+                </svg>
+              </span>
             </button>
           </td>
           {% endif %}
@@ -244,7 +272,7 @@ styles %} {{ super() }}
             class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"
           >
             <div
-              class="col-auto me-2 d-flex flex-column justify-content-between"
+              class="col-auto me-2 d-flex flex-column justify-content-between stanje-column"
             >
               <label class="mb-1">SKLADIŠTE</label>
               <input
