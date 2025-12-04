@@ -102,7 +102,7 @@ styles %} {{ super() }}
   .table tr.red-row,
   .table tr.red-row td {
     background-color: #fae5e8 !important;
-   /* color: #ee1831 !important;*/
+    /* color: #ee1831 !important;*/
   }
 
   .table tr.green-row,
@@ -113,6 +113,17 @@ styles %} {{ super() }}
   .table tr.blue-row,
   .table tr.blue-row td {
     background-color: #e4eef7 !important;
+  }
+
+  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
+  .table-emph-h-border th,
+  .table-emph-h-border td {
+    /* Set the border style for all sides first */
+    border: 1px solid #919394;
+
+    /* Override the top/bottom borders to be thicker */
+    border-top-width: 3px !important;
+    border-bottom-width: 3px !important;
   }
 </style>
 {% endblock %} {% block content%}
@@ -150,9 +161,7 @@ styles %} {{ super() }}
       </ul>
     </nav>
     {% endif %}
-    <table
-      class="table table-striped table-bordered table-hover align-middle table-sm"
-    >
+    <table class="table table-hover align-middle table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
           <th class="stanje-column">SKLADIŠTE</th>
