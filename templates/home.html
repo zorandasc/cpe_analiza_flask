@@ -121,7 +121,7 @@ styles %} {{ super() }}
 
   <div class="table-responsive">
     <!--AKO JE ADMIN USER NEMA PAGINACIJE-->
-    {% if current_user.role != "admin" %}
+    {% if current_user.role == "user" %}
     <nav>
       <ul class="pagination">
         {% if records.has_prev %}
@@ -180,7 +180,7 @@ styles %} {{ super() }}
         <!-- ZA NE ADMIN current_user.role == 'admin' JE FALSE, PA CE PRVA IF PETLJA BITI ISTINA SAMO
          ONDA KADA JE PRVA ITERACIJA loop.first= TRUE I record.page=1 -->
         <tr
-          class="{% if (current_user.role == 'admin' or (loop.first and records.page==1)) %}{% if r.updated_at.date() < monday %}red-row{% else %}green-row{% endif %}{% endif %}"
+          class="{% if (current_user.role != 'user' or (loop.first and records.page==1)) %}{% if r.updated_at.date() < monday %}red-row{% else %}green-row{% endif %}{% endif %}"
         >
           <td>{{ r.city.name }}</td>
           <td>{{ r.iads }}</td>

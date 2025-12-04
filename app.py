@@ -135,7 +135,7 @@ def get_latest_cpe_records():
 
 # AUTHORIZATION
 def admin_required():
-    if not current_user.is_authenticated or current_user.role != "admin":
+    if not current_user.is_authenticated or current_user.role == "user":
         flash("Niste Autorizovani!", "danger")
         return False
     return True
@@ -155,7 +155,7 @@ def home():
     monday = today - timedelta(days=today.weekday())  # Monday of this week
     # Initialize totals to None
     totals = None
-    if current_user.role == "admin":
+    if current_user.role == "admin" or current_user.role == "view":
         # ZA ADMIN USERA DOBAVI POSLJEDNJI DATUM ZA SVAKI GRAD
         records, totals = get_latest_cpe_records()
     else:
