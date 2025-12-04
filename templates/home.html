@@ -96,20 +96,22 @@ styles %} {{ super() }}
     max-width: 90px;
     /* Allows the text to flow to the next line */
     white-space: normal;
-    /* Centers the label text if desired (optional) */
+
     text-align: center;
   }
   .table tr.red-row,
   .table tr.red-row td {
     background-color: #ffdde1 !important;
-
-    /* Optional: Set a darker text color for contrast */
   }
 
   .table tr.green-row,
   .table tr.green-row td {
     background-color: #def7eb !important;
-    /* Optional: Set a darker text color for contrast */
+  }
+
+  .table tr.blue-row,
+  .table tr.blue-row td {
+    background-color: #e4eef7 !important;
   }
 </style>
 {% endblock %} {% block content%}
@@ -243,7 +245,7 @@ styles %} {{ super() }}
           {% endif %}
         </tr>
         {% endfor %} {% if totals %}
-        <tr class="table-custom-head table-sm fw-bold">
+        <tr class="table-custom-head table-sm fw-bold blue-row">
           <td>**TOTAL**</td>
           <td>{{ totals.iads }}</td>
           <td>{{ totals.stb_arr_4205 }}</td>
@@ -261,6 +263,11 @@ styles %} {{ super() }}
         {% endif %}
       </tbody>
     </table>
+    <p>
+      * Razlika u stanju Centralnog skladišta i raspoloživog stanja se može
+      pojaviti u nalozima koji su odrađeni, ali oprema još nije izuzeta iz
+      magacina.
+    </p>
   </div>
 </div>
 
