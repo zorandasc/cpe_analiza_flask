@@ -44,8 +44,11 @@ styles %} {{ super() }}
   }
   .btn-edit {
     background-color: #f6f89d;
-    color: #000; /* text color */
+    background: linear-gradient(to top, #ff8008, #ffc837);
     border: none; /* remove default border */
+    width: 70px;
+    box-shadow: 1px 1px 2px black;
+   
   }
   .btn-edit:hover {
     background-color: #d8c589;
@@ -54,6 +57,7 @@ styles %} {{ super() }}
     background: linear-gradient(to right, #be93c5, #7bc6cc);
 
     color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0,0,0);
   }
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
@@ -107,6 +111,14 @@ styles %} {{ super() }}
 
   .table tr.green-row,
   .table tr.green-row td {
+    background-color: #def7eb !important;
+  }
+  .red-bcg {
+    background-color: #fae5e8 !important;
+    /* color: #ee1831 !important;*/
+  }
+
+  .green-bcg {
     background-color: #def7eb !important;
   }
 
@@ -188,10 +200,16 @@ styles %} {{ super() }}
         <!-- ZA ADNIN current_user.role == 'admin' JE UVIJEK TRUE PA CE DRUGI if UVIJEK BITI ISPUNJAVAN-->
         <!-- ZA NE ADMIN current_user.role == 'admin' JE FALSE, PA CE PRVA IF PETLJA BITI ISTINA SAMO
          ONDA KADA JE PRVA ITERACIJA loop.first= TRUE I record.page=1 -->
+        <!--
         <tr
           class="{% if (current_user.role != 'user' or (loop.first and records.page==1)) %}{% if r.updated_at.date() < monday %}red-row{% else %}green-row{% endif %}{% endif %}"
-        >
-          <td>{{ r.city.name }}</td>
+        > -->
+        <tr>
+          <td
+            class="{% if (current_user.role != 'user' or (loop.first and records.page==1)) %}{% if r.updated_at.date() < monday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}"
+          >
+            {{ r.city.name }}
+          </td>
           <td>{{ r.iads }}</td>
           <td>{{ r.stb_arr_4205 }}</td>
           <td>{{ r.stb_arr_5305 }}</td>
@@ -214,7 +232,7 @@ styles %} {{ super() }}
             <!-- data-* attributes → store all the values of that row.-->
             <button
               type="button"
-              class="btn btn-edit w-100"
+              class="btn btn-edit"
               data-bs-toggle="modal"
               data-bs-target="#editModal"
               data-id="{{ r.id }}"
