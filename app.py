@@ -133,12 +133,22 @@ def get_latest_cpe_records():
     return latest_records, totals
 
 
-# AUTHORIZATION
+# AUTHORIZATION ZA BILO KOJU AKCIJU
 def admin_required():
-    if not current_user.is_authenticated or current_user.role == "user":
-        flash("Niste Autorizovani!", "danger")
-        return False
-    return True
+    if current_user.is_authenticated and current_user.role == "admin":
+        return True
+    flash("Niste Autorizovani!", "danger")
+    return False
+
+
+# AUTHORIZATION ZA ADVANCED VIEW
+def view_required():
+    if current_user.is_authenticated and (
+        current_user.role == "view" or current_user.role == "admin"
+    ):
+        return True
+    flash("Niste Autorizovani!", "danger")
+    return False
 
 
 # -------------------------------------------------------
@@ -187,6 +197,8 @@ def admin_dashboard():
 @app.route("/update_cpe", methods=["POST"])
 @login_required
 def update_cpe():
+    if not admin_required():
+        return redirect(url_for("home"))
     # 1. Extract and Convert Fields
     city_id = request.form.get("city_id")  # <-- GET THE HIDDEN ID
     current_date = date.today()
@@ -285,7 +297,7 @@ def logout():
 @app.route("/admin/cities")
 @login_required
 def admin_cities():
-    if not admin_required():
+    if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
     cities = Cities.query.order_by(Cities.id).all()
@@ -296,7 +308,7 @@ def admin_cities():
 @login_required
 def admin_add_city():
     if not admin_required():
-        return "Forbidden", 403
+        return redirect(url_for("admin_cities"))
 
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
@@ -315,7 +327,7 @@ def admin_add_city():
 @login_required
 def admin_edit_city(id):
     if not admin_required():
-        return "Forbidden", 403
+        return redirect(url_for("admin_cities"))
 
     city = Cities.query.get_or_404(id)
 
@@ -331,7 +343,7 @@ def admin_edit_city(id):
 @login_required
 def admin_delete_city(id):
     if not admin_required():
-        return "Forbidden", 403
+        return redirect(url_for("admin_cities"))
 
     city = Cities.query.get_or_404(id)
 
@@ -352,7 +364,7 @@ def admin_delete_city(id):
 @app.route("/admin/users")
 @login_required
 def admin_users():
-    if not admin_required():
+    if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
     users = Users.query.order_by(Users.id).all()
@@ -363,7 +375,7 @@ def admin_users():
 @login_required  # AUTHENTICATE
 def admin_add_user():
     if not admin_required():  # AUTHORIZE
-        return "Forbidden", 403
+        return redirect(url_for("admin_users"))
 
     # THIS IS FOR SUMBITING A NEW REQUEST
     if request.method == "POST":
@@ -422,7 +434,7 @@ def admin_add_user():
 @login_required
 def admin_edit_user(id):
     if not admin_required():
-        return "Forbidden", 403
+        return redirect(url_for("admin_users"))
 
     user = Users.query.get_or_404(id)
 
@@ -436,7 +448,7 @@ def admin_edit_user(id):
 @login_required
 def admin_delete_user(id):
     if not admin_required():
-        return "Forbidden", 403
+        return redirect(url_for("admin_users"))
 
     user = Users.query.get_or_404(id)
     # PROTECT CITY DELETE: block if related rows exist
@@ -456,7 +468,7 @@ def admin_delete_user(id):
 @app.route("/admin/cpe_records")
 @login_required
 def admin_cpe_records():
-    if not admin_required():
+    if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:

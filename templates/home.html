@@ -206,8 +206,8 @@ styles %} {{ super() }}
           <td>{{ r.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
           <!-- PRIKAZI SVA DUGMAD ZA UPDATE ZA ADMIN USERAA
            AKO JE USER NEADMIN ONDA PRIKAZI SAMO ZA PRVI ROW I SAMO NA PRVOJ PAGINACIJI-->
-          {% if current_user.role == "admin" or (loop.first and records.page==1)
-          %}
+          {% if current_user.role == "admin" or current_user.role == "view" or
+          (loop.first and records.page==1) %}
           <td>
             <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
             <!-- data-bs-target="#editModal" → tells which modal to open.-->
