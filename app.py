@@ -153,6 +153,8 @@ def home():
     # today.weekday() gives 0 for Monday, 6 for Sunday
     # Subtracting gives the date for this week's Monday
     monday = today - timedelta(days=today.weekday())  # Monday of this week
+    # Initialize totals to None
+    totals = None
     if current_user.role == "admin":
         # ZA ADMIN USERA DOBAVI POSLJEDNJI DATUM ZA SVAKI GRAD
         records, totals = get_latest_cpe_records()

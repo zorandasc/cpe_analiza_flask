@@ -101,7 +101,8 @@ styles %} {{ super() }}
   }
   .table tr.red-row,
   .table tr.red-row td {
-    background-color: #ffdde1 !important;
+    background-color: #fae5e8 !important;
+   /* color: #ee1831 !important;*/
   }
 
   .table tr.green-row,
@@ -263,11 +264,13 @@ styles %} {{ super() }}
         {% endif %}
       </tbody>
     </table>
+    {% if totals %}
     <p>
       * Razlika u stanju Centralnog skladišta i raspoloživog stanja se može
       pojaviti u nalozima koji su odrađeni, ali oprema još nije izuzeta iz
       magacina.
     </p>
+    {% endif %}
   </div>
 </div>
 
