@@ -102,7 +102,35 @@ def get_latest_cpe_records():
         .order_by(CpeRecords.city_id)
         .all()
     )
-    return latest_records
+
+    totals = {
+        "iads": 0,
+        "stb_arr_4205": 0,
+        "stb_arr_5305": 0,
+        "stb_ekt_4805": 0,
+        "stb_ekt_7005": 0,
+        "stb_sky_44h": 0,
+        "ont_huaw": 0,
+        "ont_nok": 0,
+        "stb_dth": 0,
+        "antena_dth": 0,
+        "lnb_duo": 0,
+    }
+
+    for r in latest_records:
+        totals["iads"] += r.iads
+        totals["stb_arr_4205"] += r.stb_arr_4205
+        totals["stb_arr_5305"] += r.stb_arr_5305
+        totals["stb_ekt_4805"] += r.stb_ekt_4805
+        totals["stb_ekt_7005"] += r.stb_ekt_7005
+        totals["stb_sky_44h"] += r.stb_sky_44h
+        totals["ont_huaw"] += r.ont_huaw
+        totals["ont_nok"] += r.ont_nok
+        totals["stb_dth"] += r.stb_dth
+        totals["antena_dth"] += r.antena_dth
+        totals["lnb_duo"] += r.lnb_duo
+
+    return latest_records, totals
 
 
 # AUTHORIZATION
@@ -127,7 +155,7 @@ def home():
     monday = today - timedelta(days=today.weekday())  # Monday of this week
     if current_user.role == "admin":
         # ZA ADMIN USERA DOBAVI POSLJEDNJI DATUM ZA SVAKI GRAD
-        records = get_latest_cpe_records()
+        records, totals = get_latest_cpe_records()
     else:
         # ZA NE ADMI USERA POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
         page = request.args.get("page", 1, type=int)
@@ -140,6 +168,7 @@ def home():
     return render_template(
         "home.html",
         records=records,
+        totals=totals,
         today=today.strftime("%d-%m-%Y"),
         monday=monday,
     )

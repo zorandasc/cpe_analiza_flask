@@ -43,7 +43,7 @@ styles %} {{ super() }}
     background-color: #ddebf7 !important;
   }
   .btn-edit {
-    background-color: #ffc107;
+    background-color: #f6f89d;
     color: #000; /* text color */
     border: none; /* remove default border */
   }
@@ -101,13 +101,14 @@ styles %} {{ super() }}
   }
   .table tr.red-row,
   .table tr.red-row td {
-    background-color: #f8d7da !important;
+    background-color: #ffdde1 !important;
+
     /* Optional: Set a darker text color for contrast */
   }
 
   .table tr.green-row,
   .table tr.green-row td {
-    background-color: #d1e7dd !important;
+    background-color: #def7eb !important;
     /* Optional: Set a darker text color for contrast */
   }
 </style>
@@ -219,7 +220,7 @@ styles %} {{ super() }}
               data-antenadth="{{ r.antena_dth }}"
               data-lnbduo="{{ r.lnb_duo }}"
             >
-              <span class="text-white fw-bold fs-4"
+              <span class="text-black fw-bold fs-4"
                 ><svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="1em"
@@ -241,7 +242,23 @@ styles %} {{ super() }}
           </td>
           {% endif %}
         </tr>
-        {% endfor %}
+        {% endfor %} {% if totals %}
+        <tr class="table-custom-head table-sm fw-bold">
+          <td>**TOTAL**</td>
+          <td>{{ totals.iads }}</td>
+          <td>{{ totals.stb_arr_4205 }}</td>
+          <td>{{ totals.stb_arr_5305 }}</td>
+          <td>{{ totals.stb_ekt_4805 }}</td>
+          <td>{{ totals.stb_ekt_7005 }}</td>
+          <td>{{ totals.stb_sky_44h }}</td>
+          <td>{{ totals.ont_huaw }}</td>
+          <td>{{ totals.ont_nok }}</td>
+          <td>{{ totals.stb_dth }}</td>
+          <td>{{ totals.antena_dth }}</td>
+          <td>{{ totals.lnb_duo }}</td>
+          <td colspan="2"></td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
