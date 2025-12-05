@@ -8,8 +8,8 @@ styles %} {{ super() }}
     font-weight: 400;
     text-align: center;
     vertical-align: middle;
-    border-top-left-radius: 8px; /* top-left corner */
-    border-top-right-radius: 8px; /* top-right corner */
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     font-size: 14px;
     border-bottom: 1px solid black;
   }
@@ -24,7 +24,7 @@ styles %} {{ super() }}
   .stanje-column {
     min-width: 140px;
     text-align: center;
-    background-color: #e4eef7 !important;
+    background-color: #d7dce2 !important;
   }
   .iad-column {
     background-color: #f0d6f2 !important;
@@ -54,7 +54,6 @@ styles %} {{ super() }}
   }
   .btn-custom-save {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
-
     color: whitesmoke;
     box-shadow: 1px 1px 2px rgb(0, 0, 0);
   }
@@ -99,7 +98,6 @@ styles %} {{ super() }}
     max-width: 90px;
     /* Allows the text to flow to the next line */
     white-space: normal;
-
     text-align: center;
   }
   .table tr.red-row,
@@ -111,6 +109,7 @@ styles %} {{ super() }}
   .table tr.green-row,
   .table tr.green-row td {
     /*background-color: #def7eb !important;*/
+    color: #111 !important;
   }
   .red-bcg {
     background-color: #fae5e8 !important;
@@ -126,7 +125,7 @@ styles %} {{ super() }}
   }
 
   /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
-  .table-emph-h-border th,
+
   .table-emph-h-border td {
     /* Set the border style for all sides first */
     border: 1px solid #919394;
@@ -230,7 +229,7 @@ styles %} {{ super() }}
             <!-- data-* attributes → store all the values of that row.-->
             <button
               type="button"
-              class="btn btn-edit"
+              class="btn btn-custom-save"
               data-bs-toggle="modal"
               data-bs-target="#editModal"
               data-id="{{ r.id }}"
@@ -248,7 +247,7 @@ styles %} {{ super() }}
               data-antenadth="{{ r.antena_dth }}"
               data-lnbduo="{{ r.lnb_duo }}"
             >
-              <span class="text-black fw-bold fs-4"
+              <span class="text-white fw-bold fs-4"
                 ><svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="1em"
