@@ -141,6 +141,23 @@ def admin_required():
     return False
 
 
+# The helper function admin_and_user_required(city_id) handles access based
+# on role ("admin") or resource ownership (current_user.city_id == city_id).
+def admin_and_user_required(city_id):
+    try:
+        user_city_id = str(current_user.city_id)
+        requested_city_id = str(city_id)
+    except Exception:
+        flash("Greška u provjeri autorizacije!", "danger")
+        return False
+    if current_user.is_authenticated and (
+        user_city_id == requested_city_id or current_user.role == "admin"
+    ):
+        return True
+    flash("Niste Autorizovani!", "danger")
+    return False
+
+
 # AUTHORIZATION ZA ADVANCED VIEW
 def view_required():
     if current_user.is_authenticated and (
@@ -197,15 +214,16 @@ def admin_dashboard():
 @app.route("/update_cpe", methods=["POST"])
 @login_required
 def update_cpe():
-    if not admin_required():
-        return redirect(url_for("home"))
     # 1. Extract and Convert Fields
     city_id = request.form.get("city_id")  # <-- GET THE HIDDEN ID
-    current_date = date.today()
-
-    # Check if city_id is missing or invalid
     if not city_id:
-        return "Error: City ID is missing.", 400
+        flash("City ID is missing.", "danger")
+        return redirect(url_for("home"))
+
+    if not admin_and_user_required(city_id):
+        return redirect(url_for("home"))
+
+    current_date = date.today()
 
     # maybe validate fields
     # construct NEW Cperecord object
@@ -236,7 +254,6 @@ def update_cpe():
         .first()
     )
 
-    info_message = "Novi unos kreiran."
     # 3. Handle Update vs. Create Logic
     if existing_record:
         # if city_id and  updated_at combination already exsist just update exsisting row
@@ -244,7 +261,7 @@ def update_cpe():
             setattr(existing_record, key, value)
         # Update the timestamp
         existing_record.updated_at = datetime.datetime.now()
-        info_message = "Izmijenjen postojeći unos!"
+        flash("Postojeći unos ažuriran!", "success")
     else:
         # --- CREATE LOGIC ---
         # If record does NOT exist, create a new one
@@ -255,8 +272,7 @@ def update_cpe():
         )
 
         db.session.add(new_cpe_record)
-
-    flash(info_message, "success")
+        flash("Novi unos kreiran!", "success")
 
     db.session.commit()
 
