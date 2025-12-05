@@ -347,12 +347,16 @@ def admin_edit_city(id):
 
     city = Cities.query.get_or_404(id)
 
+    types = db.session.query(Cities.type).distinct().all()
+    types = [t[0] for t in types]
+
     if request.method == "POST":
         city.name = request.form.get("name")
+        city.type = request.form.get("type")
         db.session.commit()
         return redirect(url_for("admin_cities"))
 
-    return render_template("admin/cities_edit.html", city=city)
+    return render_template("admin/cities_edit.html", city=city, types=types)
 
 
 @app.route("/admin/cities/delete/<int:id>")

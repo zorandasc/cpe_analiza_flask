@@ -1,14 +1,14 @@
 {% extends "base.html" %} {% block title %}Add City{% endblock %} {% block
 content %}
 <div class="container py-4">
-  <h2>Add City</h2>
+  <h2>Dodaj novo skladište</h2>
   <form method="POST">
     <div class="mb-3">
-      <label class="form-label">City Name</label>
+      <label class="form-label">Ime skladišta</label>
       <input type="text" name="name" class="form-control" required />
     </div>
     <div class="mb-3">
-      <label class="form-label">Tip Skladišta</label>
+      <label class="form-label">Tip skladišta</label>
       <select name="type" class="form-control" required>
         {% for t in types %}
         <option value="{{ t }}">{{ t|capitalize }}</option>
