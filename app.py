@@ -334,8 +334,9 @@ def admin_add_city():
         db.session.commit()
         return redirect(url_for("admin_cities"))
 
+    types = db.session.query(Cities.type).distinct().all()
+    types = [t[0] for t in types]
     # THIS IS FOR GET REQUEST WHEN OPENING ADD FORM
-    types = ["IJ", "Skladiste"]
     return render_template("admin/cities_add.html", types=types)
 
 
