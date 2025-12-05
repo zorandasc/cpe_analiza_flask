@@ -5,18 +5,35 @@ content %}
     <h2>Promjena korisnika</h2>
     <form method="POST">
       <div class="mb-3">
-        <label class="form-label">Username</label>
-        <input type="text" name="username" class="form-control" required />
+        <label class="form-label">Korisničko ime</label>
+        <input
+          type="text"
+          name="username"
+          class="form-control"
+          value="{{ user.username }}"
+        />
       </div>
       <div class="mb-3">
-        <label class="form-label">Password</label>
-        <input type="password" name="password" class="form-control" required />
+        <label class="form-label">Šifra</label>
+        <input
+          type="password"
+          name="password1"
+          class="form-control"
+        />
+      </div>
+       <div class="mb-3">
+        <label class="form-label">Ponovi šifru</label>
+        <input
+          type="password"
+          name="password2"
+          class="form-control"
+        />
       </div>
       <div class="mb-3">
         <label class="form-label">Role</label>
-        <select name="role" class="form-control" required>
+        <select name="role" class="form-control">
           {% for r in roles %}
-          <option value="{{ r }}">{{ r|capitalize }}</option>
+          <option value="{{ r }}" {% if user.role == r %}selected {% endif%}>{{ r|capitalize }}</option>
 
           {% endfor %}
         </select>
@@ -24,9 +41,9 @@ content %}
       <div class="mb-3">
         <label class="form-label">Skladište</label>
         <select name="city_id" class="form-control">
-          <option value="">-- Select city --</option>
+          <option value="">-- Izaberite skladište --</option>
           {% for city in cities %}
-          <option value="{{ city.id }}">{{ city.name }}</option>
+          <option value="{{ city.id }}" {% if user.city_id==city.id %}selected{% endif %}>{{ city.name }}</option>
 
           {% endfor %}
         </select>

@@ -2,19 +2,20 @@
 content %}
 <div class="container py-4">
   <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
-    <h2>Add User</h2>
+    <h2>Dodaj novog korisnika</h2>
     <form method="POST">
       <div class="mb-3">
-        <label class="form-label">Username</label>
+        <label class="form-label">Korisničko ime</label>
         <input type="text" name="username" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label class="form-label">Password</label>
+        <label class="form-label">Šifra</label>
         <input type="password" name="password" class="form-control" required />
       </div>
       <div class="mb-3">
         <label class="form-label">Role</label>
         <select name="role" class="form-control" required>
+          <option value="">--Izaberite rolu--</option>
           {% for r in roles %}
           <option value="{{ r }}">{{ r|capitalize }}</option>
 
@@ -22,9 +23,9 @@ content %}
         </select>
       </div>
       <div class="mb-3">
-        <label class="form-label">City</label>
+        <label class="form-label">Skladište</label>
         <select name="city_id" class="form-control">
-          <option value="">-- Select city --</option>
+          <option value="">--Izaberite skladište--</option>
           {% for city in cities %}
           <option value="{{ city.id }}">{{ city.name }}</option>
 

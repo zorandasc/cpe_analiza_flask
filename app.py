@@ -330,12 +330,19 @@ def admin_add_city():
     if request.method == "POST":
         name = request.form.get("name")
         type = request.form.get("type")
+
+        # Validation: name must be unique
+        existing_city = Cities.query.filter_by(name=name).first()
+        if existing_city:
+            flash("Skladište već postoji", "danger")
+            return redirect(url_for("admin_add_city"))
+
         db.session.add(Cities(name=name, type=type))
         db.session.commit()
         return redirect(url_for("admin_cities"))
 
     types = db.session.query(Cities.type).distinct().all()
-    types = [t[0] for t in types]
+    types = [t[0] for t in types]  # flatten list of tuples
     # THIS IS FOR GET REQUEST WHEN OPENING ADD FORM
     return render_template("admin/cities_add.html", types=types)
 
@@ -445,9 +452,11 @@ def admin_add_user():
             flash(f"Error creating user: {e}", "danger")
             return redirect(url_for("admin_add_user"))
 
-    # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
     cities = Cities.query.order_by(Cities.name).all()
-    roles = ["admin", "user", "view"]
+    roles = db.session.query(Users.role).distinct().all()
+    roles = [r[0] for r in roles]  # flatten list of tuples
+
+    # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
     return render_template("admin/users_add.html", cities=cities, roles=roles)
 
 
@@ -459,10 +468,69 @@ def admin_edit_user(id):
 
     user = Users.query.get_or_404(id)
 
-    if request.method == "POST":
-        pass
+    cities = Cities.query.order_by(Cities.name).all()
+    roles = db.session.query(Users.role).distinct().all()
+    roles = [r[0] for r in roles]  # flatten list of tuples
 
-    return render_template("admin/users_edit.html", user=user)
+    if request.method == "POST":
+        username = request.form.get("username")
+        plain_password1 = request.form.get("password1")
+        plain_password2 = request.form.get("password2")
+        # CHOOSED FROM SELECTION IN ADD FORM
+        city_id = request.form.get("city_id", type=int)
+        # CHOOSED FROM SELECTION IN ADD FORM
+        role = request.form.get("role")
+
+        # Username uniqueness (except current user)
+        existing_user = Users.query.filter(
+            Users.username == username, Users.id != id
+        ).first()
+
+        if existing_user:
+            flash("Username već postoji!", "danger")
+            return redirect(url_for("admin_edit_user", id=id))
+
+        if plain_password1 or plain_password2:
+            if plain_password1 != plain_password2:
+                flash("Šifre nisu iste!", "danger")
+                return redirect(url_for("admin_edit_user", id=id))
+            # Update password hash only if a new password is entered
+            user.password_hash = generate_password_hash(plain_password1)
+
+        # Validation: city must be real (if provided)
+        if city_id:
+            city = Cities.query.get(city_id)
+            if not city:
+                flash("Invalid city selected", "danger")
+                return redirect(url_for("admin_edit_user", id=id))
+
+        # Validation: role must be valid
+        if role not in roles:
+            flash("Invalid role", "danger")
+            return redirect(url_for("admin_edit_user", id=id))
+
+        # Prevent Admin from Demoting Themselves
+        if current_user.id == user.id and user.role == "admin" and role != "admin":
+            flash("Ne možete ukloniti svoju admin ulogu!", "danger")
+            return redirect(url_for("admin_edit_user", id=id))
+
+        user.username = username
+        user.city_id = city_id
+        user.role = role
+        user.updated_at = datetime.datetime.now()
+
+        try:
+            db.session.commit()
+            flash("Korisnik uspješno izmijenjen!", "success")
+            return redirect(url_for("admin_users"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Greška prilikom izmjene korisnika: {e}", "danger")
+            return redirect(url_for("admin_edit_user", id=id))
+
+    return render_template(
+        "admin/users_edit.html", user=user, roles=roles, cities=cities
+    )
 
 
 @app.route("/admin/users/delete/<int:id>")
@@ -472,16 +540,16 @@ def admin_delete_user(id):
         return redirect(url_for("admin_users"))
 
     user = Users.query.get_or_404(id)
-    # PROTECT CITY DELETE: block if related rows exist
-    if user.username == "admin":
-        flash("Cannot delete admin user.", "danger")
-        return render_template(
-            "admin/users_list.html",
-            users=Users.query.all(),
-        )
-    flash("User deleted", "success")
+
+    if user.role == "admin":
+        admin_count = Users.query.filter_by(role="admin").count()
+        if admin_count:
+            flash("Ne možete obrisati posljednjeg admina!", "danger")
+            return redirect(url_for("admin_users"))
+
     db.session.delete(user)
     db.session.commit()
+    flash("User deleted", "success")
     return redirect(url_for("admin_users"))
 
 
