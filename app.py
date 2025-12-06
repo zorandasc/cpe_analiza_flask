@@ -133,7 +133,7 @@ def get_latest_cpe_records():
     return latest_records, totals
 
 
-# AUTHORIZATION ZA BILO KOJU AKCIJU
+# AUTHORIZATION ZA BILO KOJU AKCIJU: SAMO ADMIN
 def admin_required():
     if current_user.is_authenticated and current_user.role == "admin":
         return True
@@ -141,6 +141,7 @@ def admin_required():
     return False
 
 
+# AUTHORIZACIJA ZA CPECIFICNU AKCIJU: ILI ADMIN ILI USER AKO JE NJEGOV RESURS
 # The helper function admin_and_user_required(city_id) handles access based
 # on role ("admin") or resource ownership (current_user.city_id == city_id).
 def admin_and_user_required(city_id):
@@ -158,7 +159,7 @@ def admin_and_user_required(city_id):
     return False
 
 
-# AUTHORIZATION ZA ADVANCED VIEW
+# AUTHORIZATION ZA VIEW: ILI ADMIN ILI VIEW 
 def view_required():
     if current_user.is_authenticated and (
         current_user.role == "view" or current_user.role == "admin"
