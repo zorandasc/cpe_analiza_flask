@@ -560,16 +560,19 @@ def admin_cpe_records():
     if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
+
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
     page = request.args.get("page", 1, type=int)
     per_page = 50
 
-    sort_by = request.args.get("sort", "id")
-    direction = request.args.get("direction", "asc")
+    # when inicicaly lending on page does default values will be defualt
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "updated_at")
+    direction = request.args.get("direction", "desc")
 
     # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "updated_at", "created_at"]
+    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
     if sort_by not in allowed_sorts:
         sort_by = "id"
 

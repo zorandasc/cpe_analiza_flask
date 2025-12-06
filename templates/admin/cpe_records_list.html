@@ -45,7 +45,12 @@ content%}
               >Id</a
             >
           </td>
-          <th>Skladišta</th>
+          <th>
+            <a
+              href="{{ url_for('admin_cpe_records', sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
+              >Skladišta</a
+            >
+          </th>
           <th>IAD H267N / HG658V2 / Zyxel /Skyworth</th>
           <th>STB Arris VIP4205 / VIP4302 / 1113</th>
           <th>STB Arris VIP5305</th>
