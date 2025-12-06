@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
 from sqlalchemy import func
-from models import db, CpeRecords, Users, Cities
+from models import db, CpeRecords, Users, Cities, CpeTypes, DismantleReasons
 from datetime import date, timedelta
 import datetime
 from flask_login import (
@@ -159,7 +159,7 @@ def admin_and_user_required(city_id):
     return False
 
 
-# AUTHORIZATION ZA VIEW: ILI ADMIN ILI VIEW 
+# AUTHORIZATION ZA VIEW: ILI ADMIN ILI VIEW
 def view_required():
     if current_user.is_authenticated and (
         current_user.role == "view" or current_user.role == "admin"
@@ -591,6 +591,28 @@ def admin_cpe_records():
         sort_by=sort_by,
         direction=direction,
     )
+
+
+# -----------------CPE_TYPES CRUD---------------------
+@app.route("/admin/cpe_types")
+@login_required
+def admin_cpe_types():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+    cpes = CpeTypes.query.order_by(CpeTypes.id).all()
+    return render_template("admin/cpe_types_list.html", cpes=cpes)
+
+
+# -----------------SISMANTLE REASONS CRUD---------------------
+@app.route("/admin/dismantle_reasons")
+@login_required
+def admin_dismantle_reasons():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+    reasons = DismantleReasons.query.order_by(DismantleReasons.id).all()
+    return render_template("admin/cpe_dismantle_reasons_list.html", reasons=reasons)
 
 
 # -----MAIN LOOP-----------

@@ -60,7 +60,7 @@ block styles %} {{ super() }}
       <a href="{{ url_for('admin_users') }}" class="dashboard-link">
         <div class="card dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
-            <h4 class="card-title">Korisnici</h4>
+            <h4 class="card-title">Korisnici aplikacije</h4>
             <p>Kreiraj, izmijeni, obriši korisnika</p>
           </div>
         </div>
@@ -72,8 +72,8 @@ block styles %} {{ super() }}
       <a href="{{ url_for('admin_cpe_records') }}" class="dashboard-link">
         <div class="card dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
-            <h4 class="card-title">CPE Oprema</h4>
-            <p>Pregled i upravljanje CPE opremom</p>
+            <h4 class="card-title">Stanje CPE opreme</h4>
+            <p>Pregled ukupnog stanja CPE opreme</p>
           </div>
         </div>
       </a>
@@ -84,8 +84,31 @@ block styles %} {{ super() }}
       <a href="{{ url_for('admin_cities') }}" class="dashboard-link">
         <div class="card dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
-            <h4 class="card-title">Skladišta</h4>
+            <h4 class="card-title">Skladišta CPE opreme</h4>
             <p>Upravljanje skladištima i IJ</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- CPE TYPES -->
+    <div class="col-md-4">
+      <a href="{{ url_for('admin_cpe_types') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow-lg p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Tipovi CPE opreme</h4>
+            <p>Upravljanje tipovima CPE opreme</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <!-- DISMANTLE-->
+    <div class="col-md-4">
+      <a href="{{ url_for('admin_dismantle_reasons') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow-lg p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Tip demontaže CPE opreme</h4>
+            <p>Statusi demontirane opreme</p>
           </div>
         </div>
       </a>
