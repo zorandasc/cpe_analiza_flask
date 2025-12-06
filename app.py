@@ -566,7 +566,7 @@ def admin_cpe_records():
     page = request.args.get("page", 1, type=int)
     per_page = 50
 
-    # when inicicaly lending on page does default values will be defualt
+    # WHEN INCICIALY LANDING ON PAGE
     # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
     sort_by = request.args.get("sort", "updated_at")
     direction = request.args.get("direction", "desc")
