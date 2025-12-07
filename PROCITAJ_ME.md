@@ -21,9 +21,11 @@
 # set DB_HOST=localhost
 
 # docker compose -f docker-compose.dev.yml up -d
+
 THIS RUN POSTGRES AND PGADMIN ON LOCAL DOCKER
 
 # python app.py
+
 THIS RUN FLASK APP LOCALO ON PC
 
 # localhost:5000 (Flask)
@@ -230,6 +232,37 @@ REPLACE Base with db.Model
 # get_id()
 # Exactly what Flask-Login needs.
 class Users(db.Model, UserMixin):
+
+CPE_TYPE_CHOICES = [
+    "IAD",
+    "ONT",
+    "STB",
+    "ANTENA",
+    "ROUTER",
+    "SWITCH",
+    "WIFI EXTENDER",
+    "WIFI ACCESS POINT",
+    "PHONES",
+    "SERVER",
+    "PC",
+    "IOT",
+]
+
+class CpeTypes(db.Model):
+    __tablename__ = "cpe_types"
+    __table_args__ = (
+        CheckConstraint(
+            sqltext=f"type::text = ANY (ARRAY[{', '.join(f"'{c}'::character varying" for c in CPE_TYPE_CHOICES)}]::text[])",
+            name="cpe_types_type_check",
+        ),
+        PrimaryKeyConstraint("id", name="cpe_types_pkey"),
+        UniqueConstraint("name", name="cpe_types_name_key"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    type: Mapped[Optional[str]] = mapped_column(String(100))
+
 ```
 
 # --------------------------------------

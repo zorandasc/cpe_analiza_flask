@@ -14,11 +14,11 @@
       <th>Opis</th>
       <th style="width: 160px">Akcije</th>
     </tr>
-    {% for reason in reasons %}
+    {% for s in status %}
     <tr>
-      <td>{{ reason.id }}</td>
-      <td>{{ reason.label }}</td>
-      <td>{{ reason.description }}</td>
+      <td>{{ s.id }}</td>
+      <td>{{ s.label }}</td>
+      <td>{{ s.description }}</td>
       <td>
         <a href="" class="btn btn-warning btn-sm">Edit</a>
         <a

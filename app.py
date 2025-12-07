@@ -635,15 +635,15 @@ def admin_add_cpe_type():
     return render_template("admin/cpe_types_add.html", types=types)
 
 
-# -----------------DISMANTLE REASONS CRUD---------------------
-@app.route("/admin/dismantle_reasons")
+# -----------------DISMANTLE STATUS CRUD---------------------
+@app.route("/admin/dismantle_status")
 @login_required
-def admin_dismantle_reasons():
+def admin_dismantle_status():
     if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
-    reasons = DismantleStatus.query.order_by(DismantleStatus.id).all()
-    return render_template("admin/cpe_dismantle_reasons_list.html", reasons=reasons)
+    status = DismantleStatus.query.order_by(DismantleStatus.id).all()
+    return render_template("admin/cpe_dismantle_status_list.html", status=status)
 
 
 # -----MAIN LOOP-----------
