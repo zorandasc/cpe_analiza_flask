@@ -1,7 +1,15 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
 from sqlalchemy import func
-from models import db, CpeRecords, Users, Cities, CpeTypes, DismantleStatus, CPE_TYPE_CHOICES
+from models import (
+    db,
+    CpeRecords,
+    Users,
+    Cities,
+    CpeTypes,
+    DismantleStatus,
+    CPE_TYPE_CHOICES,
+)
 from datetime import date, timedelta
 import datetime
 from flask_login import (
@@ -317,8 +325,9 @@ def admin_cities():
     if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
+
     cities = Cities.query.order_by(Cities.id).all()
-    return render_template("admin/cities_list.html", cities=cities)
+    return render_template("admin/cities.html", cities=cities)
 
 
 @app.route("/admin/cities/add", methods=["GET", "POST"])
@@ -397,7 +406,7 @@ def admin_users():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
     users = Users.query.order_by(Users.id).all()
-    return render_template("admin/users_list.html", users=users)
+    return render_template("admin/users.html", users=users)
 
 
 @app.route("/admin/users/add", methods=["GET", "POST"])
@@ -554,7 +563,7 @@ def admin_delete_user(id):
     return redirect(url_for("admin_users"))
 
 
-# -------------CPE RECORDS CRUD----------------------------------------
+# -------------CPE_RECORDS CRUD----------------------------------------
 @app.route("/admin/cpe_records")
 @login_required
 def admin_cpe_records():
@@ -585,7 +594,7 @@ def admin_cpe_records():
         page=page, per_page=per_page, error_out=False
     )
     return render_template(
-        "admin/cpe_records_list.html",
+        "admin/cpe_records.html",
         records=pagination.items,
         pagination=pagination,
         sort_by=sort_by,
@@ -601,7 +610,7 @@ def admin_cpe_types():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
     cpes = CpeTypes.query.order_by(CpeTypes.id).all()
-    return render_template("admin/cpe_types_list.html", cpes=cpes)
+    return render_template("admin/cpe_types.html", cpes=cpes)
 
 
 @app.route("/admin/cpe_types/add", methods=["GET", "POST"])
@@ -635,8 +644,6 @@ def admin_add_cpe_type():
     return render_template("admin/cpe_types_add.html", types=types)
 
 
-
-
 # -----------------DISMANTLE TYPES CRUD---------------------
 @app.route("/admin/dismantle_status")
 @login_required
@@ -645,7 +652,7 @@ def admin_dismantle_status():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
     status = DismantleStatus.query.order_by(DismantleStatus.id).all()
-    return render_template("admin/dismantle_types_list.html", status=status)
+    return render_template("admin/dismantle_types.html", status=status)
 
 
 # -----MAIN LOOP-----------
