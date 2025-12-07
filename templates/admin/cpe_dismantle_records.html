@@ -9,31 +9,66 @@
   {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
-  <table class="table table-striped table-bordered shadow-lg">
-    <tr>
-      <th>ID</th>
-      <th>Skladište</th>
-      <th>Role</th>
-      <th>Organizacija</th>
-      <th style="width: 160px">Akcije</th>
-    </tr>
-    {% for user in users %}
-    <tr>
-      <td>{{ user.id }}</td>
-      <td>{{ user.username }}</td>
-      <td>{{ user.role }}</td>
-      <td>{{ user.city.name if user.city else "—" }}</td>
-      <td>
-        <a href="" class="btn btn-warning btn-sm">Edit</a>
-        <a
-          href=""
-          class="btn btn-danger btn-sm"
-          onclick="return confirm('Delete user?')"
-          >Delete</a
-        >
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
+  <div class="table-responsive">
+    <nav>
+      <ul class="pagination">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin_cpe_records', page=pagination.prev_num, sort=sort_by, direction=direction) }}"
+            >Previus</a
+          >
+        </li>
+        {% endif %} {% for p in pagination.iter_pages() %} {% if p %}
+        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+          <a
+            class="page-link"
+            href="{{ url_for('admin_cpe_records', page=p, sort=sort_by, direction=direction) }}"
+            >{{ p }}</a
+          >
+        </li>
+        {% else%}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif%} {% endfor %} {% if pagination.has_next %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <table class="table table-striped table-bordered shadow-lg">
+      <tr>
+        <th>ID</th>
+        <th>Skladište</th>
+        <th>Tip CPE opreme</th>
+        <th>Količina</th>
+        <th>Tip demontaže</th>
+        <th style="width: 160px">Akcije</th>
+      </tr>
+      {% for r in records %}
+      <tr>
+        <td>{{ r.id }}</td>
+        <td>{{ r.city.name }}</td>
+        <td>{{ r.cpe_types.name }}</td>
+        <td>{{ r.quantity }}</td>
+        <td>{{ r.dismantle_types }}</td>
+        <td>
+          <a href="" class="btn btn-warning btn-sm">Edit</a>
+          <a
+            href=""
+            class="btn btn-danger btn-sm"
+            onclick="return confirm('Delete user?')"
+            >Delete</a
+          >
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
 </div>
 {% endblock %}

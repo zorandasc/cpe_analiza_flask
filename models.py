@@ -80,11 +80,11 @@ class CpeTypes(db.Model):
     )
 
 
-class DismantleStatus(db.Model):
-    __tablename__ = "dismantle_status"
+class DismantleTypes(db.Model):
+    __tablename__ = "dismantle_types"
     __table_args__ = (
-        PrimaryKeyConstraint("id", name="dismantle_status_pkey"),
-        UniqueConstraint("label", name="dismantle_status_label_key"),
+        PrimaryKeyConstraint("id", name="dismantle_types_pkey"),
+        UniqueConstraint("label", name="dismantle_types_label_key"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -92,7 +92,7 @@ class DismantleStatus(db.Model):
     description: Mapped[Optional[str]] = mapped_column(String(100))
 
     cpe_dismantle_records: Mapped[list["CpeDismantleRecords"]] = relationship(
-        "CpeDismantleRecords", back_populates="dismantle_state"
+        "CpeDismantleRecords", back_populates="dismantle_type"
     )
 
 
@@ -100,24 +100,26 @@ class CpeDismantleRecords(db.Model):
     __tablename__ = "cpe_dismantle_records"
     __table_args__ = (
         ForeignKeyConstraint(
-            ["city_id"], ["cities.id"], name="dismantle_records_city_id_fkey"
+            ["city_id"], ["cities.id"], name="cpe_dismantle_records_city_id_fkey"
         ),
         ForeignKeyConstraint(
-            ["cpe_type_id"], ["cpe_types.id"], name="dismantle_records_cpe_type_id_fkey"
+            ["cpe_type_id"],
+            ["cpe_types.id"],
+            name="cpe_dismantle_records_cpe_type_id_fkey",
         ),
         ForeignKeyConstraint(
-            ["dismantle_state_id"],
-            ["dismantle_status.id"],
-            name="dismantle_records_dismantle_state_id_fkey",
+            ["dismantle_type_id"],
+            ["dismantle_types.id"],
+            name="cpe_dismantle_records_dismantle_type_id_fkey",
         ),
-        PrimaryKeyConstraint("id", name="dismantle_records_pkey"),
+        PrimaryKeyConstraint("id", name="cpe_dismantle_records_pkey"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     city_id: Mapped[Optional[int]] = mapped_column(Integer)
     cpe_type_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
-    dismantle_state_id: Mapped[Optional[int]] = mapped_column(Integer)
+    dismantle_type_id: Mapped[Optional[int]] = mapped_column(Integer)
     day_date: Mapped[Optional[datetime.date]] = mapped_column(
         Date, server_default=text("now()")
     )
@@ -128,8 +130,8 @@ class CpeDismantleRecords(db.Model):
     cpe_type: Mapped[Optional["CpeTypes"]] = relationship(
         "CpeTypes", back_populates="cpe_dismantle_records"
     )
-    dismantle_state: Mapped[Optional["DismantleStatus"]] = relationship(
-        "DismantleStatus", back_populates="cpe_dismantle_records"
+    dismantle_type: Mapped[Optional["DismantleTypes"]] = relationship(
+        "DismantleTypes", back_populates="cpe_dismantle_records"
     )
 
 
