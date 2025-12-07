@@ -222,7 +222,7 @@ from flask_login import UserMixin
 
 db = SQLAlchemy()
 
-REPLACE Base with db.Model
+#REPLACE Base with db.Model
 
 
 # UserMixin automatically provides:
