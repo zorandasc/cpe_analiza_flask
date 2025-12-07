@@ -4,10 +4,11 @@ from sqlalchemy import func
 from models import (
     db,
     CpeRecords,
+    CpeDismantleRecords,
     Users,
     Cities,
     CpeTypes,
-    DismantleStatus,
+    DismantleTypes,
     CPE_TYPE_CHOICES,
 )
 from datetime import date, timedelta
@@ -602,6 +603,49 @@ def admin_cpe_records():
     )
 
 
+# -------------CPE_DISMANTLE_RECORDS CRUD----------------------------------------
+@app.route("/admin/cpe_dismantle_records")
+@login_required
+def admin_cpe_dismantle_records():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    # WHEN INCICIALY LANDING ON PAGE
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "day_date")
+    direction = request.args.get("direction", "desc")
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = [
+        "id",
+        "city_id",
+        "day_date",
+    ]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    order_column = getattr(CpeDismantleRecords, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = CpeDismantleRecords.query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return render_template(
+        "admin/cpe_dismantle_records.html",
+        records=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        direction=direction,
+    )
+
+
 # -----------------CPE_TYPES CRUD---------------------
 @app.route("/admin/cpe_types")
 @login_required
@@ -651,7 +695,7 @@ def admin_dismantle_status():
     if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
-    status = DismantleStatus.query.order_by(DismantleStatus.id).all()
+    status = DismantleTypes.query.order_by(DismantleTypes.id).all()
     return render_template("admin/dismantle_types.html", status=status)
 
 
