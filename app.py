@@ -1,7 +1,7 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
 from sqlalchemy import func
-from models import db, CpeRecords, Users, Cities, CpeTypes, DismantleReasons
+from models import db, CpeRecords, Users, Cities, CpeTypes, DismantleStatus, CPE_TYPE_CHOICES
 from datetime import date, timedelta
 import datetime
 from flask_login import (
@@ -604,14 +604,45 @@ def admin_cpe_types():
     return render_template("admin/cpe_types_list.html", cpes=cpes)
 
 
-# -----------------SISMANTLE REASONS CRUD---------------------
+@app.route("/admin/cpe_types/add", methods=["GET", "POST"])
+@login_required
+def admin_add_cpe_type():
+    if not admin_required():
+        return redirect(url_for("admin_cpe_types"))
+
+    # THIS IS FOR SUMBITING REQUEST
+    if request.method == "POST":
+        name = request.form.get("name")
+        type = request.form.get("type")
+
+        # Validation: name must be unique
+        existing_cpe_type = CpeTypes.query.filter_by(name=name).first()
+        if existing_cpe_type:
+            flash("Tip CPE već postoji", "danger")
+            return redirect(url_for("admin_add_cpe_type"))
+
+        db.session.add(CpeTypes(name=name, type=type))
+        db.session.commit()
+        return redirect(url_for("admin_cpe_types"))
+
+    # PROBLEM WITH THIS IT IS ONLY GIVE ME TYPES OF ALREADY
+    # EXISISTING RECORDS, IF IT DOESNOT EXISISTIN TABLE IT WONT LIST
+    # types = db.session.query(CpeTypes.type).distinct().all()
+    # types = [t[0] for t in types]  # flatten list of tuples
+    types = CPE_TYPE_CHOICES
+
+    # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
+    return render_template("admin/cpe_types_add.html", types=types)
+
+
+# -----------------DISMANTLE REASONS CRUD---------------------
 @app.route("/admin/dismantle_reasons")
 @login_required
 def admin_dismantle_reasons():
     if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
-    reasons = DismantleReasons.query.order_by(DismantleReasons.id).all()
+    reasons = DismantleStatus.query.order_by(DismantleStatus.id).all()
     return render_template("admin/cpe_dismantle_reasons_list.html", reasons=reasons)
 
 

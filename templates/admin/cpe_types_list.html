@@ -3,7 +3,7 @@
 <div class="container py-4">
   <h2>Tipovi CPE opreme</h2>
 
-  <a href="" class="btn btn-primary my-3"
+  <a href="{{ url_for('admin_add_cpe_type') }}" class="btn btn-primary my-3"
     >Dodaj CPE opremu</a
   >
   {% if error %}

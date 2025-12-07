@@ -12,10 +12,24 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
+CPE_TYPE_CHOICES = [
+    "IAD",
+    "ONT",
+    "STB",
+    "ANTENA",
+    "ROUTER",
+    "SWITCH",
+    "WIFI EXTENDER",
+    "WIFI ACCESS POINT",
+    "PHONES",
+    "SERVER",
+    "PC",
+    "IOT",
+]
 
 db = SQLAlchemy()
 
@@ -45,7 +59,7 @@ class CpeTypes(db.Model):
     __tablename__ = "cpe_types"
     __table_args__ = (
         CheckConstraint(
-            "type::text = ANY (ARRAY['IAD'::character varying, 'ONT'::character varying, 'STB'::character varying, 'ANTENA'::character varying, 'ROUTER'::character varying, 'SWITCH'::character varying, 'WIFI EXTENDER'::character varying, 'WIFI ACCESS POINT'::character varying, 'PHONES'::character varying, 'SERVER'::character varying, 'PC'::character varying, 'IOT'::character varying]::text[])",
+            sqltext=f"type::text = ANY (ARRAY[{', '.join(f"'{c}'::character varying" for c in CPE_TYPE_CHOICES)}]::text[])",
             name="cpe_types_type_check",
         ),
         PrimaryKeyConstraint("id", name="cpe_types_pkey"),
@@ -57,11 +71,11 @@ class CpeTypes(db.Model):
     type: Mapped[Optional[str]] = mapped_column(String(100))
 
 
-class DismantleReasons(db.Model):
-    __tablename__ = "dismantle_reasons"
+class DismantleStatus(db.Model):
+    __tablename__ = "dismantle_status"
     __table_args__ = (
-        PrimaryKeyConstraint("id", name="dismantle_reasons_pkey"),
-        UniqueConstraint("label", name="dismantle_reasons_label_key"),
+        PrimaryKeyConstraint("id", name="dismantle_status_pkey"),
+        UniqueConstraint("label", name="dismantle_status_label_key"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
