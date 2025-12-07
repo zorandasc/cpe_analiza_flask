@@ -27,6 +27,8 @@ block styles %} {{ super() }}
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     background: white;
     border-top: 4px solid #acd4f7; /* match login button color */
+    height: 180px;
+    overflow: hidden;
   }
 
   .dashboard-card:hover {
@@ -74,6 +76,18 @@ block styles %} {{ super() }}
           <div class="card-body text-center">
             <h4 class="card-title">Stanje CPE opreme</h4>
             <p>Pregled ukupnog stanja CPE opreme</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- CPE Records -->
+    <div class="col-md-4">
+      <a href="{{ url_for('admin_cpe_records') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow-lg p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Stanje demontirane CPE opreme</h4>
+            <p>Pregled ukupnog stanja demontirane CPE opreme</p>
           </div>
         </div>
       </a>
