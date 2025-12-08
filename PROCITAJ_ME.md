@@ -387,6 +387,7 @@ CREATE TABLE cpe_inventory (
 );
 
 ```
+
 Benefits of the Vertical Structure:
 
 Flexibility (Scalability): To add a new CPE type, you simply insert a new row into the cpe_types table. No schema changes are needed for the cpe_inventory table.
@@ -401,6 +402,55 @@ Smarter Storage: You only store records for CPE types that actually have a posit
 
 Using Pivot Tables to Present Data
 
+```sql
+CREATE EXTENSION IF NOT EXISTS tablefunc;
+```
+
 Your vertical table is excellent for storage and analysis, but the horizontal format is often better for reporting and presentation in your Flask app.
 
 This is exactly where the PostgreSQL crosstab function becomes useful. You store the data vertically, and you use crosstab only for the final output step.
+
+The crosstab function typically takes one or two SQL queries as text arguments (passed inside $$-delimited strings) and returns the pivoted result. The structure you provided is the one-argument form:
+
+```sql
+
+SELECT * FROM crosstab(source_sql_query) AS pivot_table(output_column_definitions)
+```
+
+This is the SQL query passed as the first argument to crosstab. It's responsible for fetching the raw data in the vertical format needed for pivoting.
+
+```sql
+$$
+SELECT
+    c.name AS city, -- 1. Row Identifier (Row Header)
+    s.name AS stb_model, -- 2. Category (Column Header)
+    r.quantity -- 3. Value (Aggregation Value)
+FROM dismantle_records r
+JOIN cities c ON r.city_id=c.id
+JOIN stb_types s ON r.stb_type_id=s.id
+WHERE r.week_start = '2025-02-03'
+ORDER BY 1,2
+$$
+```
+
+THIS QUERY RETURN The source query must return exactly three columns
+
+Position Role in Pivot Your Query's Column Description
+1st Column Row Identifier city The value that remains constant on the left side (the new row header).
+2nd Column Category stb_model The value that will be rotated to become the new column headers.
+3rd Column Value quantity The aggregated value that goes into the intersection of the new row and column.
+
+# This is the part that defines the structure and data types of the final, pivoted resu
+
+AS pivot_table (
+city text,
+mag250 int,
+mag410 int,
+kaon int
+);
+
+# AS pivot_table: Assigns an alias to the result set returned by crosstab
+
+# city text: Defines the first output column. This must match the Row Identifier column (c.name AS city) from the source query.
+
+# mag250 int, mag410 int, kaon int: These are the new column headers. The crosstab function expects to find these exact values ('mag250', 'mag410', 'kaon') in the Category column (stb_model) of your source data. The type is int because it's aggregating the quantity (which must be an integer).
