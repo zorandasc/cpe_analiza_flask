@@ -23,7 +23,7 @@
       <td>{{ cpe.type }}</td>
       <td>
         <a
-          href=""
+          href="{{ url_for('admin_edit_cpe_type', id=cpe.id) }}"
           class="btn btn-warning btn-sm"
           >Edit</a
         >

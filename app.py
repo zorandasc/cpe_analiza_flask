@@ -688,6 +688,54 @@ def admin_add_cpe_type():
     return render_template("admin/cpe_types_add.html", types=types)
 
 
+@app.route("/admin/cpe_types/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def admin_edit_cpe_type(id):
+    if not admin_required():
+        return redirect(url_for("admin_cpe_types"))
+
+    cpe = CpeTypes.query.get_or_404(id)
+
+    types = CPE_TYPE_CHOICES
+
+    if request.method == "POST":
+        name = request.form.get("name")
+        type = request.form.get("type")
+
+        # Username uniqueness (except current user)
+        existing_cpe_type = CpeTypes.query.filter(
+            CpeTypes.name == name, CpeTypes.id != id
+        ).first()
+
+        if existing_cpe_type:
+            flash("Tip CPE opreme već postoji!", "danger")
+            return redirect(url_for("admin_edit_cpe_type", id=id))
+
+        # Validation: type must be valid
+        if type not in types:
+            flash("Invalid tip", "danger")
+            return redirect(url_for("admin_edit_cpe_type", id=id))
+
+        cpe.name = name
+        cpe.id = id
+        cpe.type = type
+
+        try:
+            db.session.commit()
+            flash("Cpe tip uspješno izmijenjen!", "success")
+            return redirect(url_for("admin_cpe_types"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Greška prilikom izmjene korisnika: {e}", "danger")
+            return redirect(url_for("admin_edit_cpe_type", id=id))
+
+    return render_template(
+        "admin/cpe_types_edit.html",
+        cpe=cpe,
+        types=types,
+    )
+
+
 # -----------------DISMANTLE TYPES CRUD---------------------
 @app.route("/admin/dismantle_status")
 @login_required

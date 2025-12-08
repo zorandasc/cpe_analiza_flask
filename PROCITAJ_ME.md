@@ -349,3 +349,58 @@ When you successfully log a user in using flask_login.login_user(user_object), F
 On every subsequent request, Flask-Login sees the ID in the session and calls your load_user(user_id) function, passing the stored ID.
 
 Your function fetches the entire Users object from the database, allowing Flask-Login to set the global current_user proxy for that request.
+
+# -----------------DESIGNING TABLES IN POSTGRES-------------------------
+
+Your current horizontal structure is a design pattern known as an anti-pattern for several reasons.
+
+That's an excellent question that gets to the heart of database normalization and optimal data modeling! The choice between a horizontal (wide) table and a vertical (tall) table depends heavily on how your data naturally behaves and how you plan to query it.
+In your case, you should definitely switch to a vertical (normalized) table structure. Your current horizontal structure is a design pattern known as an anti-pattern for several reasons.
+
+❌ Why the Current Horizontal Table is ProblematicYour existing cpe_records table structure is:idcity_idiadsstb_arr_4205stb_ekt_4805...lnb_duocreated_at110151012...32025-01-01
+
+This design violates the principles of good database modeling:Schema Rigidity (Anti-Pattern):
+
+Every time a new CPE type (e.g., a new modem model, stb_arr_6000) is introduced, you must perform a schema migration (ALTER TABLE ADD COLUMN). This is slow, risky, and requires application code changes.
+
+Increased Query Complexity: Getting the latest record per city, as you are doing, is relatively complex but necessary. More importantly, calculating summary statistics (e.g., "What is the total number of STBs deployed across all cities?") requires summing up many columns, which is error-prone and inefficient.
+
+Data Sparsity/Waste: If a specific city has zero units of stb_sky_44h, that column still exists and holds a 0 or NULL value for every record, wasting space and cache efficiency.
+
+The Recommended Vertical (Normalized) Structure
+The best practice is to normalize the data by moving the CPE type names into a separate lookup table and keeping the counts in a single column in your main record table.
+
+```sql
+CREATE TABLE cpe_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL  -- e.g., 'iads', 'stb_arr_4205', 'ont_huaw', etc.
+);
+
+CREATE TABLE cpe_inventory (
+    id SERIAL PRIMARY KEY,
+    city_id INTEGER NOT NULL REFERENCES cities(id),
+    cpe_type_id INTEGER NOT NULL REFERENCES cpe_types(id),
+    quantity INTEGER NOT NULL DEFAULT 0,
+    updated_at TIMESTAMP DEFAULT NOW(),
+    -- Ensures only one record per CPE type per city (optional but good for inventory)
+    CONSTRAINT uc_city_cpe UNIQUE (city_id, cpe_type_id)
+);
+
+```
+Benefits of the Vertical Structure:
+
+Flexibility (Scalability): To add a new CPE type, you simply insert a new row into the cpe_types table. No schema changes are needed for the cpe_inventory table.
+
+Easier Queries: Aggregations are simple. To get the total inventory across all cities:
+
+```sql
+SELECT SUM(quantity) FROM cpe_inventory;
+```
+
+Smarter Storage: You only store records for CPE types that actually have a positive quantity for a given city, avoiding many 0 or NULL entries
+
+Using Pivot Tables to Present Data
+
+Your vertical table is excellent for storage and analysis, but the horizontal format is often better for reporting and presentation in your Flask app.
+
+This is exactly where the PostgreSQL crosstab function becomes useful. You store the data vertically, and you use crosstab only for the final output step.

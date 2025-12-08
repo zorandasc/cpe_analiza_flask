@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% block title %}Izmjeni CPE tip{% endblock %} {% block
+content %}
+<div class="container py-4">
+  <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
+    <h2>Izmjeni CPE tip</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Ime</label>
+        <input type="text" name="name" class="form-control" value="{{ cpe.name }}" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Tip</label>
+        <select name="type" class="form-control" required>
+          <option value="">--Izaberite tip--</option>
+          {% for t in types %}
+          <option value="{{ t }}" {% if t == cpe.type %}selected{% endif %}>{{ t|capitalize }}</option>
+
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-success">Save</button>
+      <a href="{{ url_for('admin_cpe_types') }}" class="btn btn-secondary"
+        >Cancel</a
+      >
+    </form>
+  </div>
+</div>
+
+{% endblock %}
