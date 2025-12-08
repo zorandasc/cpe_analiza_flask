@@ -3,8 +3,8 @@ block styles %} {{ super() }}
 
 <style>
   body {
-    background: url("{{ url_for('static', filename='bg-login1.jpg') }}")
-      no-repeat right bottom fixed;
+    background: url("{{ url_for('static', filename='bg-login1.jpg') }}") no-repeat
+      right bottom fixed;
     background-size: contain;
   }
 
@@ -20,7 +20,7 @@ block styles %} {{ super() }}
     letter-spacing: 1px;
   }
 
-  /* Dashboard cards */
+  /* Dashboard cards (for the top row - larger focus items) */
   .dashboard-card {
     border: none;
     border-radius: 12px;
@@ -30,19 +30,34 @@ block styles %} {{ super() }}
     height: 180px;
     overflow: hidden;
   }
+  
+  /* NEW/Restored style for smaller cards (for the bottom row - list management) */
+  .side_dashboard-card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: white;
+    border-top: 4px solid #acd4f7; 
+    height: 150px; /* Smaller height for administrative items */
+    overflow: hidden;
+  }
 
-  .dashboard-card:hover {
+  .dashboard-card:hover, .side_dashboard-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   }
 
-  .dashboard-card .card-title {
+  .dashboard-card .card-title, .side_dashboard-card .card-title {
     font-size: 1.5rem;
     font-weight: 600;
     color: #234a6f;
   }
+  
+  .side_dashboard-card .card-title {
+    font-size: 1.25rem; /* Slightly smaller title for smaller cards */
+  }
 
-  .dashboard-card p {
+  .dashboard-card p, .side_dashboard-card p {
     color: #6c7a89;
   }
 
@@ -56,34 +71,23 @@ block styles %} {{ super() }}
 <div class="container admin-wrapper">
   <h1 class="text-center mb-5 admin-title">Admin Dashboard</h1>
 
-  <div class="row g-4 justify-content-center">
-    <!-- Users -->
-    <div class="col-md-4">
-      <a href="{{ url_for('admin_users') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow-lg p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Korisnici aplikacije</h4>
-            <p>Kreiraj, izmijeni, obriši korisnika</p>
-          </div>
-        </div>
-      </a>
-    </div>
-
-    <!-- CPE Records -->
-    <div class="col-md-4">
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
       <a href="{{ url_for('admin_cpe_records') }}" class="dashboard-link">
         <div class="card dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
-            <h4 class="card-title">Stanje CPE opreme</h4>
+            <h4 class="card-title">Stanje raspoložive CPE opreme</h4>
             <p>Pregled ukupnog stanja CPE opreme</p>
           </div>
         </div>
       </a>
     </div>
 
-    <!-- CPE Records -->
-    <div class="col-md-4">
-      <a href="{{ url_for('admin_cpe_dismantle_records') }}" class="dashboard-link">
+    <div class="col-md-6">
+      <a
+        href="{{ url_for('admin_cpe_dismantle_records') }}"
+        class="dashboard-link"
+      >
         <div class="card dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
             <h4 class="card-title">Stanje demontirane CPE opreme</h4>
@@ -92,11 +96,25 @@ block styles %} {{ super() }}
         </div>
       </a>
     </div>
+  </div>
 
-    <!-- Cities -->
-    <div class="col-md-4">
+  <h2 class="h5 admin-title mb-4">Administracija i Upravljanje Listama</h2>
+
+  <div class="row g-4">
+    <div class="col-md-3 col-sm-6">
+      <a href="{{ url_for('admin_users') }}" class="dashboard-link">
+        <div class="card side_dashboard-card shadow-lg p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Korisnici aplikacije</h4>
+            <p>Kreiraj, izmijeni, obriši korisnika</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
       <a href="{{ url_for('admin_cities') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow-lg p-3">
+        <div class="card side_dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
             <h4 class="card-title">Skladišta CPE opreme</h4>
             <p>Upravljanje skladištima i IJ</p>
@@ -105,24 +123,23 @@ block styles %} {{ super() }}
       </a>
     </div>
 
-    <!-- CPE TYPES -->
-    <div class="col-md-4">
+    <div class="col-md-3 col-sm-6">
       <a href="{{ url_for('admin_cpe_types') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow-lg p-3">
+        <div class="card side_dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
-            <h4 class="card-title">Tipovi CPE opreme</h4>
+            <h4 class="card-title">Modeli CPE opreme</h4>
             <p>Upravljanje tipovima CPE opreme</p>
           </div>
         </div>
       </a>
     </div>
-    <!-- DISMANTLE-->
-    <div class="col-md-4">
+
+    <div class="col-md-3 col-sm-6">
       <a href="{{ url_for('admin_dismantle_status') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow-lg p-3">
+        <div class="card side_dashboard-card shadow-lg p-3">
           <div class="card-body text-center">
             <h4 class="card-title">Tipovi demontaža</h4>
-            <p>Stanje demontirane CPE opreme</p>
+            <p>Stanja u kojima se može naći demontirana CPE opreme</p>
           </div>
         </div>
       </a>

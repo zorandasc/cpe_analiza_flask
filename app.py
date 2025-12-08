@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
-from sqlalchemy import func
+from sqlalchemy import func, text
 from models import (
     db,
     CpeRecords,
@@ -80,6 +80,55 @@ app.cli.add_command(create_initial_admin)
 app.cli.add_command(create_initial_db)
 
 # ---------------HELPER FUNCTION--------------------------
+
+SQL_QUERY = """
+SELECT
+	c.name AS city_name,
+	p.*, 
+	max_ts.max_updated_at 
+FROM
+	(	
+		SELECT * 
+		FROM crosstab(
+			$$
+			SELECT 
+				city_id,
+			    cpe_model,
+			    quantity
+			FROM
+				(
+					SELECT 
+						r.city_id,
+						s.name AS cpe_model,
+						r.quantity,
+						r.updated_at,
+						ROW_NUMBER() OVER(
+							PARTITION BY r.city_id, r.cpe_type_id
+							ORDER BY r.updated_at DESC
+						) AS rn
+					FROM cpe_inventory r
+					JOIN cpe_types s ON r.cpe_type_id=s.id
+				) AS ranked_records
+			WHERE
+				rn=1
+			ORDER BY
+			    city_id,
+			    cpe_model
+			$$
+		) AS pivot_table ( 
+		city_id INTEGER, "H267N/HG658V2/Zyxel/Skyworth" int, "Arris VIP4205/VIP4302" int, "Arris VIP5305" int,"EKT DIN4805V 4K" int, "EKT DIN7005V HD" int, "Skyworth HP44H HD/4K" int, "ONT HUAWEI" int, "ONT NOKIA" int, "STB DTH" int, "ANTENA SATELITSKA DTH" int,"LNB DUO TWIN" int   
+		)
+	)AS p
+JOIN cities c ON c.id=p.city_id
+LEFT JOIN (
+	SELECT 
+		city_id,
+		MAX(updated_at) AS max_updated_at
+	FROM cpe_inventory
+	GROUP BY
+		city_id
+) AS max_ts ON max_ts.city_id=p.city_id; 
+"""
 
 
 # Function to get the latest CPE records for all cities
@@ -168,6 +217,21 @@ def admin_and_user_required(city_id):
     return False
 
 
+def get_latest_pivoted_inventory():
+    # 1. Prepare the raw SQL string
+    sql_statement = text(SQL_QUERY)
+
+    # 2. Execute the query
+    result = db.session.execute(sql_statement)
+
+    # 3. Fetch all rows
+    # The result is a ResultProxy; .mappings() helps convert rows to dicts
+    # for easier handling in a web app.
+    pivoted_data = [row._asdict() for row in result.all()]
+
+    return pivoted_data
+
+
 # AUTHORIZATION ZA VIEW: ILI ADMIN ILI VIEW
 def view_required():
     if current_user.is_authenticated and (
@@ -211,6 +275,14 @@ def home():
         today=today.strftime("%d-%m-%Y"),
         monday=monday,
     )
+
+
+@app.route("/cpe-data")
+@login_required
+def getcpe():
+    records = get_latest_pivoted_inventory()
+    print(records)
+    return render_template("cpe.html", records=records)
 
 
 # ADMIN DASHBOARD PAGE

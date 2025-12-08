@@ -1,0 +1,187 @@
+{% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  /* Modern table header */
+  .table-custom-head th {
+    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
+    color: #000; /* black text */
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 14px;
+  }
+
+  /* Remove border radius from inner th cells to avoid overlapping */
+  .table-custom-head th:first-child {
+    border-top-left-radius: 8px;
+  }
+  .table-custom-head th:last-child {
+    border-top-right-radius: 8px;
+  }
+  .stanje-column {
+    min-width: 140px;
+    text-align: center;
+    background-color: #d7dce2 !important;
+  }
+  .iad-column {
+    background-color: #f0d6f2 !important;
+  }
+  .stb-column {
+    background-color: #cbd7f1 !important;
+  }
+  .ont-column {
+    background-color: #d9c3ee !important;
+  }
+  .antena-column {
+    background-color: #fce4d6 !important;
+    min-width: 80px;
+  }
+  .azur-column {
+    background-color: #ddebf7 !important;
+  }
+  .btn-edit {
+    background-color: #f6f89d;
+    background: linear-gradient(to top, #ff8008, #ffc837);
+    border: none; /* remove default border */
+    width: 70px;
+    box-shadow: 1px 1px 2px black;
+  }
+  .btn-edit:hover {
+    background-color: #d8c589;
+  }
+  .btn-custom-save {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+  }
+  .custom-modal-header {
+    background: linear-gradient(to right, #7bc6cc, #be93c5);
+  }
+
+  .plus-icon-bg {
+    color: white;
+    background-color: #0d6efd; /* Bootstrap primary */
+    padding: 4px 6px;
+    border-radius: 50%;
+    font-size: 18px;
+  }
+
+  .active .page-link {
+    background-color: #8ec8f7 !important;
+  }
+
+  /* Custom class for an extra-extra large modal */
+  .modal-xxl {
+    /* Set the max-width of the entire modal dialog.
+       90% of the viewport width is generally a safe large size. */
+    --bs-modal-width: 90vw;
+    /* The modal-dialog will take up 90% of the screen width */
+    max-width: var(--bs-modal-width);
+  }
+
+  /* Optional: Ensure the content (modal-content) also respects this width */
+  .modal-xxl .modal-content {
+    width: 100%;
+  }
+
+  .input-cpe-count {
+    /* Set a specific maximum width for the small number fields */
+    max-width: 80px;
+    /* Ensures they don't stretch beyond this point */
+    margin: 0 auto;
+  }
+  .cpe-label-wrap {
+    /* Set max width slightly wider than the input (80px) to accommodate text */
+    max-width: 90px;
+    /* Allows the text to flow to the next line */
+    white-space: normal;
+    text-align: center;
+  }
+  .table tr.red-row,
+  .table tr.red-row td {
+    /*background-color: #fae5e8 !important;*/
+    color: #ee1831 !important;
+  }
+
+  .table tr.green-row,
+  .table tr.green-row td {
+    /*background-color: #def7eb !important;*/
+    color: #111 !important;
+  }
+  .red-bcg {
+    background-color: #fae5e8 !important;
+  }
+
+  .green-bcg {
+    background-color: #def7eb !important;
+  }
+
+  .table tr.blue-row,
+  .table tr.blue-row td {
+    background-color: #e4eef7 !important;
+  }
+
+  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
+
+  .table-emph-h-border td {
+    /* Set the border style for all sides first */
+    border: 1px solid #919394;
+
+    /* Override the top/bottom borders to be thicker */
+    border-top-width: 3px !important;
+    border-bottom-width: 3px !important;
+  }
+</style>
+{% endblock %} {% block content%}
+<div class="container py-5">
+  <h1 class="mb-4 text-center">Zadnje stanje CPE opreme</h1>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle table-sm table-emph-h-border">
+      <thead class="table-custom-head">
+        <tr>
+          <th class="stanje-column">SKLADIŠTA</th>
+          <th class="iad-column">IAD H267N / HG658V2 / Zyxel /Skyworth</th>
+          <th class="stb-column">STB ARRIS VIP4205 / VIP4302 / 1113</th>
+          <th class="stb-column">STB ARRIS VIP5305</th>
+          <th class="stb-column">STB EKT DIN4805V 4K</th>
+          <th class="stb-column">STB EKT DIN7005V HD</th>
+          <th class="stb-column">STB SKYWORTH HD/4K HP44H</th>
+          <th class="ont-column">ONT (HUAWEI)</th>
+          <th class="ont-column">ONT (NOKIA)</th>
+          <th class="antena-column">UREĐAJ STB DTH</th>
+          <th class="antena-column">ANTENA SATELITSKA DTH</th>
+          <th class="antena-column">LNB DUO TWIN</th>
+          <th class="azur-column">AŽURIRANO</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.city_name }}</td>
+          <td>{{ r["H267N/HG658V2/Zyxel/Skyworth"]}}</td>
+          <td>{{ r["Arris VIP4205/VIP4302"]}}</td>
+          <td>{{ r["Arris VIP5305"]}}</td>
+          <td>{{ r["EKT DIN4805V 4K"]}}</td>
+          <td>{{ r["EKT DIN7005V HD"]}}</td>
+          <td>{{ r["Skyworth HP44H HD/4K"]}}</td>
+          <td>{{ r["ONT HUAWEI"]}}</td>
+          <td>{{ r["ONT NOKIA"]}}</td>
+          <td>{{ r["STB DTH"]}}</td>
+          <td>{{ r["ANTENA SATELITSKA DTH"] }}</td>
+          <td>{{ r["LNB DUO TWIN"]}}</td>
+          <td>
+            {% if r.max_updated_at %} {{ r.max_updated_at.strftime('%Y-%m-%d
+            %H:%M:%S') }} {% else %} N/A {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
