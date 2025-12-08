@@ -454,3 +454,63 @@ kaon int
 # city text: Defines the first output column. This must match the Row Identifier column (c.name AS city) from the source query.
 
 # mag250 int, mag410 int, kaon int: These are the new column headers. The crosstab function expects to find these exact values ('mag250', 'mag410', 'kaon') in the Category column (stb_model) of your source data. The type is int because it's aggregating the quantity (which must be an integer).
+
+# crosstab:
+
+```sql
+--c, p, max_ts, are TABLES
+SELECT
+	c.name AS city_name, --iz c izberi name i nazovi ga city_name
+	p.*, -- iz p izaberi sve
+	max_ts.max_updated_at --iz max_ts izberi max_updated_at
+FROM
+	(
+	-- Your existing PIVOT QUERY goes here (aliased as p)
+		SELECT *
+		FROM crosstab(
+			$$
+			SELECT
+				city_id,
+			    cpe_model,
+			    quantity
+			FROM
+				(
+				-- (Your Window Function query to get rn=1 data)
+					SELECT
+						r.city_id,
+						s.name AS cpe_model,
+						r.quantity,
+						r.updated_at,
+						-- Assigns a rank (1, 2, 3...) to records within each group
+						ROW_NUMBER() OVER(
+						-- Define the group: A unique combination of city and cpe_model
+							PARTITION BY r.city_id, r.cpe_type_id
+							ORDER BY r.updated_at DESC
+						) AS rn -- rn IS NAME OF COLUMN
+					FROM cpe_inventory r
+					JOIN cpe_types s ON r.cpe_type_id=s.id
+				) AS ranked_records --KREIRA TABELU SA KOLONAMA: city: cpe_model, quantity, rn, updated_at
+			WHERE
+				-- Select only the record ranked #1 (the most recent one) for each group
+				rn=1
+			ORDER BY
+			    city_id,
+			    cpe_model
+			$$
+		) AS pivot_table (
+		city_id INTEGER, "H267N" int, "HG658V2" int, "Arris VIP4205" int, "Arris VIP1113" int, "ONT HUAWEI" int, "ONT NOKIA" int
+		)
+	)AS p
+	--to displays names of city instead of city_id in pivot table
+JOIN cities c ON c.id=p.city_id
+--to add latest update_at COLUMN to pivot table
+LEFT JOIN (
+	-- Subquery to find the single latest update time for the entire city
+	SELECT
+		city_id,
+		MAX(updated_at) AS max_updated_at
+	FROM cpe_inventory
+	GROUP BY
+		city_id
+) AS max_ts ON max_ts.city_id=p.city_id;
+```

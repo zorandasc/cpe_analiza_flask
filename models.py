@@ -17,9 +17,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 
-
-db = SQLAlchemy()
-
 CPE_TYPE_CHOICES = [
     "IAD",
     "ONT",
@@ -34,6 +31,9 @@ CPE_TYPE_CHOICES = [
     "PC",
     "IOT",
 ]
+
+
+db = SQLAlchemy()
 
 
 class Cities(db.Model):
@@ -53,6 +53,9 @@ class Cities(db.Model):
 
     cpe_dismantle_records: Mapped[list["CpeDismantleRecords"]] = relationship(
         "CpeDismantleRecords", back_populates="city"
+    )
+    cpe_inventory: Mapped[list["CpeInventory"]] = relationship(
+        "CpeInventory", back_populates="city"
     )
     cpe_records: Mapped[list["CpeRecords"]] = relationship(
         "CpeRecords", back_populates="city"
@@ -77,6 +80,9 @@ class CpeTypes(db.Model):
 
     cpe_dismantle_records: Mapped[list["CpeDismantleRecords"]] = relationship(
         "CpeDismantleRecords", back_populates="cpe_type"
+    )
+    cpe_inventory: Mapped[list["CpeInventory"]] = relationship(
+        "CpeInventory", back_populates="cpe_type"
     )
 
 
@@ -132,6 +138,37 @@ class CpeDismantleRecords(db.Model):
     )
     dismantle_type: Mapped[Optional["DismantleTypes"]] = relationship(
         "DismantleTypes", back_populates="cpe_dismantle_records"
+    )
+
+
+class CpeInventory(db.Model):
+    __tablename__ = "cpe_inventory"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["city_id"], ["cities.id"], name="cpe_inventory_city_id_fkey"
+        ),
+        ForeignKeyConstraint(
+            ["cpe_type_id"], ["cpe_types.id"], name="cpe_inventory_cpe_type_id_fkey"
+        ),
+        PrimaryKeyConstraint("id", name="cpe_inventory_pkey"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    city_id: Mapped[Optional[int]] = mapped_column(Integer)
+    cpe_type_id: Mapped[Optional[int]] = mapped_column(Integer)
+    quantity: Mapped[Optional[int]] = mapped_column(Integer)
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("now()")
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("now()")
+    )
+
+    city: Mapped[Optional["Cities"]] = relationship(
+        "Cities", back_populates="cpe_inventory"
+    )
+    cpe_type: Mapped[Optional["CpeTypes"]] = relationship(
+        "CpeTypes", back_populates="cpe_inventory"
     )
 
 
