@@ -4,7 +4,7 @@
   <h2>Tipovi CPE opreme</h2>
 
   <a href="{{ url_for('admin_add_cpe_type') }}" class="btn btn-primary my-3"
-    >Dodaj CPE opremu</a
+    >Dodaj CPE model</a
   >
   {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
@@ -13,14 +13,18 @@
     <tr>
       <th>Id</th>
       <th>Ime</th>
+      <th>Labela</th>
       <th>Tip</th>
+      <th>Aktivan</th>
       <th style="width: 160px">Akcije</th>
     </tr>
     {% for cpe in cpes %}
     <tr>
       <td>{{ cpe.id }}</td>
       <td>{{ cpe.name }}</td>
+      <td>{{ cpe.label }}</td>
       <td>{{ cpe.type }}</td>
+      <td>{{ cpe.is_active }}</td>
       <td>
         <a
           href="{{ url_for('admin_edit_cpe_type', id=cpe.id) }}"

@@ -2,8 +2,8 @@ from typing import Optional
 import datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
-    Date,
     DateTime,
     ForeignKeyConstraint,
     Integer,
@@ -16,6 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+
 
 CPE_TYPE_CHOICES = [
     "IAD",
@@ -51,8 +52,8 @@ class Cities(db.Model):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     type: Mapped[Optional[str]] = mapped_column(String(100))
 
-    cpe_dismantle_records: Mapped[list["CpeDismantleRecords"]] = relationship(
-        "CpeDismantleRecords", back_populates="city"
+    cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
+        "CpeDismantle", back_populates="city"
     )
     cpe_inventory: Mapped[list["CpeInventory"]] = relationship(
         "CpeInventory", back_populates="city"
@@ -76,10 +77,14 @@ class CpeTypes(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    label: Mapped[Optional[str]] = mapped_column(String(200))
     type: Mapped[Optional[str]] = mapped_column(String(100))
+    is_active: Mapped[Optional[bool]] = mapped_column(
+        Boolean, server_default=text("true")
+    )
 
-    cpe_dismantle_records: Mapped[list["CpeDismantleRecords"]] = relationship(
-        "CpeDismantleRecords", back_populates="cpe_type"
+    cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
+        "CpeDismantle", back_populates="cpe_type"
     )
     cpe_inventory: Mapped[list["CpeInventory"]] = relationship(
         "CpeInventory", back_populates="cpe_type"
@@ -97,28 +102,26 @@ class DismantleTypes(db.Model):
     label: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(100))
 
-    cpe_dismantle_records: Mapped[list["CpeDismantleRecords"]] = relationship(
-        "CpeDismantleRecords", back_populates="dismantle_type"
+    cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
+        "CpeDismantle", back_populates="dismantle_type"
     )
 
 
-class CpeDismantleRecords(db.Model):
-    __tablename__ = "cpe_dismantle_records"
+class CpeDismantle(db.Model):
+    __tablename__ = "cpe_dismantle"
     __table_args__ = (
         ForeignKeyConstraint(
-            ["city_id"], ["cities.id"], name="cpe_dismantle_records_city_id_fkey"
+            ["city_id"], ["cities.id"], name="cpe_dismantle_city_id_fkey"
         ),
         ForeignKeyConstraint(
-            ["cpe_type_id"],
-            ["cpe_types.id"],
-            name="cpe_dismantle_records_cpe_type_id_fkey",
+            ["cpe_type_id"], ["cpe_types.id"], name="cpe_dismantle_cpe_type_id_fkey"
         ),
         ForeignKeyConstraint(
             ["dismantle_type_id"],
             ["dismantle_types.id"],
-            name="cpe_dismantle_records_dismantle_type_id_fkey",
+            name="cpe_dismantle_dismantle_type_id_fkey",
         ),
-        PrimaryKeyConstraint("id", name="cpe_dismantle_records_pkey"),
+        PrimaryKeyConstraint("id", name="cpe_dismantle_pkey"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -126,18 +129,21 @@ class CpeDismantleRecords(db.Model):
     cpe_type_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
     dismantle_type_id: Mapped[Optional[int]] = mapped_column(Integer)
-    day_date: Mapped[Optional[datetime.date]] = mapped_column(
-        Date, server_default=text("now()")
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("now()")
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime, server_default=text("now()")
     )
 
     city: Mapped[Optional["Cities"]] = relationship(
-        "Cities", back_populates="cpe_dismantle_records"
+        "Cities", back_populates="cpe_dismantle"
     )
     cpe_type: Mapped[Optional["CpeTypes"]] = relationship(
-        "CpeTypes", back_populates="cpe_dismantle_records"
+        "CpeTypes", back_populates="cpe_dismantle"
     )
     dismantle_type: Mapped[Optional["DismantleTypes"]] = relationship(
-        "DismantleTypes", back_populates="cpe_dismantle_records"
+        "DismantleTypes", back_populates="cpe_dismantle"
     )
 
 
@@ -206,6 +212,12 @@ class CpeRecords(db.Model):
     )
 
 
+# UserMixin automatically provides:
+# is_authenticated
+# is_active
+# is_anonymous
+# get_id()
+# Exactly what Flask-Login needs.
 class Users(db.Model, UserMixin):
     __tablename__ = "users"
     __table_args__ = (

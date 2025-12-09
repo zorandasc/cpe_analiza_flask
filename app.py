@@ -5,7 +5,7 @@ from models import (
     db,
     CpeRecords,
     CpeInventory,
-    CpeDismantleRecords,
+    CpeDismantle,
     Users,
     Cities,
     CpeTypes,
@@ -637,10 +637,10 @@ def admin_delete_user(id):
     return redirect(url_for("admin_users"))
 
 
-# -------------CPE_RECORDS CRUD----------------------------------------
-@app.route("/admin/cpe_records")
+# -------------CPE_INVENTORY CRUD----------------------------------------
+@app.route("/admin/cpe_inventory")
 @login_required
-def admin_cpe_records():
+def admin_cpe_inventory():
     if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
@@ -668,7 +668,7 @@ def admin_cpe_records():
         page=page, per_page=per_page, error_out=False
     )
     return render_template(
-        "admin/cpe_records.html",
+        "admin/cpe_inventory.html",
         records=pagination.items,
         pagination=pagination,
         sort_by=sort_by,
@@ -677,9 +677,9 @@ def admin_cpe_records():
 
 
 # -------------CPE_DISMANTLE_RECORDS CRUD----------------------------------------
-@app.route("/admin/cpe_dismantle_records")
+@app.route("/admin/cpe_dismantle")
 @login_required
-def admin_cpe_dismantle_records():
+def admin_cpe_dismantle():
     if not view_required():
         # return "Forbidden", 403
         return redirect(url_for("admin_dashboard"))
@@ -691,27 +691,23 @@ def admin_cpe_dismantle_records():
 
     # WHEN INCICIALY LANDING ON PAGE
     # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
-    sort_by = request.args.get("sort", "day_date")
+    sort_by = request.args.get("sort", "updated_at")
     direction = request.args.get("direction", "desc")
 
     # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = [
-        "id",
-        "city_id",
-        "day_date",
-    ]
+    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
     if sort_by not in allowed_sorts:
         sort_by = "id"
 
-    order_column = getattr(CpeDismantleRecords, sort_by)
+    order_column = getattr(CpeDismantle, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
 
-    pagination = CpeDismantleRecords.query.order_by(order_column).paginate(
+    pagination = CpeDismantle.query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
     return render_template(
-        "admin/cpe_dismantle_records.html",
+        "admin/cpe_dismantle.html",
         records=pagination.items,
         pagination=pagination,
         sort_by=sort_by,
@@ -739,6 +735,7 @@ def admin_add_cpe_type():
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
         name = request.form.get("name")
+        label = request.form.get("label")
         type = request.form.get("type")
 
         # Validation: name must be unique
@@ -747,7 +744,7 @@ def admin_add_cpe_type():
             flash("Tip CPE već postoji", "danger")
             return redirect(url_for("admin_add_cpe_type"))
 
-        db.session.add(CpeTypes(name=name, type=type))
+        db.session.add(CpeTypes(name=name, label=label, type=type))
         db.session.commit()
         return redirect(url_for("admin_cpe_types"))
 
@@ -773,25 +770,28 @@ def admin_edit_cpe_type(id):
 
     if request.method == "POST":
         name = request.form.get("name")
-        type = request.form.get("type")
+        label = request.form.get("label")
+        type_ = request.form.get("type")  # renamed to avoid shadowing built-in 'type'
+        is_active = request.form.get("is_active")
 
         # Username uniqueness (except current user)
         existing_cpe_type = CpeTypes.query.filter(
             CpeTypes.name == name, CpeTypes.id != id
         ).first()
-
         if existing_cpe_type:
             flash("Tip CPE opreme već postoji!", "danger")
             return redirect(url_for("admin_edit_cpe_type", id=id))
 
         # Validation: type must be valid
-        if type not in types:
+        if type_ not in types:
             flash("Invalid tip", "danger")
             return redirect(url_for("admin_edit_cpe_type", id=id))
 
-        cpe.name = name
         cpe.id = id
-        cpe.type = type
+        cpe.name = name
+        cpe.label = label
+        cpe.type = type_
+        cpe.is_active = "is_active" in request.form  # THIS IS THE CORRECT WAY
 
         try:
             db.session.commit()
