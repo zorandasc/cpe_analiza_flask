@@ -4,6 +4,7 @@ from sqlalchemy import func, text
 from models import (
     db,
     CpeRecords,
+    CpeInventory,
     CpeDismantleRecords,
     Users,
     Cities,
@@ -659,11 +660,11 @@ def admin_cpe_records():
     if sort_by not in allowed_sorts:
         sort_by = "id"
 
-    order_column = getattr(CpeRecords, sort_by)
+    order_column = getattr(CpeInventory, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
 
-    pagination = CpeRecords.query.order_by(order_column).paginate(
+    pagination = CpeInventory.query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
     return render_template(
