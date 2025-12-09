@@ -141,6 +141,13 @@ styles %} {{ super() }}
   <div class="table-responsive">
     <table class="table table-hover align-middle table-sm table-emph-h-border">
       <thead class="table-custom-head">
+        <!--
+        <tr>
+          {% if records %} {% for key in records[0].keys() %}
+          <th class="stanje-column">{{key}}</th>
+          {% endfor %} {% endif %}
+        </tr>
+      -->
         <tr>
           <th class="stanje-column">SKLADIŠTA</th>
           <th class="iad-column">IAD H267N / HG658V2 / Zyxel /Skyworth</th>
@@ -162,17 +169,17 @@ styles %} {{ super() }}
         {% for r in records %}
         <tr>
           <td>{{ r.city_name }}</td>
-          <td>{{ r["H267N/HG658V2/Zyxel/Skyworth"]}}</td>
-          <td>{{ r["Arris VIP4205/VIP4302"]}}</td>
-          <td>{{ r["Arris VIP5305"]}}</td>
-          <td>{{ r["EKT DIN4805V 4K"]}}</td>
-          <td>{{ r["EKT DIN7005V HD"]}}</td>
-          <td>{{ r["Skyworth HP44H HD/4K"]}}</td>
-          <td>{{ r["ONT HUAWEI"]}}</td>
-          <td>{{ r["ONT NOKIA"]}}</td>
-          <td>{{ r["STB DTH"]}}</td>
-          <td>{{ r["ANTENA SATELITSKA DTH"] }}</td>
-          <td>{{ r["LNB DUO TWIN"]}}</td>
+          <td>{{ r["IADS"]}}</td>
+          <td>{{ r["VIP4205_VIP4302_1113"]}}</td>
+          <td>{{ r["VIP5305"]}}</td>
+          <td>{{ r["DIN4805V"]}}</td>
+          <td>{{ r["DIN7005V"]}}</td>
+          <td>{{ r["HP44H"]}}</td>
+          <td>{{ r["ONT_HUA"]}}</td>
+          <td>{{ r["ONT_NOK"]}}</td>
+          <td>{{ r["STB_DTH"]}}</td>
+          <td>{{ r["ANTENA_DTH"] }}</td>
+          <td>{{ r["LNB_DUO_TWIN"]}}</td>
           <td>
             {% if r.max_updated_at %} {{ r.max_updated_at.strftime('%Y-%m-%d
             %H:%M:%S') }} {% else %} N/A {% endif %}

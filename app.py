@@ -82,53 +82,71 @@ app.cli.add_command(create_initial_db)
 
 # ---------------HELPER FUNCTION--------------------------
 
+# raw SQL statement, as crosstab isn't a standard, ORM-mappable function
 SQL_QUERY = """
 SELECT
-	c.name AS city_name,
-	p.*, 
-	max_ts.max_updated_at 
+	C.NAME AS CITY_NAME,
+	P.*,
+	MAX_TS.MAX_UPDATED_AT
 FROM
-	(	
-		SELECT * 
-		FROM crosstab(
+	(
+		SELECT
+			*
+		FROM
+			CROSSTAB (
+				$$
+		SELECT
+			city_id,
+			cpe_model,
+			quantity
+		FROM
+			(
+				SELECT
+					R.CITY_ID,
+					S.NAME AS CPE_MODEL,
+					R.QUANTITY,
+					R.UPDATED_AT,
+					ROW_NUMBER() OVER (
+						PARTITION BY
+							R.CITY_ID,
+							R.CPE_TYPE_ID
+						ORDER BY
+							R.UPDATED_AT DESC
+					) AS RN
+				FROM
+					CPE_INVENTORY R
+					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+			) AS RANKED_RECORDS
+		WHERE
+			RN = 1
+		ORDER BY
+			CITY_ID
 			$$
-			SELECT 
-				city_id,
-			    cpe_model,
-			    quantity
-			FROM
-				(
-					SELECT 
-						r.city_id,
-						s.name AS cpe_model,
-						r.quantity,
-						r.updated_at,
-						ROW_NUMBER() OVER(
-							PARTITION BY r.city_id, r.cpe_type_id
-							ORDER BY r.updated_at DESC
-						) AS rn
-					FROM cpe_inventory r
-					JOIN cpe_types s ON r.cpe_type_id=s.id
-				) AS ranked_records
-			WHERE
-				rn=1
-			ORDER BY
-			    city_id,
-			    cpe_model
-			$$
-		) AS pivot_table ( 
-		city_id INTEGER, "H267N/HG658V2/Zyxel/Skyworth" int, "Arris VIP4205/VIP4302" int, "Arris VIP5305" int,"EKT DIN4805V 4K" int, "EKT DIN7005V HD" int, "Skyworth HP44H HD/4K" int, "ONT HUAWEI" int, "ONT NOKIA" int, "STB DTH" int, "ANTENA SATELITSKA DTH" int,"LNB DUO TWIN" int   
-		)
-	)AS p
-JOIN cities c ON c.id=p.city_id
-LEFT JOIN (
-	SELECT 
-		city_id,
-		MAX(updated_at) AS max_updated_at
-	FROM cpe_inventory
-	GROUP BY
-		city_id
-) AS max_ts ON max_ts.city_id=p.city_id; 
+			) AS PIVOT_TABLE (
+				CITY_ID INTEGER,
+				"IADS" INT,
+				"VIP4205_VIP4302_1113" INT,
+				"VIP5305" INT,
+				"DIN4805V" INT,
+				"DIN7005V" INT,
+				"HP44H" INT,
+				"ONT_HUA" INT,
+				"ONT_NOK" INT,
+				"STB_DTH" INT,
+				"ANTENA_DTH" INT,
+				"LNB_DUO_TWIN" INT
+			)
+	) AS P
+	JOIN CITIES C ON C.ID = P.CITY_ID
+	LEFT JOIN (
+		SELECT
+			CITY_ID,
+			MAX(UPDATED_AT) AS MAX_UPDATED_AT
+		FROM
+			CPE_INVENTORY
+		GROUP BY
+			CITY_ID
+	) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
 """
 
 
@@ -192,6 +210,25 @@ def get_latest_cpe_records():
     return latest_records, totals
 
 
+# This approach bypasses the ORM's object mapping for this specific complex query,
+# treating it purely as a data fetch, which is necessary when using custom database
+# functions like crosstab.
+def get_latest_pivoted_inventory():
+    # 1. Prepare the raw SQL string
+    sql_statement = text(SQL_QUERY)
+
+    # 2. Execute the query
+    result = db.session.execute(sql_statement)
+
+    # 3. Fetch all rows
+    # The result is a ResultProxy; .mappings() helps convert rows to dicts
+    # for easier handling in a web app.
+    pivoted_data = [row._asdict() for row in result.all()]
+
+    return pivoted_data
+
+
+# --------AUTHORIZACIJA--------------------------------------------
 # AUTHORIZATION ZA BILO KOJU AKCIJU: SAMO ADMIN
 def admin_required():
     if current_user.is_authenticated and current_user.role == "admin":
@@ -218,21 +255,6 @@ def admin_and_user_required(city_id):
     return False
 
 
-def get_latest_pivoted_inventory():
-    # 1. Prepare the raw SQL string
-    sql_statement = text(SQL_QUERY)
-
-    # 2. Execute the query
-    result = db.session.execute(sql_statement)
-
-    # 3. Fetch all rows
-    # The result is a ResultProxy; .mappings() helps convert rows to dicts
-    # for easier handling in a web app.
-    pivoted_data = [row._asdict() for row in result.all()]
-
-    return pivoted_data
-
-
 # AUTHORIZATION ZA VIEW: ILI ADMIN ILI VIEW
 def view_required():
     if current_user.is_authenticated and (
@@ -246,7 +268,7 @@ def view_required():
 # -------------------------------------------------------
 
 
-# -------------------------------- ROUTES------
+# -------------------------------- ROUTES---------------------------------
 # HOME PAGE
 @app.route("/")
 @login_required  # <-- This is the protection decorator!

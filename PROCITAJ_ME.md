@@ -514,3 +514,239 @@ LEFT JOIN (
 		city_id
 ) AS max_ts ON max_ts.city_id=p.city_id;
 ```
+
+PRVA SQL TABELA:
+
+```sql
+SELECT
+					R.CITY_ID,
+					S.NAME AS CPE_MODEL,
+					R.QUANTITY,
+					R.UPDATED_AT,
+					ROW_NUMBER() OVER (
+						PARTITION BY
+							R.CITY_ID,
+							R.CPE_TYPE_ID
+						ORDER BY
+							R.UPDATED_AT DESC
+					) AS RN
+				FROM
+					CPE_INVENTORY R
+					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+			) AS RANKED_RECORDS
+```
+
+DRUGA SQL TABELA:
+
+```SQL
+SELECT
+			city_id,
+			cpe_model,
+			quantity
+		FROM
+			(
+				SELECT
+					R.CITY_ID,
+					S.NAME AS CPE_MODEL,
+					R.QUANTITY,
+					R.UPDATED_AT,
+					ROW_NUMBER() OVER (
+						PARTITION BY
+							R.CITY_ID,
+							R.CPE_TYPE_ID
+						ORDER BY
+							R.UPDATED_AT DESC
+					) AS RN
+				FROM
+					CPE_INVENTORY R
+					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+			) AS RANKED_RECORDS
+		WHERE
+			RN = 1
+		ORDER BY
+			CITY_ID
+			$$
+			) AS PIVOT_TABLE (
+				CITY_ID INTEGER,
+				"IADS" INT,
+				"VIP4205_VIP4302_1113" INT,
+				"VIP5305" INT,
+				"DIN4805V" INT,
+				"DIN7005V" INT,
+				"HP44H" INT,
+				"ONT_HUA" INT,
+				"ONT_NOK" INT,
+				"STB_DTH" INT,
+				"ANTENA_DTH" INT,
+				"LNB_DUO_TWIN" INT
+			)
+```
+
+TRECA SQL TABELA:
+
+```SQL
+SELECT
+			*
+		FROM
+			CROSSTAB (
+				$$
+		SELECT
+			city_id,
+			cpe_model,
+			quantity
+		FROM
+			(
+				SELECT
+					R.CITY_ID,
+					S.NAME AS CPE_MODEL,
+					R.QUANTITY,
+					R.UPDATED_AT,
+					ROW_NUMBER() OVER (
+						PARTITION BY
+							R.CITY_ID,
+							R.CPE_TYPE_ID
+						ORDER BY
+							R.UPDATED_AT DESC
+					) AS RN
+				FROM
+					CPE_INVENTORY R
+					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+			) AS RANKED_RECORDS
+		WHERE
+			RN = 1
+		ORDER BY
+			CITY_ID
+			$$
+			) AS PIVOT_TABLE (
+				CITY_ID INTEGER,
+				"IADS" INT,
+				"VIP4205_VIP4302_1113" INT,
+				"VIP5305" INT,
+				"DIN4805V" INT,
+				"DIN7005V" INT,
+				"HP44H" INT,
+				"ONT_HUA" INT,
+				"ONT_NOK" INT,
+				"STB_DTH" INT,
+				"ANTENA_DTH" INT,
+				"LNB_DUO_TWIN" INT
+			)
+	) AS P
+```
+
+CETVRTA I ZADNJA SQL TABELA:
+
+```SQL
+SELECT
+	C.NAME AS CITY_NAME, --DODAJ CITY NAME
+	P.*,--CIJELA PIVOT TABELA
+	MAX_TS.MAX_UPDATED_AT --DODAJ ZADNJE VRIJEME
+FROM
+	(
+		SELECT
+			*
+		FROM
+			CROSSTAB (
+				$$
+                -- 1. SOURCE QUERY (Input must provide the (row_name, category, value))
+		SELECT
+			city_id,
+			cpe_model,
+			quantity
+		FROM
+			(
+				SELECT
+					R.CITY_ID,
+					S.NAME AS CPE_MODEL,
+					R.QUANTITY,
+					R.UPDATED_AT,
+                    -- Assigns a rank (1, 2, 3...) to records within each group
+                    -- Window function to find the latest record per (city, cpe_model) group
+					ROW_NUMBER() OVER (
+                        -- Define the group: A unique combination of city and cpe_model
+						PARTITION BY
+							R.CITY_ID,
+							R.CPE_TYPE_ID
+                            -- Order the records within the group by most recent update firs
+						ORDER BY
+							R.UPDATED_AT DESC
+					) AS RN --KOLONA SE ZOVE RN
+				FROM
+					CPE_INVENTORY R
+					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+			) AS RANKED_RECORDS
+		WHERE
+        -- Select only the record ranked #1 (the most recent one) for each group
+			RN = 1
+		ORDER BY
+			CITY_ID
+			$$
+			) AS PIVOT_TABLE (
+                -- 2. OUTPUT DEFINITION (Must define all columns and data types)
+				CITY_ID INTEGER,
+				"IADS" INT,
+				"VIP4205_VIP4302_1113" INT,
+				"VIP5305" INT,
+				"DIN4805V" INT,
+				"DIN7005V" INT,
+				"HP44H" INT,
+				"ONT_HUA" INT,
+				"ONT_NOK" INT,
+				"STB_DTH" INT,
+				"ANTENA_DTH" INT,
+				"LNB_DUO_TWIN" INT
+			)
+	) AS P
+	JOIN CITIES C ON C.ID = P.CITY_ID
+	LEFT JOIN (--DODAL KOLONU LASTA DATE
+		SELECT
+			CITY_ID,
+			MAX(UPDATED_AT) AS MAX_UPDATED_AT
+		FROM
+			CPE_INVENTORY
+		GROUP BY
+			CITY_ID
+	) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
+```
+
+Using Window Functions
+This query uses the ROW_NUMBER() window function to assign a rank to each record within a city/CPE group based on the latest updated_at timestamp.
+
+1. The Inner Query (Subquery)
+   The inner query performs the joins and applies the window function:
+
+PARTITION BY r.city_id, r.cpe_type_id: This tells PostgreSQL to treat every unique combination of city_id and cpe_type_id as a separate group (or "window").
+
+ORDER BY r.updated_at DESC: Within each group, the rows are ordered by the updated_at column in descending order. This ensures the most recent record is always placed first.
+
+ROW_NUMBER() OVER (...) AS rn: This function assigns the number 1 to the first record in the ordered partition (the latest update), 2 to the second, and so on.
+
+The outer query simply selects all columns (city, cpe_model, quantity, updated_at) from the result of the inner query, but only where the assigned rank (rn) is equal to 1.
+
+This effectively filters the dataset down to the single, most recent record for every combination of city and CPE model, giving you the current inventory snapshot.
+
+Step 1: Find the Latest Inventory Snapshot (Inner Query)
+
+The subquery aliased as ranked_records first retrieves all inventory records. The ROW_NUMBER() window function assigns rn=1 to the row that has the maximum updated_at time for every unique combination of city_id and cpe_type_id
+
+Result: A dataset containing only the current quantity for every CPE model in every city.
+
+Step 2: Prepare Data for Pivoting (Outer SELECT inside crosstab)
+
+The outer SELECT within the crosstab function takes the result of Step 1 and selects only the three columns needed for the one-argument crosstab function:
+
+Row Identifier: city
+
+Category: cpe_model
+
+Value: quantity
+
+Step 3: Execute the Pivot (The crosstab Function)
+
+The crosstab function receives the vertical data from Step 2 and performs the rotation:
+
+It uses city to create the rows.
+
+It takes the specific values listed in the output definition ("H267N", "HG658V2", etc.) from the cpe_model column and converts them into column headers.
+
+It places the corresponding quantity value into the cell where the row and model intersect. Since the input is already pre-aggregated to the latest record (thanks to the rn=1 filter), crosstab simply handles the rotation, not further aggregation.
