@@ -84,10 +84,21 @@ app.cli.add_command(create_initial_db)
 
 # raw SQL statement, as crosstab isn't a standard, ORM-mappable function
 SQL_QUERY = """
-SELECT
-	C.NAME AS CITY_NAME,
-	P.*,
-	MAX_TS.MAX_UPDATED_AT
+WITH latest_pivot AS (SELECT
+		P.CITY_ID, -- <--- ADDED: City ID for ordering
+		C.NAME AS CITY_NAME,
+        P."IADS",
+        P."VIP4205_VIP4302_1113",
+        P."VIP5305",
+        P."DIN4805V",
+        P."DIN7005V",
+        P."HP44H",
+        P."ONT_HUA",
+        P."ONT_NOK",
+        P."STB_DTH",
+        P."ANTENA_DTH",
+        P."LNB_DUO_TWIN",
+        MAX_TS.MAX_UPDATED_AT
 FROM
 	(
 		SELECT
@@ -147,6 +158,35 @@ FROM
 		GROUP BY
 			CITY_ID
 	) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
+)
+-----------------------------------------------------------
+-- adding total row to end of pivot table
+--PRVA TABELA
+-- Data Rows
+SELECT * FROM latest_pivot
+-- <--- FIX: Sort by ID (ASC), placing NULLs (the Total Row) at the end
+--UNIRANA (NA ZACELJE PRVE TABLELE DODAJ ROWOVE OD DRUGE TABELE)
+UNION ALL --This appends a new row to the result set.
+
+--SA DRUGOM TABLEOM koja sadrzi samo jedan row
+SELECT 
+	NULL::INTEGER AS CITY_ID, -- <--- ADDED: City ID is NULL for the total row
+	'UKUPNO'::VARCHAR AS CITY_NAME,
+	SUM("IADS") AS "IADS",
+	SUM("VIP4205_VIP4302_1113") AS "VIP4205_VIP4302_1113",
+	SUM("VIP5305") AS "VIP5305",
+	SUM("DIN4805V") AS "DIN4805V",
+	SUM("DIN7005V") AS "DIN7005V",
+	SUM("HP44H") AS "HP44H",
+	SUM("ONT_HUA") AS "ONT_HUA",
+    SUM("ONT_NOK") AS "ONT_NOK",
+    SUM("STB_DTH") AS "STB_DTH",
+	SUM("ANTENA_DTH") AS "ANTENA_DTH",
+    SUM("LNB_DUO_TWIN") AS "LNB_DUO_TWIN",
+	NULL::TIMESTAMP AS MAX_UPDATE_AT-- Max_updated_at is NULL for the total row
+FROM latest_pivot 
+ORDER BY 
+	CITY_ID ASC NULLS LAST; 
 """
 
 
@@ -270,6 +310,8 @@ def view_required():
 
 # -------------------------------- ROUTES---------------------------------
 # HOME PAGE
+"""
+
 @app.route("/")
 @login_required  # <-- This is the protection decorator!
 def home():
@@ -299,13 +341,15 @@ def home():
         monday=monday,
     )
 
+"""
 
-@app.route("/cpe-data")
+
+@app.route("/")
 @login_required
-def getcpe():
+def home():
     records = get_latest_pivoted_inventory()
     print(records)
-    return render_template("cpe.html", records=records)
+    return render_template("home.html", records=records)
 
 
 # ADMIN DASHBOARD PAGE
