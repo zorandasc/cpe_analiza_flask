@@ -12,8 +12,7 @@ from models import (
     DismantleTypes,
     CPE_TYPE_CHOICES,
 )
-from datetime import date, timedelta
-import datetime
+from datetime import date, timedelta, datetime
 from flask_login import (
     LoginManager,
     login_required,
@@ -309,7 +308,7 @@ def view_required():
 
 
 # -------------------------------- ROUTES---------------------------------
-# HOME PAGE
+# HOME PAGE OLD
 """
 
 @app.route("/")
@@ -340,24 +339,9 @@ def home():
         today=today.strftime("%d-%m-%Y"),
         monday=monday,
     )
-
+    
 """
-
-
-@app.route("/")
-@login_required
-def home():
-    records = get_latest_pivoted_inventory()
-    print(records)
-    return render_template("home.html", records=records)
-
-
-# ADMIN DASHBOARD PAGE
-@app.route("/admin/")
-@login_required
-def admin_dashboard():
-    return render_template("admin.html")
-
+"""
 
 # UPDATE ROUTE HOME TABLE, CALLED FROM INSIDE UPDATE FORM
 @app.route("/update_cpe", methods=["POST"])
@@ -374,9 +358,7 @@ def update_cpe():
 
     current_date = date.today()
 
-    # maybe validate fields
     # construct NEW Cperecord object
-    # Extract CPE fields and safely convert to integer (or use validation library like WTForms)
     # Extract CPE fields and safely convert to integer (or use validation library like WTForms)
     cpe_data = {
         "iads": int(request.form.get("iads", 0)),
@@ -430,7 +412,116 @@ def update_cpe():
     return redirect(url_for("home"))
 
 
-# AUTENTIFIKACIJA
+"""
+
+
+# -------------HOME PAGE NEW---------------------------
+@app.route("/")
+@login_required
+def home():
+    today = date.today()
+    # today.weekday() gives 0 for Monday, 6 for Sunday
+    # Subtracting gives the date for this week's Monday
+    monday = today - timedelta(days=today.weekday())  # Monday of this week
+    records = get_latest_pivoted_inventory()
+    return render_template(
+        "home.html", today=today.strftime("%d-%m-%Y"), monday=monday, records=records
+    )
+
+
+# UPDATE ROUTE HOME TABLE, CALLED FROM INSIDE UPDATE FORM
+@app.route("/update_cpe", methods=["POST"])
+@login_required
+def update_recent_cpe_inventory():
+    # 1. Extract and Convert Fields
+    city_id = request.form.get("city_id")  # <-- GET THE HIDDEN ID
+
+    if not city_id:
+        flash("City ID is missing.", "danger")
+        return redirect(url_for("home"))
+
+    if not admin_and_user_required(city_id):
+        return redirect(url_for("home"))
+
+    # construct NEW CpeInventory object
+    # Extract CPE fields and safely convert to integer (or use validation library like WTForms)
+    cpe_data_map = {
+        "IADS": int(request.form.get("iads", 0)),
+        "VIP4205_VIP4302_1113": int(request.form.get("stb_arr_4205", 0)),
+        "VIP5305": int(request.form.get("stb_arr_5305", 0)),
+        "DIN4805V": int(request.form.get("stb_ekt_4805", 0)),
+        "DIN7005V": int(request.form.get("stb_ekt_7005", 0)),
+        "HP44H": int(request.form.get("stb_sky_44h", 0)),
+        "ONT_HUA": int(request.form.get("ont_huaw", 0)),
+        "ONT_NOK": int(request.form.get("ont_nok", 0)),
+        "STB_DTH": int(request.form.get("stb_dth", 0)),
+        "ANTENA_DTH": int(request.form.get("antena_dth", 0)),
+        "LNB_DUO_TWIN": int(request.form.get("lnb_duo", 0)),
+    }
+    # print("cpe_data_map", cpe_data_map)
+    # cpe_data_map {'VIP4205_VIP4302_1113': 242, 'VIP5305': 77,
+
+    # 3. Retrieve CPE Type Mappings (ID and Name)
+    # We need the primary key (id) of the CPE type to insert into CpeInventory
+    cpe_types = (
+        # STAVI U cpe_types ARRAY SVE ELEMENTE IZ CpeTypes TABELE
+        db.session.query(CpeTypes.id, CpeTypes.name)
+        # ALI SAMO AKO SE IME TOG ELEMENTA eNALAZI U KLJUCEVIMA IZ  cpe_data_map
+        .filter(CpeTypes.name.in_(cpe_data_map.keys()))
+        .all()
+    )
+    print(cpe_types)
+    # [(2, 'VIP4205_VIP4302_1113'), (3, 'VIP5305'),
+
+    # Create a dictionary mapping the CPE model name (SQL name) to its ID
+    # FOR EASIER HANDELING
+    type_id_map = {name: id for id, name in cpe_types}
+    # print("type_id_map", type_id_map)
+    # type_id_map {'VIP4205_VIP4302_1113': 2, 'VIP5305': 3, 'DIN4805V': 4, .....
+
+    # 4. Prepare Batch Insert
+    # All records for this city must share the exact same timestamp to be the 'latest' set.
+    current_time = datetime.now()
+    record_to_add = []
+
+    for cpe_name, quantity in cpe_data_map.items():
+        # get cpe_type_id
+        cpe_type_id = type_id_map.get(cpe_name)
+        if cpe_type_id is not None:
+            # We insert a new record for every CPE type, even if quantity is 0
+            new_record = CpeInventory(
+                city_id=city_id,
+                cpe_type_id=cpe_type_id,
+                quantity=quantity,
+                updated_at=current_time,
+            )
+            record_to_add.append(new_record)
+
+        # 5. Execute Transaction
+        try:
+            db.session.add_all(record_to_add)
+            db.session.commit()
+            flash(
+                f"Novo stanje za skladište ID {city_id} uspješno sačuvano!", "success"
+            )
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during CpeInventory batch insert: {e}")
+            flash("Došlo je do greške prilikom unosa u bazu.", "danger")
+
+    # Redirect to Home (Post-Redirect-Get Pattern)
+    # This prevents duplicate form submissions if the user hits refresh.
+    return redirect(url_for("home"))
+
+
+# ---------------- ADMIN DASHBOARD PAGE-----------
+@app.route("/admin/")
+@login_required
+def admin_dashboard():
+    return render_template("admin.html")
+
+
+# ----------------- AUTENTIFIKACIJA------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
