@@ -435,6 +435,7 @@ def home():
 def update_recent_cpe_inventory():
     # 1. Extract and Convert Fields
     city_id = request.form.get("city_id")  # <-- GET THE HIDDEN ID
+    city_name = request.form.get("city")
 
     if not city_id:
         flash("City ID is missing.", "danger")
@@ -485,7 +486,7 @@ def update_recent_cpe_inventory():
     record_to_add = []
 
     for cpe_name, quantity in cpe_data_map.items():
-        # get cpe_type_id
+        # get cpe_type_id from name
         cpe_type_id = type_id_map.get(cpe_name)
         if cpe_type_id is not None:
             # We insert a new record for every CPE type, even if quantity is 0
@@ -495,15 +496,14 @@ def update_recent_cpe_inventory():
                 quantity=quantity,
                 updated_at=current_time,
             )
+            # gather all record from one row, one city
             record_to_add.append(new_record)
 
         # 5. Execute Transaction
         try:
             db.session.add_all(record_to_add)
             db.session.commit()
-            flash(
-                f"Novo stanje za skladište ID {city_id} uspješno sačuvano!", "success"
-            )
+            flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
         except Exception as e:
             db.session.rollback()
             print(f"Error during CpeInventory batch insert: {e}")
