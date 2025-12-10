@@ -750,3 +750,115 @@ It uses city to create the rows.
 It takes the specific values listed in the output definition ("H267N", "HG658V2", etc.) from the cpe_model column and converts them into column headers.
 
 It places the corresponding quantity value into the cell where the row and model intersect. Since the input is already pre-aggregated to the latest record (thanks to the rn=1 filter), crosstab simply handles the rotation, not further aggregation.
+
+# ------------------------------------------------------
+# FINAL RAQ SQL FOR GETTING PIVOT TABLE FROM VERTICAL DB:
+# ---------------------------------------------------
+
+# raw SQL statement, as crosstab isn't a standard, ORM-mappable function
+```PYTHON
+SQL_QUERY = """
+WITH latest_pivot AS (SELECT
+		P.CITY_ID, -- <--- ADDED: City ID for ordering
+		C.NAME AS CITY_NAME,
+        P."IADS",
+        P."VIP4205_VIP4302_1113",
+        P."VIP5305",
+        P."DIN4805V",
+        P."DIN7005V",
+        P."HP44H",
+        P."ONT_HUA",
+        P."ONT_NOK",
+        P."STB_DTH",
+        P."ANTENA_DTH",
+        P."LNB_DUO_TWIN",
+        MAX_TS.MAX_UPDATED_AT
+FROM
+	(
+		SELECT
+			*
+		FROM
+			CROSSTAB (
+				$$
+		SELECT
+			city_id,
+			cpe_model,
+			quantity
+		FROM
+			(
+				SELECT
+					R.CITY_ID,
+					S.NAME AS CPE_MODEL,
+					R.QUANTITY,
+					R.UPDATED_AT,
+					ROW_NUMBER() OVER (
+						PARTITION BY
+							R.CITY_ID,
+							R.CPE_TYPE_ID
+						ORDER BY
+							R.UPDATED_AT DESC
+					) AS RN
+				FROM
+					CPE_INVENTORY R
+					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+			) AS RANKED_RECORDS
+		WHERE
+			RN = 1
+		ORDER BY
+			CITY_ID
+			$$
+			) AS PIVOT_TABLE (
+				CITY_ID INTEGER,
+				"IADS" INT,
+				"VIP4205_VIP4302_1113" INT,
+				"VIP5305" INT,
+				"DIN4805V" INT,
+				"DIN7005V" INT,
+				"HP44H" INT,
+				"ONT_HUA" INT,
+				"ONT_NOK" INT,
+				"STB_DTH" INT,
+				"ANTENA_DTH" INT,
+				"LNB_DUO_TWIN" INT
+			)
+	) AS P
+	JOIN CITIES C ON C.ID = P.CITY_ID
+	LEFT JOIN (
+		SELECT
+			CITY_ID,
+			MAX(UPDATED_AT) AS MAX_UPDATED_AT
+		FROM
+			CPE_INVENTORY
+		GROUP BY
+			CITY_ID
+	) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
+)
+-----------------------------------------------------------
+-- adding total row to end of pivot table
+--PRVA TABELA
+-- Data Rows
+SELECT * FROM latest_pivot
+-- <--- FIX: Sort by ID (ASC), placing NULLs (the Total Row) at the end
+--UNIRANA (NA ZACELJE PRVE TABLELE DODAJ ROWOVE OD DRUGE TABELE)
+UNION ALL --This appends a new row to the result set.
+
+--SA DRUGOM TABLEOM koja sadrzi samo jedan row
+SELECT 
+	NULL::INTEGER AS CITY_ID, -- <--- ADDED: City ID is NULL for the total row
+	'UKUPNO'::VARCHAR AS CITY_NAME,
+	SUM("IADS") AS "IADS",
+	SUM("VIP4205_VIP4302_1113") AS "VIP4205_VIP4302_1113",
+	SUM("VIP5305") AS "VIP5305",
+	SUM("DIN4805V") AS "DIN4805V",
+	SUM("DIN7005V") AS "DIN7005V",
+	SUM("HP44H") AS "HP44H",
+	SUM("ONT_HUA") AS "ONT_HUA",
+    SUM("ONT_NOK") AS "ONT_NOK",
+    SUM("STB_DTH") AS "STB_DTH",
+	SUM("ANTENA_DTH") AS "ANTENA_DTH",
+    SUM("LNB_DUO_TWIN") AS "LNB_DUO_TWIN",
+	NULL::TIMESTAMP AS MAX_UPDATE_AT-- Max_updated_at is NULL for the total row
+FROM latest_pivot 
+ORDER BY 
+	CITY_ID ASC NULLS LAST; 
+```
