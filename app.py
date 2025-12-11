@@ -1,9 +1,8 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
-from sqlalchemy import func, text, distinct
+from sqlalchemy import text, distinct
 from models import (
     db,
-    CpeRecords,
     CpeInventory,
     CpeDismantle,
     Users,
@@ -81,7 +80,7 @@ app.cli.add_command(create_initial_db)
 
 # ---------------HELPER FUNCTION--------------------------
 
-'''
+"""
 # THIS IS FOR OLD HOME Function to get the latest CPE records for all cities
 def get_latest_cpe_records():
     # Subquery: find latest updated_at per city
@@ -140,9 +139,13 @@ def get_latest_cpe_records():
         totals["lnb_duo"] += r.lnb_duo
 
     return latest_records, totals
-'''
+"""
 
-def get_dynamic_cpe_model_list():
+
+# This approach bypasses the ORM's object mapping for this specific complex query,
+# treating it purely as a data fetch, which is necessary when using custom database
+# functions like crosstab.
+def get_report_schema_and_pivoted_data():
     # 1. get distinc id froM CPEInventory
     # The result is a list of tuples, e.g., [(1,), (5,), (10,)]
     list_of_id_tuples = db.session.query(distinct(CpeInventory.cpe_type_id)).all()
@@ -150,32 +153,23 @@ def get_dynamic_cpe_model_list():
     # Flatten the list of tuples: [(1,), (5,)] -> [1, 5]
     list_of_ids = [id_tuple[0] for id_tuple in list_of_id_tuples]
 
-    # 2. get name and label from CpeTypes table for that id from CpeInventory table
+    # 2. get id, name, label, type from CpeTypes table for that id from CpeInventory table
     cpe_types = (
-        db.session.query(CpeTypes.name, CpeTypes.label)
+        db.session.query(CpeTypes.id, CpeTypes.name, CpeTypes.label, CpeTypes.type)
         .filter(CpeTypes.id.in_(list_of_ids))
         .order_by(CpeTypes.id)
         .all()
     )
 
-    # cpe_types is now a list of tuples: [('IADS', 'IAD H267N /...'), ('VIP5305', 'STB ARRIS VIP5305')]
-    # list of (name, label) tuples
-    return cpe_types
-
-
-# This approach bypasses the ORM's object mapping for this specific complex query,
-# treating it purely as a data fetch, which is necessary when using custom database
-# functions like crosstab.
-def get_latest_pivoted_inventory():
-    # 1. Get the list of (name, label) tuples
-    cpe_models_data = get_dynamic_cpe_model_list()
+    # Prepare the structured list and separate lists
+    schema_list = [
+        {"id": id, "name": name, "label": label, "type": type}
+        for id, name, label, type in cpe_types
+    ]
 
     # Extract ONLY the model names (the first element in the tuple)
     # This is what CROSSTAB uses for column names
-    model_names = [name for name, label in cpe_models_data]
-
-    # thsis is fot html header
-    model_labels = [label for name, label in cpe_models_data]
+    model_names = [item["name"] for item in schema_list]
 
     # for first select
     # Create the comma-separated list of model names (for the final SELECT)
@@ -275,10 +269,7 @@ def get_latest_pivoted_inventory():
     # for easier handling in a web app.
     pivoted_data = [row._asdict() for row in result.all()]
 
-    # To use the dynamic headers in your Flask route:
-    headers = ["SKLADIŠTA"] + model_labels + ["AŽURIRANO"]
-
-    return pivoted_data, model_names, headers
+    return pivoted_data, schema_list
 
 
 # --------AUTHORIZACIJA--------------------------------------------
@@ -437,14 +428,22 @@ def home():
     # today.weekday() gives 0 for Monday, 6 for Sunday
     # Subtracting gives the date for this week's Monday
     monday = today - timedelta(days=today.weekday())  # Monday of this week
-    records, model_names, headers = get_latest_pivoted_inventory()
+    # 1. Get the records and the schema list
+    records, schema_list = get_report_schema_and_pivoted_data()
+
+    # 2. Derive the model labels for the headers
+    model_labels = [item["label"] for item in schema_list]
+
+    # 4. Construct the full list of headers for the HTML <thead>
+    headers = ["SKLADIŠTA"] + model_labels + ["AŽURIRANO"]
+
     return render_template(
         "home.html",
         today=today.strftime("%d-%m-%Y"),
         monday=monday,
         headers=headers,
-        names=model_names,
         records=records,
+        schema=schema_list,
     )
 
 
@@ -453,80 +452,58 @@ def home():
 @login_required
 def update_recent_cpe_inventory():
     # 1. Extract and Convert Fields
-    city_id = request.form.get("city_id")  # <-- GET THE HIDDEN ID
+    city_id_str = request.form.get("city_id")  # <-- GET THE HIDDEN ID
     city_name = request.form.get("city")
 
-    if not city_id:
+    if not city_id_str or not city_id_str.isdigit():
         flash("City ID is missing.", "danger")
         return redirect(url_for("home"))
+
+    city_id = int(city_id_str)
 
     if not admin_and_user_required(city_id):
         return redirect(url_for("home"))
 
-    # construct NEW CpeInventory object
-    # Extract CPE fields and safely convert to integer (or use validation library like WTForms)
-    cpe_data_map = {
-        "IADS": int(request.form.get("iads", 0)),
-        "VIP4205_VIP4302_1113": int(request.form.get("stb_arr_4205", 0)),
-        "VIP5305": int(request.form.get("stb_arr_5305", 0)),
-        "DIN4805V": int(request.form.get("stb_ekt_4805", 0)),
-        "DIN7005V": int(request.form.get("stb_ekt_7005", 0)),
-        "HP44H": int(request.form.get("stb_sky_44h", 0)),
-        "ONT_HUA": int(request.form.get("ont_huaw", 0)),
-        "ONT_NOK": int(request.form.get("ont_nok", 0)),
-        "STB_DTH": int(request.form.get("stb_dth", 0)),
-        "ANTENA_DTH": int(request.form.get("antena_dth", 0)),
-        "LNB_DUO_TWIN": int(request.form.get("lnb_duo", 0)),
-    }
-    # print("cpe_data_map", cpe_data_map)
-    # cpe_data_map {'VIP4205_VIP4302_1113': 242, 'VIP5305': 77,
-
-    # 3. Retrieve CPE Type Mappings (ID and Name)
-    # We need the primary key (id) of the CPE type to insert into CpeInventory
-    cpe_types = (
-        # DOBAVI IZ cPtypes TABELE SVE ELEMENTE
-        db.session.query(CpeTypes.id, CpeTypes.name)
-        # ALI SAMO AKO SE IME TOG ELEMENTA eNALAZI U KLJUCEVIMA IZ  cpe_data_map
-        .filter(CpeTypes.name.in_(cpe_data_map.keys()))
-        .all()
-    )
-    print(cpe_types)
-    # [(2, 'VIP4205_VIP4302_1113'), (3, 'VIP5305'),
-
-    # Create a dictionary mapping the CPE model name (SQL name) to its ID
-    # FOR EASIER HANDELING
-    type_id_map = {name: id for id, name in cpe_types}
-    # print("type_id_map", type_id_map)
-    # type_id_map {'VIP4205_VIP4302_1113': 2, 'VIP5305': 3, 'DIN4805V': 4, .....
-
-    # 4. Prepare Batch Insert
-    # All records for this city must share the exact same timestamp to be the 'latest' set.
     current_time = datetime.now()
-    record_to_add = []
+    records_to_add = []
 
-    for cpe_name, quantity in cpe_data_map.items():
-        # get cpe_type_id from name
-        cpe_type_id = type_id_map.get(cpe_name)
-        if cpe_type_id is not None:
-            # We insert a new record for every CPE type, even if quantity is 0
-            new_record = CpeInventory(
-                city_id=city_id,
-                cpe_type_id=cpe_type_id,
-                quantity=quantity,
-                updated_at=current_time,
-            )
+    # Iterate through all submitted form items
+    for key, value in request.form.items():
+        # Keys are formatted as 'cpe-ID-NAME', e.g., 'cpe-1-IADS'
+        # from .html form modal inputs
+        if key.startswith("cpe-"):
+            parts = key.split("-", 2)  # Splits into ['cpe', 'ID', 'NAME']
+            if len(parts) == 3:
+                cpe_type_id_str = parts[1]  #'ID'
+                try:
+                    cpe_type_id = int(cpe_type_id_str)
+                    quantity = int(value or 0)
+                except ValueError:
+                    # Skip this record if ID or Quantity is invalid
+                    continue
+
+                # We insert a new record for every CPE type,
+                new_record = CpeInventory(
+                    city_id=city_id,
+                    cpe_type_id=cpe_type_id,
+                    quantity=quantity,
+                    updated_at=current_time,
+                )
             # gather all record from one row, one city
-            record_to_add.append(new_record)
+            records_to_add.append(new_record)
 
-        # 5. Execute Transaction
+    # 4. Execute Single Batch Transaction
+    if records_to_add:
         try:
-            db.session.add_all(record_to_add)
+            db.session.add_all(records_to_add)
             db.session.commit()
             flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
         except Exception as e:
             db.session.rollback()
             print(f"Error during CpeInventory batch insert: {e}")
             flash("Došlo je do greške prilikom unosa u bazu.", "danger")
+    else:
+        flash("Nije pronađen nijedan CPE za unos.", "warning")
 
     # Redirect to Home (Post-Redirect-Get Pattern)
     # This prevents duplicate form submissions if the user hits refresh.
@@ -948,7 +925,6 @@ def admin_edit_cpe_type(id):
         name = request.form.get("name")
         label = request.form.get("label")
         type_ = request.form.get("type")  # renamed to avoid shadowing built-in 'type'
-        is_active = request.form.get("is_active")
 
         # Username uniqueness (except current user)
         existing_cpe_type = CpeTypes.query.filter(

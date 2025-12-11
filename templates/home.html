@@ -152,8 +152,8 @@ styles %} {{ super() }}
         {% for r in records %}
         <tr>
           <td>{{ r.city_name }}</td>
-          {% for name in names %}
-          <td>{{ r[name]}}</td>
+          {% for item in schema %}
+          <td>{{ r[item.name]}}</td>
           {% endfor %}
           <td>
             {% if r.max_updated_at %} {{ r.max_updated_at.strftime('%Y-%m-%d
@@ -172,15 +172,18 @@ styles %} {{ super() }}
               data-id="{{ r.id }}"
               data-city-id="{{ r.city_id }}"
               data-city="{{ r.city_name }}"
-              {# CORRECTION: LOOP 2 - Dynamically pass data for the modal #}
-              {# Iterate with index for the JavaScript to use a simple index #}
-              {% for name in names %}
-              {# The name will be the dictionary key, r[name] is the value #}
-              data-cpe-{{ loop.index}}="{{ r[name] }}"
-              data-cpe-name-{{ loop.index }}="{{ name }}" {# Optional: Pass the model name key too #}
+              data-schema-count="{{ schema | length }}"
+              {% for item in schema %}
+              {# loop.index starts at 1, which we will use as the key index #}
+              {# Pass the ID (critical for the update route) #}
+              data-cpe-id-{{ loop.index}}="{{ item.id }}"
+              {# Pass the Name (used to look up the quantity from the current record 'r') #}
+              data-cpe-name-{{ loop.index }}="{{ item.name }}" 
+              {# Pass the Quantity (using the item.name as the dynamic key to access the 'r' dict) #}
+              data-cpe-quantity-{{ loop.index }}="{{ r[item.name] }}"
               {% endfor %}
               
-              data-cpe-count="{{ names | length }}" {# Pass the total count to JS #}
+            
             >
               <span class="text-white fw-bold fs-4"
                 ><svg
@@ -259,13 +262,13 @@ styles %} {{ super() }}
               class="col-auto me-2 d-flex flex-column justify-content-between iad-column"
             >
               <label class="mb-1 cpe-label-wrap">{{header}}</label>
-              {# loop.index starts at 1. (Used for data-cpe-1, id="modal-cpe-1") #}
-              {# loop.index0 starts at 0. (Used for array access: names[0], names[1], etc #}
+    
               <input
                 class="form-control input-cpe-count"
-                id="modal-cpe-{{ loop.index }}"
-                name="cpe-{{ names[loop.index0] }}"
+                id="modal-cpe-{{ loop.index }}" {# loop.index starts at 1. `id=modal-cpe-1` #}
+                name="" {# The name attribute is intentionally left blank here, JS will set it to cpe-ID-NAME #}
                 type="number"
+                min="0"
               />
             </div>
             {% endfor %}
@@ -330,8 +333,11 @@ styles %} {{ super() }}
   document
     .getElementById("editModal")
     .addEventListener("show.bs.modal", function (event) {
-      const btn = event.relatedTarget; // the Edit button that triggered modal
-      const modal = event.currentTarget; // The modal itself
+      // the Edit button that triggered modal and that carry the data
+      const btn = event.relatedTarget; 
+
+       // The modal itself to update thair input fields
+      const modal = event.currentTarget;
 
       // Static field updates
       modal.querySelector("#modal-id").value = btn.getAttribute("data-id");
@@ -339,22 +345,28 @@ styles %} {{ super() }}
       modal.querySelector("#modal-city").value = btn.getAttribute("data-city");
 
       // Get the number of CPE columns we need to loop through
-      const cpeCount = parseInt(btn.getAttribute("data-cpe-count"));
+      const schemaCount = parseInt(btn.getAttribute("data-schema-count"));
 
-      // Dynamic field updates
-      for (let i = 1; i <= cpeCount; i++) {
-        const dataAttributeName = `data-cpe-${i}`;
-        const inputId = `modal-cpe-${i}`;
+      // Dynamic field updates for all CPE types
+      for (let i = 1; i <= schemaCount; i++) {
+        // 1. Get the data from the button attributes
+        const cpeId = btn.getAttribute(`data-cpe-id-${i}`);
+        const cpeName = btn.getAttribute(`data-cpe-name-${i}`);
+        const cpeQuantity = btn.getAttribute(`data-cpe-quantity-${i}`);
+      
+        // 2. Find the corresponding input fields in the modal
+        const countInput = modal.querySelector(`#modal-cpe-${i}`);
 
-        const cpeValue = btn.getAttribute(dataAttributeName);
-        const inputField = modal.querySelector(`#${inputId}`);
+        // 3. Update the value (Quantity) in modal inputs
+        if (countInput) {
+          countInput.value = cpeQuantity !== null ? cpeQuantity  : '';
+        }
 
-        if (inputField && cpeValue !== null) {
-          // Set the value from the button's data attribute
-          inputField.value = cpeValue;
-        } else if (inputField) {
-            // Clear the field if data is missing or N/A
-            inputField.value = '';
+        // 4. Update the NAME attribute of the input in modal to include the CPE ID
+        // This is CRITICAL for passing the ID back to the Flask update route
+        if(countInput&& cpeId){
+          // The form submission will now send: cpe-1-IADS=150, cpe-2-VIP5305=50, etc.
+          countInput.name=`cpe-${cpeId}-${cpeName}`
         }
 
       }
