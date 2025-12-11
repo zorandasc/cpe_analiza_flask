@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
-from sqlalchemy import func, text
+from sqlalchemy import func, text, distinct
 from models import (
     db,
     CpeRecords,
@@ -81,115 +81,8 @@ app.cli.add_command(create_initial_db)
 
 # ---------------HELPER FUNCTION--------------------------
 
-# raw SQL statement, as crosstab isn't a standard, ORM-mappable function
-SQL_QUERY = """
-WITH latest_pivot AS (SELECT
-		P.CITY_ID, -- <--- ADDED: City ID for ordering
-		C.NAME AS CITY_NAME,
-        P."IADS",
-        P."VIP4205_VIP4302_1113",
-        P."VIP5305",
-        P."DIN4805V",
-        P."DIN7005V",
-        P."HP44H",
-        P."ONT_HUA",
-        P."ONT_NOK",
-        P."STB_DTH",
-        P."ANTENA_DTH",
-        P."LNB_DUO_TWIN",
-        MAX_TS.MAX_UPDATED_AT
-FROM
-	(
-		SELECT
-			*
-		FROM
-			CROSSTAB (
-				$$
-		SELECT
-			city_id,
-			cpe_model,
-			quantity
-		FROM
-			(
-				SELECT
-					R.CITY_ID,
-					S.NAME AS CPE_MODEL,
-					R.QUANTITY,
-					R.UPDATED_AT,
-					ROW_NUMBER() OVER (
-						PARTITION BY
-							R.CITY_ID,
-							R.CPE_TYPE_ID
-						ORDER BY
-							R.UPDATED_AT DESC
-					) AS RN
-				FROM
-					CPE_INVENTORY R
-					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
-			) AS RANKED_RECORDS
-		WHERE
-			RN = 1
-		ORDER BY
-			CITY_ID
-			$$
-			) AS PIVOT_TABLE (
-				CITY_ID INTEGER,
-				"IADS" INT,
-				"VIP4205_VIP4302_1113" INT,
-				"VIP5305" INT,
-				"DIN4805V" INT,
-				"DIN7005V" INT,
-				"HP44H" INT,
-				"ONT_HUA" INT,
-				"ONT_NOK" INT,
-				"STB_DTH" INT,
-				"ANTENA_DTH" INT,
-				"LNB_DUO_TWIN" INT
-			)
-	) AS P
-	JOIN CITIES C ON C.ID = P.CITY_ID
-	LEFT JOIN (
-		SELECT
-			CITY_ID,
-			MAX(UPDATED_AT) AS MAX_UPDATED_AT
-		FROM
-			CPE_INVENTORY
-		GROUP BY
-			CITY_ID
-	) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
-)
------------------------------------------------------------
--- adding total row to end of pivot table
---PRVA TABELA
--- Data Rows
-SELECT * FROM latest_pivot
--- <--- FIX: Sort by ID (ASC), placing NULLs (the Total Row) at the end
---UNIRANA (NA ZACELJE PRVE TABLELE DODAJ ROWOVE OD DRUGE TABELE)
-UNION ALL --This appends a new row to the result set.
-
---SA DRUGOM TABLEOM koja sadrzi samo jedan row
-SELECT 
-	NULL::INTEGER AS CITY_ID, -- <--- ADDED: City ID is NULL for the total row
-	'UKUPNO'::VARCHAR AS CITY_NAME,
-	SUM("IADS") AS "IADS",
-	SUM("VIP4205_VIP4302_1113") AS "VIP4205_VIP4302_1113",
-	SUM("VIP5305") AS "VIP5305",
-	SUM("DIN4805V") AS "DIN4805V",
-	SUM("DIN7005V") AS "DIN7005V",
-	SUM("HP44H") AS "HP44H",
-	SUM("ONT_HUA") AS "ONT_HUA",
-    SUM("ONT_NOK") AS "ONT_NOK",
-    SUM("STB_DTH") AS "STB_DTH",
-	SUM("ANTENA_DTH") AS "ANTENA_DTH",
-    SUM("LNB_DUO_TWIN") AS "LNB_DUO_TWIN",
-	NULL::TIMESTAMP AS MAX_UPDATE_AT-- Max_updated_at is NULL for the total row
-FROM latest_pivot 
-ORDER BY 
-	CITY_ID ASC NULLS LAST; 
-"""
-
-
-# Function to get the latest CPE records for all cities
+'''
+# THIS IS FOR OLD HOME Function to get the latest CPE records for all cities
 def get_latest_cpe_records():
     # Subquery: find latest updated_at per city
     # Select two fields:
@@ -247,24 +140,145 @@ def get_latest_cpe_records():
         totals["lnb_duo"] += r.lnb_duo
 
     return latest_records, totals
+'''
+
+def get_dynamic_cpe_model_list():
+    # 1. get distinc id froM CPEInventory
+    # The result is a list of tuples, e.g., [(1,), (5,), (10,)]
+    list_of_id_tuples = db.session.query(distinct(CpeInventory.cpe_type_id)).all()
+
+    # Flatten the list of tuples: [(1,), (5,)] -> [1, 5]
+    list_of_ids = [id_tuple[0] for id_tuple in list_of_id_tuples]
+
+    # 2. get name and label from CpeTypes table for that id from CpeInventory table
+    cpe_types = (
+        db.session.query(CpeTypes.name, CpeTypes.label)
+        .filter(CpeTypes.id.in_(list_of_ids))
+        .order_by(CpeTypes.id)
+        .all()
+    )
+
+    # cpe_types is now a list of tuples: [('IADS', 'IAD H267N /...'), ('VIP5305', 'STB ARRIS VIP5305')]
+    # list of (name, label) tuples
+    return cpe_types
 
 
 # This approach bypasses the ORM's object mapping for this specific complex query,
 # treating it purely as a data fetch, which is necessary when using custom database
 # functions like crosstab.
 def get_latest_pivoted_inventory():
-    # 1. Prepare the raw SQL string
-    sql_statement = text(SQL_QUERY)
+    # 1. Get the list of (name, label) tuples
+    cpe_models_data = get_dynamic_cpe_model_list()
 
+    # Extract ONLY the model names (the first element in the tuple)
+    # This is what CROSSTAB uses for column names
+    model_names = [name for name, label in cpe_models_data]
+
+    # thsis is fot html header
+    model_labels = [label for name, label in cpe_models_data]
+
+    # for first select
+    # Create the comma-separated list of model names (for the final SELECT)
+    # e.g., 'p."H267N", p."Arris VIP4205/VIP4302/1113", ...'
+    selected_columns = ", ".join([f'p."{name}"' for name in model_names])
+
+    # for pivot table as
+    # Create the comma-separated list of quoted model names (for the SQL)
+    # e.g., '"H267N" int, "Arris VIP4205/VIP4302/1113" int, ...'
+    quoted_columns = ", ".join([f'"{name}" int' for name in model_names])
+
+    # for sum columns
+    sum_columns = ", ".join([f'SUM("{name}") AS "{name}"' for name in model_names])
+
+    # raw SQL statement, as crosstab isn't a standard, ORM-mappable function
+    # Inject these lists into the complete SQL template
+    SQL_QUERY = f"""
+    WITH latest_pivot AS (
+        SELECT
+            C.NAME AS CITY_NAME, -- Add CITY_NAME here for final result
+            P.CITY_ID, -- For ordering purposes
+            {selected_columns}, -- COMMA separated list of columns
+            MAX_TS.MAX_UPDATED_AT
+        FROM
+            (
+                SELECT
+                    *
+                FROM
+                    CROSSTAB (
+                        $$
+                        SELECT
+                            R.CITY_ID,
+                            S.NAME AS CPE_MODEL,
+                            R.QUANTITY
+                        FROM
+                            (
+                                SELECT
+                                    CITY_ID,
+                                    CPE_TYPE_ID,
+                                    QUANTITY,
+                                    UPDATED_AT,
+                                    ROW_NUMBER() OVER (
+                                        PARTITION BY CITY_ID, CPE_TYPE_ID
+                                        ORDER BY UPDATED_AT DESC
+                                    ) AS RN
+                                FROM CPE_INVENTORY
+                            ) AS R
+                            JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+                        WHERE RN = 1
+                        ORDER BY R.CITY_ID
+                        $$
+                    ) AS PIVOT_TABLE (
+                        CITY_ID INTEGER,
+                        {quoted_columns}
+                    )
+            ) AS P
+            JOIN CITIES C ON C.ID = P.CITY_ID
+            LEFT JOIN (
+                SELECT
+                    CITY_ID,
+                    MAX(UPDATED_AT) AS MAX_UPDATED_AT
+                FROM
+                    CPE_INVENTORY
+                GROUP BY
+                    CITY_ID
+            ) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
+        )
+    
+    -- Data Rows
+    SELECT 
+        CITY_ID, 
+        CITY_NAME, 
+        {selected_columns.replace("p.", "")}, -- Remove 'p.' alias as we are selecting directly from latest_pivot
+        MAX_UPDATED_AT
+    FROM latest_pivot
+
+    UNION ALL
+
+    -- Total Row
+    SELECT 
+        NULL::INTEGER AS CITY_ID,
+        'UKUPNO'::VARCHAR AS CITY_NAME,
+        {sum_columns},
+        NULL::TIMESTAMP AS MAX_UPDATED_AT
+    FROM latest_pivot 
+    
+    ORDER BY 
+        CITY_ID ASC NULLS LAST; 
+    """
+
+    # 1. Prepare the raw SQL string
     # 2. Execute the query
-    result = db.session.execute(sql_statement)
+    result = db.session.execute(text(SQL_QUERY))
 
     # 3. Fetch all rows
     # The result is a ResultProxy; .mappings() helps convert rows to dicts
     # for easier handling in a web app.
     pivoted_data = [row._asdict() for row in result.all()]
 
-    return pivoted_data
+    # To use the dynamic headers in your Flask route:
+    headers = ["SKLADIŠTA"] + model_labels + ["AŽURIRANO"]
+
+    return pivoted_data, model_names, headers
 
 
 # --------AUTHORIZACIJA--------------------------------------------
@@ -423,9 +437,14 @@ def home():
     # today.weekday() gives 0 for Monday, 6 for Sunday
     # Subtracting gives the date for this week's Monday
     monday = today - timedelta(days=today.weekday())  # Monday of this week
-    records = get_latest_pivoted_inventory()
+    records, model_names, headers = get_latest_pivoted_inventory()
     return render_template(
-        "home.html", today=today.strftime("%d-%m-%Y"), monday=monday, records=records
+        "home.html",
+        today=today.strftime("%d-%m-%Y"),
+        monday=monday,
+        headers=headers,
+        names=model_names,
+        records=records,
     )
 
 
@@ -465,7 +484,7 @@ def update_recent_cpe_inventory():
     # 3. Retrieve CPE Type Mappings (ID and Name)
     # We need the primary key (id) of the CPE type to insert into CpeInventory
     cpe_types = (
-        # STAVI U cpe_types ARRAY SVE ELEMENTE IZ CpeTypes TABELE
+        # DOBAVI IZ cPtypes TABELE SVE ELEMENTE
         db.session.query(CpeTypes.id, CpeTypes.name)
         # ALI SAMO AKO SE IME TOG ELEMENTA eNALAZI U KLJUCEVIMA IZ  cpe_data_map
         .filter(CpeTypes.name.in_(cpe_data_map.keys()))

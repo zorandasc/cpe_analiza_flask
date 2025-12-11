@@ -752,10 +752,13 @@ It takes the specific values listed in the output definition ("H267N", "HG658V2"
 It places the corresponding quantity value into the cell where the row and model intersect. Since the input is already pre-aggregated to the latest record (thanks to the rn=1 filter), crosstab simply handles the rotation, not further aggregation.
 
 # ------------------------------------------------------
-# FINAL RAQ SQL FOR GETTING PIVOT TABLE FROM VERTICAL DB:
+
+# FINAL STATIC RAW SQL FOR GETTING PIVOT TABLE FROM VERTICAL DB:
+
 # ---------------------------------------------------
 
 # raw SQL statement, as crosstab isn't a standard, ORM-mappable function
+
 ```PYTHON
 SQL_QUERY = """
 WITH latest_pivot AS (SELECT
@@ -843,7 +846,7 @@ SELECT * FROM latest_pivot
 UNION ALL --This appends a new row to the result set.
 
 --SA DRUGOM TABLEOM koja sadrzi samo jedan row
-SELECT 
+SELECT
 	NULL::INTEGER AS CITY_ID, -- <--- ADDED: City ID is NULL for the total row
 	'UKUPNO'::VARCHAR AS CITY_NAME,
 	SUM("IADS") AS "IADS",
@@ -858,7 +861,91 @@ SELECT
 	SUM("ANTENA_DTH") AS "ANTENA_DTH",
     SUM("LNB_DUO_TWIN") AS "LNB_DUO_TWIN",
 	NULL::TIMESTAMP AS MAX_UPDATE_AT-- Max_updated_at is NULL for the total row
-FROM latest_pivot 
-ORDER BY 
-	CITY_ID ASC NULLS LAST; 
+FROM latest_pivot
+ORDER BY
+	CITY_ID ASC NULLS LAST;
 ```
+
+# ------------------------------------------------------
+
+# FINAL DYNAMIC RAW SQL FOR GETTING PIVOT TABLE FROM VERTICAL DB:
+
+# ---------------------------------------------------
+
+```python
+  SQL_QUERY = f"""
+    WITH latest_pivot AS (
+    SELECT
+        C.NAME AS CITY_NAME, -- Add CITY_NAME here for final result
+        P.CITY_ID, -- For ordering purposes
+        {selected_columns}, -- COMMA separated list of columns
+        MAX_TS.MAX_UPDATED_AT
+    FROM
+        (
+            SELECT
+                *
+            FROM
+                CROSSTAB (
+                    $$
+                    SELECT
+                        R.CITY_ID,
+                        S.NAME AS CPE_MODEL,
+                        R.QUANTITY
+                    FROM
+                        (
+                            SELECT
+                                CITY_ID,
+                            	CPE_TYPE_ID,
+                            	QUANTITY,
+                            	UPDATED_AT,
+                                ROW_NUMBER() OVER (
+                                    PARTITION BY CITY_ID, CPE_TYPE_ID
+                                    ORDER BY UPDATED_AT DESC
+                                ) AS RN
+                            FROM CPE_INVENTORY
+                        ) AS R
+                        JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
+                    WHERE RN = 1
+                    ORDER BY R.CITY_ID
+                    $$
+                ) AS PIVOT_TABLE (
+                    CITY_ID INTEGER,
+                    {quoted_columns}
+                )
+        ) AS P
+        JOIN CITIES C ON C.ID = P.CITY_ID
+        LEFT JOIN (
+            SELECT
+                CITY_ID,
+                MAX(UPDATED_AT) AS MAX_UPDATED_AT
+            FROM
+                CPE_INVENTORY
+            GROUP BY
+                CITY_ID
+        ) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
+    )
+    
+    -- Data Rows
+    SELECT 
+        CITY_ID, 
+        CITY_NAME, 
+        {selected_columns.replace('p.', '')}, -- Remove 'p.' alias as we are selecting directly from latest_pivot
+        MAX_UPDATED_AT
+    FROM latest_pivot
+
+    UNION ALL
+
+    -- Total Row
+    SELECT 
+        NULL::INTEGER AS CITY_ID,
+        'UKUPNO'::VARCHAR AS CITY_NAME,
+        {sum_columns},
+        NULL::TIMESTAMP AS MAX_UPDATED_AT
+    FROM latest_pivot 
+    
+    ORDER BY 
+        CITY_ID ASC NULLS LAST; 
+    """
+```
+
+Final SELECT Correction: The SELECT \* FROM latest_pivot was replaced with an explicit SELECT to match the column names in the UNION ALL. Crucially, I had to remove the p. alias from the selected_columns list in the final SELECT because you are selecting from the latest_pivot CTE, not the aliased subquery P.

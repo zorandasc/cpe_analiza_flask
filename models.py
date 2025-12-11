@@ -19,18 +19,19 @@ from flask_login import UserMixin
 
 
 CPE_TYPE_CHOICES = [
-    "IAD",
-    "ONT",
-    "STB",
-    "ANTENA",
-    "ROUTER",
-    "SWITCH",
-    "WIFI EXTENDER",
-    "WIFI ACCESS POINT",
-    "PHONES",
-    "SERVER",
-    "PC",
-    "IOT",
+    "Iad",
+    "Ont",
+    "Stb",
+    "Antena",
+    "Router",
+    "Switch",
+    "Wifi_extender",
+    "Wifi_access_point",
+    "Phones",
+    "Server",
+    "Pc",
+    "Iot",
+    "Other",
 ]
 
 
