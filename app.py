@@ -665,6 +665,10 @@ def admin_add_user():
             flash("Invalid role", "danger")
             return redirect(url_for("admin_add_user"))
 
+        if role == "user" and (city_id is None or city_id == 0):
+            flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
+            return redirect(url_for("admin_add_user"))
+
         password_hash = generate_password_hash(plain_password)
 
         user = Users(
