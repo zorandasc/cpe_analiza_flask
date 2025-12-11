@@ -162,6 +162,9 @@ def get_report_schema_and_pivoted_data():
     )
 
     # Prepare the structured list and separate lists
+    # THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE IN CPEINVENTORY TABLE
+    # FROM THIS SCHEMA LIST WE BUILD DYNAMIC SQL QUERY
+    # WE ALSO USE IT IN HTML TEMPLATES AND IN ROUTES
     schema_list = [
         {"id": id, "name": name, "label": label, "type": type}
         for id, name, label, type in cpe_types
@@ -475,14 +478,14 @@ def update_recent_cpe_inventory():
                     # Skip this record if ID or Quantity is invalid
                     continue
 
-                # We insert a new record for every CPE type,
+                # We insert a new record for every CPE type, FOR ONE CITY_ID
                 new_record = CpeInventory(
                     city_id=city_id,
                     cpe_type_id=cpe_type_id,
                     quantity=quantity,
                     updated_at=current_time,
                 )
-            # gather all record from one row, one city
+            # gather all record from one row OF one city
             records_to_add.append(new_record)
 
     # 4. Execute Single Batch Transaction
