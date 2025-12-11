@@ -142,11 +142,11 @@ styles %} {{ super() }}
     <table class="table table-hover align-middle table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
-           <th class="stanje-column">SKLADIŠTA</th>
-          {% if schema %} {% for item in schema %}
-          <th class="{{item.type}}-column">{{item.label}}</th>
+          <th class="stanje-column">SKLADIŠTA</th><!--CITY COLUMN-->
+          {% if schema %} {% for item in schema %} 
+          <th class="{{item.type}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
           {% endfor %} {% endif %}
-          <th class="azur-column">AŽURIRANO</th>
+          <th class="azur-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
         </tr>
       </thead>
 
@@ -162,10 +162,13 @@ styles %} {{ super() }}
             %H:%M:%S') }} {% else %} N/A {% endif %}
           </td>
           <td>
+            <!--PRIKAZI EDIT BUTTON  AKO VRIJE POSTOJI-->
+            {% if r.max_updated_at  %}
+            <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
+              {% if ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))  %}
             <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
             <!-- data-bs-target="#editModal" → tells which modal to open.-->
             <!-- data-* attributes → store all the values of that row.-->
-             {% if r.max_updated_at %}
             <button
               type="button"
               title="Ažuritajte posljednje stanje CPE opreme"
@@ -207,6 +210,7 @@ styles %} {{ super() }}
                 </svg>
               </span>
             </button>
+              {% endif %}
             {% endif %}
           </td>
         </tr>

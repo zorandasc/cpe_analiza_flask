@@ -162,6 +162,7 @@ def get_report_schema_and_pivoted_data():
     )
 
     # Prepare the structured list and separate lists
+    # SOURCE OF TRUTH FOR WHOLE APP TO WORK
     # THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE IN CPEINVENTORY TABLE
     # FROM THIS SCHEMA LIST WE BUILD DYNAMIC SQL QUERY
     # WE ALSO USE IT IN HTML TEMPLATES AND IN ROUTES
@@ -505,6 +506,14 @@ def update_recent_cpe_inventory():
     # This prevents duplicate form submissions if the user hits refresh.
     return redirect(url_for("home"))
 
+
+@app.route("/admin/cities/history/<int:id>")
+@login_required
+def city_history(id):
+
+    Cities.query.get_or_404(id)
+
+    return render_template("admin/cities_edit.html")
 
 # ---------------- ADMIN DASHBOARD PAGE-----------
 @app.route("/admin/")
