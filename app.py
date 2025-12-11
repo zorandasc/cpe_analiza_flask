@@ -431,17 +431,10 @@ def home():
     # 1. Get the records and the schema list
     records, schema_list = get_report_schema_and_pivoted_data()
 
-    # 2. Derive the model labels for the headers
-    model_labels = [item["label"] for item in schema_list]
-
-    # 4. Construct the full list of headers for the HTML <thead>
-    headers = ["SKLADIŠTA"] + model_labels + ["AŽURIRANO"]
-
     return render_template(
         "home.html",
         today=today.strftime("%d-%m-%Y"),
         monday=monday,
-        headers=headers,
         records=records,
         schema=schema_list,
     )
