@@ -1,6 +1,8 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
 from sqlalchemy import text, distinct
+from simplepagination import SimplePagination
+
 from models import (
     db,
     CpeInventory,
@@ -142,10 +144,11 @@ def get_latest_cpe_records():
 """
 
 
-# This approach bypasses the ORM's object mapping for this specific complex query,
-# treating it purely as a data fetch, which is necessary when using custom database
-# functions like crosstab.
-def get_report_schema_and_pivoted_data():
+# SOURCE OF TRUTH FOR WHOLE APP TO WORK
+# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE PRESENT IN CPEINVENTORY TABLE
+# FROM THIS SCHEMA LIST WE BUILD DYNAMIC SQL QUERY
+# WE ALSO USE IT IN HTML TEMPLATES AND IN ROUTES
+def get_cpe_column_schema():
     # 1. get distinc id froM CPEInventory
     # The result is a list of tuples, e.g., [(1,), (5,), (10,)]
     list_of_id_tuples = db.session.query(distinct(CpeInventory.cpe_type_id)).all()
@@ -162,15 +165,18 @@ def get_report_schema_and_pivoted_data():
     )
 
     # Prepare the structured list and separate lists
-    # SOURCE OF TRUTH FOR WHOLE APP TO WORK
-    # THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE IN CPEINVENTORY TABLE
-    # FROM THIS SCHEMA LIST WE BUILD DYNAMIC SQL QUERY
-    # WE ALSO USE IT IN HTML TEMPLATES AND IN ROUTES
     schema_list = [
         {"id": id, "name": name, "label": label, "type": type}
         for id, name, label, type in cpe_types
     ]
 
+    return schema_list
+
+
+# This approach bypasses the ORM's object mapping for this specific complex query,
+# treating it purely as a data fetch, which is necessary when using custom database
+# functions like crosstab.
+def get_pivoted_data(schema_list: list):
     # Extract ONLY the model names (the first element in the tuple)
     # This is what CROSSTAB uses for column names
     model_names = [item["name"] for item in schema_list]
@@ -273,7 +279,98 @@ def get_report_schema_and_pivoted_data():
     # for easier handling in a web app.
     pivoted_data = [row._asdict() for row in result.all()]
 
-    return pivoted_data, schema_list
+    return pivoted_data
+
+
+def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page: int):
+    """
+    Retrieves the historical records for a specific city_id, pivoted by CPE type.
+    This query handles pagination internally based on the unique UPDATED_AT timestamp.
+    """
+    model_names = [item["name"] for item in schema_list]
+
+    quoted_columns = ", ".join([f'"{name}" INT' for name in model_names])
+    selected_columns = ", ".join([f'P."{name}"' for name in model_names])
+
+    # koloko ima rows za izabrani grad
+    # We need a separate query to get the total count for pagination
+    count_query = text(
+        f"""SELECT 
+                COUNT(DISTINCT UPDATED_AT) 
+            FROM CPE_INVENTORY 
+            WHERE CITY_ID={city_id}"""
+    )
+
+    total_count = db.session.execute(count_query).scalar()
+
+    # Calculate offset
+    offset = (page - 1) * per_page
+
+    # THIS IS THE QUERY FOR CROSSTAB FUNCTION
+    # IT WILL FIND ALL PIVOTED DATAD FOR SELECTED CITY_ID
+    inner_crosstab_query = f"""
+    SELECT
+        R.UPDATED_AT,
+        S.NAME AS CPE_MODEL,
+        R.QUANTITY
+    FROM 
+        CPE_INVENTORY R
+    JOIN 
+        CPE_TYPES S ON R.CPE_TYPE_ID=S.ID
+    WHERE
+        R.CITY_ID={city_id}
+    ORDER BY
+        R.UPDATED_AT DESC, S.NAME
+    """
+
+    # CRITICAL: We need to figure out which UPDATED_AT timestamps belong to the current page.
+    # We do this using a subquery (distinct_updates) to find the timestamps, and then offset/limit.
+    # WE FIND ALL THE PIVOTED DATA IN CROSSTAB AND THEN JOIN WITH distinct_updates TABLE
+    # distinct_updates TABLE ACT AS A FILTER. DISPLAY ONLY PIVOTED DATA BUT FOR DATA IN
+    # LIMIT AND OFFSET.
+    # PAGINATION ON ALL PIVOTED DATA IS NOT PERFORMANT
+    SQL_QUERY = f"""
+    WITH distinct_updates AS (
+        SELECT DISTINCT UPDATED_AT
+        FROM CPE_INVENTORY
+        WHERE CITY_ID = {city_id}
+        ORDER BY UPDATED_AT DESC
+        LIMIT {per_page} OFFSET {offset}
+    )
+    SELECT
+        D.UPDATED_AT,
+        {selected_columns}
+    FROM
+        CROSSTAB (
+            $QUERY$
+            {inner_crosstab_query}
+            $QUERY$,
+            $CATEGORY$
+            SELECT NAME FROM CPE_TYPES WHERE NAME IN ({", ".join([f"'{name}'" for name in model_names])}) ORDER BY ID
+            $CATEGORY$
+        ) AS P (
+            UPDATED_AT TIMESTAMP,
+            {quoted_columns}
+        ) 
+    JOIN
+        distinct_updates D ON D.UPDATED_AT = P.UPDATED_AT
+    ORDER BY
+        P.UPDATED_AT DESC;
+    """
+    # The CROSSTAB generates a large pivoted table (P) containing all historical records for the city
+    #  (row ID = UPDATED_AT).The JOIN acts as a filter. It discards all rows from the massive
+    # pivoted table (P) except for those whose UPDATED_AT timestamp matches one of the
+    # handful of timestamps found in the small, already-paginated distinct_updates list (D).
+
+    result = db.session.execute(text(SQL_QUERY))
+
+    pivoted_data = [row._asdict() for row in result.all()]
+
+    paginate = SimplePagination(
+        page=page, per_page=per_page, total=total_count, items=pivoted_data
+    )
+
+    return paginate
 
 
 # --------AUTHORIZACIJA--------------------------------------------
@@ -432,8 +529,11 @@ def home():
     # today.weekday() gives 0 for Monday, 6 for Sunday
     # Subtracting gives the date for this week's Monday
     monday = today - timedelta(days=today.weekday())  # Monday of this week
-    # 1. Get the records and the schema list
-    records, schema_list = get_report_schema_and_pivoted_data()
+
+    schema_list = get_cpe_column_schema()
+
+    # 1. Build pivoted records from schema list
+    records = get_pivoted_data(schema_list)
 
     return render_template(
         "home.html",
@@ -471,7 +571,7 @@ def update_recent_cpe_inventory():
         if key.startswith("cpe-"):
             parts = key.split("-", 2)  # Splits into ['cpe', 'ID', 'NAME']
             if len(parts) == 3:
-                cpe_type_id_str = parts[1]  #'ID'
+                cpe_type_id_str = parts[1]  #'DOBAVI ID'
                 try:
                     cpe_type_id = int(cpe_type_id_str)
                     quantity = int(value or 0)
@@ -507,13 +607,31 @@ def update_recent_cpe_inventory():
     return redirect(url_for("home"))
 
 
-@app.route("/admin/cities/history/<int:id>")
+@app.route("/cities/history/<int:id>")
 @login_required
 def city_history(id):
+    # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
+    city = Cities.query.get_or_404(id)
 
-    Cities.query.get_or_404(id)
+    if not admin_and_user_required(city.id):
+        return redirect(url_for("home"))
 
-    return render_template("admin/cities_edit.html")
+    page = request.args.get("page", 1, int)
+    per_page = 20
+
+    schema_list = get_cpe_column_schema()
+
+    pagination = get_city_history_pivot(
+        city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
+    )
+
+    return render_template(
+        "city_history.html",
+        records=pagination,
+        schema=schema_list,
+        city=city,
+    )
+
 
 # ---------------- ADMIN DASHBOARD PAGE-----------
 @app.route("/admin/")
