@@ -159,7 +159,7 @@ def get_cpe_column_schema():
     # 2. get id, name, label, type from CpeTypes table for that id from CpeInventory table
     cpe_types = (
         db.session.query(CpeTypes.id, CpeTypes.name, CpeTypes.label, CpeTypes.type)
-        .filter(CpeTypes.id.in_(list_of_ids))
+        .filter(CpeTypes.id.in_(list_of_ids), CpeTypes.is_active)
         .order_by(CpeTypes.id)
         .all()
     )
