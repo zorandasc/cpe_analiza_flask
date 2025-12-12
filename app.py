@@ -282,6 +282,8 @@ def get_pivoted_data(schema_list: list):
     return pivoted_data
 
 
+# The main difference with get_pivoted_data is that, for the history, you need to pivot on the updated_at timestamp
+# and the cpe_model, while filtering for a single city_id
 def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page: int):
     """
     Retrieves the historical records for a specific city_id, pivoted by CPE type.
@@ -325,6 +327,7 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
 
     # CRITICAL: We need to figure out which UPDATED_AT timestamps belong to the current page.
     # We do this using a subquery (distinct_updates) to find the timestamps, and then offset/limit.
+
     # WE FIND ALL THE PIVOTED DATA IN CROSSTAB AND THEN JOIN WITH distinct_updates TABLE
     # distinct_updates TABLE ACT AS A FILTER. DISPLAY ONLY PIVOTED DATA BUT FOR DATA IN
     # LIMIT AND OFFSET.
@@ -364,8 +367,10 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
 
     result = db.session.execute(text(SQL_QUERY))
 
+    # pivoted_data is now list
     pivoted_data = [row._asdict() for row in result.all()]
 
+    # paginate is iterable SimplePagination object
     paginate = SimplePagination(
         page=page, per_page=per_page, total=total_count, items=pivoted_data
     )

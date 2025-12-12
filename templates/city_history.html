@@ -180,6 +180,7 @@ styles %} {{ super() }}
           {% endfor %} {% endif %}
         </tr>
       </thead>
+      <!--records are now SimplePagination objects-->
     <!--Your SimplePagination class returns the actual list inside:self.items, records.items-->
       <tbody>
         {% for r in records.items %}

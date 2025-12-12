@@ -924,11 +924,11 @@ ORDER BY
                 CITY_ID
         ) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
     )
-    
+
     -- Data Rows
-    SELECT 
-        CITY_ID, 
-        CITY_NAME, 
+    SELECT
+        CITY_ID,
+        CITY_NAME,
         {selected_columns.replace('p.', '')}, -- Remove 'p.' alias as we are selecting directly from latest_pivot
         MAX_UPDATED_AT
     FROM latest_pivot
@@ -936,16 +936,126 @@ ORDER BY
     UNION ALL
 
     -- Total Row
-    SELECT 
+    SELECT
         NULL::INTEGER AS CITY_ID,
         'UKUPNO'::VARCHAR AS CITY_NAME,
         {sum_columns},
         NULL::TIMESTAMP AS MAX_UPDATED_AT
-    FROM latest_pivot 
-    
-    ORDER BY 
-        CITY_ID ASC NULLS LAST; 
+    FROM latest_pivot
+
+    ORDER BY
+        CITY_ID ASC NULLS LAST;
     """
 ```
 
 Final SELECT Correction: The SELECT \* FROM latest_pivot was replaced with an explicit SELECT to match the column names in the UNION ALL. Crucially, I had to remove the p. alias from the selected_columns list in the final SELECT because you are selecting from the latest_pivot CTE, not the aliased subquery P.
+
+# ---------ALL CITY HISTORY PIVOTING----------
+
+```PYTHON
+ # THIS IS THE QUERY FOR CROSSTAB FUNCTION
+    # IT WILL FIND ALL PIVOTED DATAD FOR SELECTED CITY_ID
+    inner_crosstab_query = f"""
+    SELECT
+        R.UPDATED_AT,
+        S.NAME AS CPE_MODEL,
+        R.QUANTITY
+    FROM
+        CPE_INVENTORY R
+    JOIN
+        CPE_TYPES S ON R.CPE_TYPE_ID=S.ID
+    WHERE
+        R.CITY_ID={city_id}
+    ORDER BY
+        R.UPDATED_AT DESC, S.NAME
+    """
+
+    # CRITICAL: We need to figure out which UPDATED_AT timestamps belong to the current page.
+    # We do this using a subquery (distinct_updates) to find the timestamps, and then offset/limit.
+
+    # WE FIND ALL THE PIVOTED DATA IN CROSSTAB AND THEN JOIN WITH distinct_updates TABLE
+    # distinct_updates TABLE ACT AS A FILTER. DISPLAY ONLY PIVOTED DATA BUT FOR DATA IN
+    # LIMIT AND OFFSET.
+    # PAGINATION ON ALL PIVOTED DATA IS NOT PERFORMANT
+    SQL_QUERY = f"""
+    WITH distinct_updates AS (
+        SELECT DISTINCT UPDATED_AT
+        FROM CPE_INVENTORY
+        WHERE CITY_ID = {city_id}
+        ORDER BY UPDATED_AT DESC
+        LIMIT {per_page} OFFSET {offset}
+    )
+    SELECT
+        D.UPDATED_AT,
+        {selected_columns}
+    FROM
+        CROSSTAB (
+            $QUERY$
+            {inner_crosstab_query}
+            $QUERY$,
+            $CATEGORY$
+            SELECT NAME FROM CPE_TYPES WHERE NAME IN ({", ".join([f"'{name}'" for name in model_names])}) ORDER BY ID
+            $CATEGORY$
+        ) AS P (
+            UPDATED_AT TIMESTAMP,
+            {quoted_columns}
+        )
+    JOIN
+        distinct_updates D ON D.UPDATED_AT = P.UPDATED_AT
+    ORDER BY
+        P.UPDATED_AT DESC;
+    """
+```
+
+While the one-argument form is simpler to write, it can sometimes be slow or produce inconsistent results if not all categories (CPE names) appear in the source data for every single row ID (timestamp).
+
+The two-argument form of CROSSTAB fixes this by providing an explicit list of expected columns (categories). This guarantees that your output table always has the same column structure, even if some categories are missing in the data for a specific timestamp.
+
+```SQL
+CROSSTAB(
+    source_sql TEXT,  -- 1. The query that provides the data (Row ID, Category, Value)
+    category_sql TEXT -- 2. A separate query that provides the explicit list of columns
+)
+```
+
+Field Purpose Example
+Row ID What defines a unique output row (the pivot key). R.UPDATED_AT
+Category What defines the output columns. S.NAME ('IADS', 'VIP5305')
+Value The value to fill the cells with. R.QUANTITY
+
+# -------- class SimplePagination:---------
+
+IZ NEKOG RAZLOGA IMPORT pAGINATION FROM FLASK DOESNOT WOORK
+
+```python
+from flask_sqlalchemy import Pagination
+```
+
+A Pagination mi treba u :
+def get_city_history_pivot():
+
+Pa sam napravi SImplePagination classu koj simulira paginaciju:
+
+```python
+# paginate is iterable SimplePagination object
+    paginate = SimplePagination(
+        page=page, per_page=per_page, total=total_count, items=pivoted_data
+    )
+```
+
+```python
+ pagination = get_city_history_pivot(
+        city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
+    )
+
+    return render_template(
+        "city_history.html",
+        records=pagination,
+        schema=schema_list,
+        city=city,
+    )
+```
+
+but records is your SimplePagination object
+SimplePagination class returns the actual list inside:self.items, records.items
+Stvarnu iteraciju vrsis po {% for r in records.items %}
