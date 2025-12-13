@@ -559,6 +559,7 @@ def home():
 
 
 # UPDATE ROUTE HOME TABLE, CALLED FROM INSIDE UPDATE FORM
+# NE VRACA SVOJ TEMPLATE VEC REDIRECT TO HOME
 @app.route("/update_cpe", methods=["POST"])
 @login_required
 def update_recent_cpe_inventory():
@@ -964,37 +965,38 @@ def admin_cpe_inventory():
     pagination = CpeInventory.query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
+
+    # THIS IS DATA FOR NEW CPE MODAL
+    cities = Cities.query.order_by(Cities.id).all()
+    cpe_types = CpeTypes.query.filter_by(is_active=True).order_by(CpeTypes.id).all()
+
     return render_template(
         "admin/cpe_inventory.html",
         records=pagination.items,
         pagination=pagination,
         sort_by=sort_by,
         direction=direction,
+        cities=cities,
+        cpe_types=cpe_types,
     )
 
 
 @app.route("/admin/cpe_inventory/add", methods=["GET", "POST"])
 @login_required
-def admin_add_cpe_inventory():
+def admin_add_to_cpe_inventory():
     if not admin_required():  # AUTHORIZE
         return redirect(url_for("admin_users"))
 
     if request.method == "POST":
-        # Ako je unos za nepostojeci cpe_type onda je to to
-        # Ako je unos za vec poctojeci cpe_type onda saberi kvantitie na posljednje stanje
-        # novi unos zahtijeva
         pass
-    # predstavi formu sa dva reda
-    # prvi red je labela za cpe types i sve gradove (pribavi sve gradove)
-    # drugi red je selector za cpe_type (pribavi sve cpe_types) i prazno polje
-    # za kvantitetet za sve gradove
-    cities = Cities.query.order_by(Cities.id).all()
-    cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
+
+    # batch save on all city for taht cpe_type
+    # for loop
+    # for every city_id find most rescent updated_at
+    # and savi it {city_id, updated_at, cpe_type, created_at=now}
 
     # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
-    return render_template(
-        "admin/cpe_inventory_add.html", cities=cities, cpe_types=cpe_types
-    )
+    return redirect(url_for("admin_cpe_inventory"))
 
 
 # -------------CPE_DISMANTLE_RECORDS CRUD----------------------------------------
