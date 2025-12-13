@@ -178,6 +178,10 @@ def get_cpe_column_schema():
 # treating it purely as a data fetch, which is necessary when using custom database
 # functions like crosstab.
 def get_pivoted_data(schema_list: list):
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
     # Extract ONLY the model names (the first element in the tuple)
     # This is what CROSSTAB uses for column names
     model_names = [item["name"] for item in schema_list]
@@ -290,6 +294,10 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
     Retrieves the historical records for a specific city_id, pivoted by CPE type.
     This query handles pagination internally based on the unique UPDATED_AT timestamp.
     """
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
     model_names = [item["name"] for item in schema_list]
 
     quoted_columns = ", ".join([f'"{name}" INT' for name in model_names])
@@ -962,6 +970,30 @@ def admin_cpe_inventory():
         pagination=pagination,
         sort_by=sort_by,
         direction=direction,
+    )
+
+
+@app.route("/admin/cpe_inventory/add", methods=["GET", "POST"])
+@login_required
+def admin_add_cpe_inventory():
+    if not admin_required():  # AUTHORIZE
+        return redirect(url_for("admin_users"))
+
+    if request.method == "POST":
+        # Ako je unos za nepostojeci cpe_type onda je to to
+        # Ako je unos za vec poctojeci cpe_type onda saberi kvantitie na posljednje stanje
+        # novi unos zahtijeva
+        pass
+    # predstavi formu sa dva reda
+    # prvi red je labela za cpe types i sve gradove (pribavi sve gradove)
+    # drugi red je selector za cpe_type (pribavi sve cpe_types) i prazno polje
+    # za kvantitetet za sve gradove
+    cities = Cities.query.order_by(Cities.id).all()
+    cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
+
+    # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
+    return render_template(
+        "admin/cpe_inventory_add.html", cities=cities, cpe_types=cpe_types
     )
 
 

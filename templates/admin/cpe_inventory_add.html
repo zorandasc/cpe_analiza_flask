@@ -8,8 +8,8 @@ content %}
         <label class="form-label">Tip</label>
         <select name="type" class="form-control" required>
           <option value="">--Izaberite tip--</option>
-          {% for t in types %}
-          <option value="{{ t }}">{{ t|capitalize }}</option>
+          {% for cpe in cpe_types %}
+          <option value="{{ cpe }}">{{ cpe|capitalize }}</option>
 
           {% endfor %}
         </select>
