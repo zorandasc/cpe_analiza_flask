@@ -145,7 +145,8 @@ def get_latest_cpe_records():
 
 
 # SOURCE OF TRUTH FOR WHOLE APP TO WORK
-# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE PRESENT IN CPEINVENTORY TABLE
+# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE
+# PRESENT IN CPEINVENTORY TABLE an is_active
 # FROM THIS SCHEMA LIST WE BUILD DYNAMIC SQL QUERY
 # WE ALSO USE IT IN HTML TEMPLATES AND IN ROUTES
 def get_cpe_column_schema():
@@ -624,15 +625,18 @@ def city_history(id):
     page = request.args.get("page", 1, int)
     per_page = 20
 
+    # THIS IS LIST OF CPETYPE OBJECTS, BUT ONLY ONE
+    # PRESENT IN CPEINVENTORY TABLE AND is_active
     schema_list = get_cpe_column_schema()
 
-    pagination = get_city_history_pivot(
+    # paginated_records is iterable SimplePagination object
+    paginated_records = get_city_history_pivot(
         city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
     )
 
     return render_template(
         "city_history.html",
-        records=pagination,
+        records=paginated_records,
         schema=schema_list,
         city=city,
     )

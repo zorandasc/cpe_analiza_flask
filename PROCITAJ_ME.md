@@ -1059,3 +1059,11 @@ Pa sam napravi SImplePagination classu koj simulira paginaciju:
 but records is your SimplePagination object
 SimplePagination class returns the actual list inside:self.items, records.items
 Stvarnu iteraciju vrsis po {% for r in records.items %}
+# --------------------------------------------------------------------------
+
+RUCNI UNOS U CPE_INVENOTRI NOVOG ELEMENTA ILI POVECANJA POSTOJOCEG KVANTITETA:
+
+1. AKO JE UNOS KVANTITE ZA CPE ELEMNT KOJI NE POSTOJI U CPE_INVENOTRY ONDA
+   POPUNI SVE GRADOVE
+2. AKO JE UNOS KVANTITEA ZA VEC POCTOJECI CPE ELEMENT ONDA 
+	NADJI ZADNJI UNOS ZA SVE GRADOVE I DODAJ NA NJEGA
