@@ -13,101 +13,156 @@
 
     {% block styles %}
     <style>
-      /* Navbar transparent with black links */
       .navbar-custom {
         background-color: transparent;
+        padding: 0.75rem 1rem;
       }
 
       .navbar-custom .navbar-brand,
       .navbar-custom .nav-link {
-        color: #000;
+        color: #212529;
+        font-weight: 500;
+        transition: color 0.2s ease, border-color 0.2s ease;
       }
 
+      /* =========================
+   Hover state
+========================= */
       .navbar-custom .nav-link:hover {
-        color: #007bff;
+        color: #0d6efd;
       }
 
-      /* Active link highlight */
+      /* =========================
+   Active link
+========================= */
       .navbar-custom .nav-link.active {
-        color: #000 !important; /* ← black text */
-        border-bottom: 2px solid #acd4f7;
-        padding: 0.5rem 1rem;
+        color: #212529 !important;
+        border-bottom: 3px solid transparent;
+        border-image: linear-gradient(to right, #be93c5, #7bc6cc);
+        border-image-slice: 1;
+        padding-bottom: 0.4rem;
       }
+
+      /* =========================
+   Logo spacing
+========================= */
       .logo {
-        margin-right: 1rem;
-        margin-left: 1rem;
+        margin-right: 2rem;
+        margin-left: 0.75rem;
       }
+
+      /* =========================
+   Username badge
+========================= */
       .navbar-username {
-        background: #acd4f7;
-        padding: 4px 10px;
-        border-radius: 8px;
+        background: linear-gradient(to right, #be93c5, #7bc6cc);
+        color: #121212;
+        padding: 4px 12px;
+        border-radius: 999px;
         font-weight: 600;
+        font-size: 0.9rem;
+        margin-right: 0.5rem;
       }
+
+      /* =========================
+   Logout link subtle
+========================= */
+      .navbar-custom .nav-link[href*="logout"] {
+        color: #6c757d;
+      }
+
+      .navbar-custom .nav-link[href*="logout"]:hover {
+        color: #dc3545;
+      }
+
+      .navbar-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1030; /* above content, below modals */
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  background-color: rgba(255, 255, 255, 0.75);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Smooth appearance */
+.navbar-sticky {
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Slight shadow when scrolling (optional) */
+body:not(:has(.navbar:hover)) .navbar-sticky {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
     </style>
     {% endblock %}
   </head>
   <body>
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-custom">
-      <div class="container-fluid">
-        <a class="navbar-brand logo" href="{{ url_for('home') }}"
-          ><img
-            src="{{ url_for('static', filename='logo.png') }}"
-            alt="CPE-ANALIZA Logo"
-            height="60"
-            class="d-inline-block align-text-top"
-        /></a>
+    <nav class="navbar navbar-expand-lg navbar-custom navbar-sticky">
+  <div class="container-fluid">
+    <a class="navbar-brand logo" href="{{ url_for('home') }}">
+      <img
+        src="{{ url_for('static', filename='logo.png') }}"
+        alt="CPE-ANALIZA Logo"
+        height="50"
+        class="d-inline-block align-text-top"
+      />
+    </a>
 
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarContent"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarContent"
+      aria-controls="navbarContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-        <div class="collapse navbar-collapse" id="navbarContent">
-          <!-- LEFT SIDE LINKS -->
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a
-                class="nav-link {% if request.path == url_for('home') %}active{% endif %}"
-                href="{{ url_for('home') }}"
-                >Početna</a
-              >
-            </li>
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <!-- LEFT -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.path == url_for('home') %}active{% endif %}"
+            href="{{ url_for('home') }}"
+            aria-current="page"
+          >
+            Početna
+          </a>
+        </li>
 
-            {% if current_user.is_authenticated %}
-            <li class="nav-item">
-              <a
-                class="nav-link {% if request.path == url_for('admin_dashboard') %}active{% endif %}"
-                href="{{ url_for('admin_dashboard') }}"
-                >Admin Panel</a
-              >
-            </li>
-            {% endif %}
-          </ul>
+        {% if current_user.is_authenticated %}
+        <li class="nav-item">
+          <a
+            class="nav-link {% if request.path == url_for('admin_dashboard') %}active{% endif %}"
+            href="{{ url_for('admin_dashboard') }}"
+          >
+            Admin Panel
+          </a>
+        </li>
+        {% endif %}
+      </ul>
 
-          {% if current_user.is_authenticated %}
-          <!-- RIGHT SIDE: USERNAME + LOGOUT -->
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <span class="nav-link navbar-username">
-                👤 {{ current_user.username }}
-              </span>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
-            </li>
-          </ul>
-          {% else %}
-          <!-- RIGHT SIDE: LOGIN WHEN NOT AUTH -->
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0"></ul>
-          {% endif %}
-        </div>
-      </div>
-    </nav>
+      <!-- RIGHT -->
+      {% if current_user.is_authenticated %}
+      <ul class="navbar-nav ms-auto align-items-center">
+        <li class="nav-item">
+          <span class="nav-link navbar-username">
+            👤 {{ current_user.username }}
+          </span>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+        </li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</nav>
 
     <!-- MAIN PAGE CONTENT -->
     <div class="container mt-4">{% block content %}{% endblock %}</div>
