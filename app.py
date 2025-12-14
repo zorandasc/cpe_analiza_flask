@@ -1,6 +1,9 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash
-from sqlalchemy import text, distinct
+from sqlalchemy import text, distinct, func
+
+# My IMPLEMENTATION OF PAGINATION FUNCIONALITY
+# FOR PAGINATING RAW PIVOTED SQL STATEMENT
 from simplepagination import SimplePagination
 
 from models import (
@@ -968,6 +971,9 @@ def admin_cpe_inventory():
 
     # THIS IS DATA FOR NEW CPE MODAL
     cities = Cities.query.order_by(Cities.id).all()
+    # cities = db.session.query(CpeInventory.city_id).distinct().all()
+
+    # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
     cpe_types = CpeTypes.query.filter_by(is_active=True).order_by(CpeTypes.id).all()
 
     return render_template(
@@ -981,21 +987,75 @@ def admin_cpe_inventory():
     )
 
 
-@app.route("/admin/cpe_inventory/add", methods=["GET", "POST"])
+@app.route("/admin/cpe_inventory/add", methods=["POST"])
 @login_required
 def admin_add_to_cpe_inventory():
     if not admin_required():  # AUTHORIZE
-        return redirect(url_for("admin_users"))
+        return redirect(url_for("admin_dashboard"))
 
-    if request.method == "POST":
-        pass
+    cpe_type_id = request.form.get("cpe_type_id", type=int)
 
-    # batch save on all city for taht cpe_type
-    # for loop
-    # for every city_id find most rescent updated_at
-    # and savi it {city_id, updated_at, cpe_type, created_at=now}
+    current_time = datetime.now()
+    records_to_add = []
 
-    # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
+    # --- STEP 1: PRE-FETCH MAX UPDATED_AT FOR ALL CITIES ---
+    # This prevents running 10+ separate queries inside the loop.
+    max_update_times = (
+        db.session.query(
+            CpeInventory.city_id, func.max(CpeInventory.updated_at).label("max_time")
+        )
+        .group_by(CpeInventory.city_id)
+        .all()
+    )
+
+    # Convert the list of tuples/rows into a dictionary for fast lookup
+    # The result is a dictionary: {city_id: max_updated_at, ...}
+    max_update_map = {row.city_id: row.max_time for row in max_update_times}
+
+    for key, value in request.form.items():
+        if key.startswith("city-"):
+            parts = key.split("-", 1)
+            if len(parts) == 2:
+                city_id_str = parts[1]
+                try:
+                    city_id = int(city_id_str)
+                    quantity = int(value or 0)
+                except ValueError:
+                    # Skip this record if ID or Quantity is invalid
+                    continue
+
+                # --- STEP 3: DETERMINE UPDATED_AT TIMESTAMP ---
+                # Use the max timestamp found in STEP 1 for this city.
+                # If the city has NO existing records, use the current_time (or NULL, depending on your schema)
+                # Using the current time is safer if the city is new or empty.
+                latest_update_time = max_update_map.get(city_id, current_time)
+                # batch save on every city for selected cpe_type_id
+                # FOR EVERY CITY_ID FIND MAX UPDATED_AT
+
+                new_record = CpeInventory(
+                    city_id=city_id,
+                    cpe_type_id=cpe_type_id,
+                    quantity=quantity,
+                    created_at=current_time,
+                    updated_at=latest_update_time,
+                )
+            records_to_add.append(new_record)
+
+    # 4. Execute Single Batch Transaction
+    if records_to_add:
+        try:
+            db.session.add_all(records_to_add)
+            db.session.commit()
+            flash("Novo stanje za CPE inventori uspješno sačuvano!", "success")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during CpeInventory batch insert: {e}")
+            flash("Došlo je do greške prilikom unosa u bazu.", "danger")
+    else:
+        flash("Nije pronađen nijedan CPE za unos.", "warning")
+
+    # Redirect to Home (Post-Redirect-Get Pattern)
+    # This prevents duplicate form submissions if the user hits refresh.
     return redirect(url_for("admin_cpe_inventory"))
 
 
