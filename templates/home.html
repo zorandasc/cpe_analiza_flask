@@ -139,24 +139,64 @@
     border-bottom-width: 3px !important;
   }
 
-  .custom-card-header{
-    background: linear-gradient(to right, #be93c5, #7bc6cc);
-    box-shadow: 1px 1px 2px rgb(0, 0, 0);
-    
-  }
+ .dashboard-tabs {
+  border-right: 1px solid #dee2e6;
+  padding-right: 0.5rem;
+}
+
+.dashboard-tabs .nav-link {
+  text-align: left;
+  color: #495057;
+  border-radius: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.dashboard-tabs .nav-link:hover {
+  background-color: #f1f3f5;
+}
+
+.dashboard-tabs .nav-link.active {
+  background: linear-gradient(to right, #be93c5, #7bc6cc);
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
    
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
 
-<div class="card mb-3">
-    <div class="card-header custom-card-header">
-      <a class="btn text-light" data-bs-toggle="collapse" href="#table1">
-      <h2 class="mb-4 text-center">Zadnje stanje CPE opreme {{ today }}</h2>
-      </a>
-    </div>
-    <div id="table1" class="collapse">
-      <div class="card-body">
+<ul class="nav nav-pills flex-column dashboard-tabs shadow-sm">
+  <li class="nav-item">
+    <a class="nav-link active" data-bs-toggle="tab" href="#t1">
+      Zadnje stanje CPE opreme
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#t2">
+      Demontirana TO – kompletna
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#t3">
+      Demontirana TO – nekompletna
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#t4">
+      STB uređaji – IPTV
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" data-bs-toggle="tab" href="#t5">
+      ONT uređaji – mjesečno
+    </a>
+  </li>
+</ul>
+
+<div class="tab-content mt-5">
+  <div class="tab-pane fade show active" id="t1">
+    <h2 class="mb-4 text-center">Zadnje stanje CPE opreme {{ today }}</h2>
       <div class="table-responsive">
         <table class="table table-hover align-middle table-sm table-emph-h-border">
           <thead class="table-custom-head">
@@ -258,107 +298,14 @@
           magacina.
         </p>
       </div>
-      </div>
-    </div>
-</div>
-
-<div class="card mb-3">
-    <div class="card-header custom-card-header">
-      <a class="btn text-light" data-bs-toggle="collapse" href="#table2">
-  <h2 class="mb-4 text-center"> Stanje demontirane ispravne i kompletne TO</h2>
-  </a>
-</div>
-<div id="table2" class="collapse">
-   <div class="card-body">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle table-sm table-emph-h-border">
-      <thead class="table-custom-head">
-      
-      </thead>
-
-      <tbody>
-      
-      </tbody>
-    </table>
-    <p>
-      
-    </p>
-  </div>
-  </div>
-</div>
-</div>
-
-<div class="card mb-3">
-    <div class="card-header custom-card-header">
-      <a class="btn text-light" data-bs-toggle="collapse" href="#table3">
-  <h2 class="mb-4 text-center">Stanje demontiranje ispravne i nekompletne TO</h2>
-  </a>
-</div>
-<div id="table3" class="collapse">
-   <div class="card-body">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle table-sm table-emph-h-border">
-      <thead class="table-custom-head">
     
-      </thead>
-
-      <tbody>
-     
-      </tbody>
-    </table>
-
   </div>
-  </div>
-</div>
-</div>
-
-<div class="card mb-3">
-    <div class="card-header custom-card-header">
-      <a class="btn text-light" data-bs-toggle="collapse" href="#table4">
-  <h2 class="mb-4 text-center">Stanje STB uređaja - IPTV platforma</h2>
-  </a>
-</div>
-<div id="table4" class="collapse">
-   <div class="card-body">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle table-sm table-emph-h-border">
-      <thead class="table-custom-head">
-    
-      </thead>
-
-      <tbody>
-     
-      </tbody>
-    </table>
-
-  </div>
-  </div>
-</div>
+  <div class="tab-pane fade" id="t2"><h2 class="mb-4 text-center">Stanje demontirane ispravne i kompletne TO</h2></div>
+  <div class="tab-pane fade" id="t3"><h2 class="mb-4 text-center">Stanje demontiranje ispravne i nekompletne TO</h2></div>
+  <div class="tab-pane fade" id="t4"><h2 class="mb-4 text-center">Stanje STB uređaja - IPTV platforma</h2></div>
+  <div class="tab-pane fade" id="t5"><h2 class="mb-4 text-center">Broj ONT uređaja u radu - Mjesečno stanje</h2></div>
 </div>
 
-<div class="card mb-3">
-    <div class="card-header custom-card-header">
-      <a class="btn text-light" data-bs-toggle="collapse" href="#table5">
-  <h2 class="mb-4 text-center">Broj ONT uređaja u radu - Mjesečno stanje</h2>
-  </a>
-</div>
-<div id="table5" class="collapse">
-   <div class="card-body">
-  <div class="table-responsive">
-    <table class="table table-hover align-middle table-sm table-emph-h-border">
-      <thead class="table-custom-head">
-    
-      </thead>
-
-      <tbody>
-     
-      </tbody>
-    </table>
-
-  </div>
-  </div>
-</div>
-</div>
 
 </div>
 <!-- MODAL OPENED BY EDIT BUTTON-->
