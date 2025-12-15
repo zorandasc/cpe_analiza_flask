@@ -15,6 +15,7 @@ from models import (
     Cities,
     CpeTypes,
     StbTypes,
+    StbInventory,
     DismantleTypes,
     CPE_TYPE_CHOICES,
 )
@@ -392,6 +393,13 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
     return paginate
 
 
+def current_week_end(today=None):
+    if not today:
+        today = date.today()
+    FRIDAY = 4
+    return today + timedelta(days=(FRIDAY - today.weekday()))
+
+
 def get_stb_inventory_records():
     SQL_QUERY = """
             SELECT
@@ -441,7 +449,7 @@ def get_stb_inventory_records():
             # print("week", week, "value", data.get(week))
 
     # totals {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20):
-    print("totals", totals)
+    # print("totals", totals)
 
     return weeks, table, totals
 
@@ -762,6 +770,52 @@ def city_history(id):
         records=paginated_records,
         schema=schema_list,
         city=city,
+    )
+
+
+@app.route("/cpe-records")
+@login_required
+def cpe_records():
+    today = date.today()
+    # today.weekday() gives 0 for Monday, 6 for Sunday
+    # Subtracting gives the date for this week's Monday
+    monday = today - timedelta(days=today.weekday())  # Monday of this week
+
+    schema_list = get_cpe_column_schema()
+
+    # 1. Build pivoted records from schema list
+    records = get_pivoted_data(schema_list)
+    return render_template(
+        "cpe_records.html",
+        today=today.strftime("%d-%m-%Y"),
+        monday=monday,
+        records=records,
+        schema=schema_list,
+    )
+
+
+@app.route("/stb-records")
+@login_required
+def stb_records():
+    # for getting stb inventory records
+    stb_weeks, stb_table, stb_totals = get_stb_inventory_records()
+    return render_template(
+        "stb_records.html",
+        stb_weeks=stb_weeks,
+        stb_table=stb_table,
+        stb_totals=stb_totals,
+    )
+
+
+@app.route("/ont-records")
+@login_required
+def ont_records():
+    ont_months, ont_table, ont_totals = get_ont_inventory_records()
+    return render_template(
+        "ont_records.html",
+        ont_months=ont_months,
+        ont_table=ont_table,
+        ont_totals=ont_totals,
     )
 
 
