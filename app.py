@@ -417,8 +417,8 @@ def get_stb_inventory_records():
 
     # Transforming rows into a pivot-friendly structure
     for r in rows:
-        #quantity = r.quantity
-        #if isinstance(quantity, list):
+        # quantity = r.quantity
+        # if isinstance(quantity, list):
         #    quantity = sum(quantity)
 
         # tabli is in format  # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
@@ -437,12 +437,56 @@ def get_stb_inventory_records():
         for week in weeks:
             totals[week] += data.get(week, 0)
             # week 2025-12-27 value 594
-            print("week", week, "value", data.get(week))
+            # print("week", week, "value", data.get(week))
 
     # totals {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20):
     print("totals", totals)
 
     return weeks, table, totals
+
+
+def get_ont_inventory_records():
+    SQL_QUERY = """
+    SELECT 
+        c.id, 
+        c.name, 
+        i.month_end, 
+        i.quantity 
+    FROM cities c
+    left join ont_inventory i on i.city_id=c.id
+    WHERE
+        C.TYPE = 'IJ'
+    ORDER BY
+        C.ID, i.month_end DESC 
+    """
+
+    rows = db.session.execute(text(SQL_QUERY))
+
+    # The statement creates a dictionary of dictionaries
+    # defaultdict(default_factory)
+    # default_factory: This is a function (or constructor) that provides the default value for the key.
+    # The innermost defaultdict(int) uses int as its default factory.
+    # The function: lambda: (takes no arguments) returns defaultdict(int).
+    table = defaultdict(lambda: defaultdict(int))
+
+    months = set()
+
+    # fill table dictionary and
+    # months set
+    for r in rows:
+        table[r.name][r.month_end] += r.quantity
+        months.add(r.month_end)
+
+    # sortija od najveceg do najmanjeg i odaberi samo prvo 4 recorda
+    months = sorted(months, reverse=True)[:4]
+
+    # calculate tottal SABERI KVANTITETE PO MIJESECIMA
+    totals = {month: 0 for month in months}
+    for data in table.values():
+        for month in months:
+            totals[month] += data.get(month, 0)
+
+    return months, table, totals
 
 
 # --------AUTHORIZACIJA--------------------------------------------
@@ -608,7 +652,9 @@ def home():
     records = get_pivoted_data(schema_list)
 
     # for getting stb inventory records
-    weeks, table, totals = get_stb_inventory_records()
+    stb_weeks, stb_table, stb_totals = get_stb_inventory_records()
+
+    ont_months, ont_table, ont_totals = get_ont_inventory_records()
 
     return render_template(
         "home.html",
@@ -616,9 +662,12 @@ def home():
         monday=monday,
         records=records,
         schema=schema_list,
-        weeks=weeks,
-        table=table,
-        totals=totals,
+        stb_weeks=stb_weeks,
+        stb_table=stb_table,
+        stb_totals=stb_totals,
+        ont_months=ont_months,
+        ont_table=ont_table,
+        ont_totals=ont_totals,
     )
 
 

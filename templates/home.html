@@ -302,21 +302,22 @@
   </div>
   <div class="tab-pane fade" id="t2"><h2 class="mb-4 text-center">Stanje demontirane ispravne i kompletne TO</h2></div>
   <div class="tab-pane fade" id="t3"><h2 class="mb-4 text-center">Stanje demontiranje ispravne i nekompletne TO</h2></div>
-  <div class="tab-pane fade" id="t4"><h2 class="mb-4 text-center">Stanje STB uređaja - IPTV platforma</h2>
+  <div class="tab-pane fade" id="t4">
+    <h2 class="mb-4 text-center">Stanje STB uređaja - IPTV platforma</h2>
   <table class="table table-bordered table-striped"> 
     <thead>
        <tr>
       <th>STB Device</th>
-      {% for week in weeks %}
+      {% for week in stb_weeks %}
        <th>{{ week }}</th>
       {% endfor %}
       </tr>
     </thead>
       <tbody>
-        {% for stb, data in table.items()%}
+        {% for stb, data in stb_table.items()%}
         <tr>
           <td>{{stb}}</td>
-          {% for week in weeks%}
+          {% for week in stb_weeks%}
           <td>{{data.get(week, 0)}}</td>
              {% endfor %}
         </tr>
@@ -324,14 +325,43 @@
          <!-- Total row -->
         <tr style="font-weight:bold;">
             <td>Total</td>
-             {% for week in weeks %}
-                <td>{{ totals[week] }}</td>
+             {% for week in stb_weeks %}
+                <td>{{ stb_totals[week] }}</td>
             {% endfor %}
         </tr>
       </tbody>
   </table>
 </div>
-  <div class="tab-pane fade" id="t5"><h2 class="mb-4 text-center">Broj ONT uređaja u radu - Mjesečno stanje</h2></div>
+  <div class="tab-pane fade" id="t5">
+    <h2 class="mb-4 text-center">Broj ONT uređaja u radu - Mjesečno stanje</h2>
+    <table class="table table-bordered table-striped"> 
+    <thead>
+       <tr>
+      <th>Skladište</th>
+      {% for month in ont_months %}
+       <th>{{ month }}</th>
+      {% endfor %}
+      </tr>
+    </thead>
+      <tbody>
+        {% for city, data in ont_table.items()%}
+        <tr>
+          <td>{{city}}</td>
+          {% for month in ont_months%}
+          <td>{{data.get(month, 0)}}</td>
+             {% endfor %}
+        </tr>
+           {% endfor %}
+         <!-- Total row -->
+        <tr style="font-weight:bold;">
+            <td>Total</td>
+             {% for month in ont_months %}
+                <td>{{ ont_totals[month] }}</td>
+            {% endfor %}
+        </tr>
+      </tbody>
+  </table>
+  </div>
 </div>
 
 
