@@ -410,20 +410,39 @@ def get_stb_inventory_records():
     # Creates a dictionary where each key (STB device name) maps
     # to another dictionary of week → quantity.
     # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
-    table = defaultdict(dict)
+    table = defaultdict(lambda: defaultdict(int))
 
     # Collects all unique weeks from the query, so we know which columns to display.
     weeks = set()
 
     # Transforming rows into a pivot-friendly structure
     for r in rows:
-        table[r.name][r.week_end] = [r.quantity]
+        #quantity = r.quantity
+        #if isinstance(quantity, list):
+        #    quantity = sum(quantity)
+
+        # tabli is in format  # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
+        table[r.name][r.week_end] += r.quantity
         weeks.add(r.week_end)
 
     # Sorts weeks descending (latest week first) and keeps only last 4 weeks.
     weeks = sorted(weeks, reverse=True)[:4]
 
-    return weeks, table
+    # Calculate totals per week
+    # table: stb_name -> week_end -> int quantity
+    # totals is a dictionary like:
+    # {'2025-11-25': 210,'2025-11-18': 95,'2025-11-11': 0,'2025-11-04': 0}
+    totals = {week: 0 for week in weeks}
+    for data in table.values():
+        for week in weeks:
+            totals[week] += data.get(week, 0)
+            # week 2025-12-27 value 594
+            print("week", week, "value", data.get(week))
+
+    # totals {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20):
+    print("totals", totals)
+
+    return weeks, table, totals
 
 
 # --------AUTHORIZACIJA--------------------------------------------
@@ -589,7 +608,7 @@ def home():
     records = get_pivoted_data(schema_list)
 
     # for getting stb inventory records
-    stb_weeks, stb_table = get_stb_inventory_records()
+    weeks, table, totals = get_stb_inventory_records()
 
     return render_template(
         "home.html",
@@ -597,8 +616,9 @@ def home():
         monday=monday,
         records=records,
         schema=schema_list,
-        stb_weeks=stb_weeks,
-        stb_table=stb_table,
+        weeks=weeks,
+        table=table,
+        totals=totals,
     )
 
 
