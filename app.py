@@ -14,6 +14,7 @@ from models import (
     Users,
     Cities,
     CpeTypes,
+    StbTypes,
     DismantleTypes,
     CPE_TYPE_CHOICES,
 )
@@ -1291,7 +1292,7 @@ def admin_edit_cpe_type(id):
             return redirect(url_for("admin_cpe_types"))
         except Exception as e:
             db.session.rollback()
-            flash(f"Greška prilikom izmjene korisnika: {e}", "danger")
+            flash(f"Greška prilikom izmjene CPE tipa: {e}", "danger")
             return redirect(url_for("admin_edit_cpe_type", id=id))
 
     return render_template(
@@ -1299,6 +1300,81 @@ def admin_edit_cpe_type(id):
         cpe=cpe,
         types=types,
     )
+
+
+# -------------STB TYPES CRUD----------------------------------------
+@app.route("/admin/stb_types")
+@login_required
+def admin_stb_types():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+    stbs = StbTypes.query.order_by(StbTypes.id).all()
+    return render_template("admin/stb_types.html", stbs=stbs)
+
+
+@app.route("/admin/stb_types/add", methods=["GET", "POST"])
+@login_required
+def admin_add_stb_type():
+    if not admin_required():
+        return redirect(url_for("admin_stb_types"))
+
+    # THIS IS FOR SUMBITING REQUEST
+    if request.method == "POST":
+        name = request.form.get("name")
+        label = request.form.get("label")
+
+        # Validation: name must be unique
+        existing_stb_type = StbTypes.query.filter_by(name=name).first()
+        if existing_stb_type:
+            flash("Tip STB već postoji", "danger")
+            return redirect(url_for("admin_add_stb_type"))
+
+        db.session.add(StbTypes(name=name, label=label))
+        db.session.commit()
+        return redirect(url_for("admin_stb_types"))
+
+    # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
+    return render_template(
+        "admin/stb_types_add.html",
+    )
+
+
+@app.route("/admin/stb_types/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def admin_edit_stb_type(id):
+    if not admin_required():
+        return redirect(url_for("admin_stb_types"))
+
+    stb = StbTypes.query.get_or_404(id)
+
+    if request.method == "POST":
+        name = request.form.get("name")
+        label = request.form.get("label")
+
+        # Username uniqueness (except current user)
+        existing_stb_type = StbTypes.query.filter(
+            StbTypes.name == name, StbTypes.id != id
+        ).first()
+        if existing_stb_type:
+            flash("Tip STB opreme već postoji!", "danger")
+            return redirect(url_for("admin_edit_stb_type", id=id))
+
+        stb.id = id
+        stb.name = name
+        stb.label = label
+        stb.is_active = "is_active" in request.form  # THIS IS THE CORRECT WAY
+
+        try:
+            db.session.commit()
+            flash("Stb tip uspješno izmijenjen!", "success")
+            return redirect(url_for("admin_stb_types"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Greška prilikom izmjene stb tipa: {e}", "danger")
+            return redirect(url_for("admin_edit_stb_type", id=id))
+
+    return render_template("admin/stb_types_edit.html", stb=stb)
 
 
 # -----------------DISMANTLE TYPES CRUD---------------------

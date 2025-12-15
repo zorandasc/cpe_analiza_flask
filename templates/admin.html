@@ -126,7 +126,7 @@ block styles %} {{ super() }}
       <a href="{{ url_for('admin_cities') }}" class="dashboard-link">
         <div class="card side_dashboard-card shadow p-3">
           <div class="card-body text-center">
-            <h4 class="card-title">Skladišta CPE opreme</h4>
+            <h4 class="card-title">Skladišta opreme</h4>
             <p>Upravljanje skladištima i IJ</p>
           </div>
         </div>
@@ -150,6 +150,17 @@ block styles %} {{ super() }}
           <div class="card-body text-center">
             <h4 class="card-title">Tipovi demontaža</h4>
             <p>Stanja u kojima se može naći demontirana CPE opreme</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+      <a href="{{ url_for('admin_stb_types') }}" class="dashboard-link">
+        <div class="card side_dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Modeli STB opreme</h4>
+            <p>Upravljanje tipovima STB opreme</p>
           </div>
         </div>
       </a>
