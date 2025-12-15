@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 from flask import Flask, render_template, redirect, url_for, request, flash
 from sqlalchemy import text, distinct, func
 
@@ -390,6 +391,41 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
     return paginate
 
 
+def get_stb_inventory_records():
+    SQL_QUERY = """
+            SELECT
+            t.id,
+            t.name,
+            i.week_end,
+            i.quantity
+            FROM stb_types t
+            LEFT JOIN stb_inventory i ON i.stb_type_id = t.id
+            WHERE t.is_active = true
+            ORDER BY t.name, i.week_end DESC;
+    """
+    # returns all rows as a list of tuples
+    #  ('STB-100', '2025-11-25', 90),
+    rows = db.session.execute(text(SQL_QUERY)).fetchall()
+
+    # Creates a dictionary where each key (STB device name) maps
+    # to another dictionary of week → quantity.
+    # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
+    table = defaultdict(dict)
+
+    # Collects all unique weeks from the query, so we know which columns to display.
+    weeks = set()
+
+    # Transforming rows into a pivot-friendly structure
+    for r in rows:
+        table[r.name][r.week_end] = [r.quantity]
+        weeks.add(r.week_end)
+
+    # Sorts weeks descending (latest week first) and keeps only last 4 weeks.
+    weeks = sorted(weeks, reverse=True)[:4]
+
+    return weeks, table
+
+
 # --------AUTHORIZACIJA--------------------------------------------
 # AUTHORIZATION ZA BILO KOJU AKCIJU: SAMO ADMIN
 def admin_required():
@@ -552,12 +588,17 @@ def home():
     # 1. Build pivoted records from schema list
     records = get_pivoted_data(schema_list)
 
+    # for getting stb inventory records
+    stb_weeks, stb_table = get_stb_inventory_records()
+
     return render_template(
         "home.html",
         today=today.strftime("%d-%m-%Y"),
         monday=monday,
         records=records,
         schema=schema_list,
+        stb_weeks=stb_weeks,
+        stb_table=stb_table,
     )
 
 
