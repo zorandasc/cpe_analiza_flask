@@ -20,6 +20,40 @@ block styles %} {{ super() }}
     letter-spacing: 1px;
   }
 
+  .title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    padding-bottom: 5px;
+  }
+
+  .title:before {
+    width: 28px;
+    height: 6px;
+    display: block;
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    margin-left: -14px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
+  .title:after {
+    width: 200px;
+    height: 2px;
+    display: block;
+    content: "";
+    position: relative;
+    margin-top: 25px;
+    left: 50%;
+    margin-left: -100px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
   /* Dashboard cards (for the top row - larger focus items) */
   .dashboard-card {
     border: none;
@@ -82,7 +116,7 @@ block styles %} {{ super() }}
 
 {% endblock %} {% block content %}
 <div class="container admin-wrapper">
-  <h1 class="text-center mb-5 admin-title">Admin Dashboard</h1>
+  <h1 class="text-center mb-5 title">Admin Dashboard</h1>
 
   <div class="row g-4 mb-5">
     <div class="col-md-6">
@@ -110,7 +144,7 @@ block styles %} {{ super() }}
 
   <h2 class="h5 admin-title mb-4">Administracija i Upravljanje Listama</h2>
 
-  <div class="row g-4">
+  <div class="row g-4 mb-5">
     <div class="col-md-3 col-sm-6">
       <a href="{{ url_for('admin_users') }}" class="dashboard-link">
         <div class="card side_dashboard-card shadow p-3">

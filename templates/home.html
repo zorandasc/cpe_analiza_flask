@@ -6,11 +6,39 @@ styles %} {{ super() }}
   }
 
   /* Title */
-  .admin-title {
+  .title {
     font-weight: 700;
-    color: #2b3a55;
     letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    padding-bottom: 5px;
   }
+
+  .title:before {
+  width: 28px;
+  height: 6px;
+  display: block;
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  margin-left: -14px;
+  background: linear-gradient(to right, #be93c5, #7bc6cc);;
+}
+
+.title:after {
+  width: 400px;
+  height: 2px;
+  display: block;
+  content: "";
+  position: relative;
+  margin-top: 25px;
+  left: 50%;
+  margin-left: -200px;
+  background: linear-gradient(to right, #be93c5, #7bc6cc);;
+}
 
   /* Dashboard cards (for the top row - larger focus items) */
   .dashboard-card {
@@ -19,16 +47,6 @@ styles %} {{ super() }}
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     background: white;
     height: 180px;
-    overflow: hidden;
-  }
-
-  /* NEW/Restored style for smaller cards (for the bottom row - list management) */
-  .side_dashboard-card {
-    border: none;
-    border-radius: 12px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: white;
-    height: 150px; /* Smaller height for administrative items */
     overflow: hidden;
   }
 
@@ -70,11 +88,16 @@ styles %} {{ super() }}
   .dashboard-link {
     text-decoration: none;
   }
+
+  .custom-icon {
+    height: 50px;
+    margin-bottom: 0.5rem;
+  }
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
-  <h1 class="text-center mb-5 admin-title">
-    Dobro došli u aplikaciju stanja korisničke opreme
+  <h1 class="text-center mb-5 title">
+    Aplikacija stanja korisničke opreme
   </h1>
 
   <div class="row g-4 mb-5">
@@ -82,6 +105,11 @@ styles %} {{ super() }}
       <a href="{{ url_for('cpe_records') }}" class="dashboard-link">
         <div class="card dashboard-card shadow p-3">
           <div class="card-body text-center">
+            <img
+              src="{{ url_for('static', filename='cpe-1.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
             <h4 class="card-title">Stanje raspoložive CPE opreme</h4>
             <p>Pregled ukupnog stanja CPE opreme</p>
           </div>
@@ -90,9 +118,18 @@ styles %} {{ super() }}
     </div>
 
     <div class="col-md-6">
+       <div class="card dashboard-card shadow p-3">
+        
       <a href="{{ url_for('cpe_dismantle') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow p-3">
+       
           <div class="card-body text-center">
+             
+            <img
+              src="{{ url_for('static', filename='cpe-dismantle.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
+       
             <h4 class="card-title">Stanje demontirane CPE opreme</h4>
             <p>Pregled ukupnog stanja demontirane CPE opreme</p>
           </div>
@@ -103,6 +140,11 @@ styles %} {{ super() }}
       <a href="{{ url_for('stb_records')  }}" class="dashboard-link">
         <div class="card dashboard-card shadow p-3">
           <div class="card-body text-center">
+            <img
+              src="{{ url_for('static', filename='smart-tv.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
             <h4 class="card-title">Stanje STB uređaja - IPTV platforma</h4>
             <p>Pregled ukupnog stanja STB opreme</p>
           </div>
@@ -113,6 +155,11 @@ styles %} {{ super() }}
       <a href="{{ url_for('ont_records') }}" class="dashboard-link">
         <div class="card dashboard-card shadow p-3">
           <div class="card-body text-center">
+            <img
+              src="{{ url_for('static', filename='ont.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
             <h4 class="card-title">Stanje ONT uređaja - GPON mreža</h4>
             <p>Broj ONT uređaja u radu - Mjesečno stanje</p>
           </div>
