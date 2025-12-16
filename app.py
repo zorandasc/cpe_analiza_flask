@@ -676,9 +676,6 @@ def stb_records():
     # Collects all unique weeks from the query, so we know which columns to display.
     weeks = set()
 
-    # Sorts weeks descending (latest week first) and keeps only last 4 weeks.
-    weeks = sorted(weeks, reverse=True)[:4]
-
     # Transforming rows into a pivot-friendly structure
     for r in rows:
         # quantity = r.quantity
@@ -688,6 +685,9 @@ def stb_records():
         # tabli is in format  # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
         table[r.name][r.week_end] += r.quantity
         weeks.add(r.week_end)
+
+    # Sorts weeks descending (latest week first) and keeps only last 4 weeks.
+    weeks = sorted(weeks, reverse=True)[:4]
 
     # Calculate totals per week
     # table: stb_name -> week_end -> int quantity
