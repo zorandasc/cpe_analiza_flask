@@ -62,6 +62,7 @@
         font-weight: 600;
         font-size: 0.9rem;
         margin-right: 0.5rem;
+        margin-left: 0.5rem;
       }
 
       /* =========================
@@ -134,7 +135,7 @@
                 Početna
               </a>
             </li>
-             {% if current_user.is_authenticated %}
+            {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a
                 class="nav-link {% if request.path == url_for('cpe_records') %}active{% endif %}"
@@ -144,7 +145,7 @@
                 CPE oprema
               </a>
             </li>
-             <li class="nav-item">
+            <li class="nav-item">
               <a
                 class="nav-link {% if request.path == url_for('cpe_dismantle') %}active{% endif %}"
                 href="{{ url_for('cpe_dismantle') }}"
@@ -172,7 +173,12 @@
               </a>
             </li>
 
-           
+            {% endif %}
+          </ul>
+
+          <!-- RIGHT -->
+          {% if current_user.is_authenticated %}
+          <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item">
               <a
                 class="nav-link {% if request.path == url_for('admin_dashboard') %}active{% endif %}"
@@ -181,12 +187,6 @@
                 Admin Panel
               </a>
             </li>
-            {% endif %}
-          </ul>
-
-          <!-- RIGHT -->
-          {% if current_user.is_authenticated %}
-          <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item">
               <span class="nav-link navbar-username">
                 👤 {{ current_user.username }}
