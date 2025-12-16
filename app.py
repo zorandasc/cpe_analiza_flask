@@ -34,10 +34,11 @@ from create_admin_cli import create_initial_admin
 from create_db_tables_cli import create_initial_db
 
 DB_HOST = os.environ.get("DB_HOST", "localhost")
-# KADA NAPRAVIMO python app.py UNUTAR MOG VS CODA, ODNOSNO IZ VANA
-# DOCKER MREZE GADJAMO DOKERIZOVANI POSTGRES 5431
+# KADA NAPRAVIMO python app.py UNUTAR VS CODA, ODNOSNO IZ VANA
+# DOCKER MREZE, GADJAMO DOKERIZOVANI POSTGRES 5431
 # MEDJUTIM KADA DOKERIZUJEMO FLASK APP MI SMO U INTERNOM DOCKER
-# OKRUZENJU I ONDA TREBA DA GADJAMAO 5342
+# OKRUZENJU I ONDA TREBA DA GADJAMAO 5342, ODNOSNO
+# DB_PORT: 5432 U DOCKER COMPOSE
 DB_PORT = os.environ.get("DB_PORT", "5431")  # <-- add port variable
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASS = os.environ.get("DB_PASSWORD", "mypassword")
@@ -59,8 +60,6 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "a_very_long_and_random_string_for_security"
 
 # ----- INICIALIZE---------
-
-
 # Initialize SQLAlchemy with the app
 db.init_app(app)
 
@@ -119,42 +118,17 @@ def get_latest_cpe_records():
         .all()
     )
 
-    totals = {
-        "iads": 0,
-        "stb_arr_4205": 0,
-        "stb_arr_5305": 0,
-        "stb_ekt_4805": 0,
-        "stb_ekt_7005": 0,
-        "stb_sky_44h": 0,
-        "ont_huaw": 0,
-        "ont_nok": 0,
-        "stb_dth": 0,
-        "antena_dth": 0,
-        "lnb_duo": 0,
-    }
 
-    for r in latest_records:
-        totals["iads"] += r.iads
-        totals["stb_arr_4205"] += r.stb_arr_4205
-        totals["stb_arr_5305"] += r.stb_arr_5305
-        totals["stb_ekt_4805"] += r.stb_ekt_4805
-        totals["stb_ekt_7005"] += r.stb_ekt_7005
-        totals["stb_sky_44h"] += r.stb_sky_44h
-        totals["ont_huaw"] += r.ont_huaw
-        totals["ont_nok"] += r.ont_nok
-        totals["stb_dth"] += r.stb_dth
-        totals["antena_dth"] += r.antena_dth
-        totals["lnb_duo"] += r.lnb_duo
-
-    return latest_records, totals
+    return latest_records
 """
 
 
-# SOURCE OF TRUTH FOR WHOLE APP TO WORK
+# SOURCE OF TRUTH FOR WHOLE CPE-RECORDS TABLE
 # THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE
-# PRESENT IN CPEINVENTORY TABLE an is_active
-# FROM THIS SCHEMA LIST WE BUILD DYNAMIC SQL QUERY
-# WE ALSO USE IT IN HTML TEMPLATES AND IN ROUTES
+# PRESENT IN CPEINVENTORY TABLE and is_active
+# FROM THIS SCHEMA LIST:
+# 1. WE BUILD DYNAMIC SQL QUERY
+# 2. WE ALSO USE IT IN HTML TABLES TEMPLATES AND IN ROUTES
 def get_cpe_column_schema():
     # 1. get distinc id froM CPEInventory
     # The result is a list of tuples, e.g., [(1,), (5,), (10,)]
@@ -163,7 +137,8 @@ def get_cpe_column_schema():
     # Flatten the list of tuples: [(1,), (5,)] -> [1, 5]
     list_of_ids = [id_tuple[0] for id_tuple in list_of_id_tuples]
 
-    # 2. get id, name, label, type from CpeTypes table for that id from CpeInventory table
+    # 2. Get full data (id, name, label, type) from Cpe_Types table
+    # for that cpe_type_id found in CpeInventory table
     cpe_types = (
         db.session.query(CpeTypes.id, CpeTypes.name, CpeTypes.label, CpeTypes.type)
         .filter(CpeTypes.id.in_(list_of_ids), CpeTypes.is_active)
@@ -293,7 +268,8 @@ def get_pivoted_data(schema_list: list):
     return pivoted_data
 
 
-# The main difference with get_pivoted_data is that, for the history, you need to pivot on the updated_at timestamp
+# The main difference with get_pivoted_data is that, for the history,
+# you need to pivot on the updated_at timestamp
 # and the cpe_model, while filtering for a single city_id
 def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page: int):
     """
@@ -393,113 +369,8 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
     return paginate
 
 
-def current_week_end(today=None):
-    if not today:
-        today = date.today()
-    FRIDAY = 4
-    return today + timedelta(days=(FRIDAY - today.weekday()))
-
-
-def get_stb_inventory_records():
-    SQL_QUERY = """
-            SELECT
-            t.id,
-            t.name,
-            i.week_end,
-            i.quantity
-            FROM stb_types t
-            LEFT JOIN stb_inventory i ON i.stb_type_id = t.id
-            WHERE t.is_active = true
-            ORDER BY t.name, i.week_end DESC;
-    """
-    # returns all rows as a list of tuples
-    #  ('STB-100', '2025-11-25', 90),
-    rows = db.session.execute(text(SQL_QUERY)).fetchall()
-
-    # Creates a dictionary where each key (STB device name) maps
-    # to another dictionary of week → quantity.
-    # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
-    table = defaultdict(lambda: defaultdict(int))
-
-    # Collects all unique weeks from the query, so we know which columns to display.
-    weeks = set()
-
-    # Transforming rows into a pivot-friendly structure
-    for r in rows:
-        # quantity = r.quantity
-        # if isinstance(quantity, list):
-        #    quantity = sum(quantity)
-
-        # tabli is in format  # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
-        table[r.name][r.week_end] += r.quantity
-        weeks.add(r.week_end)
-
-    # Sorts weeks descending (latest week first) and keeps only last 4 weeks.
-    weeks = sorted(weeks, reverse=True)[:4]
-
-    # Calculate totals per week
-    # table: stb_name -> week_end -> int quantity
-    # totals is a dictionary like:
-    # {'2025-11-25': 210,'2025-11-18': 95,'2025-11-11': 0,'2025-11-04': 0}
-    totals = {week: 0 for week in weeks}
-    for data in table.values():
-        for week in weeks:
-            totals[week] += data.get(week, 0)
-            # week 2025-12-27 value 594
-            # print("week", week, "value", data.get(week))
-
-    # totals {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20):
-    # print("totals", totals)
-
-    return weeks, table, totals
-
-
-def get_ont_inventory_records():
-    SQL_QUERY = """
-    SELECT 
-        c.id, 
-        c.name, 
-        i.month_end, 
-        i.quantity 
-    FROM cities c
-    left join ont_inventory i on i.city_id=c.id
-    WHERE
-        C.TYPE = 'IJ'
-    ORDER BY
-        C.ID, i.month_end DESC 
-    """
-
-    rows = db.session.execute(text(SQL_QUERY))
-
-    # The statement creates a dictionary of dictionaries
-    # defaultdict(default_factory)
-    # default_factory: This is a function (or constructor) that provides the default value for the key.
-    # The innermost defaultdict(int) uses int as its default factory.
-    # The function: lambda: (takes no arguments) returns defaultdict(int).
-    table = defaultdict(lambda: defaultdict(int))
-
-    months = set()
-
-    # fill table dictionary and
-    # months set
-    for r in rows:
-        table[r.name][r.month_end] += r.quantity
-        months.add(r.month_end)
-
-    # sortija od najveceg do najmanjeg i odaberi samo prvo 4 recorda
-    months = sorted(months, reverse=True)[:4]
-
-    # calculate tottal SABERI KVANTITETE PO MIJESECIMA
-    totals = {month: 0 for month in months}
-    for data in table.values():
-        for month in months:
-            totals[month] += data.get(month, 0)
-
-    return months, table, totals
-
-
 # --------AUTHORIZACIJA--------------------------------------------
-# AUTHORIZATION ZA BILO KOJU AKCIJU: SAMO ADMIN
+# AUTHORIZATION ZA BILO KOJU AKCIJU: ONLY ADMIN
 def admin_required():
     if current_user.is_authenticated and current_user.role == "admin":
         return True
@@ -507,7 +378,7 @@ def admin_required():
     return False
 
 
-# AUTHORIZACIJA ZA CPECIFICNU AKCIJU: ILI ADMIN ILI USER AKO JE NJEGOV RESURS
+# AUTHORIZACIJA ZA CPECIFICNU AKCIJU: ADMIN OR USER AKO JE NJEGOV RESURS
 # The helper function admin_and_user_required(city_id) handles access based
 # on role ("admin") or resource ownership (current_user.city_id == city_id).
 def admin_and_user_required(city_id):
@@ -525,7 +396,7 @@ def admin_and_user_required(city_id):
     return False
 
 
-# AUTHORIZATION ZA VIEW: ILI ADMIN ILI VIEW
+# AUTHORIZATION ZA VIEW:  ADMIN OR VIEW
 def view_required():
     if current_user.is_authenticated and (
         current_user.role == "view" or current_user.role == "admin"
@@ -650,8 +521,31 @@ def update_cpe():
 @app.route("/")
 @login_required
 def home():
+    return render_template("home.html")
+
+
+# ----------AUTENTHENTICATED ROUTES FOR USE PAGES-----------------------
+
+
+# ---------- CPE-RECORDS-----------------
+@app.route("/cpe-records")
+@login_required
+def cpe_records():
+    today = date.today()
+    # today.weekday() gives 0 for Monday, 6 for Sunday
+    # Subtracting gives the date for this week's Monday
+    monday = today - timedelta(days=today.weekday())  # Monday of this week
+
+    schema_list = get_cpe_column_schema()
+
+    # 1. Build pivoted records from schema list
+    records = get_pivoted_data(schema_list)
     return render_template(
-        "home.html",
+        "cpe_records.html",
+        today=today.strftime("%d-%m-%Y"),
+        monday=monday,
+        records=records,
+        schema=schema_list,
     )
 
 
@@ -748,91 +642,135 @@ def city_history(id):
     )
 
 
+# ---------- CPE-DISMANTLE-RECORDS-----------------
 @app.route("/cpe-dismantle")
 @login_required
 def cpe_dismantle():
     return render_template("cpe_dismantle.html")
 
 
-@app.route("/cpe-records")
-@login_required
-def cpe_records():
-    today = date.today()
-    # today.weekday() gives 0 for Monday, 6 for Sunday
-    # Subtracting gives the date for this week's Monday
-    monday = today - timedelta(days=today.weekday())  # Monday of this week
-
-    schema_list = get_cpe_column_schema()
-
-    # 1. Build pivoted records from schema list
-    records = get_pivoted_data(schema_list)
-    return render_template(
-        "cpe_records.html",
-        today=today.strftime("%d-%m-%Y"),
-        monday=monday,
-        records=records,
-        schema=schema_list,
-    )
-
-
+# ---------- STB-RECORDS-----------------
 @app.route("/stb-records")
 @login_required
 def stb_records():
-    # for getting stb inventory records
-    stb_weeks, stb_table, stb_totals = get_stb_inventory_records()
+    SQL_QUERY = """
+            SELECT
+            t.id,
+            t.name,
+            i.week_end,
+            i.quantity
+            FROM stb_types t
+            LEFT JOIN stb_inventory i ON i.stb_type_id = t.id
+            WHERE t.is_active = true
+            ORDER BY t.name, i.week_end DESC;
+    """
+    # returns all rows as a list of tuples
+    #  ('STB-100', '2025-11-25', 90),
+    rows = db.session.execute(text(SQL_QUERY)).fetchall()
+
+    # Creates a dictionary where each key (STB device name) maps
+    # to another dictionary of week → quantity.
+    # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
+    table = defaultdict(lambda: defaultdict(int))
+
+    # Collects all unique weeks from the query, so we know which columns to display.
+    weeks = set()
+
+    # Sorts weeks descending (latest week first) and keeps only last 4 weeks.
+    weeks = sorted(weeks, reverse=True)[:4]
+
+    # Transforming rows into a pivot-friendly structure
+    for r in rows:
+        # quantity = r.quantity
+        # if isinstance(quantity, list):
+        #    quantity = sum(quantity)
+
+        # tabli is in format  # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
+        table[r.name][r.week_end] += r.quantity
+        weeks.add(r.week_end)
+
+    # Calculate totals per week
+    # table: stb_name -> week_end -> int quantity
+    # totals is a dictionary like:
+    # {'2025-11-25': 210,'2025-11-18': 95,'2025-11-11': 0,'2025-11-04': 0}
+    totals = {week: 0 for week in weeks}
+    for data in table.values():
+        for week in weeks:
+            totals[week] += data.get(week, 0)
+            # week 2025-12-27 value 594
+            # print("week", week, "value", data.get(week))
+
+    # totals {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20):
+    # print("totals", totals)
+
     return render_template(
         "stb_records.html",
-        stb_weeks=stb_weeks,
-        stb_table=stb_table,
-        stb_totals=stb_totals,
+        weeks=weeks,
+        table=table,
+        totals=totals,
     )
 
 
+# ---------- ONT-RECORDS-----------------
 @app.route("/ont-records")
 @login_required
 def ont_records():
-    ont_months, ont_table, ont_totals = get_ont_inventory_records()
+    SQL_QUERY = """
+    SELECT 
+        c.id, 
+        c.name, 
+        i.month_end, 
+        i.quantity 
+    FROM cities c
+    left join ont_inventory i on i.city_id=c.id
+    WHERE
+        C.TYPE = 'IJ'
+    ORDER BY
+        C.ID, i.month_end DESC 
+    """
+
+    rows = db.session.execute(text(SQL_QUERY))
+
+    # The statement creates a dictionary of dictionaries
+    # defaultdict(default_factory)
+    # default_factory: This is a function (or constructor) that provides the default value for the key.
+    # The innermost defaultdict(int) uses int as its default factory.
+    # The function: lambda: (takes no arguments) returns defaultdict(int).
+    table = defaultdict(lambda: defaultdict(int))
+
+    months = set()
+
+    # fill table dictionary and
+    # months set
+    for r in rows:
+        table[r.name][r.month_end] += r.quantity
+        months.add(r.month_end)
+
+    # sortija od najveceg do najmanjeg i odaberi samo prvo 4 recorda
+    months = sorted(months, reverse=True)[:4]
+
+    # calculate tottal SABERI KVANTITETE PO MIJESECIMA
+    totals = {month: 0 for month in months}
+    for data in table.values():
+        for month in months:
+            totals[month] += data.get(month, 0)
+
     return render_template(
         "ont_records.html",
-        ont_months=ont_months,
-        ont_table=ont_table,
-        ont_totals=ont_totals,
+        months=months,
+        table=table,
+        totals=totals,
     )
 
 
-# ---------------- ADMIN DASHBOARD PAGE-----------
+# ----------AUTTORHIZED PAGES---------------------
+
+
+# ----------------ADMIN DASHBOARD PAGE-----------
 @app.route("/admin/")
 @login_required
 def admin_dashboard():
     return render_template("admin.html")
-
-
-# ----------------- AUTENTIFIKACIJA------------------------
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        user = Users.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password_hash, password):
-            # Flask will store user session in browser
-            login_user(user)  # from flask-login packet
-            flash(f"Dobrodošli, {username}", "success")
-            return redirect(url_for("home"))
-        flash("Invalid credentials", "danger")
-        return render_template("login.html", message="Invalid credentials")
-
-    return render_template("login.html")
-
-
-# LOGGOUT
-@app.route("/logout")
-@login_required
-def logout():
-    username_to_flash = current_user.username
-    logout_user()
-    flash(f"Doviđenja, {username_to_flash}", "success")
-    return redirect(url_for("login"))
 
 
 # -----------------CITIES CRUD---------------------
@@ -1421,6 +1359,34 @@ def admin_dismantle_status():
         return redirect(url_for("admin_dashboard"))
     status = DismantleTypes.query.order_by(DismantleTypes.id).all()
     return render_template("admin/dismantle_types.html", status=status)
+
+
+# -----------------LOGIN AUTENTIFIKACIJA------------------------
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        user = Users.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password_hash, password):
+            # Flask will store user session in browser
+            login_user(user)  # from flask-login packet
+            flash(f"Dobrodošli, {username}", "success")
+            return redirect(url_for("home"))
+        flash("Invalid credentials", "danger")
+        return render_template("login.html", message="Invalid credentials")
+
+    return render_template("login.html")
+
+
+# --------------- LOGGOUT-----------------------
+@app.route("/logout")
+@login_required
+def logout():
+    username_to_flash = current_user.username
+    logout_user()
+    flash(f"Doviđenja, {username_to_flash}", "success")
+    return redirect(url_for("login"))
 
 
 # -----MAIN LOOP-----------

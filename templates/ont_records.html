@@ -188,16 +188,16 @@ styles %} {{ super() }}
     <thead>
       <tr>
         <th>Skladište</th>
-        {% for month in ont_months %}
+        {% for month in months %}
         <th>{{ month }}</th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for city, data in ont_table.items()%}
+      {% for city, data in table.items()%}
       <tr>
         <td>{{city}}</td>
-        {% for month in ont_months%}
+        {% for month in months%}
         <td>{{data.get(month, 0)}}</td>
         {% endfor %}
       </tr>
@@ -205,7 +205,7 @@ styles %} {{ super() }}
       <!-- Total row -->
       <tr style="font-weight: bold">
         <td>Total</td>
-        {% for month in ont_months %}
+        {% for month in months %}
         <td>{{ ont_totals[month] }}</td>
         {% endfor %}
       </tr>

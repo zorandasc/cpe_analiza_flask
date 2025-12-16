@@ -189,16 +189,16 @@ styles %} {{ super() }}
     <thead>
       <tr>
         <th>STB Device</th>
-        {% for week in stb_weeks %}
+        {% for week in weeks %}
         <th>{{ week }}</th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for stb, data in stb_table.items()%}
+      {% for stb, data in table.items()%}
       <tr>
         <td>{{stb}}</td>
-        {% for week in stb_weeks%}
+        {% for week in weeks%}
         <td>{{data.get(week, 0)}}</td>
         {% endfor %}
       </tr>
@@ -206,8 +206,8 @@ styles %} {{ super() }}
       <!-- Total row -->
       <tr style="font-weight: bold">
         <td>Total</td>
-        {% for week in stb_weeks %}
-        <td>{{ stb_totals[week] }}</td>
+        {% for week in weeks %}
+        <td>{{ totals[week] }}</td>
         {% endfor %}
       </tr>
     </tbody>
