@@ -650,33 +650,8 @@ def update_cpe():
 @app.route("/")
 @login_required
 def home():
-    today = date.today()
-    # today.weekday() gives 0 for Monday, 6 for Sunday
-    # Subtracting gives the date for this week's Monday
-    monday = today - timedelta(days=today.weekday())  # Monday of this week
-
-    schema_list = get_cpe_column_schema()
-
-    # 1. Build pivoted records from schema list
-    records = get_pivoted_data(schema_list)
-
-    # for getting stb inventory records
-    stb_weeks, stb_table, stb_totals = get_stb_inventory_records()
-
-    ont_months, ont_table, ont_totals = get_ont_inventory_records()
-
     return render_template(
         "home.html",
-        today=today.strftime("%d-%m-%Y"),
-        monday=monday,
-        records=records,
-        schema=schema_list,
-        stb_weeks=stb_weeks,
-        stb_table=stb_table,
-        stb_totals=stb_totals,
-        ont_months=ont_months,
-        ont_table=ont_table,
-        ont_totals=ont_totals,
     )
 
 
@@ -771,6 +746,12 @@ def city_history(id):
         schema=schema_list,
         city=city,
     )
+
+
+@app.route("/cpe-dismantle")
+@login_required
+def cpe_dismantle():
+    return render_template("cpe_dismantle.html")
 
 
 @app.route("/cpe-records")

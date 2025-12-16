@@ -134,6 +134,7 @@
                 Početna
               </a>
             </li>
+             {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a
                 class="nav-link {% if request.path == url_for('cpe_records') %}active{% endif %}"
@@ -141,6 +142,15 @@
                 aria-current="page"
               >
                 CPE oprema
+              </a>
+            </li>
+             <li class="nav-item">
+              <a
+                class="nav-link {% if request.path == url_for('cpe_dismantle') %}active{% endif %}"
+                href="{{ url_for('cpe_dismantle') }}"
+                aria-current="page"
+              >
+                Demontirana CPE oprema
               </a>
             </li>
             <li class="nav-item">
@@ -162,7 +172,7 @@
               </a>
             </li>
 
-            {% if current_user.is_authenticated %}
+           
             <li class="nav-item">
               <a
                 class="nav-link {% if request.path == url_for('admin_dashboard') %}active{% endif %}"
