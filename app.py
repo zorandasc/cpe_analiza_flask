@@ -654,15 +654,29 @@ def cpe_dismantle():
 @login_required
 def stb_records():
     SQL_QUERY = """
+            WITH
+            LAST_WEEK AS (
+                SELECT DISTINCT
+                    WEEK_END
+                FROM
+                    STB_INVENTORY
+                ORDER BY
+                    WEEK_END DESC
+                LIMIT
+                    4
+            )
             SELECT
-            t.id,
-            t.name,
-            i.week_end,
-            i.quantity
-            FROM stb_types t
-            LEFT JOIN stb_inventory i ON i.stb_type_id = t.id
+                T.ID,
+                T.NAME,
+                I.WEEK_END,
+                I.QUANTITY
+            FROM
+                STB_TYPES T
+                LEFT JOIN STB_INVENTORY I 
+                    ON I.STB_TYPE_ID = T.ID
+                    AND I.WEEK_END IN (SELECT WEEK_END FROM LAST_WEEK)
             WHERE t.is_active = true
-            ORDER BY t.name, i.week_end DESC;
+            ORDER BY i.week_end DESC;
     """
     # returns all rows as a list of tuples
     #  ('STB-100', '2025-11-25', 90),
@@ -682,12 +696,12 @@ def stb_records():
         # if isinstance(quantity, list):
         #    quantity = sum(quantity)
 
-        # tabli is in format  # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
+        # tabli is in format:{ 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },.....}
         table[r.name][r.week_end] += r.quantity
         weeks.add(r.week_end)
 
-    # Sorts weeks descending (latest week first) and keeps only last 4 weeks.
-    weeks = sorted(weeks, reverse=True)[:4]
+    # Sorts weeks ascending (latest week last)
+    weeks = sorted(weeks)
 
     # Calculate totals per week
     # table: stb_name -> week_end -> int quantity
@@ -698,10 +712,8 @@ def stb_records():
         for week in weeks:
             totals[week] += data.get(week, 0)
             # week 2025-12-27 value 594
-            # print("week", week, "value", data.get(week))
 
-    # totals {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20):
-    # print("totals", totals)
+    # totals: {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20),.....}:
 
     return render_template(
         "stb_records.html",
