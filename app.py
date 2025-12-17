@@ -592,8 +592,8 @@ def update_recent_cpe_inventory():
                     quantity=quantity,
                     updated_at=current_time,
                 )
-            # gather all record from one row OF one city
-            records_to_add.append(new_record)
+                # gather all record from one row OF one city
+                records_to_add.append(new_record)
 
     # 4. Execute Single Batch Transaction
     if records_to_add:
@@ -642,6 +642,12 @@ def city_history(id):
     )
 
 
+def get_current_week_end(today=None):
+    today = today or date.today()
+    # Friday = 4 (Mon=0)
+    return today + timedelta(days=(4 - today.weekday()) % 7)
+
+
 # ---------- CPE-DISMANTLE-RECORDS-----------------
 @app.route("/cpe-dismantle")
 @login_required
@@ -682,10 +688,9 @@ def stb_records():
     #  ('STB-100', '2025-11-25', 90),
     rows = db.session.execute(text(SQL_QUERY)).fetchall()
 
-    # Creates a dictionary where each key (STB device name) maps
-    # to another dictionary of week → quantity.
-    # 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },
-    table = defaultdict(lambda: defaultdict(int))
+    # Creates a dictionary of dictionary
+    # "name" is name of STB, data is {date1:quantity1, date2:quantity2,...}
+    table = defaultdict(lambda: {"name": None, "data": defaultdict(int)})
 
     # Collects all unique weeks from the query, so we know which columns to display.
     weeks = set()
@@ -696,31 +701,97 @@ def stb_records():
         # if isinstance(quantity, list):
         #    quantity = sum(quantity)
 
-        # tabli is in format:{ 'STB-100': { '2025-11-25': 90, '2025-11-18': 95 },.....}
-        table[r.name][r.week_end] += r.quantity
+        table[r.id]["name"] = r.name
+        table[r.id]["data"][r.week_end] += r.quantity
         weeks.add(r.week_end)
+
+    # table is in format:
+    # table = {1: {"name": "STB-100","data": {date(2025,12,27): 90,date(2025,12,20): 80}},
+    #          2: {"name": "STB-200","data": {date(2025,12,27): 10,date(2025,12,20): 80}},
+    #           ....
+    # }}
 
     # Sorts weeks ascending (latest week last)
     weeks = sorted(weeks)
 
-    # Calculate totals per week
-    # table: stb_name -> week_end -> int quantity
-    # totals is a dictionary like:
-    # {'2025-11-25': 210,'2025-11-18': 95,'2025-11-11': 0,'2025-11-04': 0}
-    totals = {week: 0 for week in weeks}
-    for data in table.values():
-        for week in weeks:
-            totals[week] += data.get(week, 0)
-            # week 2025-12-27 value 594
+    # calculate current week week_end date
+    current_week_end = get_current_week_end()
 
+    # Calculate totals quantityes per week
+    # table.values() → each STB
+    # t["data"] → dict {week → quantity}
+    # .get(week, 0) → safe for missing weeks
+    totals = {
+        week: sum(t["data"].get(week, 0) for t in table.values()) for week in weeks
+    }
+    # totals is a dictionary like:
+    # {'2025-11-25': 210, '2025-11-18': 95, '2025-11-11': 0, '2025-11-04': 0}
     # totals: {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20),.....}:
 
     return render_template(
         "stb_records.html",
         weeks=weeks,
+        current_week_end=current_week_end,
         table=table,
         totals=totals,
     )
+
+
+@app.route("/update_stb", methods=["POST"])
+@login_required
+def update_recent_stb_inventory():
+    current_week_end = get_current_week_end()
+    try:
+        for key, value in request.form.items():
+            if not key.startswith("qty_"):
+                continue
+            try:
+                stb_type_id = int(key.split("_", 1)[1])
+
+                quantity = int(value or 0)
+
+            except ValueError:
+                # Skip this record if ID or Quantity is invalid
+                continue
+
+            # because of UNIQUE (stb_type_id, week_end) constraints
+            # added when defining table StbInventory in postgres
+            # business logic is: “For this week, insert if missing, update if exists”
+            # That is exactly what PostgreSQL ON CONFLICT DO UPDATE is for.
+            # ORM add_all() cannot do UPSERT cleanly
+            db.session.execute(
+                text("""
+                    INSERT INTO stb_inventory (stb_type_id, week_end, quantity)
+                    VALUES (:stb_id, :week_end, :quantity)
+                    ON CONFLICT (stb_type_id, week_end)
+                    DO UPDATE SET quantity = EXCLUDED.quantity
+                """),
+                {
+                    "stb_id": stb_type_id,
+                    "week_end": current_week_end,
+                    "quantity": quantity,
+                },
+            )
+
+        # PostgreSQL loves batching UPSERTs in a single transaction.
+        # UPSERT = “UPDATE or INSERT”.
+        # Only on commit() does SQLAlchemy:
+        # Send all pending SQL statements to the database
+        # Wrap them in a transaction
+        # `Make them permanent in the DB
+        db.session.commit()
+        flash(
+            f"Novo stanje za {current_week_end} uspješno sačuvano!",
+            "success",
+        )
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        flash("Greška prilikom čuvanja podataka.", "danger")
+
+    # Redirect to Home (Post-Redirect-Get Pattern)
+    # This prevents duplicate form submissions if the user hits refresh.
+    return redirect(url_for("stb_records"))
 
 
 # ---------- ONT-RECORDS-----------------

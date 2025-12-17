@@ -1,64 +1,42 @@
 {% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
 styles %} {{ super() }}
 <style>
-  /* Modern table header */
-  .table-custom-head th {
-    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
-    color: #000; /* black text */
-    font-weight: 400;
+  .title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
     text-align: center;
-    vertical-align: middle;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    font-size: 14px;
+    padding-bottom: 5px;
   }
 
-  /* Remove border radius from inner th cells to avoid overlapping */
-  .table-custom-head th:first-child {
-    border-top-left-radius: 8px;
+  .title:before {
+    width: 28px;
+    height: 6px;
+    display: block;
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    margin-left: -14px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
   }
-  .table-custom-head th:last-child {
-    border-top-right-radius: 8px;
+
+  .title:after {
+    width: 400px;
+    height: 2px;
+    display: block;
+    content: "";
+    position: relative;
+    margin-top: 25px;
+    left: 50%;
+    margin-left: -200px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
   }
-  .stanje-column {
-    min-width: 140px;
-    text-align: center;
-    background-color: #d7dce2 !important;
-  }
-  .Iad-column {
-    background-color: #f0d6f2 !important;
-  }
-  .Stb-column {
-    background-color: #cbd7f1 !important;
-  }
-  .Ont-column {
-    background-color: #d9c3ee !important;
-  }
-  .Antena-column,
-  .Iot-column {
-    background-color: #fce4d6 !important;
-    min-width: 80px;
-  }
-  .azur-column {
-    background-color: #d4e2db !important;
-  }
-  .btn-edit {
-    background-color: #f6f89d;
-    background: linear-gradient(to top, #ff8008, #ffc837);
-    border: none; /* remove default border */
-    width: 70px;
-    box-shadow: 1px 1px 2px black;
-  }
-  .btn-edit:hover {
-    background-color: #d8c589;
-  }
+
   .btn-custom-save {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
-    color: whitesmoke;
-    box-shadow: 1px 1px 2px rgb(0, 0, 0);
-  }
-  .btn-custom-history {
-    background: linear-gradient(to right, #ada996, #f2f2f2, #dbdbdb, #eaeaea);
     color: whitesmoke;
     box-shadow: 1px 1px 2px rgb(0, 0, 0);
   }
@@ -76,32 +54,6 @@ styles %} {{ super() }}
     background: linear-gradient(to right, #7bc6cc, #be93c5);
   }
 
-  .plus-icon-bg {
-    color: white;
-    background-color: #0d6efd; /* Bootstrap primary */
-    padding: 4px 6px;
-    border-radius: 50%;
-    font-size: 18px;
-  }
-
-  .active .page-link {
-    background-color: #8ec8f7 !important;
-  }
-
-  /* Custom class for an extra-extra large modal */
-  .modal-xxl {
-    /* Set the max-width of the entire modal dialog.
-       90% of the viewport width is generally a safe large size. */
-    --bs-modal-width: 90vw;
-    /* The modal-dialog will take up 90% of the screen width */
-    max-width: var(--bs-modal-width);
-  }
-
-  /* Optional: Ensure the content (modal-content) also respects this width */
-  .modal-xxl .modal-content {
-    width: 100%;
-  }
-
   .input-cpe-count {
     /* Set a specific maximum width for the small number fields */
     max-width: 80px;
@@ -109,29 +61,10 @@ styles %} {{ super() }}
     margin: 0 auto;
   }
   .cpe-label-wrap {
-    /* Set max width slightly wider than the input (80px) to accommodate text */
-    max-width: 90px;
-    /* Allows the text to flow to the next line */
     white-space: normal;
     text-align: center;
-  }
-  .table tr.red-row,
-  .table tr.red-row td {
-    /*background-color: #fae5e8 !important;*/
-    color: #ee1831 !important;
-  }
-
-  .table tr.green-row,
-  .table tr.green-row td {
-    /*background-color: #def7eb !important;*/
-    color: #111 !important;
-  }
-  .red-bcg {
-    background-color: #fae5e8 !important;
-  }
-
-  .green-bcg {
-    background-color: #def7eb !important;
+    height: 38px; /* Bootstrap input height */
+    line-height: 1.2;
   }
 
   .table tr.blue-row,
@@ -150,32 +83,29 @@ styles %} {{ super() }}
     border-bottom-width: 3px !important;
   }
 
-  .dashboard-tabs {
-    border-right: 1px solid #dee2e6;
-    padding-right: 0.5rem;
+  .d-flex.mb-2 {
+    display: flex;
+    align-items: center; /* Vertically centers label and input in the row */
+    margin-bottom: 10px;
   }
 
-  .dashboard-tabs .nav-link {
-    text-align: left;
-    color: #495057;
-    border-radius: 0.5rem;
-    padding: 0.6rem 0.75rem;
-    transition: all 0.15s ease-in-out;
+  /* The Label Wrapper */
+  .cpe-label-wrap {
+    flex: 0 0 150px; /* Does not grow, does not shrink, stays 150px wide */
+    max-width: 150px; /* Ensures it doesn't expand */
+    margin-right: 15px; /* Space between label and input */
+    word-wrap: break-word; /* Prevents long text from breaking layout */
   }
 
-  .dashboard-tabs .nav-link:hover {
-    background-color: #f1f3f5;
-  }
-
-  .dashboard-tabs .nav-link.active {
-    background: linear-gradient(to right, #be93c5, #7bc6cc);
-    color: #ffffff;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  /* The Input Field */
+  .input-cpe-count {
+    flex: 1; /* Allows input to fill the remaining horizontal space */
+    max-width: 200px; /* Optional: Prevents inputs from getting too wide */
   }
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
-  <h2 class="mb-4 text-center">Stanje STB uređaja - IPTV platforma</h2>
+  <h2 class="mb-4 text-center title">Stanje STB uređaja - IPTV platforma</h2>
   <button
     type="button"
     title="Ažuritajte posljednje stanje STB opreme"
@@ -186,25 +116,25 @@ styles %} {{ super() }}
     + Dodaj / Izmjeni Sedmični Unos
   </button>
   <table class="table table-bordered table-striped shadow">
-    <thead>
+    <thead class="table-dark">
       <tr>
-        <th>STB Device</th>
+        <th>STB Uređaji</th>
         {% for week in weeks %}
         <th>{{ week }}</th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for stb, data in table.items()%}
+      {% for stb_id, stb in table.items()%}
       <tr>
-        <td>{{stb}}</td>
+        <td>{{stb.name}}</td>
         {% for week in weeks%}
-        <td>{{data.get(week, 0)}}</td>
+        <td>{{stb.data.get(week, 0)}}</td>
         {% endfor %}
       </tr>
       {% endfor %}
       <!-- Total row -->
-      <tr style="font-weight: bold">
+      <tr style="font-weight: bold" class="table-primary">
         <td>Total</td>
         {% for week in weeks %}
         <td>{{ totals[week] }}</td>
@@ -217,10 +147,31 @@ styles %} {{ super() }}
 <div class="modal fade" id="stbEditModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="post">
-        <div class="modal-header custom-modal-header"></div>
+      <form method="POST" action="{{url_for('update_recent_stb_inventory')}}">
+        <div class="modal-header custom-modal-header">
+          <h4 class="modal-title">
+            Dodaj novo stanje za: {{ current_week_end }}
+          </h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
         <div class="modal-body">
-          <h4>Week ending</h4>
+          {% for stb_id, stb in table.items()%}
+          <div class="d-flex mb-2">
+            <div class="cpe-label-wrap">{{ stb.name }}</div>
+
+            <input
+              class="form-control input-cpe-count"
+              name="qty_{{ stb_id }}"
+              type="number"
+              value="{{ stb.data.get(current_week_end, 0) }}"
+              min="0"
+            />
+          </div>
+          {% endfor %}
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-custom-save">
