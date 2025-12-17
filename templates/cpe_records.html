@@ -1,6 +1,39 @@
 {% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %}
  {% block styles %} {{ super() }}
 <style>
+  .title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    padding-bottom: 5px;
+  }
+
+  .title:before {
+    width: 28px;
+    height: 6px;
+    display: block;
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    margin-left: -14px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
+  .title:after {
+    width: 400px;
+    height: 2px;
+    display: block;
+    content: "";
+    position: relative;
+    margin-top: 25px;
+    left: 50%;
+    margin-left: -200px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
   /* Modern table header */
   .table-custom-head th {
     /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
@@ -117,7 +150,7 @@
   .table tr.red-row,
   .table tr.red-row td {
     /*background-color: #fae5e8 !important;*/
-    color: #ee1831 !important;
+    color: #ee1831;
   }
 
   .table tr.green-row,
@@ -127,6 +160,7 @@
   }
   .red-bcg {
     background-color: #fae5e8 !important;
+   
   }
 
   .green-bcg {
@@ -177,7 +211,7 @@
 <div class="container py-5">
 
 
-    <h2 class="mb-4 text-center">Zadnje stanje CPE opreme {{ today }}</h2>
+    <h2 class="mb-4 text-center title">Zadnje stanje CPE opreme {{ today }}</h2>
       <div class="table-responsive">
         <table class="table table-hover align-middle table-sm table-emph-h-border">
           <thead class="table-custom-head">

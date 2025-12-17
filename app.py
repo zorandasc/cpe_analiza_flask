@@ -642,13 +642,9 @@ def city_history(id):
     )
 
 
-def get_current_week_end(today=None):
-    today = today or date.today()
-    # Friday = 4 (Mon=0)
-    return today + timedelta(days=(4 - today.weekday()) % 7)
-
-
 # ---------- CPE-DISMANTLE-RECORDS-----------------
+
+
 @app.route("/cpe-dismantle")
 @login_required
 def cpe_dismantle():
@@ -656,6 +652,16 @@ def cpe_dismantle():
 
 
 # ---------- STB-RECORDS-----------------
+
+
+# vraca datum petka za svaku sedmicu
+# posto je petak datum u svakoj koloni
+def get_current_week_end(today=None):
+    today = today or date.today()
+    # Friday = 4 (Mon=0)
+    return today + timedelta(days=(4 - today.weekday()) % 7)
+
+
 @app.route("/stb-records")
 @login_required
 def stb_records():
@@ -746,6 +752,7 @@ def update_recent_stb_inventory():
             if not key.startswith("qty_"):
                 continue
             try:
+                # key je tima qty_1, qty_2,....
                 stb_type_id = int(key.split("_", 1)[1])
 
                 quantity = int(value or 0)
@@ -795,55 +802,145 @@ def update_recent_stb_inventory():
 
 
 # ---------- ONT-RECORDS-----------------
+
+
+# return date of last day of current month
+def get_current_month_end(today=None):
+    # Take today
+    today = today or date.today()
+
+    # Move to first day of next month
+    if today.month == 12:
+        first_next_month = date(today.year + 1, 1, 1)
+    else:
+        # Jump to the first day of the next month
+        first_next_month = date(today.year, today.month + 1, 1)
+
+    # Subtract one day Step back one day → last day of current month
+    return first_next_month - timedelta(days=1)
+
+
 @app.route("/ont-records")
 @login_required
 def ont_records():
     SQL_QUERY = """
-    SELECT 
-        c.id, 
-        c.name, 
-        i.month_end, 
-        i.quantity 
-    FROM cities c
-    left join ont_inventory i on i.city_id=c.id
-    WHERE
-        C.TYPE = 'IJ'
-    ORDER BY
-        C.ID, i.month_end DESC 
+            WITH
+            LAST_MONTH AS (
+                SELECT DISTINCT
+                    MONTH_END
+                FROM
+                    ONT_INVENTORY
+                ORDER BY
+                    MONTH_END DESC
+                LIMIT
+                    4
+            )
+            SELECT
+                c.id, 
+                c.name, 
+                i.month_end, 
+                i.quantity 
+            FROM
+                CITIES C
+                LEFT JOIN ONT_INVENTORY I 
+                    ON I.CITY_ID = C.ID
+                    AND I.MONTH_END IN (SELECT MONTH_END FROM LAST_MONTH)
+            WHERE C.TYPE = 'IJ'
+            ORDER BY  C.ID, i.month_end DESC ;
     """
 
-    rows = db.session.execute(text(SQL_QUERY))
+    rows = db.session.execute(text(SQL_QUERY)).fetchall()
 
     # The statement creates a dictionary of dictionaries
     # defaultdict(default_factory)
-    # default_factory: This is a function (or constructor) that provides the default value for the key.
+    # default_factory: This is a function (or constructor) that provides
+    #  the default value for the key.
     # The innermost defaultdict(int) uses int as its default factory.
     # The function: lambda: (takes no arguments) returns defaultdict(int).
-    table = defaultdict(lambda: defaultdict(int))
+    table = defaultdict(lambda: {"name": None, "data": defaultdict(int)})
 
     months = set()
 
-    # fill table dictionary and
-    # months set
+    # Transforming rows into a pivot-friendly structure
     for r in rows:
-        table[r.name][r.month_end] += r.quantity
+        table[r.id]["name"] = r.name
+        table[r.id]["data"][r.month_end] += r.quantity
         months.add(r.month_end)
 
+    # table is in format:
+    # table = {1: {"name": "STB-100","data": {date(2025,12,27): 90,date(2025,12,20): 80}},
+    #          2: {"name": "STB-200","data": {date(2025,12,27): 10,date(2025,12,20): 80}},
+    #           ....}}
+
     # sortija od najveceg do najmanjeg i odaberi samo prvo 4 recorda
-    months = sorted(months, reverse=True)[:4]
+    months = sorted(months)
+
+    # calculate current week week_end date
+    current_month_end = get_current_month_end()
 
     # calculate tottal SABERI KVANTITETE PO MIJESECIMA
-    totals = {month: 0 for month in months}
-    for data in table.values():
-        for month in months:
-            totals[month] += data.get(month, 0)
+    totals = {
+        month: sum(t["data"].get(month, 0) for t in table.values()) for month in months
+    }
 
     return render_template(
         "ont_records.html",
         months=months,
+        current_month_end=current_month_end,
         table=table,
         totals=totals,
     )
+
+
+@app.route("/update_ont", methods=["POST"])
+@login_required
+def update_recent_ont_inventory():
+    current_month_end = get_current_month_end()
+    try:
+        for key, value in request.form.items():
+            if not key.startswith("qty_"):
+                continue
+            try:
+                # key je tima qty_1, qty_2,....
+                city_id = int(key.split("_", 1)[1])
+                quantity = int(value or 0)
+            except ValueError:
+                # Skip this record if ID or Quantity is invalid
+                continue
+
+            db.session.execute(
+                text("""
+
+            INSERT INTO ont_inventory (city_id, month_end, quantity)
+                    VALUES (:city_id, :month_end, :quantity)
+                    ON CONFLICT (city_id, month_end)
+                    DO UPDATE SET quantity = EXCLUDED.quantity
+            """),
+                {
+                    "city_id": city_id,
+                    "month_end": current_month_end,
+                    "quantity": quantity,
+                },
+            )
+
+        # PostgreSQL loves batching UPSERTs in a single transaction.
+        # UPSERT = “UPDATE or INSERT”.
+        # Only on commit() does SQLAlchemy:
+        # Send all pending SQL statements to the database
+        # Wrap them in a transaction
+        # `Make them permanent in the DB
+        db.session.commit()
+        flash(
+            f"Novo stanje za {current_month_end} uspješno sačuvano!",
+            "success",
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        flash("Greška prilikom čuvanja podataka.", "danger")
+
+    return redirect(url_for("ont_records"))
 
 
 # ----------AUTTORHIZED PAGES---------------------
