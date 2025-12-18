@@ -13,25 +13,26 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     text,
+    Enum
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
+import enum
 from flask_login import UserMixin
 
-CPE_TYPE_CHOICES = [
-    "IAD",
-    "ONT",
-    "STB",
-    "ANTENA",
-    "ROUTER",
-    "SWITCH",
-    "WIFI EXTENDER",
-    "WIFI ACCESS POINT",
-    "PHONES",
-    "SERVER",
-    "PC",
-    "IOT",
-]
+class CpeTypeEnum(enum.Enum):
+    IAD = "IAD"
+    ONT = "ONT"
+    STB = "STB"
+    ANTENA = "ANTENA"
+    ROUTER = "ROUTER"
+    SWITCH = "SWITCH"
+    WIFI_EXTENDER = "WIFI EXTENDER"
+    WIFI_ACCESS_POINT = "WIFI ACCESS POINT"
+    PHONES = "PHONES"
+    SERVER = "SERVER"
+    PC = "PC"
+    IOT = "IOT"
 
 db = SQLAlchemy()
 
@@ -65,19 +66,17 @@ class Cities(db.Model):
 
 class CpeTypes(db.Model):
     __tablename__ = "cpe_types"
-    __table_args__ = (
-        CheckConstraint(
-            sqltext=f"type::text = ANY (ARRAY[{', '.join(f"'{c}'::character varying" for c in CPE_TYPE_CHOICES)}]::text[])",
-            name="cpe_types_type_check",
-        ),
-        PrimaryKeyConstraint("id", name="cpe_types_pkey"),
-        UniqueConstraint("name", name="cpe_types_name_key"),
-    )
-
+    
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     label: Mapped[Optional[str]] = mapped_column(String(200))
-    type: Mapped[Optional[str]] = mapped_column(String(100))
+    
+    # 2. Use the Enum type here
+    # native_enum=True tells Postgres to create a custom TYPE
+    type: Mapped[Optional[CpeTypeEnum]] = mapped_column(
+        Enum(CpeTypeEnum, native_enum=True, name="cpe_type_enum")
+    )
+    
     is_active: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )

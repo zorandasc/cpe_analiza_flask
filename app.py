@@ -18,7 +18,7 @@ from models import (
     CpeTypes,
     StbTypes,
     DismantleTypes,
-    CPE_TYPE_CHOICES,
+    CpeTypeEnum,
 )
 from datetime import date, timedelta, datetime
 from flask_login import (
@@ -1494,6 +1494,7 @@ def admin_add_cpe_type():
         name = request.form.get("name")
         label = request.form.get("label")
         type = request.form.get("type")
+        print("type", type)
 
         # Validation: name must be unique
         existing_cpe_type = CpeTypes.query.filter_by(name=name).first()
@@ -1509,7 +1510,7 @@ def admin_add_cpe_type():
     # EXISISTING RECORDS, IF IT DOESNOT EXISISTIN TABLE IT WONT LIST
     # types = db.session.query(CpeTypes.type).distinct().all()
     # types = [t[0] for t in types]  # flatten list of tuples
-    types = CPE_TYPE_CHOICES
+    types = [member.value for member in CpeTypeEnum]
 
     # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
     return render_template("admin/cpe_types_add.html", types=types)
@@ -1523,7 +1524,7 @@ def admin_edit_cpe_type(id):
 
     cpe = CpeTypes.query.get_or_404(id)
 
-    types = CPE_TYPE_CHOICES
+    types = [member.value for member in CpeTypeEnum]
 
     if request.method == "POST":
         name = request.form.get("name")
