@@ -13,13 +13,17 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     text,
-    Enum
+    Enum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
 import enum
 from flask_login import UserMixin
 
+
+# To make this robust, define the Enum so that the Value (what goes in the DB)
+# s explicitly the string with the space, while the Name
+# (how you use it in code) uses an underscore.
 class CpeTypeEnum(enum.Enum):
     IAD = "IAD"
     ONT = "ONT"
@@ -27,12 +31,14 @@ class CpeTypeEnum(enum.Enum):
     ANTENA = "ANTENA"
     ROUTER = "ROUTER"
     SWITCH = "SWITCH"
+    # Name is WIFI_EXTENDER, but Value is "WIFI EXTENDER"
     WIFI_EXTENDER = "WIFI EXTENDER"
     WIFI_ACCESS_POINT = "WIFI ACCESS POINT"
     PHONES = "PHONES"
     SERVER = "SERVER"
     PC = "PC"
     IOT = "IOT"
+
 
 db = SQLAlchemy()
 
@@ -66,17 +72,17 @@ class Cities(db.Model):
 
 class CpeTypes(db.Model):
     __tablename__ = "cpe_types"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     label: Mapped[Optional[str]] = mapped_column(String(200))
-    
+
     # 2. Use the Enum type here
     # native_enum=True tells Postgres to create a custom TYPE
     type: Mapped[Optional[CpeTypeEnum]] = mapped_column(
         Enum(CpeTypeEnum, native_enum=True, name="cpe_type_enum")
     )
-    
+
     is_active: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )
