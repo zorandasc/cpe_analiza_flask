@@ -716,7 +716,8 @@ def stb_records():
         #    quantity = sum(quantity)
 
         table[r.id]["name"] = r.name
-        table[r.id]["data"][r.week_end] += r.quantity
+        quantity = r.quantity or 0
+        table[r.id]["data"][r.week_end] += quantity
         weeks.add(r.week_end)
 
     # table is in format:
@@ -880,7 +881,8 @@ def ont_records():
     # Transforming rows into a pivot-friendly structure
     for r in rows:
         table[r.id]["name"] = r.name
-        table[r.id]["data"][r.month_end] += r.quantity
+        quantity = r.quantity or 0
+        table[r.id]["data"][r.month_end] += quantity
         months.add(r.month_end)
 
     # table is in format:
