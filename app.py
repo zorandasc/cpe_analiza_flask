@@ -19,6 +19,7 @@ from models import (
     StbTypes,
     DismantleTypes,
     CpeTypeEnum,
+    UserRole,
 )
 from datetime import date, timedelta, datetime
 from flask_login import (
@@ -373,7 +374,7 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
 # --------AUTHORIZACIJA--------------------------------------------
 # AUTHORIZATION ZA BILO KOJU AKCIJU: ONLY ADMIN
 def admin_required():
-    if current_user.is_authenticated and current_user.role == "admin":
+    if current_user.is_authenticated and current_user.role == UserRole.ADMIN:
         return True
     flash("Niste Autorizovani!", "danger")
     return False
@@ -390,7 +391,7 @@ def admin_and_user_required(city_id):
         flash("Greška u provjeri autorizacije!", "danger")
         return False
     if current_user.is_authenticated and (
-        user_city_id == requested_city_id or current_user.role == "admin"
+        user_city_id == requested_city_id or current_user.role == UserRole.ADMIN
     ):
         return True
     flash("Niste Autorizovani!", "danger")
@@ -400,7 +401,7 @@ def admin_and_user_required(city_id):
 # AUTHORIZATION ZA VIEW:  ADMIN OR VIEW
 def view_required():
     if current_user.is_authenticated and (
-        current_user.role == "view" or current_user.role == "admin"
+        current_user.role == UserRole.VIEW or current_user.role == UserRole.ADMIN
     ):
         return True
     flash("Niste Autorizovani!", "danger")
@@ -411,111 +412,6 @@ def view_required():
 
 
 # -------------------------------- ROUTES---------------------------------
-# HOME PAGE OLD
-"""
-
-@app.route("/")
-@login_required  # <-- This is the protection decorator!
-def home():
-    today = date.today()
-    # today.weekday() gives 0 for Monday, 6 for Sunday
-    # Subtracting gives the date for this week's Monday
-    monday = today - timedelta(days=today.weekday())  # Monday of this week
-    # Initialize totals to None
-    totals = None
-    if current_user.role == "admin" or current_user.role == "view":
-        # ZA ADMIN USERA DOBAVI POSLJEDNJI DATUM ZA SVAKI GRAD
-        records, totals = get_latest_cpe_records()
-    else:
-        # ZA NE ADMI USERA POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
-        page = request.args.get("page", 1, type=int)
-        per_page = 10
-        records = (
-            CpeRecords.query.filter_by(city_id=current_user.city_id)
-            .order_by(CpeRecords.updated_at.desc())
-            .paginate(page=page, per_page=per_page, error_out=False)
-        )
-    return render_template(
-        "home.html",
-        records=records,
-        totals=totals,
-        today=today.strftime("%d-%m-%Y"),
-        monday=monday,
-    )
-    
-"""
-"""
-
-# UPDATE ROUTE HOME TABLE, CALLED FROM INSIDE UPDATE FORM
-@app.route("/update_cpe", methods=["POST"])
-@login_required
-def update_cpe():
-    # 1. Extract and Convert Fields
-    city_id = request.form.get("city_id")  # <-- GET THE HIDDEN ID
-    if not city_id:
-        flash("City ID is missing.", "danger")
-        return redirect(url_for("home"))
-
-    if not admin_and_user_required(city_id):
-        return redirect(url_for("home"))
-
-    current_date = date.today()
-
-    # construct NEW Cperecord object
-    # Extract CPE fields and safely convert to integer (or use validation library like WTForms)
-    cpe_data = {
-        "iads": int(request.form.get("iads", 0)),
-        "stb_arr_4205": int(request.form.get("stb_arr_4205", 0)),
-        "stb_arr_5305": int(request.form.get("stb_arr_5305", 0)),
-        "stb_ekt_4805": int(request.form.get("stb_ekt_4805", 0)),
-        "stb_ekt_7005": int(request.form.get("stb_ekt_7005", 0)),
-        "stb_sky_44h": int(request.form.get("stb_sky_44h", 0)),
-        "ont_huaw": int(request.form.get("ont_huaw", 0)),
-        "ont_nok": int(request.form.get("ont_nok", 0)),
-        "stb_dth": int(request.form.get("stb_dth", 0)),
-        "antena_dth": int(request.form.get("antena_dth", 0)),
-        "lnb_duo": int(request.form.get("lnb_duo", 0)),
-    }
-
-    # 2. Query for Existing Record
-    existing_record = (
-        db.session.query(CpeRecords)
-        .filter(
-            CpeRecords.city_id == city_id,
-            # Cast the TIMESTAMP column (updated_at) to DATE for a correct comparison
-            func.date(CpeRecords.updated_at) == current_date,
-        )
-        .first()
-    )
-
-    # 3. Handle Update vs. Create Logic
-    if existing_record:
-        # if city_id and  updated_at combination already exsist just update exsisting row
-        for key, value in cpe_data.items():
-            setattr(existing_record, key, value)
-        # Update the timestamp
-        existing_record.updated_at = datetime.datetime.now()
-        flash("Postojeći unos ažuriran!", "success")
-    else:
-        # --- CREATE LOGIC ---
-        # If record does NOT exist, create a new one
-        # if not append new row in Cperecordes table for city and Date
-        new_cpe_record = CpeRecords(
-            city_id=city_id,
-            **cpe_data,
-        )
-
-        db.session.add(new_cpe_record)
-        flash("Novi unos kreiran!", "success")
-
-    db.session.commit()
-
-    # 4. Redirect to Home (Post-Redirect-Get Pattern)
-    # This prevents duplicate form submissions if the user hits refresh.
-    return redirect(url_for("home"))
-
-
-"""
 
 
 # -------------HOME PAGE NEW---------------------------
@@ -1327,7 +1223,14 @@ def admin_add_user():
         # CHOOSED FROM SELECTION IN ADD FORM
         city_id = request.form.get("city_id", type=int)
         # CHOOSED FROM SELECTION IN ADD FORM
-        role = request.form.get("role")
+        role_string = request.form.get("role")
+
+        # 1. Validation: Convert string to Enum object safely
+        try:
+            selected_role = UserRole(role_string)
+        except ValueError:
+            flash("Izabrana rola nije važeća.", "danger")
+            return redirect(url_for("admin_add_user"))
 
         # Validation: username must be unique
         existing_user = Users.query.filter_by(username=username).first()
@@ -1335,19 +1238,7 @@ def admin_add_user():
             flash("Username already exists", "danger")
             return redirect(url_for("admin_add_user"))
 
-        # Validation: city must be real (if provided)
-        if city_id:
-            city = Cities.query.get(city_id)
-            if not city:
-                flash("Invalid city selected", "danger")
-                return redirect(url_for("admin_add_user"))
-
-        # Validation: role must be valid
-        if role not in ["admin", "user", "view"]:
-            flash("Invalid role", "danger")
-            return redirect(url_for("admin_add_user"))
-
-        if role == "user" and (city_id is None or city_id == 0):
+        if selected_role == UserRole.USER and (not city_id or city_id == 0):
             flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
             return redirect(url_for("admin_add_user"))
 
@@ -1356,10 +1247,8 @@ def admin_add_user():
         user = Users(
             username=username,
             password_hash=password_hash,
-            city_id=city_id,
-            role=role,
-            created_at=datetime.datetime.now(),
-            updated_at=datetime.datetime.now(),
+            city_id=city_id if city_id != 0 else None,
+            role=selected_role,  # SQLAlchemy handles the conversion to DB string
         )
         try:
             db.session.add(user)
@@ -1371,9 +1260,10 @@ def admin_add_user():
             flash(f"Error creating user: {e}", "danger")
             return redirect(url_for("admin_add_user"))
 
+    # GET Request
     cities = Cities.query.order_by(Cities.name).all()
-    roles = db.session.query(Users.role).distinct().all()
-    roles = [r[0] for r in roles]  # flatten list of tuples
+
+    roles = [r.value for r in UserRole]
 
     # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
     return render_template("admin/users_add.html", cities=cities, roles=roles)
@@ -1387,10 +1277,6 @@ def admin_edit_user(id):
 
     user = Users.query.get_or_404(id)
 
-    cities = Cities.query.order_by(Cities.name).all()
-    roles = db.session.query(Users.role).distinct().all()
-    roles = [r[0] for r in roles]  # flatten list of tuples
-
     if request.method == "POST":
         username = request.form.get("username")
         plain_password1 = request.form.get("password1")
@@ -1398,12 +1284,16 @@ def admin_edit_user(id):
         # CHOOSED FROM SELECTION IN ADD FORM
         city_id = request.form.get("city_id", type=int)
         # CHOOSED FROM SELECTION IN ADD FORM
-        role = request.form.get("role")
+        role_string = request.form.get("role")
+
+        try:
+            selected_role = UserRole(role_string)
+        except ValueError:
+            flash("Izabrana rola nije važeća.", "danger")
+            return redirect(url_for("admin_add_user"))
 
         # Username uniqueness (except current user)
-        existing_user = Users.query.filter(
-            Users.username == username, Users.id != id
-        ).first()
+        existing_user = Users.query.filter(Users.username == username, Users.id != id).first()
 
         if existing_user:
             flash("Username već postoji!", "danger")
@@ -1416,26 +1306,18 @@ def admin_edit_user(id):
             # Update password hash only if a new password is entered
             user.password_hash = generate_password_hash(plain_password1)
 
-        # Validation: city must be real (if provided)
-        if city_id:
-            city = Cities.query.get(city_id)
-            if not city:
-                flash("Invalid city selected", "danger")
-                return redirect(url_for("admin_edit_user", id=id))
-
-        # Validation: role must be valid
-        if role not in roles:
-            flash("Invalid role", "danger")
-            return redirect(url_for("admin_edit_user", id=id))
-
         # Prevent Admin from Demoting Themselves
-        if current_user.id == user.id and user.role == "admin" and role != "admin":
+        if (
+            current_user.id == user.id
+            and user.role == UserRole.ADMIN
+            and selected_role != UserRole.ADMIN
+        ):
             flash("Ne možete ukloniti svoju admin ulogu!", "danger")
             return redirect(url_for("admin_edit_user", id=id))
 
         user.username = username
-        user.city_id = city_id
-        user.role = role
+        user.city_id = city_id if city_id != 0 else None
+        user.role = selected_role
         user.updated_at = datetime.datetime.now()
 
         try:
@@ -1446,6 +1328,11 @@ def admin_edit_user(id):
             db.session.rollback()
             flash(f"Greška prilikom izmjene korisnika: {e}", "danger")
             return redirect(url_for("admin_edit_user", id=id))
+
+    # GET Request
+    cities = Cities.query.order_by(Cities.name).all()
+    # Correct way to get all values from Enum for the dropdown
+    roles = [r.value for r in UserRole]
 
     return render_template(
         "admin/users_edit.html", user=user, roles=roles, cities=cities
@@ -1460,8 +1347,8 @@ def admin_delete_user(id):
 
     user = Users.query.get_or_404(id)
 
-    if user.role == "admin":
-        admin_count = Users.query.filter_by(role="admin").count()
+    if user.role == UserRole.ADMIN:
+        admin_count = Users.query.filter_by(role=UserRole.ADMIN).count()
         if admin_count:
             flash("Ne možete obrisati posljednjeg admina!", "danger")
             return redirect(url_for("admin_users"))

@@ -33,8 +33,10 @@ content %}
         <label class="form-label">Role</label>
         <select name="role" class="form-control">
           {% for r in roles %}
-          <option value="{{ r }}" {% if user.role == r %}selected {% endif%}>{{ r|capitalize }}</option>
-
+          <!--Since user.role is an Enum object, you need to compare its .value to the loop variable:-->
+          <option value="{{ r }}" {% if user.role.value == r %}selected {% endif%}>
+            {{ r|capitalize }}
+          </option>
           {% endfor %}
         </select>
       </div>

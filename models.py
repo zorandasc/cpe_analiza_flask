@@ -14,6 +14,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
     Enum,
+    ForeignKey
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
@@ -38,6 +39,12 @@ class CpeTypeEnum(enum.Enum):
     SERVER = "SERVER"
     PC = "PC"
     IOT = "IOT"
+
+
+class UserRole(enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
+    VIEW = "view"
 
 
 db = SQLAlchemy()
@@ -251,28 +258,25 @@ class StbInventory(db.Model):
 
 class Users(db.Model, UserMixin):
     __tablename__ = "users"
-    __table_args__ = (
-        CheckConstraint(
-            "role::text = ANY (ARRAY['admin'::character varying, 'user'::character varying, 'view'::character varying]::text[])",
-            name="chk_user_role",
-        ),
-        ForeignKeyConstraint(["city_id"], ["cities.id"], name="fk_city"),
-        PrimaryKeyConstraint("id", name="users_pkey"),
-        UniqueConstraint("username", name="users_username_key"),
-    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    username: Mapped[str] = mapped_column(String(50), nullable=False)
+    username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
-    role: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'user'::character varying")
+    
+    # 2. Apply the Enum here
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole, native_enum=True, name="user_role_enum"),
+        nullable=False,
+        # Default must match the Enum value
+        server_default=UserRole.USER.value 
     )
-    city_id: Mapped[Optional[int]] = mapped_column(Integer)
+    
+    city_id: Mapped[Optional[int]] = mapped_column(ForeignKey("cities.id", name="fk_city"))
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime(True), server_default=text("CURRENT_TIMESTAMP")
     )
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime(True), server_default=text("CURRENT_TIMESTAMP")
+        DateTime(True), server_default=text("CURRENT_TIMESTAMP"), onupdate=text("CURRENT_TIMESTAMP")
     )
 
     city: Mapped[Optional["Cities"]] = relationship("Cities", back_populates="users")

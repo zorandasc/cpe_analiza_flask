@@ -16,8 +16,8 @@ content %}
         <label class="form-label">Role</label>
         <select name="role" class="form-control" required>
           <option value="">--Izaberite rolu--</option>
-          {% for r in roles %}
-          <option value="{{ r }}">{{ r|capitalize }}</option>
+          {% for role in roles %}
+          <option value="{{ role }}">{{ role |capitalize }}</option>
 
           {% endfor %}
         </select>
