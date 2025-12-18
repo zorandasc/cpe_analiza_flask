@@ -34,6 +34,16 @@ styles %} {{ super() }}
     margin-left: -200px;
     background: linear-gradient(to right, #be93c5, #7bc6cc);
   }
+  .info {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    line-height: 3em;
+    padding-left: 0.25em;
+    color: rgba(0, 0, 0, 0.4);
+    padding-bottom: 10px;
+  }
 
   .btn-custom-save {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
@@ -87,6 +97,11 @@ styles %} {{ super() }}
   >
     + Dodaj / Izmjeni Mjesečni Unos
   </button>
+  <span class="info"
+    >Posljedne ažuriranje {% if last_updated %} {{
+    last_updated.strftime('%Y-%m-%d %H:%M') }} {% else %} never {% endif
+    %}</span
+  >
   <table class="table table-bordered table-striped shadow">
     <thead class="table-dark">
       <tr>

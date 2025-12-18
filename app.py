@@ -694,6 +694,13 @@ def stb_records():
     #  ('STB-100', '2025-11-25', 90),
     rows = db.session.execute(text(SQL_QUERY)).fetchall()
 
+    # get time when table stb_inventory lates updated
+    last_updated = db.session.execute(
+        text("""SELECT
+        MAX(updated_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Sarajevo')
+        FROM stb_inventory;""")
+    ).scalar()
+
     # Creates a dictionary of dictionary
     # "name" is name of STB, data is {date1:quantity1, date2:quantity2,...}
     table = defaultdict(lambda: {"name": None, "data": defaultdict(int)})
@@ -740,6 +747,7 @@ def stb_records():
         current_week_end=current_week_end,
         table=table,
         totals=totals,
+        last_updated=last_updated,
     )
 
 
@@ -771,7 +779,7 @@ def update_recent_stb_inventory():
                     INSERT INTO stb_inventory (stb_type_id, week_end, quantity)
                     VALUES (:stb_id, :week_end, :quantity)
                     ON CONFLICT (stb_type_id, week_end)
-                    DO UPDATE SET quantity = EXCLUDED.quantity
+                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
                 """),
                 {
                     "stb_id": stb_type_id,
@@ -851,6 +859,13 @@ def ont_records():
 
     rows = db.session.execute(text(SQL_QUERY)).fetchall()
 
+    # get time when table ont_inventory lates updated
+    last_updated = db.session.execute(
+        text("""SELECT
+        MAX(updated_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Sarajevo')
+        FROM ont_inventory;""")
+    ).scalar()
+
     # The statement creates a dictionary of dictionaries
     # defaultdict(default_factory)
     # default_factory: This is a function (or constructor) that provides
@@ -889,6 +904,7 @@ def ont_records():
         current_month_end=current_month_end,
         table=table,
         totals=totals,
+        last_updated=last_updated,
     )
 
 
@@ -914,7 +930,7 @@ def update_recent_ont_inventory():
             INSERT INTO ont_inventory (city_id, month_end, quantity)
                     VALUES (:city_id, :month_end, :quantity)
                     ON CONFLICT (city_id, month_end)
-                    DO UPDATE SET quantity = EXCLUDED.quantity
+                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
             """),
                 {
                     "city_id": city_id,
