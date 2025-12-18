@@ -140,9 +140,33 @@ block styles %} {{ super() }}
         </div>
       </a>
     </div>
+
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_stb_inventory') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Stanje raspoložive STB opreme</h4>
+            <p>Pregled ukupnog stanja STB opreme</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-6">
+      <a href="{{ url_for('admin_ont_inventory') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Stanje raspoložive ONT opreme</h4>
+            <p>Pregled ukupnog stanja ONT opreme</p>
+          </div>
+        </div>
+      </a>
+    </div>
   </div>
 
-  <h2 class="h5 admin-title mb-4">Administracija i Upravljanje Listama</h2>
+  <h2 class="h5 admin-title mb-4">
+    Administracija i Upravljanje Pomoćnim Listama
+  </h2>
 
   <div class="row g-4 mb-5">
     <div class="col-md-3 col-sm-6">

@@ -11,11 +11,12 @@ from models import (
     db,
     CpeInventory,
     CpeDismantle,
+    StbInventory,
+    OntInventory,
     Users,
     Cities,
     CpeTypes,
     StbTypes,
-    StbInventory,
     DismantleTypes,
     CPE_TYPE_CHOICES,
 )
@@ -969,6 +970,257 @@ def admin_dashboard():
     return render_template("admin.html")
 
 
+# -------------CPE_INVENTORY CRUD----------------------------------------
+@app.route("/admin/cpe_inventory")
+@login_required
+def admin_cpe_inventory():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    # WHEN INCICIALY LANDING ON PAGE
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "updated_at")
+    direction = request.args.get("direction", "desc")
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    order_column = getattr(CpeInventory, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = CpeInventory.query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    # THIS IS DATA FOR NEW CPE MODAL
+    cities = Cities.query.order_by(Cities.id).all()
+    # cities = db.session.query(CpeInventory.city_id).distinct().all()
+
+    # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
+    cpe_types = CpeTypes.query.filter_by(is_active=True).order_by(CpeTypes.id).all()
+
+    return render_template(
+        "admin/cpe_inventory.html",
+        records=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        direction=direction,
+        cities=cities,
+        cpe_types=cpe_types,
+    )
+
+
+@app.route("/admin/cpe_inventory/add", methods=["POST"])
+@login_required
+def admin_add_to_cpe_inventory():
+    if not admin_required():  # AUTHORIZE
+        return redirect(url_for("admin_dashboard"))
+
+    cpe_type_id = request.form.get("cpe_type_id", type=int)
+
+    current_time = datetime.now()
+    records_to_add = []
+
+    # --- STEP 1: PRE-FETCH MAX UPDATED_AT FOR ALL CITIES ---
+    # This prevents running 10+ separate queries inside the loop.
+    max_update_times = (
+        db.session.query(
+            CpeInventory.city_id, func.max(CpeInventory.updated_at).label("max_time")
+        )
+        .group_by(CpeInventory.city_id)
+        .all()
+    )
+
+    # Convert the list of tuples/rows into a dictionary for fast lookup
+    # The result is a dictionary: {city_id: max_updated_at, ...}
+    max_update_map = {row.city_id: row.max_time for row in max_update_times}
+
+    for key, value in request.form.items():
+        if key.startswith("city-"):
+            parts = key.split("-", 1)
+            if len(parts) == 2:
+                city_id_str = parts[1]
+                try:
+                    city_id = int(city_id_str)
+                    quantity = int(value or 0)
+                except ValueError:
+                    # Skip this record if ID or Quantity is invalid
+                    continue
+
+                # --- STEP 3: DETERMINE UPDATED_AT TIMESTAMP ---
+                # Use the max timestamp found in STEP 1 for this city.
+                # If the city has NO existing records, use the current_time (or NULL, depending on your schema)
+                # Using the current time is safer if the city is new or empty.
+                latest_update_time = max_update_map.get(city_id, current_time)
+                # batch save on every city for selected cpe_type_id
+                # FOR EVERY CITY_ID FIND MAX UPDATED_AT
+
+                new_record = CpeInventory(
+                    city_id=city_id,
+                    cpe_type_id=cpe_type_id,
+                    quantity=quantity,
+                    created_at=current_time,
+                    updated_at=latest_update_time,
+                )
+            records_to_add.append(new_record)
+
+    # 4. Execute Single Batch Transaction
+    if records_to_add:
+        try:
+            db.session.add_all(records_to_add)
+            db.session.commit()
+            flash("Novo stanje za CPE inventori uspješno sačuvano!", "success")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error during CpeInventory batch insert: {e}")
+            flash("Došlo je do greške prilikom unosa u bazu.", "danger")
+    else:
+        flash("Nije pronađen nijedan CPE za unos.", "warning")
+
+    # Redirect to Home (Post-Redirect-Get Pattern)
+    # This prevents duplicate form submissions if the user hits refresh.
+    return redirect(url_for("admin_cpe_inventory"))
+
+
+# -------------CPE_DISMANTLE CRUD----------------------------------------
+@app.route("/admin/cpe_dismantle")
+@login_required
+def admin_cpe_dismantle():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    # WHEN INCICIALY LANDING ON PAGE
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "updated_at")
+    direction = request.args.get("direction", "desc")
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    order_column = getattr(CpeDismantle, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = CpeDismantle.query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return render_template(
+        "admin/cpe_dismantle.html",
+        records=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        direction=direction,
+    )
+
+
+# -------------STB_INVENTORY CRUD----------------------------------------
+@app.route("/admin/stb_inventory")
+@login_required
+def admin_stb_inventory():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    # WHEN INCICIALY LANDING ON PAGE
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "updated_at")
+    direction = request.args.get("direction", "desc")
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = ["id", "stb_type_id", "week_end", "updated_at", "created_at"]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    order_column = getattr(StbInventory, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = StbInventory.query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    # THIS IS DATA FOR NEW CPE MODAL
+    # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
+    stb_types = StbTypes.query.filter_by(is_active=True).order_by(StbTypes.id).all()
+
+    return render_template(
+        "admin/stb_inventory.html",
+        records=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        direction=direction,
+        stb_types=stb_types,
+    )
+
+
+# -------------ONT_INVENTORY CRUD----------------------------------------
+@app.route("/admin/ont_inventory")
+@login_required
+def admin_ont_inventory():
+    if not view_required():
+        # return "Forbidden", 403
+        return redirect(url_for("admin_dashboard"))
+
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    # WHEN INCICIALY LANDING ON PAGE
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "updated_at")
+    direction = request.args.get("direction", "desc")
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    order_column = getattr(OntInventory, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = OntInventory.query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    # THIS IS DATA FOR NEW CPE MODAL
+    cities = Cities.query.order_by(Cities.id).all()
+    # cities = db.session.query(CpeInventory.city_id).distinct().all()
+
+    return render_template(
+        "admin/ont_inventory.html",
+        records=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        direction=direction,
+        cities=cities,
+    )
+
+
+# ------------POMOCNE LISTE------------
 # -----------------CITIES CRUD---------------------
 @app.route("/admin/cities")
 @login_required
@@ -1216,166 +1468,6 @@ def admin_delete_user(id):
     db.session.commit()
     flash("User deleted", "success")
     return redirect(url_for("admin_users"))
-
-
-# -------------CPE_INVENTORY CRUD----------------------------------------
-@app.route("/admin/cpe_inventory")
-@login_required
-def admin_cpe_inventory():
-    if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
-
-    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
-    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
-    page = request.args.get("page", 1, type=int)
-    per_page = 50
-
-    # WHEN INCICIALY LANDING ON PAGE
-    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
-    sort_by = request.args.get("sort", "updated_at")
-    direction = request.args.get("direction", "desc")
-
-    # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
-    if sort_by not in allowed_sorts:
-        sort_by = "id"
-
-    order_column = getattr(CpeInventory, sort_by)
-    if direction == "desc":
-        order_column = order_column.desc()
-
-    pagination = CpeInventory.query.order_by(order_column).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-
-    # THIS IS DATA FOR NEW CPE MODAL
-    cities = Cities.query.order_by(Cities.id).all()
-    # cities = db.session.query(CpeInventory.city_id).distinct().all()
-
-    # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
-    cpe_types = CpeTypes.query.filter_by(is_active=True).order_by(CpeTypes.id).all()
-
-    return render_template(
-        "admin/cpe_inventory.html",
-        records=pagination.items,
-        pagination=pagination,
-        sort_by=sort_by,
-        direction=direction,
-        cities=cities,
-        cpe_types=cpe_types,
-    )
-
-
-@app.route("/admin/cpe_inventory/add", methods=["POST"])
-@login_required
-def admin_add_to_cpe_inventory():
-    if not admin_required():  # AUTHORIZE
-        return redirect(url_for("admin_dashboard"))
-
-    cpe_type_id = request.form.get("cpe_type_id", type=int)
-
-    current_time = datetime.now()
-    records_to_add = []
-
-    # --- STEP 1: PRE-FETCH MAX UPDATED_AT FOR ALL CITIES ---
-    # This prevents running 10+ separate queries inside the loop.
-    max_update_times = (
-        db.session.query(
-            CpeInventory.city_id, func.max(CpeInventory.updated_at).label("max_time")
-        )
-        .group_by(CpeInventory.city_id)
-        .all()
-    )
-
-    # Convert the list of tuples/rows into a dictionary for fast lookup
-    # The result is a dictionary: {city_id: max_updated_at, ...}
-    max_update_map = {row.city_id: row.max_time for row in max_update_times}
-
-    for key, value in request.form.items():
-        if key.startswith("city-"):
-            parts = key.split("-", 1)
-            if len(parts) == 2:
-                city_id_str = parts[1]
-                try:
-                    city_id = int(city_id_str)
-                    quantity = int(value or 0)
-                except ValueError:
-                    # Skip this record if ID or Quantity is invalid
-                    continue
-
-                # --- STEP 3: DETERMINE UPDATED_AT TIMESTAMP ---
-                # Use the max timestamp found in STEP 1 for this city.
-                # If the city has NO existing records, use the current_time (or NULL, depending on your schema)
-                # Using the current time is safer if the city is new or empty.
-                latest_update_time = max_update_map.get(city_id, current_time)
-                # batch save on every city for selected cpe_type_id
-                # FOR EVERY CITY_ID FIND MAX UPDATED_AT
-
-                new_record = CpeInventory(
-                    city_id=city_id,
-                    cpe_type_id=cpe_type_id,
-                    quantity=quantity,
-                    created_at=current_time,
-                    updated_at=latest_update_time,
-                )
-            records_to_add.append(new_record)
-
-    # 4. Execute Single Batch Transaction
-    if records_to_add:
-        try:
-            db.session.add_all(records_to_add)
-            db.session.commit()
-            flash("Novo stanje za CPE inventori uspješno sačuvano!", "success")
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error during CpeInventory batch insert: {e}")
-            flash("Došlo je do greške prilikom unosa u bazu.", "danger")
-    else:
-        flash("Nije pronađen nijedan CPE za unos.", "warning")
-
-    # Redirect to Home (Post-Redirect-Get Pattern)
-    # This prevents duplicate form submissions if the user hits refresh.
-    return redirect(url_for("admin_cpe_inventory"))
-
-
-# -------------CPE_DISMANTLE_RECORDS CRUD----------------------------------------
-@app.route("/admin/cpe_dismantle")
-@login_required
-def admin_cpe_dismantle():
-    if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
-
-    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
-    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
-    page = request.args.get("page", 1, type=int)
-    per_page = 50
-
-    # WHEN INCICIALY LANDING ON PAGE
-    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
-    sort_by = request.args.get("sort", "updated_at")
-    direction = request.args.get("direction", "desc")
-
-    # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
-    if sort_by not in allowed_sorts:
-        sort_by = "id"
-
-    order_column = getattr(CpeDismantle, sort_by)
-    if direction == "desc":
-        order_column = order_column.desc()
-
-    pagination = CpeDismantle.query.order_by(order_column).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
-    return render_template(
-        "admin/cpe_dismantle.html",
-        records=pagination.items,
-        pagination=pagination,
-        sort_by=sort_by,
-        direction=direction,
-    )
 
 
 # -----------------CPE_TYPES CRUD---------------------

@@ -206,6 +206,12 @@ class OntInventory(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     month_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, nullable=False, server_default=text("now()")
+    )
     city_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
 
@@ -224,6 +230,12 @@ class StbInventory(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, nullable=False, server_default=text("now()")
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, nullable=False, server_default=text("now()")
+    )
     stb_type_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
 
