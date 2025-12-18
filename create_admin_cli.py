@@ -8,7 +8,7 @@ import datetime
 
 @click.command("create-admin")  # Define the command name
 @with_appcontext
-def create_initial_admin(username="admin", plain_password="admin123"):
+def create_initial_admin(username="admin", plain_password="123"):
     """CLI command to create a default admin user."""
 
 
