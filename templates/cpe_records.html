@@ -1,6 +1,11 @@
 {% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %}
  {% block styles %} {{ super() }}
 <style>
+  @media (min-width: 1400px) {
+    .container, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+        max-width: 1420px;
+    }
+}
   .title {
     font-weight: 700;
     letter-spacing: 1px;
@@ -209,8 +214,6 @@
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
-
-
     <h2 class="mb-4 text-center title">Zadnje stanje CPE opreme {{ today }}</h2>
       <div class="table-responsive">
         <table class="table table-hover align-middle table-sm table-emph-h-border">
