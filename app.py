@@ -303,7 +303,7 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
     offset = (page - 1) * per_page
 
     # THIS IS THE QUERY FOR CROSSTAB FUNCTION
-    # IT WILL FIND ALL PIVOTED DATAD FOR SELECTED CITY_ID
+    # IT WILL FIND ALL PIVOTED DATAD (ROWS) FOR SELECTED CITY_ID
     inner_crosstab_query = f"""
     SELECT
         R.UPDATED_AT,
@@ -322,9 +322,11 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
     # CRITICAL: We need to figure out which UPDATED_AT timestamps belong to the current page.
     # We do this using a subquery (distinct_updates) to find the timestamps, and then offset/limit.
 
-    # WE FIND ALL THE PIVOTED DATA IN CROSSTAB AND THEN JOIN WITH distinct_updates TABLE
-    # distinct_updates TABLE ACT AS A FILTER. DISPLAY ONLY PIVOTED DATA BUT FOR DATA IN
-    # LIMIT AND OFFSET.
+    # 1.WE FIND ALL THE PIVOTED DATA IN CROSSTAB
+    # 2. AND THEN JOIN WITH distinct_updates TABLE
+    # distinct_updates TABLE ACT AS A FILTER.
+    # IT HOLDS UPDATE_AT RECORDA LIMITED BY PAGE AN OFFSET
+    # SO WE ARE PIGINATING ONLY ON FILTERED PIVOTED DATA
     # PAGINATION ON ALL PIVOTED DATA IS NOT PERFORMANT
     SQL_QUERY = f"""
     WITH distinct_updates AS (
@@ -355,7 +357,8 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
         P.UPDATED_AT DESC;
     """
     # The CROSSTAB generates a large pivoted table (P) containing all historical records for the city
-    #  (row ID = UPDATED_AT).The JOIN acts as a filter. It discards all rows from the massive
+    #  (row ID = UPDATED_AT).
+    # The JOIN acts as a filter. It discards all rows from the massive
     # pivoted table (P) except for those whose UPDATED_AT timestamp matches one of the
     # handful of timestamps found in the small, already-paginated distinct_updates list (D).
 
@@ -409,9 +412,6 @@ def view_required():
     return False
 
 
-# -------------------------------------------------------
-
-
 # -------------------------------- ROUTES---------------------------------
 
 
@@ -447,8 +447,7 @@ def cpe_records():
     )
 
 
-# UPDATE ROUTE HOME TABLE, CALLED FROM INSIDE UPDATE FORM
-# NE VRACA SVOJ TEMPLATE VEC REDIRECT TO HOME
+# UPDATE CPE-RECORDS TABLE, CALLED FROM INSIDE UPDATE FORME
 @app.route("/update_cpe", methods=["POST"])
 @login_required
 def update_recent_cpe_inventory():
@@ -600,6 +599,8 @@ def stb_records():
     ).scalar()
 
     # Creates a dictionary of dictionary
+    # dictionary of lambda funkcija
+    # lambda prima 1 vrijednost vraca objekat
     # "name" is name of STB, data is {date1:quantity1, date2:quantity2,...}
     table = defaultdict(lambda: {"name": None, "data": defaultdict(int)})
 
