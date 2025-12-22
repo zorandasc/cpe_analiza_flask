@@ -17,7 +17,7 @@ content %}
         <select name="type" class="form-control" required>
           <option value="">--Izaberite tip--</option>
           {% for t in types %}
-          <option value="{{ t }}" {% if t == cpe.type %}selected{% endif %}>{{ t|capitalize }}</option>
+          <option value="{{ t }}" {% if t == cpe.type.value %}selected{% endif %}>{{ t|capitalize }}</option>
 
           {% endfor %}
         </select>

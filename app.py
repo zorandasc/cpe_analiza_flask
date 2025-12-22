@@ -19,6 +19,7 @@ from models import (
     StbTypes,
     DismantleTypes,
     CpeTypeEnum,
+    CityTypeEnum,
     UserRole,
 )
 from datetime import date, timedelta, datetime
@@ -507,7 +508,7 @@ def update_recent_cpe_inventory():
 
     # Redirect to Home (Post-Redirect-Get Pattern)
     # This prevents duplicate form submissions if the user hits refresh.
-    return redirect(url_for("home"))
+    return redirect(url_for("cpe_records"))
 
 
 @app.route("/cities/history/<int:id>")
@@ -1140,7 +1141,15 @@ def admin_add_city():
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
         name = request.form.get("name")
-        type = request.form.get("type")
+        type_string = request.form.get("type")
+        print("type_string ", type_string)
+
+        # 1. Validation: Convert string to Enum object safely
+        try:
+            selected_type = CityTypeEnum(type_string)
+        except ValueError:
+            flash("Izabrani tip nije važeći.", "danger")
+            return redirect(url_for("admin_add_city"))
 
         # Validation: name must be unique
         existing_city = Cities.query.filter_by(name=name).first()
@@ -1148,12 +1157,13 @@ def admin_add_city():
             flash("Skladište već postoji", "danger")
             return redirect(url_for("admin_add_city"))
 
-        db.session.add(Cities(name=name, type=type))
+        print("type", type)
+        db.session.add(Cities(name=name, type=selected_type))
         db.session.commit()
         return redirect(url_for("admin_cities"))
 
-    types = db.session.query(Cities.type).distinct().all()
-    types = [t[0] for t in types]  # flatten list of tuples
+    types = [t.value for t in CityTypeEnum]
+    print("types", types)
     # THIS IS FOR GET REQUEST WHEN OPENING ADD FORM
     return render_template("admin/cities_add.html", types=types)
 
@@ -1166,14 +1176,38 @@ def admin_edit_city(id):
 
     city = Cities.query.get_or_404(id)
 
-    types = db.session.query(Cities.type).distinct().all()
-    types = [t[0] for t in types]
-
     if request.method == "POST":
-        city.name = request.form.get("name")
-        city.type = request.form.get("type")
-        db.session.commit()
-        return redirect(url_for("admin_cities"))
+        name = request.form.get("name")
+        type_string = request.form.get("type")
+
+        # 1. Validation: Convert string to Enum object safely
+        try:
+            selected_type = CityTypeEnum(type_string)
+        except ValueError:
+            flash("Izabrani tip nije važeći.", "danger")
+            return redirect(url_for("admin_edit_city", id=id))
+
+        # name uniqueness (except current name)
+        existing_city = Cities.query.filter(
+            Cities.name == name, Cities.id != id
+        ).first()
+        if existing_city:
+            flash("Skladiste već postoji!", "danger")
+            return redirect(url_for("admin_edit_city", id=id))
+
+        city.name = name
+        city.type = selected_type
+
+        try:
+            db.session.commit()
+            flash("Skladiste uspješno izmijenjeno!", "success")
+            return redirect(url_for("admin_cities", id=id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Greška prilikom izmjene: {e}", "danger")
+            return redirect(url_for("admin_edit_city", id=id))
+
+    types = [t.value for t in CityTypeEnum]
 
     return render_template("admin/cities_edit.html", city=city, types=types)
 
@@ -1290,10 +1324,12 @@ def admin_edit_user(id):
             selected_role = UserRole(role_string)
         except ValueError:
             flash("Izabrana rola nije važeća.", "danger")
-            return redirect(url_for("admin_add_user"))
+            return redirect(url_for("admin_edit_user", id=id))
 
         # Username uniqueness (except current user)
-        existing_user = Users.query.filter(Users.username == username, Users.id != id).first()
+        existing_user = Users.query.filter(
+            Users.username == username, Users.id != id
+        ).first()
 
         if existing_user:
             flash("Username već postoji!", "danger")
@@ -1315,10 +1351,15 @@ def admin_edit_user(id):
             flash("Ne možete ukloniti svoju admin ulogu!", "danger")
             return redirect(url_for("admin_edit_user", id=id))
 
+        # if role changed to user
+        if selected_role == UserRole.USER and (not city_id or city_id == 0):
+            flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
+            return redirect(url_for("admin_add_user"))
+
         user.username = username
         user.city_id = city_id if city_id != 0 else None
         user.role = selected_role
-        user.updated_at = datetime.datetime.now()
+        user.updated_at = datetime.now()
 
         try:
             db.session.commit()
@@ -1349,7 +1390,7 @@ def admin_delete_user(id):
 
     if user.role == UserRole.ADMIN:
         admin_count = Users.query.filter_by(role=UserRole.ADMIN).count()
-        if admin_count:
+        if admin_count < 2:
             flash("Ne možete obrisati posljednjeg admina!", "danger")
             return redirect(url_for("admin_users"))
 
@@ -1418,7 +1459,7 @@ def admin_edit_cpe_type(id):
         label = request.form.get("label")
         type_ = request.form.get("type")  # renamed to avoid shadowing built-in 'type'
 
-        # Username uniqueness (except current user)
+        # name uniqueness (except current name)
         existing_cpe_type = CpeTypes.query.filter(
             CpeTypes.name == name, CpeTypes.id != id
         ).first()

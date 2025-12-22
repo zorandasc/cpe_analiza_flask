@@ -3,7 +3,6 @@ import datetime
 
 from sqlalchemy import (
     Boolean,
-    CheckConstraint,
     Date,
     DateTime,
     ForeignKeyConstraint,
@@ -14,7 +13,9 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
     Enum,
-    ForeignKey
+    ForeignKey,
+    DDL,
+    event,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
@@ -25,7 +26,7 @@ from flask_login import UserMixin
 # To make this robust, define the Enum so that the Value (what goes in the DB)
 # s explicitly the string with the space, while the Name
 # (how you use it in code) uses an underscore.
-class CpeTypeEnum(enum.Enum):
+class CpeTypeEnum(str, enum.Enum):
     IAD = "IAD"
     ONT = "ONT"
     STB = "STB"
@@ -40,11 +41,28 @@ class CpeTypeEnum(enum.Enum):
     PC = "PC"
     IOT = "IOT"
 
+    def __str__(self):
+        return self.value
 
-class UserRole(enum.Enum):
+
+# This is a "pro-tip" for SQLAlchemy. By inheriting from str,
+# your Enum behaves like a string, which makes it much more
+# compatible with database drivers like psycopg2.
+class UserRole(str, enum.Enum):
     ADMIN = "admin"
     USER = "user"
     VIEW = "view"
+
+    def __str__(self):
+        return self.value
+
+
+class CityTypeEnum(str, enum.Enum):
+    SKLADISTE = "SKLADISTE"
+    IJ = "IJ"
+
+    def __str__(self):
+        return self.value
 
 
 db = SQLAlchemy()
@@ -52,18 +70,13 @@ db = SQLAlchemy()
 
 class Cities(db.Model):
     __tablename__ = "cities"
-    __table_args__ = (
-        CheckConstraint(
-            "type::text = ANY (ARRAY['IJ'::character varying, 'Skladiste'::character varying]::text[])",
-            name="cities_type_check",
-        ),
-        PrimaryKeyConstraint("id", name="cities_pkey"),
-        UniqueConstraint("name", name="cities_name_key"),
-    )
-
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    type: Mapped[Optional[str]] = mapped_column(String(100))
+    # 2. Use the Enum type here
+    # native_enum=True tells Postgres to create a custom TYPE
+    type: Mapped[Optional[CityTypeEnum]] = mapped_column(
+        Enum(CityTypeEnum, native_enum=True, name="city_type_enum")
+    )
 
     cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
         "CpeDismantle", back_populates="city"
@@ -262,21 +275,60 @@ class Users(db.Model, UserMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
-    
+
     # 2. Apply the Enum here
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, native_enum=True, name="user_role_enum"),
+        Enum(
+            UserRole,
+            native_enum=True,
+            name="user_role_enum",
+            # This tells SQLAlchemy to use the values ('admin') instead of names ('ADMIN')
+            values_callable=lambda x: [item.value for item in x],
+        ),
         nullable=False,
         # Default must match the Enum value
-        server_default=UserRole.USER.value 
+        server_default=text("'user'"),
     )
-    
-    city_id: Mapped[Optional[int]] = mapped_column(ForeignKey("cities.id", name="fk_city"))
+
+    city_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("cities.id", name="fk_city")
+    )
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
         DateTime(True), server_default=text("CURRENT_TIMESTAMP")
     )
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime(True), server_default=text("CURRENT_TIMESTAMP"), onupdate=text("CURRENT_TIMESTAMP")
+        DateTime(True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP"),
     )
 
     city: Mapped[Optional["Cities"]] = relationship("Cities", back_populates="users")
+
+
+# DDL (Data Definition Language) listener in SQLAlchemy.
+# SQLAlchemy needs to "create" the custom type in the database
+# before it can "use" it in a table definition.
+# IN THIS CASE create:
+# USER ENUM before USERS TABLE and
+# CpeTypeEnum before CPETYPES TABLE
+# 2. Function to generate "If Not Exists" DDL for any Enum
+def setup_enum_ddl(enum_name, enum_values, table_object):
+    values_str = ", ".join(f"'{v}'" for v in enum_values)
+    ddl = DDL(f"""
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = '{enum_name}') THEN 
+                CREATE TYPE {enum_name} AS ENUM ({values_str}); 
+            END IF; 
+        END $$;
+    """)
+    event.listen(table_object, "before_create", ddl.execute_if(dialect="postgresql"))
+
+
+# Register the event: Create the type BEFORE the tables are created
+# We check 'if not exists' via a helper or just let the script run
+# IN THIS CASE create USER ENUM before USERS TABLE
+# 3. Register them for your specific tables
+setup_enum_ddl("user_role_enum", [r.value for r in UserRole], Users.__table__)
+setup_enum_ddl("cpe_type_enum", [c.value for c in CpeTypeEnum], CpeTypes.__table__)
+setup_enum_ddl("city_type_enum", [c.value for c in CityTypeEnum], Cities.__table__)

@@ -12,7 +12,7 @@ content %}
       <label class="form-label">Tip skladišta</label>
        <select name="type" class="form-control">
     {% for t in types %}
-    <option value="{{ t }}" {% if t == city.type %}selected{% endif %}>
+    <option value="{{ t }}" {% if t == city.type.value %}selected{% endif %}>
         {{ t }}
     </option>
     {% endfor %}

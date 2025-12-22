@@ -2,7 +2,7 @@
 from flask.cli import with_appcontext
 import click  # Import current_app for the command context
 from werkzeug.security import generate_password_hash
-from models import db, Users
+from models import db, Users, UserRole
 import datetime
 
 
@@ -11,14 +11,13 @@ import datetime
 def create_initial_admin(username="admin", plain_password="123"):
     """CLI command to create a default admin user."""
 
-
     password_hash = generate_password_hash(plain_password)
 
     admin = Users(
         username=username,
         password_hash=password_hash,
         city_id=None,
-        role="admin",
+        role=UserRole.ADMIN,
         created_at=datetime.datetime.now(),
         updated_at=datetime.datetime.now(),
     )
