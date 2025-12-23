@@ -292,17 +292,17 @@ class CpeTypeEnum(enum.Enum):
 
 class CpeTypes(db.Model):
     __tablename__ = "cpe_types"
-    
+
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     label: Mapped[Optional[str]] = mapped_column(String(200))
-    
+
     # 2. Use the Enum type here
     # native_enum=True tells Postgres to create a custom TYPE
     type: Mapped[Optional[CpeTypeEnum]] = mapped_column(
         Enum(CpeTypeEnum, native_enum=True, name="cpe_type_enum")
     )
-    
+
     is_active: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )
@@ -1120,3 +1120,18 @@ RUCNI UNOS U CPE_INVENOTRI NOVOG ELEMENTA ILI POVECANJA POSTOJOCEG KVANTITETA:
    POPUNI SVE GRADOVE
 2. AKO JE UNOS KVANTITEA ZA VEC POCTOJECI CPE ELEMENT ONDA
    NADJI ZADNJI UNOS ZA SVE GRADOVE I DODAJ NA NJEGA
+
+# ----------------------------------ABOUT APP DESIGN--------
+
+In practice, your app is designed to function as a pivoted inventory dashboard. It takes "tall" data (one row per date/type) and turns it into "wide" data (one row per type, with dates as columns).
+
+STB_INVENTORY, ONT_INVENTORY
+Database vs. Python: You are doing the "heavy lifting" (filtering the last 4 weeks) in SQL and the "formatting" (pivoting) in Python. This is a very efficient pattern for small-to-medium datasets.
+
+The defaultdict logic: Using defaultdict(int) in Python is a "defensive programming" win. It means if your template asks for a date that doesn't exist for a specific STB, it returns 0 instead of crashing your website.
+
+# ---for croostable in postgress------
+
+```sql
+CREATE EXTENSION IF NOT EXISTS tablefunc;
+```

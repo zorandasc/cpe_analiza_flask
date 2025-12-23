@@ -90,41 +90,6 @@ app.cli.add_command(create_initial_db)
 
 # ---------------HELPER FUNCTION--------------------------
 
-"""
-# THIS IS FOR OLD HOME Function to get the latest CPE records for all cities
-def get_latest_cpe_records():
-    # Subquery: find latest updated_at per city
-    # Select two fields:
-    # the city id
-    # the maximum updated_at for that city
-    # SELECT MAX(updated_at)
-    subquery = (
-        db.session.query(
-            CpeRecords.city_id, func.max(CpeRecords.updated_at).label("max_date")
-        )
-        # This finds the newest date for each city.
-        # Group results by each city, so every city returns one row
-        .group_by(CpeRecords.city_id)
-        # Wrap the result as a subquery, so we can join it later.
-        .subquery()
-    )
-
-    # Join with real records to get the newest row, we want also all fields
-    latest_records = (
-        db.session.query(CpeRecords)
-        .join(
-            subquery,
-            (CpeRecords.city_id == subquery.c.city_id)
-            & (CpeRecords.updated_at == subquery.c.max_date),
-        )
-        .order_by(CpeRecords.city_id)
-        .all()
-    )
-
-
-    return latest_records
-"""
-
 
 # SOURCE OF TRUTH FOR WHOLE CPE-RECORDS TABLE
 # THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE
@@ -133,7 +98,7 @@ def get_latest_cpe_records():
 # 1. WE BUILD DYNAMIC SQL QUERY
 # 2. WE ALSO USE IT IN HTML TABLES TEMPLATES AND IN ROUTES
 def get_cpe_column_schema():
-    # 1. get distinc id froM CPEInventory
+    # 1. get distinc CPE_TYPES froM CPEInventory
     # The result is a list of tuples, e.g., [(1,), (5,), (10,)]
     list_of_id_tuples = db.session.query(distinct(CpeInventory.cpe_type_id)).all()
 
@@ -198,7 +163,7 @@ def get_pivoted_data(schema_list: list):
                     *
                 FROM
                     CROSSTAB (
-                        $$
+                        $QUERY$
                         SELECT
                             R.CITY_ID,
                             S.NAME AS CPE_MODEL,
@@ -219,7 +184,10 @@ def get_pivoted_data(schema_list: list):
                             JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
                         WHERE RN = 1
                         ORDER BY R.CITY_ID
-                        $$
+                        $QUERY$,
+                        $CATEGORY$
+                        SELECT NAME FROM CPE_TYPES WHERE NAME IN ({", ".join([f"'{name}'" for name in model_names])}) ORDER BY ID
+                        $CATEGORY$
                     ) AS PIVOT_TABLE (
                         CITY_ID INTEGER,
                         {quoted_columns}
@@ -412,7 +380,7 @@ def view_required():
     return False
 
 
-# -------------------------------- ROUTES---------------------------------
+# -------------------------------- ROUTES----------------------------
 
 
 # -------------HOME PAGE NEW---------------------------
@@ -425,7 +393,7 @@ def home():
 # ----------AUTENTHENTICATED ROUTES FOR USE PAGES-----------------------
 
 
-# ---------- CPE-RECORDS-----------------
+# ----------PIVOT CPE-RECORDS-----------------
 @app.route("/cpe-records")
 @login_required
 def cpe_records():
@@ -539,7 +507,7 @@ def city_history(id):
     )
 
 
-# ---------- CPE-DISMANTLE-RECORDS-----------------
+# ----------PIVOT CPE-DISMANTLE-RECORDS-----------------
 
 
 @app.route("/cpe-dismantle")
@@ -548,7 +516,7 @@ def cpe_dismantle():
     return render_template("cpe_dismantle.html")
 
 
-# ---------- STB-RECORDS-----------------
+# ----------PIVOT STB-RECORDS-----------------
 
 
 # vraca datum petka za svaku sedmicu
@@ -609,14 +577,12 @@ def stb_records():
 
     # Transforming rows into a pivot-friendly structure
     for r in rows:
-        # quantity = r.quantity
-        # if isinstance(quantity, list):
-        #    quantity = sum(quantity)
-
         table[r.id]["name"] = r.label
         quantity = r.quantity or 0
-        table[r.id]["data"][r.week_end] += quantity
-        weeks.add(r.week_end)
+        # Check if week_end actually exists before adding it to the se
+        if r.week_end is not None:
+            table[r.id]["data"][r.week_end] += quantity
+            weeks.add(r.week_end)
 
     # table is in format:
     # table = {1: {"name": "STB-100","data": {date(2025,12,27): 90,date(2025,12,20): 80}},
@@ -709,7 +675,7 @@ def update_recent_stb_inventory():
     return redirect(url_for("stb_records"))
 
 
-# ---------- ONT-RECORDS-----------------
+# ----------PIVOT ONT-RECORDS-----------------
 
 
 # return date of last day of current month
@@ -780,8 +746,9 @@ def ont_records():
     for r in rows:
         table[r.id]["name"] = r.name
         quantity = r.quantity or 0
-        table[r.id]["data"][r.month_end] += quantity
-        months.add(r.month_end)
+        if r.month_end is not None:
+            table[r.id]["data"][r.month_end] += quantity
+            months.add(r.month_end)
 
     # table is in format:
     # table = {1: {"name": "STB-100","data": {date(2025,12,27): 90,date(2025,12,20): 80}},
