@@ -576,7 +576,7 @@ def stb_records():
             )
             SELECT
                 T.ID,
-                T.NAME,
+                T.LABEL,
                 I.WEEK_END,
                 I.QUANTITY
             FROM
@@ -613,7 +613,7 @@ def stb_records():
         # if isinstance(quantity, list):
         #    quantity = sum(quantity)
 
-        table[r.id]["name"] = r.name
+        table[r.id]["name"] = r.label
         quantity = r.quantity or 0
         table[r.id]["data"][r.week_end] += quantity
         weeks.add(r.week_end)
