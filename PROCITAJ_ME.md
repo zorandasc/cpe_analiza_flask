@@ -69,6 +69,10 @@ Servers
 
 # Right-click users → View/Edit Data → All Rows
 
+# ---------------------IN LOCAL PRODUCTION DEVELOPMENT---------------
+
+# docker compose -f docker-compose.prod.localy.yml up -d --build
+
 # -----------------------IN PRODUCTION----------
 
 # EXPORT DOCKER IMAGES:
