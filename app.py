@@ -92,24 +92,15 @@ app.cli.add_command(create_initial_db)
 
 
 # SOURCE OF TRUTH FOR WHOLE CPE-RECORDS TABLE
-# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY ONE
-# PRESENT IN CPEINVENTORY TABLE and is_active
+# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY  is_active
 # FROM THIS SCHEMA LIST:
-# 1. WE BUILD DYNAMIC SQL QUERY
+# 1. WE USE IT TO BUILD RAW DYNAMIC SQL QUERY
 # 2. WE ALSO USE IT IN HTML TABLES TEMPLATES AND IN ROUTES
 def get_cpe_column_schema():
-    # 1. get distinc CPE_TYPES froM CPEInventory
-    # The result is a list of tuples, e.g., [(1,), (5,), (10,)]
-    list_of_id_tuples = db.session.query(distinct(CpeInventory.cpe_type_id)).all()
-
-    # Flatten the list of tuples: [(1,), (5,)] -> [1, 5]
-    list_of_ids = [id_tuple[0] for id_tuple in list_of_id_tuples]
-
     # 2. Get full data (id, name, label, type) from Cpe_Types table
-    # for that cpe_type_id found in CpeInventory table
     cpe_types = (
         db.session.query(CpeTypes.id, CpeTypes.name, CpeTypes.label, CpeTypes.type)
-        .filter(CpeTypes.id.in_(list_of_ids), CpeTypes.is_active)
+        .filter(CpeTypes.is_active)
         .order_by(CpeTypes.id)
         .all()
     )
@@ -146,7 +137,10 @@ def get_pivoted_data(schema_list: list):
     quoted_columns = ", ".join([f'"{name}" int' for name in model_names])
 
     # for sum columns
-    sum_columns = ", ".join([f'SUM("{name}") AS "{name}"' for name in model_names])
+    # To ensure your "UKUPNO" (Total) row always shows a number, use COALESCE
+    sum_columns = ", ".join(
+        [f'COALESCE(SUM("{name}"),0) AS "{name}"' for name in model_names]
+    )
 
     # raw SQL statement, as crosstab isn't a standard, ORM-mappable function
     # Inject these lists into the complete SQL template
@@ -287,14 +281,14 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
         R.UPDATED_AT DESC, S.NAME
     """
 
-    # CRITICAL: We need to figure out which UPDATED_AT timestamps belong to the current page.
-    # We do this using a subquery (distinct_updates) to find the timestamps, and then offset/limit.
+    # CRITICAL: We need to figure out which OF UPDATED_AT timestamps belong to the current page.
+    # We do this using a subquery (distinct_updates) to find only the timestamps that are inside offset/limit.
 
     # 1.WE FIND ALL THE PIVOTED DATA IN CROSSTAB
     # 2. AND THEN JOIN WITH distinct_updates TABLE
     # distinct_updates TABLE ACT AS A FILTER.
     # IT HOLDS UPDATE_AT RECORDA LIMITED BY PAGE AN OFFSET
-    # SO WE ARE PIGINATING ONLY ON FILTERED PIVOTED DATA
+    # SO OUR FINAL PIVOTED DATA IS PAGINATED THROUGH FILTERING
     # PAGINATION ON ALL PIVOTED DATA IS NOT PERFORMANT
     SQL_QUERY = f"""
     WITH distinct_updates AS (
@@ -490,8 +484,7 @@ def city_history(id):
     page = request.args.get("page", 1, int)
     per_page = 20
 
-    # THIS IS LIST OF CPETYPE OBJECTS, BUT ONLY ONE
-    # PRESENT IN CPEINVENTORY TABLE AND is_active
+    # THIS IS LIST OF CPETYPE OBJECTS, BUT ONLY ONE is_active
     schema_list = get_cpe_column_schema()
 
     # paginated_records is iterable SimplePagination object

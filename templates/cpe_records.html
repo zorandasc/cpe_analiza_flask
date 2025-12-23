@@ -232,7 +232,7 @@
             <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < monday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < monday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">{{ r.city_name }}</td>
               {% for item in schema %}
-              <td>{{ r[item.name]}}</td>
+              <td>{{ r.get(item.name) if r.get(item.name) is not none else 0}}</td>
               {% endfor %}
               <td>
                 {% if r.max_updated_at %} {{ r.max_updated_at.strftime('%Y-%m-%d
