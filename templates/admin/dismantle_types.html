@@ -1,9 +1,13 @@
-{% extends "base.html" %} {% block title %}Users{% endblock %} {% block content
-%}
+{% extends "base.html" %} {% block title %}Tipovi Demontaža{% endblock %} {%
+block content %}
 <div class="container py-4">
   <h2>Status demontirane CPE opreme</h2>
 
-  <a href="" class="btn btn-primary my-3">Dodaj demontažu</a>
+  <a
+    href="{{ url_for('admin_add_dismantle_status') }}"
+    class="btn btn-primary my-3"
+    >Dodaj demontažu</a
+  >
   {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
@@ -20,7 +24,11 @@
       <td>{{ s.label }}</td>
       <td>{{ s.description }}</td>
       <td>
-        <a href="" class="btn btn-warning btn-sm">Edit</a>
+        <a
+          href="{{ url_for('admin_edit_dismantle_status', id=s.id) }}"
+          class="btn btn-warning btn-sm"
+          >Edit</a
+        >
         <a
           href=""
           class="btn btn-danger btn-sm"

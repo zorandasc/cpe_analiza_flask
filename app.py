@@ -1581,6 +1581,70 @@ def admin_dismantle_status():
     return render_template("admin/dismantle_types.html", status=status)
 
 
+@app.route("/admin/dismantle_status/add", methods=["GET", "POST"])
+@app.route("/admin/dismantle_status/add")
+@login_required
+def admin_add_dismantle_status():
+    if not admin_required():
+        return redirect(url_for("admin_dismantle_status"))
+
+    # THIS IS FOR SUMBITING REQUEST
+    if request.method == "POST":
+        label = request.form.get("label")
+        description = request.form.get("description")
+
+        # Validation: LABEL must be unique
+        existing_label = DismantleTypes.query.filter_by(label=label).first()
+        if existing_label:
+            flash("Labela već postoji", "danger")
+            return redirect(url_for("admin_add_dismantle_status"))
+
+        db.session.add(DismantleTypes(label=label, description=description))
+        db.session.commit()
+        return redirect(url_for("admin_dismantle_status"))
+
+    # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
+    return render_template(
+        "admin/dismantle_types_add.html",
+    )
+
+
+@app.route("/admin/dismantle_status/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def admin_edit_dismantle_status(id):
+    if not admin_required():
+        return redirect(url_for("admin_dismantle_status"))
+
+    dismantle = DismantleTypes.query.get_or_404(id)
+
+    if request.method == "POST":
+        label = request.form.get("label")
+        description = request.form.get("description")
+
+        # Validation: LABEL must be unique
+        existing_label = DismantleTypes.query.filter(
+            DismantleTypes.label == label, DismantleTypes.id != id
+        ).first()
+        if existing_label:
+            flash("Labela već postoji", "danger")
+            return redirect(url_for("admin_dismantle_status"))
+
+        dismantle.id = id
+        dismantle.label = label
+        dismantle.description = description
+
+        try:
+            db.session.commit()
+            flash("Tip demontaže uspješno izmijenjen!", "success")
+            return redirect(url_for("admin_dismantle_status"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Greška prilikom izmjene tipa demontaže: {e}", "danger")
+            return redirect(url_for("admin_edit_dismantle_status", id=id))
+
+    return render_template("admin/dismantle_types_edit.html", dismantle=dismantle)
+
+
 # -----------------LOGIN AUTENTIFIKACIJA------------------------
 @app.route("/login", methods=["GET", "POST"])
 def login():
