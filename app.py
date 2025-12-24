@@ -862,11 +862,11 @@ def admin_cpe_inventory():
     )
 
     # THIS IS DATA FOR NEW CPE MODAL
-    cities = Cities.query.order_by(Cities.id).all()
+    # cities = Cities.query.order_by(Cities.id).all()
     # cities = db.session.query(CpeInventory.city_id).distinct().all()
 
     # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
-    cpe_types = CpeTypes.query.filter_by(is_active=True).order_by(CpeTypes.id).all()
+    # cpe_types = CpeTypes.query.filter_by(is_active_total=True).order_by(CpeTypes.id).all()
 
     return render_template(
         "admin/cpe_inventory.html",
@@ -874,8 +874,8 @@ def admin_cpe_inventory():
         pagination=pagination,
         sort_by=sort_by,
         direction=direction,
-        cities=cities,
-        cpe_types=cpe_types,
+        # cities=cities,
+        # cpe_types=cpe_types,
     )
 
 
@@ -1437,7 +1437,9 @@ def admin_edit_cpe_type(id):
         cpe.name = name
         cpe.label = label
         cpe.type = type_
-        cpe.is_active_total = "is_active_total" in request.form  # THIS IS THE CORRECT WAY
+        cpe.is_active_total = (
+            "is_active_total" in request.form
+        )  # THIS IS THE CORRECT WAY
         cpe.is_active_dismantle = "is_active_dismantle" in request.form
 
         try:
