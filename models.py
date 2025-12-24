@@ -40,6 +40,9 @@ class CpeTypeEnum(str, enum.Enum):
     SERVER = "SERVER"
     PC = "PC"
     IOT = "IOT"
+    STB_DTH="STB DTH"
+    LNB="LNB"
+    OTHER="OTHER"
 
     def __str__(self):
         return self.value

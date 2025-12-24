@@ -115,7 +115,7 @@ styles %} {{ super() }}
     %}</span
   >
   <table class="table table-bordered table-striped shadow">
-    <thead class="table-dark">
+    <thead class="table-primary">
       <tr>
         <th>STB Uređaji</th>
         {% for week in weeks %}
@@ -133,7 +133,7 @@ styles %} {{ super() }}
       </tr>
       {% endfor %}
       <!-- Total row -->
-      <tr style="font-weight: bold" class="table-primary">
+      <tr style="font-weight: bold" class="table-success">
         <td>Total</td>
         {% for week in weeks %}
         <td>{{ totals[week] }}</td>

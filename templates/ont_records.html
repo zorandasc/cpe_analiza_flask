@@ -103,7 +103,7 @@ styles %} {{ super() }}
     %}</span
   >
   <table class="table table-bordered table-striped shadow">
-    <thead class="table-dark">
+    <thead class="table-primary">
       <tr>
         <th>Skladište</th>
         {% for month in months %}
@@ -121,7 +121,7 @@ styles %} {{ super() }}
       </tr>
       {% endfor %}
       <!-- Total row -->
-      <tr style="font-weight: bold" class="table-primary">
+      <tr style="font-weight: bold" class="table-success">
         <td>Total</td>
         {% for month in months %}
         <td>{{ totals[month] }}</td>

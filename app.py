@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict
 from flask import Flask, render_template, redirect, url_for, request, flash
-from sqlalchemy import text, distinct, func
+from sqlalchemy import text, func
 
 # My IMPLEMENTATION OF PAGINATION FUNCIONALITY
 # FOR PAGINATING RAW PIVOTED SQL STATEMENT
