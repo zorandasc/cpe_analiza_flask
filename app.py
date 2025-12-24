@@ -100,7 +100,7 @@ def get_cpe_column_schema():
     # 2. Get full data (id, name, label, type) from Cpe_Types table
     cpe_types = (
         db.session.query(CpeTypes.id, CpeTypes.name, CpeTypes.label, CpeTypes.type)
-        .filter(CpeTypes.is_active)
+        .filter(CpeTypes.is_active_total)
         .order_by(CpeTypes.id)
         .all()
     )
@@ -1437,7 +1437,8 @@ def admin_edit_cpe_type(id):
         cpe.name = name
         cpe.label = label
         cpe.type = type_
-        cpe.is_active = "is_active" in request.form  # THIS IS THE CORRECT WAY
+        cpe.is_active_total = "is_active_total" in request.form  # THIS IS THE CORRECT WAY
+        cpe.is_active_dismantle = "is_active_dismantle" in request.form
 
         try:
             db.session.commit()

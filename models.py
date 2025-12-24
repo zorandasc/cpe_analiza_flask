@@ -106,7 +106,11 @@ class CpeTypes(db.Model):
         Enum(CpeTypeEnum, native_enum=True, name="cpe_type_enum")
     )
 
-    is_active: Mapped[Optional[bool]] = mapped_column(
+    is_active_total: Mapped[Optional[bool]] = mapped_column(
+        Boolean, server_default=text("true")
+    )
+
+    is_active_dismantle: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )
 
