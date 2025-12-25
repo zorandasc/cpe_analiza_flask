@@ -39,10 +39,14 @@
     margin-left: -200px;
     background: linear-gradient(to right, #be93c5, #7bc6cc);
   }
-  /* Modern table header */
+ 
+  .my-custom-table {
+  border-collapse: separate !important;
+  border-spacing:4px 4px !important;
+}
+
   .table-custom-head th {
-    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
-    color: #000; /* black text */
+    color: #000; 
     font-weight: 400;
     text-align: center;
     vertical-align: middle;
@@ -250,7 +254,7 @@
 <div class="container py-5">
     <h2 class="mb-4 text-center title">Zadnje stanje CPE opreme {{ today }}</h2>
       <div class="table-responsive">
-        <table class="table table-hover align-middle table-sm table-emph-h-border">
+        <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
           <thead class="table-custom-head">
             <tr>
               <th class="stanje-column diagonal-split"><!--CITY COLUMN-->
