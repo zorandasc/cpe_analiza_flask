@@ -35,7 +35,9 @@ styles %} {{ super() }}
     background-color: #d9c3ee !important;
   }
   .ANTENA-column,
-  .IOT-column {
+  .IOT-column,
+  .STB_DTH-column,
+  .LNB-column {
     background-color: #fce4d6 !important;
     min-width: 80px;
   }
@@ -175,13 +177,13 @@ styles %} {{ super() }}
         <tr>
           <th class="azur-column">AŽURIRANO</th>
           {% if schema %} {% for item in schema %}
-          <th class="{{item.type}}-column">{{item.label}}</th>
+          <th class="{{item.type.name}}-column">{{item.label}}</th>
           <!--CPE MODELS COLUMNS-->
           {% endfor %} {% endif %}
         </tr>
       </thead>
       <!--records are now SimplePagination objects-->
-    <!--Your SimplePagination class returns the actual list inside:self.items, records.items-->
+      <!--Your SimplePagination class returns the actual list inside:self.items, records.items-->
       <tbody>
         {% for r in records.items %}
         <tr>

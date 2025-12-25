@@ -1,7 +1,13 @@
 
--- FOR CROSSTABLE FUNCIONALITY IN SQL
+-- FOR ENABLING CROSSTABLE FUNCIONALITY IN SQL
 CREATE EXTENSION IF NOT EXISTS tablefunc;
 
+--This usually happens when PostgreSQL's sequence (the counter it uses to generate
+-- the next unique ID) is out of sync with the highest id currently in your table.
+--You need to manually tell PostgreSQL to look at the maximum existing id in your cities
+--setval('cities_id_seq', ...): Resets the internal counter of the sequence named 
+--cities_id_seq to that maximum value
+SELECT setval('cities_id_seq', (SELECT MAX(id) FROM cities));
 
 -- FOR CITIES--------------
 INSERT INTO
