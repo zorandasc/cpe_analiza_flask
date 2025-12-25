@@ -91,7 +91,28 @@
     
     font-size: 13px;
   }
- 
+/*
+  .diagonal-split {
+  position: relative;
+  height: 100px; 
+  background: linear-gradient(to top right, transparent 49.5%, #858080 49.5%, #858080 50.5%, transparent 50.5%);
+  padding: 0;
+}
+
+.diagonal-split span {
+  position: absolute;
+}
+
+.bottom-left {
+  bottom: 15px;
+  left: 20px;
+}
+
+.top-right {
+  top: 15px;
+  right: 20px;
+}
+ */
   .btn-edit {
     background-color: #f6f89d;
     background: linear-gradient(to top, #ff8008, #ffc837);
@@ -232,7 +253,10 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border">
           <thead class="table-custom-head">
             <tr>
-              <th class="stanje-column">SKLADIŠTA</th><!--CITY COLUMN-->
+              <th class="stanje-column diagonal-split"><!--CITY COLUMN-->
+                <span class="bottom-left">SKLADIŠTA</span>
+                <!--<span class="top-right">OPREMA</span>-->
+              </th>
               {% if schema %} {% for item in schema %} 
               <th class="{{item.type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
