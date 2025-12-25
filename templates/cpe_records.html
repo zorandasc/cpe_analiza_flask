@@ -82,13 +82,13 @@
   }
   .azur-row-red{
     color: rgb(234, 114, 114)!important;
-    font-style: italic;
+  
     font-size: 13px;
   }
 
    .azur-row-green{
     color: rgb(208, 234, 201)!important;
-    font-style: italic;
+    
     font-size: 13px;
   }
  
@@ -247,10 +247,12 @@
               {% for item in schema %}
               <td>{{ r.get(item.name) if r.get(item.name) is not none else 0}}</td>
               {% endfor %}
+              {% if r.max_updated_at %}
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < monday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
-                {% if r.max_updated_at %}{{ r.max_updated_at.strftime('%Y-%m-%d
-                %H:%M:%S') }} {% else %} N/A {% endif %}
+                {{ r.max_updated_at.strftime('%Y-%m-%d
+                %H:%M:%S') }} 
               </td>
+              {% endif %}
               <!--PRIKAZI EDIT BUTTON  AKO VRIJE POSTOJI-->
                 {% if r.max_updated_at  %}
                 <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
