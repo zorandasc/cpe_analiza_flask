@@ -506,7 +506,7 @@ def city_history(id):
 @app.route("/cpe-dismantle")
 @login_required
 def cpe_dismantle():
-    return render_template("cpe_dismantle.html")
+    return render_template("cpe_dismantle_records.html")
 
 
 # ----------PIVOT STB-RECORDS-----------------

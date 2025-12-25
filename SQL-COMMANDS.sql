@@ -189,3 +189,49 @@ FROM (
 ) sub
 ORDER BY RANDOM() 
 LIMIT 300;
+
+
+-------  CPE_INVENTORY------------------------------------
+--created a timestamp variable ts in the subquery. This ensures 
+--created_at and updated_at are identical for each row, which is 
+--standard for a fresh insert.
+--Step A: Get the CPE types.
+--Step B: Multiply them by the Cities (creating a "Type per City" grid).
+--Step C: Multiply that grid by the Timestamps (creating a "Type per City per Time" grid).
+INSERT INTO cpe_inventory (
+    cpe_type_id, 
+    city_id, 
+    quantity,
+    created_at, 
+    updated_at
+)
+SELECT 
+    sub.cpe_type_id, 
+    sub.city_id, 
+    (FLOOR(RANDOM() * 100) + 1)::INT,
+    sub.friday_date, 
+    sub.friday_date
+FROM (
+    SELECT 
+        t.type_id as cpe_type_id, 
+        c.id as city_id,
+        d.friday_date
+    FROM 
+        generate_series(1, 11) AS t(type_id)
+    CROSS JOIN 
+        generate_series(1, 13) AS c(id)
+    CROSS JOIN (
+        -- Generate the last 4 Fridays
+        SELECT (date_trunc('week', NOW()) + interval '4 days' - (w || ' weeks')::interval)::date as friday_date
+        --1 exclude current week
+		FROM generate_series(1, 4) w
+    ) d
+) sub
+ORDER BY RANDOM();
+
+
+
+--A CROSS JOIN (also known as a Cartesian Product) is the most "aggressive" way 
+--to join tables. Unlike a regular join where you look for matching IDs, 
+--a Cross Join tells the database: "Take every single row from Table A 
+--and pair it with every single row from Table B."

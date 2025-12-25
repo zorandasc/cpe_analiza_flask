@@ -1135,3 +1135,32 @@ The defaultdict logic: Using defaultdict(int) in Python is a "defensive programm
 ```sql
 CREATE EXTENSION IF NOT EXISTS tablefunc;
 ```
+
+# CROSS JOIN vs INNER JOIN
+
+A CROSS JOIN (also known as a Cartesian Product) is the most "aggressive" way
+to join tables. Unlike a regular join where you look for matching IDs,
+a Cross Join tells the database: "Take every single row from Table A
+and pair it with every single row from Table B."
+
+Comparison with other Joins
+To understand it better, think of how it differs from a standard INNER JOIN:
+
+INNER JOIN: "Only give me rows where the City ID in Table A matches the City ID in Table B." (Filters data down).
+
+CROSS JOIN: "I don't care about matches; I want every possible combination." (Explodes data up).
+
+# OVO JE ZAPRAVO MUTIPLIKACIJA MATRICA
+
+  FROM 
+        generate_series(1, 11) AS t(type_id)
+    CROSS JOIN 
+        generate_series(1, 13) AS c(id)
+    CROSS JOIN (
+        -- Generate the last 4 Fridays
+        SELECT (date_trunc('week', NOW()) + interval '4 days' - (w || ' weeks')::interval)::date as friday_date
+        FROM generate_series(1, 4) w
+    ) d
+
+While the database doesn't care about the order,
+If you were to swap them (e.g., City first, then CPE type), the result would be exactly the same. Because a CROSS JOIN is commutative ($A \times B$ is the same as $B \times A$), the final output doesn't change based on which one you write first.

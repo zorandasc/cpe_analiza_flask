@@ -72,7 +72,7 @@
   .ONT-column {
     background-color: #d9c3ee !important;
   }
-  .ANTENA-column, .IOT-column {
+  .ANTENA-column, .IOT-column, .STB_DTH-column, .LNB-column {
     background-color: #fce4d6 !important;
     min-width: 80px;
   }
@@ -221,7 +221,7 @@
             <tr>
               <th class="stanje-column">SKLADIŠTA</th><!--CITY COLUMN-->
               {% if schema %} {% for item in schema %} 
-              <th class="{{item.type}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
+              <th class="{{item.type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
               <th class="azur-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
@@ -360,7 +360,7 @@
             </div>
             {% for item in schema %}
             <div
-              class="col-auto me-2 d-flex flex-column justify-content-between {{item.type}}-column"
+              class="col-auto me-2 d-flex flex-column justify-content-between {{item.type.name}}-column"
             >
               <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
     
