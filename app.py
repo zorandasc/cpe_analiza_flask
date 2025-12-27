@@ -117,7 +117,8 @@ def get_cpe_column_schema():
 
 # This approach bypasses the ORM's object mapping for this specific complex query,
 # treating it purely as a data fetch, which is necessary when using custom database
-# functions like crosstab.
+# functions like crosstab.]
+
 def get_pivoted_data(schema_list: list):
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
@@ -301,7 +302,7 @@ def get_pivoted_cpe_data(schema_list: list, week_end: datetime.date):
     """
 
     params = {"week_end": week_end}
-    print("week_end", week_end)
+
     result = db.session.execute(text(SQL_QUERY), params)
     return [row._asdict() for row in result.all()]
 
@@ -398,6 +399,75 @@ def get_city_history_pivot(city_id: int, schema_list: list, page: int, per_page:
     # handful of timestamps found in the small, already-paginated distinct_updates list (D).
 
     result = db.session.execute(text(SQL_QUERY))
+
+    # pivoted_data is now list
+    pivoted_data = [row._asdict() for row in result.all()]
+
+    # paginate is iterable SimplePagination object
+    paginate = SimplePagination(
+        page=page, per_page=per_page, total=total_count, items=pivoted_data
+    )
+
+    return paginate
+
+
+def get_city_history_cpe_data(
+    city_id: int, schema_list: list, page: int, per_page: int
+):
+    """
+    Retrieves the historical records for a specific city_id, pivoted by CPE type.
+    This query handles pagination internally based on the unique WEEK_END timestamp.
+    """
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
+    # We need a separate query to get the total count for pagination
+    count_query = text(
+        """SELECT 
+                COUNT(DISTINCT WEEK_END) 
+            FROM CPE_INVENTORY 
+            WHERE CITY_ID=:city_id
+        """
+    )
+
+    total_count = db.session.execute(count_query, {"city_id": city_id}).scalar()
+
+    # Calculate offset
+    offset = (page - 1) * per_page
+
+    case_columns = []
+
+    for model in schema_list:
+        case_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN ct.name = '{model["name"]}' THEN ci.quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+
+    SQL_QUERY = f"""
+        SELECT
+            WEEK_END,
+            {", ".join(case_columns)}
+        FROM cpe_inventory ci
+        LEFT JOIN cpe_types ct ON ct.id=ci.cpe_type_id
+        WHERE ci.city_id = :city_id
+        GROUP BY ci.WEEK_END
+        ORDER BY ci.week_end DESC
+        LIMIT :limit
+        OFFSET :offset
+    """
+
+    params = {
+        "city_id": city_id,
+        "limit": per_page,
+        "offset": offset,
+    }
+
+    result = db.session.execute(text(SQL_QUERY), params)
 
     # pivoted_data is now list
     pivoted_data = [row._asdict() for row in result.all()]
@@ -590,11 +660,11 @@ def city_history(id):
     page = request.args.get("page", 1, int)
     per_page = 20
 
-    # THIS IS LIST OF CPETYPE OBJECTS, BUT ONLY ONE is_active
+    # THIS IS LIST OF CPE TYPE OBJECTS, BUT ONLY ONE is_active
     schema_list = get_cpe_column_schema()
 
     # paginated_records is iterable SimplePagination object
-    paginated_records = get_city_history_pivot(
+    paginated_records = get_city_history_cpe_data(
         city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
     )
 

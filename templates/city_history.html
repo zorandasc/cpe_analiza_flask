@@ -136,6 +136,9 @@ styles %} {{ super() }}
     border-top-width: 3px !important;
     border-bottom-width: 3px !important;
   }
+  .weekend-column {
+    min-width: 120px;
+  }
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
@@ -187,9 +190,9 @@ styles %} {{ super() }}
       <tbody>
         {% for r in records.items %}
         <tr>
-          <td>
-            {% if r.updated_at %} {{ r.updated_at.strftime('%Y-%m-%d %H:%M:%S')
-            }} {% else %} N/A {% endif %}
+          <td class="weekend-column">
+            {% if r.week_end %} {{ r.week_end.strftime('%Y-%m-%d') }} {% else %}
+            N/A {% endif %}
           </td>
           {% for item in schema %}
           <td>{{ r[item.name]}}</td>

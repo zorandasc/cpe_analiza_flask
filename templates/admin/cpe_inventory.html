@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}Cities{% endblock %} {% block styles
-%} {{ super() }}
+{% extends "base.html" %} {% block title %}CPE inventar{% endblock %} {% block
+styles %} {{ super() }}
 <style>
   /* Modern table header */
   .table-custom-head th {
@@ -137,6 +137,7 @@
           </th>
           <th>Ime CPE opreme</th>
           <th>Količina</th>
+          <th>Sedmica</th>
           <th>
             <a
               href="{{ url_for('admin_cpe_inventory', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
@@ -159,6 +160,7 @@
           <td>{{ r.city.name }}</td>
           <td>{{ r.cpe_type.name }}</td>
           <td>{{ r.quantity }}</td>
+          <td>{{ r.week_end }}</td>
           <td>{{ r.created_at }}</td>
           <td>{{ r.updated_at }}</td>
         </tr>
