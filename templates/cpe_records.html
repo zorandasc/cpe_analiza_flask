@@ -250,11 +250,22 @@
   color: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
-   
+   .info {
+    display: block;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    line-height: 3em;
+    padding-left: 0.25em;
+    color: rgba(0, 0, 0, 0.4);
+    padding-bottom: 10px;
+    text-align: center;
+  }
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
-    <h2 class="mb-4 text-center title">Zadnje stanje CPE opreme {{ today }}</h2>
+    <h2 class="text-center title">Zadnje stanje CPE opreme za dan: {{ today }}</h2>
+      <span class="info">Sedmica ažuriranja {{current_week_end}} (Petak)</span>
       <div class="table-responsive">
         <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
           <thead class="table-custom-head">
@@ -264,7 +275,7 @@
                 <!--<span class="top-right">OPREMA</span>-->
               </th>
               {% if schema %} {% for item in schema %} 
-              <th class="{{item.type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
+              <th class="{{item.cpe_type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
               <th class="azur-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
@@ -272,13 +283,13 @@
 
           <tbody>
             {% for r in records %}
-            <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < monday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < monday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">{{ r.city_name }}</td>
+            <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
+              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">{{ r.city_name }}</td>
               {% for item in schema %}
               <td>{{ r.get(item.name) if r.get(item.name) is not none else 0}}</td>
               {% endfor %}
               {% if r.max_updated_at %}
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < monday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
                 {{ r.max_updated_at.strftime('%Y-%m-%d
                 %H:%M:%S') }} 
               </td>
@@ -405,7 +416,7 @@
             </div>
             {% for item in schema %}
             <div
-              class="col-auto me-2 d-flex flex-column justify-content-between {{item.type.name}}-column"
+              class="col-auto me-2 d-flex flex-column justify-content-between {{item.cpe_type.name}}-column"
             >
               <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
     

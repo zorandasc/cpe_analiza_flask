@@ -11,6 +11,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    CheckConstraint,
     text,
     Enum,
     ForeignKey,
@@ -40,9 +41,9 @@ class CpeTypeEnum(str, enum.Enum):
     SERVER = "SERVER"
     PC = "PC"
     IOT = "IOT"
-    STB_DTH="STB DTH"
-    LNB="LNB"
-    OTHER="OTHER"
+    STB_DTH = "STB DTH"
+    LNB = "LNB"
+    OTHER = "OTHER"
 
     def __str__(self):
         return self.value
@@ -200,32 +201,30 @@ class CpeDismantle(db.Model):
 class CpeInventory(db.Model):
     __tablename__ = "cpe_inventory"
     __table_args__ = (
-        ForeignKeyConstraint(
-            ["city_id"], ["cities.id"], name="cpe_inventory_city_id_fkey"
-        ),
-        ForeignKeyConstraint(
-            ["cpe_type_id"], ["cpe_types.id"], name="cpe_inventory_cpe_type_id_fkey"
-        ),
-        PrimaryKeyConstraint("id", name="cpe_inventory_pkey"),
+        # UniqueConstraint for upsert (updat/insert) One row = one city + one CPE + one week
+        UniqueConstraint("city_id", "cpe_type_id", "week_end", name="uq_city_cpe_week"),
+        # Data integrity only friday of week is enforced at DB level
+        CheckConstraint("EXTRACT(DOW FROM week_end) = 5", name="ck_week_end_friday"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    city_id: Mapped[Optional[int]] = mapped_column(Integer)
-    cpe_type_id: Mapped[Optional[int]] = mapped_column(Integer)
-    quantity: Mapped[Optional[int]] = mapped_column(Integer)
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+    id: Mapped[int] = mapped_column(primary_key=True)
+    city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), nullable=False)
+    cpe_type_id: Mapped[int] = mapped_column(ForeignKey("cpe_types.id"), nullable=False)
+    week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, server_default=text("now()")
     )
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("now()")
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime,
+        server_default=text("now()"),
+        # You want updated_at to change automatically whenever quantity changes
+        onupdate=text("now()"),
     )
 
-    city: Mapped[Optional["Cities"]] = relationship(
-        "Cities", back_populates="cpe_inventory"
-    )
-    cpe_type: Mapped[Optional["CpeTypes"]] = relationship(
-        "CpeTypes", back_populates="cpe_inventory"
-    )
+    city = relationship("Cities", back_populates="cpe_inventory")
+    cpe_type = relationship("CpeTypes", back_populates="cpe_inventory")
 
 
 class OntInventory(db.Model):

@@ -91,11 +91,12 @@ app.cli.add_command(create_initial_db)
 # ---------------HELPER FUNCTION--------------------------
 
 
-# SOURCE OF TRUTH FOR WHOLE CPE-RECORDS TABLE
-# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY  is_active
+# SINGLE SOURCE OF TRUTH FOR WHOLE CPE-RECORDS TABLE
+# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY IF is_active
 # FROM THIS SCHEMA LIST:
-# 1. WE USE IT TO BUILD RAW DYNAMIC SQL QUERY
-# 2. WE ALSO USE IT IN HTML TABLES TEMPLATES AND IN ROUTES
+# 1. WE USE IT TO BUILD RAW DYNAMIC PIVOT SQL QUERY
+# 2. WE ALSO USE IT IN HTML TABLES TEMPLATES DIS
+# PLAY
 def get_cpe_column_schema():
     # 2. Get full data (id, name, label, type) from Cpe_Types table
     cpe_types = (
@@ -107,7 +108,7 @@ def get_cpe_column_schema():
 
     # Prepare the structured list and separate lists
     schema_list = [
-        {"id": id, "name": name, "label": label, "type": type}
+        {"id": id, "name": name, "label": label, "cpe_type": type}
         for id, name, label, type in cpe_types
     ]
 
@@ -228,9 +229,81 @@ def get_pivoted_data(schema_list: list):
     # 3. Fetch all rows
     # The result is a ResultProxy; .mappings() helps convert rows to dicts
     # for easier handling in a web app.
-    pivoted_data = [row._asdict() for row in result.all()]
+    return [row._asdict() for row in result.all()]
 
-    return pivoted_data
+
+def get_pivoted_cpe_data(schema_list: list, week_end: datetime.date):
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
+    case_columns = []
+    sum_columns = []
+
+    for model in schema_list:
+        case_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN cpe_name = '{model["name"]}' THEN quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+        sum_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN cpe_name = '{model["name"]}' THEN quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+
+    SQL_QUERY = f"""
+        WITH weekly_data AS (
+            SELECT
+                c.id   AS city_id,
+                c.name AS city_name,
+                ct.name AS cpe_name,
+                ci.quantity AS quantity,
+                ci.updated_at AS updated_at
+            FROM cities c
+            LEFT JOIN cpe_inventory ci
+                ON c.id = ci.city_id
+                --Use the latest available record whose week_end is ≤ current business Friday
+                --Give me the latest week if we are in new week which doesnot have data yet
+                AND ci.week_end =(
+                SELECT MAX(ci2.week_end)
+                FROM cpe_inventory ci2
+                WHERE ci2.city_id=c.id
+                AND ci2.week_end <= :week_end
+                )
+            LEFT JOIN cpe_types ct
+                ON ct.id = ci.cpe_type_id
+        )
+        SELECT
+            city_id,
+            city_name,
+            {", ".join(case_columns)},
+            MAX(updated_at) AS max_updated_at
+        FROM weekly_data
+        GROUP BY city_id, city_name
+
+        UNION ALL
+
+        SELECT
+            NULL,
+            'UKUPNO',
+            {", ".join(sum_columns)},
+            NULL
+        FROM weekly_data
+
+        ORDER BY city_id NULLS LAST;
+    """
+
+    params = {"week_end": week_end}
+    print("week_end", week_end)
+    result = db.session.execute(text(SQL_QUERY), params)
+    return [row._asdict() for row in result.all()]
 
 
 # The main difference with get_pivoted_data is that, for the history,
@@ -384,26 +457,45 @@ def home():
     return render_template("home.html")
 
 
-# ----------AUTENTHENTICATED ROUTES FOR USE PAGES-----------------------
+# ---------- ROUTES FOR USER PIVOT PAGES-----------------------
+
+
+# A business week that runs from Saturday 00:00 → Friday 23:59
+# vraca datum petka za svaku sedmicu
+# If today is Monday (weekday=0): (4-0) % 7 = 4 → add 4 days → Friday
+# If today is Friday (weekday=4): (4-4) % 7 = 0 → add 0 days → today (Friday)
+# If today is Saturday (weekday=5): (4-5) % 7 = -1 % 7 = 6 → add 6 days → next Friday
+def get_current_week_friday(today=None):
+    today = today or date.today()
+    # Friday = 4
+    return today + timedelta(days=(4 - today.weekday()) % 7)
 
 
 # ----------PIVOT CPE-RECORDS-----------------
 @app.route("/cpe-records")
 @login_required
 def cpe_records():
+    # to display today date on title
     today = date.today()
-    # today.weekday() gives 0 for Monday, 6 for Sunday
-    # Subtracting gives the date for this week's Monday
-    monday = today - timedelta(days=today.weekday())  # Monday of this week
 
+    # SATURDAY of this week
+    # to mark row (red) if updated_at less than saturday
+    saturday = date.today() + timedelta(days=(5 - today.weekday()))
+
+    # date of friday in week
+    current_week_end = get_current_week_friday()
+
+    # list of all cpe_types object in db
     schema_list = get_cpe_column_schema()
 
-    # 1. Build pivoted records from schema list
-    records = get_pivoted_data(schema_list)
+    # 1. Build pivoted records from schema list but only for current week
+    records = get_pivoted_cpe_data(schema_list, current_week_end)
+
     return render_template(
         "cpe_records.html",
         today=today.strftime("%d-%m-%Y"),
-        monday=monday,
+        saturday=saturday,
+        current_week_end=current_week_end.strftime("%d-%m-%Y"),
         records=records,
         schema=schema_list,
     )
@@ -426,46 +518,60 @@ def update_recent_cpe_inventory():
     if not admin_and_user_required(city_id):
         return redirect(url_for("home"))
 
-    current_time = datetime.now()
-    records_to_add = []
+    current_week_end = get_current_week_friday()
 
-    # Iterate through all submitted form items
-    for key, value in request.form.items():
-        # Keys are formatted as 'cpe-ID-NAME', e.g., 'cpe-1-IADS'
-        # from .html form modal inputs
-        if key.startswith("cpe-"):
-            parts = key.split("-", 2)  # Splits into ['cpe', 'ID', 'NAME']
-            if len(parts) == 3:
-                cpe_type_id_str = parts[1]  #'DOBAVI ID'
-                try:
-                    cpe_type_id = int(cpe_type_id_str)
-                    quantity = int(value or 0)
-                except ValueError:
-                    # Skip this record if ID or Quantity is invalid
-                    continue
+    try:
+        # Iterate through all submitted form items
+        for key, value in request.form.items():
+            # Keys are formatted as 'cpe-ID-NAME', e.g., 'cpe-1-IADS'
+            # from .html form modal inputs
+            if not key.startswith("cpe-"):
+                continue
+            _, cpe_type_id_str, _ = key.split("-", 2)  # Splits into ['cpe', 'ID']
 
-                # We insert a new record for every CPE type, FOR ONE CITY_ID
-                new_record = CpeInventory(
-                    city_id=city_id,
-                    cpe_type_id=cpe_type_id,
-                    quantity=quantity,
-                    updated_at=current_time,
-                )
-                # gather all record from one row OF one city
-                records_to_add.append(new_record)
+            try:
+                cpe_type_id = int(cpe_type_id_str)
+            except ValueError:
+                # Skip this record if ID or Quantity is invalid
+                continue
+            if value is None or value.strip() == "":
+                quantity = 0
+            else:
+                quantity = int(value)
 
-    # 4. Execute Single Batch Transaction
-    if records_to_add:
-        try:
-            db.session.add_all(records_to_add)
-            db.session.commit()
-            flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error during CpeInventory batch insert: {e}")
-            flash("Došlo je do greške prilikom unosa u bazu.", "danger")
-    else:
-        flash("Nije pronađen nijedan CPE za unos.", "warning")
+            if quantity < 0:
+                flash("Količina ne može biti negativna.", "danger")
+                return redirect(url_for("cpe_records"))
+
+            # We insert a new record for every CPE type, FOR ONE CITY_ID
+            db.session.execute(
+                text("""
+                    INSERT INTO cpe_inventory ( 
+                                city_id,
+                                cpe_type_id,
+                                week_end,
+                                quantity)
+                    VALUES (:city_id,
+                            :cpe_type_id,
+                            :week_end,
+                            :quantity)
+                    ON CONFLICT (city_id, cpe_type_id, week_end)
+                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
+                    """),
+                {
+                    "city_id": city_id,
+                    "cpe_type_id": cpe_type_id,
+                    "week_end": current_week_end,
+                    "quantity": quantity,
+                },
+            )
+
+        db.session.commit()
+        flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during CpeInventory batch insert: {e}")
+        flash("Došlo je do greške prilikom unosa u bazu.", "danger")
 
     # Redirect to Home (Post-Redirect-Get Pattern)
     # This prevents duplicate form submissions if the user hits refresh.
@@ -512,14 +618,7 @@ def cpe_dismantle():
 # ----------PIVOT STB-RECORDS-----------------
 
 
-# vraca datum petka za svaku sedmicu
-# posto je petak datum u svakoj koloni
-def get_current_week_end(today=None):
-    today = today or date.today()
-    # Friday = 4 (Mon=0)
-    return today + timedelta(days=(4 - today.weekday()) % 7)
-
-
+# PIVOTING IN FLASK
 @app.route("/stb-records")
 @login_required
 def stb_records():
@@ -587,7 +686,7 @@ def stb_records():
     weeks = sorted(weeks)
 
     # calculate current week week_end date
-    current_week_end = get_current_week_end()
+    current_week_end = get_current_week_friday()
 
     # Calculate totals quantityes per week
     # table.values() → each STB
@@ -613,7 +712,7 @@ def stb_records():
 @app.route("/update_stb", methods=["POST"])
 @login_required
 def update_recent_stb_inventory():
-    current_week_end = get_current_week_end()
+    current_week_end = get_current_week_friday()
     try:
         for key, value in request.form.items():
             if not key.startswith("qty_"):

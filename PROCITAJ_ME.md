@@ -1152,15 +1152,55 @@ CROSS JOIN: "I don't care about matches; I want every possible combination." (Ex
 
 # OVO JE ZAPRAVO MUTIPLIKACIJA MATRICA
 
-  FROM 
-        generate_series(1, 11) AS t(type_id)
-    CROSS JOIN 
-        generate_series(1, 13) AS c(id)
-    CROSS JOIN (
-        -- Generate the last 4 Fridays
-        SELECT (date_trunc('week', NOW()) + interval '4 days' - (w || ' weeks')::interval)::date as friday_date
-        FROM generate_series(1, 4) w
-    ) d
+FROM
+generate_series(1, 11) AS t(type_id)
+CROSS JOIN
+generate_series(1, 13) AS c(id)
+CROSS JOIN (
+-- Generate the last 4 Fridays
+SELECT (date_trunc('week', NOW()) + interval '4 days' - (w || ' weeks')::interval)::date as friday_date
+FROM generate_series(1, 4) w
+) d
 
 While the database doesn't care about the order,
 If you were to swap them (e.g., City first, then CPE type), the result would be exactly the same. Because a CROSS JOIN is commutative ($A \times B$ is the same as $B \times A$), the final output doesn't change based on which one you write first.
+
+# CHANGE IN CPE_INVENTORY RAW SQL--------------
+
+The key realization (important)
+
+You already know:
+
+which CPE models you want to show
+
+that each (city, cpe_type, week_end) is unique
+
+that you’re aggregating a single week
+
+That means:
+
+You don’t need a pivot engine. You just need conditional aggregation.
+
+Instead of pivoting rows into columns with crosstab(),
+you use SUM(CASE WHEN ...).
+
+```SQL
+SUM(CASE WHEN cpe_type.name = 'MODEM' THEN quantity ELSE 0 END) AS "MODEM"
+```
+
+--Give me the latest week if we are in new week which doesnot have data yet
+
+```sql
+AND ci.week_end =(
+SELECT MAX(ci2.week_end)
+FROM cpe_inventory ci2
+WHERE ci2.city_id=c.id
+AND ci2.week_end <= :week_end
+)
+```
+
+Final rule (memorize this)
+
+Snapshot table ⇒ always use MAX(week_end) ≤ target_date
+
+If you follow this rule, your inventory logic will never break.
