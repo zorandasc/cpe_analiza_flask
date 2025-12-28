@@ -1257,10 +1257,68 @@ CREATE INDEX idx_cpe_dismantle_city_week_type
 ON cpe_dismantle (city_id, week_end DESC, dismantle_type_id);
 ```
 
-This is the workhorse index for:
+Above index is for:
 
 per-type reports
 
 filtered pivots
 
 analytics by reason
+
+If you filter on it regularly → index it
+If it defines uniqueness → unique constraint
+These are different concerns
+
+Golden rule (again)
+
+Any column that defines a “version” of data must be included in the latest-snapshot logic
+
+Here:
+
+week_end
+
+dismantle_type_id
+
+# DIFFERENCE BETWEEN CROSS JOIN, LEFT JOIN AND JOIN IN SQL-----
+
+Here are the key differences between these SQL join types:
+CROSS JOIN
+
+Returns the Cartesian product of both tables
+Every row from the first table is combined with every row from the second table
+If Table A has 10 rows and Table B has 5 rows, you get 50 rows
+No JOIN condition is needed (or used)
+Example: SELECT \* FROM employees CROSS JOIN departments
+
+INNER JOIN (or just JOIN)
+
+Returns only rows where there's a match in both tables based on the join condition
+Most common type of join
+If a row in either table doesn't have a matching row in the other, it's excluded
+Example: SELECT \* FROM employees JOIN departments ON employees.dept_id = departments.id
+
+LEFT JOIN (or LEFT OUTER JOIN)
+
+Returns all rows from the left table, plus matching rows from the right table
+If there's no match in the right table, the result still includes the left table row with NULL values for right table columns
+Useful when you want to keep all records from one table regardless of matches
+Example: SELECT \* FROM employees LEFT JOIN departments ON employees.dept_id = departments.id
+
+Quick comparison with sample data:
+If employees has Alice (dept 1), Bob (dept 2), Charlie (dept 3)
+And departments has only dept 1 and dept 2:
+
+INNER JOIN: Returns Alice and Bob only
+LEFT JOIN: Returns Alice, Bob, and Charlie (Charlie's dept columns show NULL)
+CROSS JOIN: Returns 9 rows (3 employees × 3 possible departments, ignoring the actual dept_id)
+
+# --------------------------
+
+🧠 Final takeaway
+
+Database = facts
+Query = selection
+Python = shaping
+HTML = grouping
+
+# --------------------------
