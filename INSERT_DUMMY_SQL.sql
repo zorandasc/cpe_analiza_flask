@@ -197,7 +197,7 @@ ORDER BY RANDOM()
 LIMIT 300;
 
 
--------  CPE_INVENTORY------------------------------------
+-------OLD  CPE_INVENTORY------------------------------------
 --created a timestamp variable ts in the subquery. This ensures 
 --created_at and updated_at are identical for each row, which is 
 --standard for a fresh insert.
@@ -268,7 +268,7 @@ FROM
 	CITIES C
 	CROSS JOIN CPE_TYPES T
 	CROSS JOIN (
-		-- last 4 completed Fridays (excluding current week)
+		-- last 4 completed Fridays
 		SELECT
 			(
 				DATE_TRUNC('week', NOW()) + INTERVAL '4 days' - (W || ' weeks')::INTERVAL
@@ -278,3 +278,35 @@ FROM
 	)as F;
 
 
+--CPE_DISMANTLE_INVENTORY---------------
+INSERT INTO
+	CPE_DISMANTLE (
+		CITY_ID,
+		CPE_TYPE_ID,
+		DISMANTLE_TYPE_ID,
+		QUANTITY,
+		WEEK_END,
+		CREATED_AT,
+		UPDATED_AT
+	)
+SELECT
+	C.ID AS CITY_ID,
+	T.ID AS CPE_TYPE_ID,
+	D.ID AS DISMANTLE_TYPE_ID,
+	(FLOOR(RANDOM() * 500) + 1)::INT AS QUANTITY,
+	F.FRIDAY_DATE AS WEEK_END,
+	F.FRIDAY_DATE AS CREATED_AT,
+	F.FRIDAY_DATE AS UPDATED_AT
+FROM
+	CITIES C
+	CROSS JOIN CPE_TYPES T
+	CROSS JOIN DISMANTLE_TYPES D
+	CROSS JOIN (
+		-- last 4 completed Fridays
+		SELECT
+			(
+				DATE_TRUNC('week', NOW()) + INTERVAL '4 days' - (W || ' weeks')::INTERVAL
+			)::DATE AS FRIDAY_DATE
+		FROM
+			GENERATE_SERIES(0, 4) AS W
+	) AS F;

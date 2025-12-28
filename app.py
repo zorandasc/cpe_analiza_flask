@@ -42,7 +42,7 @@ DB_HOST = os.environ.get("DB_HOST", "localhost")
 # MEDJUTIM KADA DOKERIZUJEMO FLASK APP MI SMO U INTERNOM DOCKER
 # OKRUZENJU I ONDA TREBA DA GADJAMAO 5342, ODNOSNO
 # DB_PORT: 5432 U DOCKER COMPOSE
-DB_PORT = os.environ.get("DB_PORT", "5431")  # <-- add port variable
+DB_PORT = os.environ.get("DB_PORT", "5431")
 DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASS = os.environ.get("DB_PASSWORD", "mypassword")
 DB_NAME = os.environ.get("DB_NAME", "mydb")
@@ -117,8 +117,7 @@ def get_cpe_column_schema():
 
 # This approach bypasses the ORM's object mapping for this specific complex query,
 # treating it purely as a data fetch, which is necessary when using custom database
-# functions like crosstab.]
-
+# functions like crosstab.
 def get_pivoted_data(schema_list: list):
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
@@ -520,14 +519,14 @@ def view_required():
 # -------------------------------- ROUTES----------------------------
 
 
-# -------------HOME PAGE NEW---------------------------
+# -------------HOME PAGE---------------------------
 @app.route("/")
 @login_required
 def home():
     return render_template("home.html")
 
 
-# ---------- ROUTES FOR USER PIVOT PAGES-----------------------
+# ---------- ROUTES FOR PIVOT TABLE PAGES-----------------------
 
 
 # A business week that runs from Saturday 00:00 → Friday 23:59
@@ -571,7 +570,7 @@ def cpe_records():
     )
 
 
-# UPDATE CPE-RECORDS TABLE, CALLED FROM INSIDE UPDATE FORME
+# UPDATE ROUTE FOR CPE-RECORDS TABLE, CALLED FROM INSIDE FORME INSIDE cpe-records
 @app.route("/update_cpe", methods=["POST"])
 @login_required
 def update_recent_cpe_inventory():
@@ -677,8 +676,6 @@ def city_history(id):
 
 
 # ----------PIVOT CPE-DISMANTLE-RECORDS-----------------
-
-
 @app.route("/cpe-dismantle")
 @login_required
 def cpe_dismantle():
@@ -686,8 +683,6 @@ def cpe_dismantle():
 
 
 # ----------PIVOT STB-RECORDS-----------------
-
-
 # PIVOTING IN FLASK
 @app.route("/stb-records")
 @login_required
@@ -838,8 +833,6 @@ def update_recent_stb_inventory():
 
 
 # ----------PIVOT ONT-RECORDS-----------------
-
-
 # return date of last day of current month
 def get_current_month_end(today=None):
     # Take today
@@ -989,7 +982,7 @@ def update_recent_ont_inventory():
     return redirect(url_for("ont_records"))
 
 
-# ----------AUTTORHIZED PAGES---------------------
+# ----------AUTHENTICATED AND AUTHORIZED PAGES---------------------
 
 
 # ----------------ADMIN DASHBOARD PAGE-----------
@@ -1249,7 +1242,6 @@ def admin_ont_inventory():
     )
 
 
-# ------------POMOCNE LISTE------------
 # -----------------CITIES CRUD---------------------
 @app.route("/admin/cities")
 @login_required
@@ -1627,7 +1619,7 @@ def admin_edit_cpe_type(id):
     )
 
 
-# -------------STB TYPES CRUD----------------------------------------
+# -------------STB_TYPES CRUD----------------------------------------
 @app.route("/admin/stb_types")
 @login_required
 def admin_stb_types():

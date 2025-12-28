@@ -161,41 +161,40 @@ class StbTypes(db.Model):
 class CpeDismantle(db.Model):
     __tablename__ = "cpe_dismantle"
     __table_args__ = (
-        ForeignKeyConstraint(
-            ["city_id"], ["cities.id"], name="cpe_dismantle_city_id_fkey"
+        # UniqueConstraint for upsert (updat/insert) One row = one city + one CPE + one week
+        UniqueConstraint(
+            "city_id",
+            "cpe_type_id",
+            "dismantle_type_id",
+            "week_end",
+            name="uq_city_cpe_dismantle_week",
         ),
-        ForeignKeyConstraint(
-            ["cpe_type_id"], ["cpe_types.id"], name="cpe_dismantle_cpe_type_id_fkey"
-        ),
-        ForeignKeyConstraint(
-            ["dismantle_type_id"],
-            ["dismantle_types.id"],
-            name="cpe_dismantle_dismantle_type_id_fkey",
-        ),
-        PrimaryKeyConstraint("id", name="cpe_dismantle_pkey"),
+        # Data integrity only friday of week is enforced at DB level
+        CheckConstraint("EXTRACT(DOW FROM week_end) = 5", name="ck_week_end_friday"),
     )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), nullable=False)
+    cpe_type_id: Mapped[int] = mapped_column(ForeignKey("cpe_types.id"), nullable=False)
+    dismantle_type_id: Mapped[int] = mapped_column(
+        ForeignKey("dismantle_types.id"), nullable=False
+    )
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    city_id: Mapped[Optional[int]] = mapped_column(Integer)
-    cpe_type_id: Mapped[Optional[int]] = mapped_column(Integer)
-    quantity: Mapped[Optional[int]] = mapped_column(Integer)
-    dismantle_type_id: Mapped[Optional[int]] = mapped_column(Integer)
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime, server_default=text("now()")
-    )
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, server_default=text("now()")
     )
 
-    city: Mapped[Optional["Cities"]] = relationship(
-        "Cities", back_populates="cpe_dismantle"
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime,
+        server_default=text("now()"),
+        # You want updated_at to change automatically whenever quantity changes
+        onupdate=text("now()"),
     )
-    cpe_type: Mapped[Optional["CpeTypes"]] = relationship(
-        "CpeTypes", back_populates="cpe_dismantle"
-    )
-    dismantle_type: Mapped[Optional["DismantleTypes"]] = relationship(
-        "DismantleTypes", back_populates="cpe_dismantle"
-    )
+
+    city = relationship("Cities", back_populates="cpe_dismantle")
+    cpe_type = relationship("CpeTypes", back_populates="cpe_dismantle")
+    dismantle_type = relationship("DismantleTypes", back_populates="cpe_dismantle")
 
 
 class CpeInventory(db.Model):

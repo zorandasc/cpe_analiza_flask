@@ -1199,8 +1199,68 @@ AND ci2.week_end <= :week_end
 )
 ```
 
+# -------------------------------------------------
+
 Final rule (memorize this)
 
 Snapshot table ⇒ always use MAX(week_end) ≤ target_date
 
 If you follow this rule, your inventory logic will never break.
+
+# ------------------------------------------------------------
+
+Index rule you should always follow
+
+Columns used in WHERE go first,
+columns used for ordering/grouping go next.
+
+--RECOMENDED INDEXSING IN CPE_INVENTORY:
+--Look at your most common query patterns.
+
+```sql
+
+CREATE INDEX idx_cpe_dismantle_city_week
+ON cpe_dismantle (city_id, week_end DESC);
+
+CREATE INDEX idx_cpe_inventory_city_week_cpe
+ON cpe_inventory (city_id, week_end DESC, cpe_type_id);
+```
+
+# cpe_dismantle--------------------------------
+
+Final rule to remember (very important)
+
+If a column changes the meaning of “one row” → it must be in the UNIQUE constraint
+
+✔ quantity changes → no
+
+✔ timestamps → no
+
+✔ reason / category → YES
+
+```sql
+CREATE INDEX idx_cpe_dismantle_city_week
+ON cpe_dismantle (city_id, week_end DESC);
+
+```
+
+Above index accelerates:
+
+weekly snapshot
+
+history pagination
+
+“latest week ≤ X
+
+```SQL
+CREATE INDEX idx_cpe_dismantle_city_week_type
+ON cpe_dismantle (city_id, week_end DESC, dismantle_type_id);
+```
+
+This is the workhorse index for:
+
+per-type reports
+
+filtered pivots
+
+analytics by reason
