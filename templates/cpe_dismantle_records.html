@@ -240,13 +240,14 @@
           </thead>
 
           <tbody>
-            {% for r in complete %}
+            {% for r in dismantle %}
             <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
-              <td>{{ r.get(item.name) if r.get(item.name) is not none else 0}}</td>
+            
+              <td> {{ r[item.name].complete}}</td>
               {% endfor %}
               {% if r.max_updated_at %}
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
@@ -280,7 +281,7 @@
                   {# Pass the Name (used to look up the quantity from the current record 'r') #}
                   data-cpe-name-{{ loop.index }}="{{ item.name }}" 
                   {# Pass the Quantity (using the item.name as the dynamic key to access the 'r' dict) #}
-                  data-cpe-quantity-{{ loop.index }}="{{ r[item.name] }}"
+                  data-cpe-quantity-{{ loop.index }}="{{ r[item.name].complete }}"
                   {% endfor %}
                   
                 
@@ -358,7 +359,7 @@
           </thead>
 
           <tbody>
-            {% for r in missing %}
+            {% for r in dismantle %}
             <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
               <td class="group-start  {% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}

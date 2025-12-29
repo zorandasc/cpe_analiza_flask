@@ -611,22 +611,20 @@ def cpe_dismantle():
     NO_ADAPTER_ID = 3
     NO_BOTH_ID = 4
 
-    ## row in complete are rows that only have objects that have iniside 'dismantle_type_id': 1
-    complete_rows = grouped_by_type[COMPLETE_ID]
-
-    # helper function for missing-grouping
-    # We want missing_grouped to look like:
+    # We want dismantle_grouped to look like:
     """
     [
     {
         "city_name": "Sarajevo",
         "max_updated_at": ...,
         "IADS": {
+            "complete": 0,
             "remote": 1,
             "adapter": 2,
             "both": 0,
         },
         "HG8245": {
+            "complete": 0,
             "remote": 0,
             "adapter": 1,
             "both": 1,
@@ -635,17 +633,19 @@ def cpe_dismantle():
     ...
     ]
     """
-    missing_grouped = {}
+    dismantle_grouped = {}
 
+    # helper function for DISMANTLE-grouping
     def ensure_city(city_id, city_name, updated_at):
-        if city_id not in missing_grouped:
-            missing_grouped[city_id] = {
+        if city_id not in dismantle_grouped:
+            dismantle_grouped[city_id] = {
                 "city_id": city_id,
                 "city_name": city_name,
                 "max_updated_at": updated_at,
             }
             for item in schema_list:
-                missing_grouped[city_id][item["name"]] = {
+                dismantle_grouped[city_id][item["name"]] = {
+                    "complete": 0,
                     "remote": 0,
                     "adapter": 0,
                     "both": 0,
@@ -653,6 +653,17 @@ def cpe_dismantle():
 
     # Fill data for each dismantle type
     # row is from orginal sql query
+    for row in grouped_by_type[COMPLETE_ID]:
+        cid = row["city_id"]
+
+        # ovim je filovan city_id, city_name and max_updated_at
+        # ali su quantity nula
+        ensure_city(cid, row["city_name"], row["max_updated_at"])
+
+        # get the quantity
+        for item in schema_list:
+            dismantle_grouped[cid][item["name"]]["complete"] = row.get(item["name"], 0)
+
     for row in grouped_by_type[NO_REMOTE_ID]:
         cid = row["city_id"]
 
@@ -662,7 +673,7 @@ def cpe_dismantle():
 
         # get the quantity
         for item in schema_list:
-            missing_grouped[cid][item["name"]]["remote"] = row.get(item["name"], 0)
+            dismantle_grouped[cid][item["name"]]["remote"] = row.get(item["name"], 0)
 
     for row in grouped_by_type[NO_ADAPTER_ID]:
         cid = row["city_id"]
@@ -670,17 +681,17 @@ def cpe_dismantle():
         ensure_city(cid, row["city_name"], row["max_updated_at"])
 
         for item in schema_list:
-            missing_grouped[cid][item["name"]]["adapter"] = row.get(item["name"], 0)
+            dismantle_grouped[cid][item["name"]]["adapter"] = row.get(item["name"], 0)
 
     for row in grouped_by_type[NO_BOTH_ID]:
         cid = row["city_id"]
         ensure_city(cid, row["city_name"], row["max_updated_at"])
 
         for item in schema_list:
-            missing_grouped[cid][item["name"]]["both"] = row.get(item["name"], 0)
+            dismantle_grouped[cid][item["name"]]["both"] = row.get(item["name"], 0)
 
     # Convert to list for template HANDELING
-    missing_grouped = list(missing_grouped.values())
+    dismantle_grouped = list(dismantle_grouped.values())
 
     # OPTIMALY YOU SHOULD EXTEND cpe_types TABLE WITH ATTRIB has_remote
     # BUT FOR NOW: ENRICH SCHEMA ONLY IN PYTHON. WHY?
@@ -694,7 +705,9 @@ def cpe_dismantle():
     for item in schema_list:
         item["has_remote"] = item["cpe_type"] in HAS_REMOTE
         # item["has_adapter"] = item["name"] in HAS_ADAPTER
-    # {"id": id, "name": name, "label": label, "cpe_type": type, "has_remote": true}
+
+    # EXSTENDED ITEM IN SCHEMA LIST
+    # item= {"id": 1, "name": 'EKV_7800', "label": 'EKV 7800', "cpe_type": STB, "has_remote": true}
 
     return render_template(
         "cpe_dismantle_records.html",
@@ -702,8 +715,7 @@ def cpe_dismantle():
         saturday=saturday,
         current_week_end=current_week_end.strftime("%d-%m-%Y"),
         schema=schema_list,
-        complete=complete_rows,
-        missing=missing_grouped,
+        dismantle=dismantle_grouped,
     )
 
 
