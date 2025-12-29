@@ -1279,6 +1279,11 @@ week_end
 
 dismantle_type_id
 
+```sql
+CREATE INDEX idx_cpe_dismantle_lookup
+ON cpe_dismantle (city_id, week_end, dismantle_type_id, cpe_type_id);
+```
+
 # DIFFERENCE BETWEEN CROSS JOIN, LEFT JOIN AND JOIN IN SQL-----
 
 Here are the key differences between these SQL join types:

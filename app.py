@@ -97,7 +97,7 @@ app.cli.add_command(create_initial_db)
 # 1. WE USE IT TO BUILD RAW DYNAMIC PIVOT SQL QUERY
 # 2. WE ALSO USE IT IN HTML TABLES TEMPLATES DIS
 # PLAY
-def get_cpe_column_schema(column_name: str = "is_active_total"):
+def get_cpe_types_column_schema(column_name: str = "is_active_total"):
     filter_column = getattr(CpeTypes, column_name)
     # 2. Get full data (id, name, label, type) from Cpe_Types table
     cpe_types = (
@@ -259,8 +259,12 @@ def get_city_history_cpe_inventory(
     return paginate
 
 
+# SQL responsibilities: Fetch latest week, Aggregate per city
+# Produce totals per dismantle type
+# Python responsibilities: Split result set by dismantle_type_id,
+# Render:Complete table, Missing parts table (nested headers)
 def get_pivoted_cpe_dismantle(
-    schema_list: list, week_end: datetime.date, city_type: str, dismantle_type_id: int
+    schema_list: list, week_end: datetime.date, city_type: str
 ):
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
@@ -294,17 +298,15 @@ def get_pivoted_cpe_dismantle(
                     C.NAME AS CITY_NAME,
                     CT.NAME AS CPE_NAME,
                     CD.QUANTITY,
+                    CD.DISMANTLE_TYPE_ID,
                     CD.UPDATED_AT
                 FROM CITIES C
                 LEFT JOIN CPE_DISMANTLE CD
                     ON C.ID = CD.CITY_ID
-                    AND CD.DISMANTLE_TYPE_ID = :dismantle_type_id
-                    --latest week must be per city and per dismantle type
                     AND CD.WEEK_END = (
                         SELECT MAX(CD2.WEEK_END)
                         FROM CPE_DISMANTLE CD2
                         WHERE CD2.CITY_ID = C.ID
-                        AND CD2.DISMANTLE_TYPE_ID = :dismantle_type_id
                         AND CD2.WEEK_END <= :week_end
                 )
                 LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
@@ -313,28 +315,27 @@ def get_pivoted_cpe_dismantle(
             SELECT
                 CITY_ID,
                 CITY_NAME,
+                DISMANTLE_TYPE_ID,
                 {", ".join(case_columns)},
                 MAX(UPDATED_AT) AS max_updated_at
             FROM WEEKLY_DATA
-            GROUP BY CITY_ID, CITY_NAME
+            GROUP BY CITY_ID, CITY_NAME, DISMANTLE_TYPE_ID
 
             UNION ALL
 
             SELECT
-                NULL,
-                'UKUPNO',
+                NULL AS city_id,
+                'UKUPNO' AS city_name,
+                DISMANTLE_TYPE_ID,
                 {", ".join(sum_columns)},
-                NULL
+                NULL AS max_updated_at
             FROM WEEKLY_DATA
+            GROUP BY DISMANTLE_TYPE_ID
 
-            ORDER BY CITY_ID NULLS LAST;
+            ORDER BY DISMANTLE_TYPE_ID, CITY_ID NULLS LAST;
     """
 
-    params = {
-        "week_end": week_end,
-        "city_type": city_type,
-        "dismantle_type_id": dismantle_type_id,
-    }
+    params = {"week_end": week_end, "city_type": city_type}
 
     result = db.session.execute(text(SQL_QUERY), params)
     return [row._asdict() for row in result.all()]
@@ -401,22 +402,30 @@ def get_current_week_friday(today=None):
     return today + timedelta(days=(4 - today.weekday()) % 7)
 
 
+def get_passed_saturday(today=None):
+    today = today or date.today()
+    # Friday = 4
+    return today - timedelta(days=(2+ today.weekday()) % 7)
+
+
 # ----------PIVOT CPE-RECORDS-----------------
+# PIVOTING IN SQL QUERY
 @app.route("/cpe-records")
 @login_required
 def cpe_records():
     # to display today date on title
     today = date.today()
+    print("today", today)
 
     # SATURDAY of this week
     # to mark row (red) if updated_at less than saturday
-    saturday = date.today() + timedelta(days=(5 - today.weekday()))
+    saturday = get_passed_saturday()
 
     # date of friday in week
     current_week_end = get_current_week_friday()
 
     # list of all cpe_types object in db
-    schema_list = get_cpe_column_schema()
+    schema_list = get_cpe_types_column_schema()
 
     # 1. Build pivoted records from schema list but only for current week
     records = get_pivoted_cpe_inventory(schema_list, current_week_end)
@@ -431,7 +440,7 @@ def cpe_records():
     )
 
 
-# UPDATE ROUTE FOR CPE-RECORDS TABLE, CALLED FROM INSIDE FORME INSIDE cpe-records
+# UPDATE ROUTE FOR CPE-RECORDS TABLE, CALLED FROM INSIDE FORME INSIDE cpe-record
 @app.route("/update_cpe", methods=["POST"])
 @login_required
 def update_recent_cpe_inventory():
@@ -508,6 +517,7 @@ def update_recent_cpe_inventory():
     return redirect(url_for("cpe_records"))
 
 
+# PIVOTING IN SQL QUERY
 @app.route("/cities/history/<int:id>")
 @login_required
 def city_history(id):
@@ -521,7 +531,7 @@ def city_history(id):
     per_page = 20
 
     # THIS IS LIST OF CPE TYPE OBJECTS, BUT ONLY ONE is_active
-    schema_list = get_cpe_column_schema()
+    schema_list = get_cpe_types_column_schema()
 
     # paginated_records is iterable SimplePagination object
     paginated_records = get_city_history_cpe_inventory(
@@ -537,6 +547,7 @@ def city_history(id):
 
 
 # ----------PIVOT CPE-DISMANTLE-RECORDS-----------------
+# PIVOTING IN SQL QUERY
 @app.route("/cpe-dismantle")
 @login_required
 def cpe_dismantle():
@@ -551,20 +562,108 @@ def cpe_dismantle():
     current_week_end = get_current_week_friday()
 
     # list of all cpe_types object in db but only if is_active_dismantle
-    schema_list = get_cpe_column_schema("is_active_dismantle")
+    schema_list = get_cpe_types_column_schema("is_active_dismantle")
 
-    # 1. Build pivoted records from schema list but only for current week
+    # 1. Build pivoted records from schema list but only for current week_end
     records = get_pivoted_cpe_dismantle(
-        schema_list, current_week_end, city_type=CityTypeEnum.IJ.value, dismantle_type_id=1
+        schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
     )
+    # rows in records look like this:
+    # {'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 1, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,..., 'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)}
+    # {'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 2, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,..., 'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)}
+    # {'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 3, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,..., 'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)}
+
+    grouped_by_type = defaultdict(list)
+
+    # grouped_by_type[1:[completed rows],2:[no remote rows],3:[no adapter rows],4:[no both rows]]
+    for row in records:
+        grouped_by_type[row["dismantle_type_id"]].append(row)
+
+    # MORAJU SE SLAGATI SA ID KAKO SU DEFINISANI U POSTGRES TABELI dismantle_types
+    COMPLETE_ID = 1
+    NO_REMOTE_ID = 2
+    NO_ADAPTER_ID = 3
+    NO_BOTH_ID = 4
+
+    ## row in complete only have objects that have iniside 'dismantle_type_id': 1
+    complete_rows = grouped_by_type[COMPLETE_ID]
+
+    # helper function for missing-grouping
+    # We want missing_grouped to look like:
+    """
+    [
+    {
+        "city_name": "Sarajevo",
+        "max_updated_at": ...,
+        "IADS": {
+            "remote": 1,
+            "adapter": 2,
+            "both": 0,
+        },
+        "HG8245": {
+            "remote": 0,
+            "adapter": 1,
+            "both": 1,
+        },
+    },
+    ...
+    ]
+    """
+    missing_grouped = {}
+
+    def ensure_city(city_id, city_name, updated_at):
+        if city_id not in missing_grouped:
+            missing_grouped[city_id] = {
+                "city_id": city_id,
+                "city_name": city_name,
+                "max_updated_at": updated_at,
+            }
+            for item in schema_list:
+                missing_grouped[city_id][item["name"]] = {
+                    "remote": 0,
+                    "adapter": 0,
+                    "both": 0,
+                }
+
+    # Fill data for each dismantle type
+    # row is from orginal sql query
+    for row in grouped_by_type[NO_REMOTE_ID]:
+        cid = row["city_id"]
+
+        # ovim je filovan city_id, city_name and max_updated_at
+        # ali su quantity nula
+        ensure_city(cid, row["city_name"], row["max_updated_at"])
+
+        # get the quantity
+        for item in schema_list:
+            missing_grouped[cid][item["name"]]["remote"] = row.get(item["name"], 0)
+
+    for row in grouped_by_type[NO_ADAPTER_ID]:
+        cid = row["city_id"]
+
+        ensure_city(cid, row["city_name"], row["max_updated_at"])
+
+        for item in schema_list:
+            missing_grouped[cid][item["name"]]["adapter"] = row.get(item["name"], 0)
+
+    for row in grouped_by_type[NO_BOTH_ID]:
+        cid = row["city_id"]
+        ensure_city(cid, row["city_name"], row["max_updated_at"])
+
+        for item in schema_list:
+            missing_grouped[cid][item["name"]]["both"] = row.get(item["name"], 0)
+
+    # Convert to list for template
+    missing_grouped = list(missing_grouped.values())
 
     return render_template(
         "cpe_dismantle_records.html",
         today=today.strftime("%d-%m-%Y"),
         saturday=saturday,
         current_week_end=current_week_end.strftime("%d-%m-%Y"),
-        records=records,
         schema=schema_list,
+        complete=complete_rows,
+        missing=missing_grouped,
     )
 
 
@@ -735,6 +834,7 @@ def get_current_month_end(today=None):
     return first_next_month - timedelta(days=1)
 
 
+# PIVOTING IN FLASK
 @app.route("/ont-records")
 @login_required
 def ont_records():
