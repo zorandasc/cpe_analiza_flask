@@ -389,8 +389,6 @@ def home():
 
 
 # ---------- ROUTES FOR PIVOT TABLE PAGES-----------------------
-
-
 # A business week that runs from Saturday 00:00 → Friday 23:59
 # vraca datum petka za svaku sedmicu
 # If today is Monday (weekday=0): (4-0) % 7 = 4 → add 4 days → Friday
@@ -405,7 +403,7 @@ def get_current_week_friday(today=None):
 def get_passed_saturday(today=None):
     today = today or date.today()
     # Friday = 4
-    return today - timedelta(days=(2+ today.weekday()) % 7)
+    return today - timedelta(days=(2 + today.weekday()) % 7)
 
 
 # ----------PIVOT CPE-RECORDS-----------------
@@ -415,19 +413,19 @@ def get_passed_saturday(today=None):
 def cpe_records():
     # to display today date on title
     today = date.today()
-    print("today", today)
 
-    # SATURDAY of this week
+    # SATURDAY BEFORE MONDAY OF THIS WEEK
     # to mark row (red) if updated_at less than saturday
     saturday = get_passed_saturday()
 
-    # date of friday in week
+    # DATE OF FRIDAY IN THIS WEEK
     current_week_end = get_current_week_friday()
 
-    # list of all cpe_types object in db
+    # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema()
 
-    # 1. Build pivoted records from schema list but only for current week
+    # 1. Build pivoted cpe_inventory records fOR schema list but only for current week
+    # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
     records = get_pivoted_cpe_inventory(schema_list, current_week_end)
 
     return render_template(
