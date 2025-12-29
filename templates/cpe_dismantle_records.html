@@ -41,9 +41,11 @@
   }
  
   .my-custom-table {
-  border-collapse: separate !important;
-  border-spacing:4px 1px !important;
-}
+    /*
+    border-collapse: separate !important;
+    border-spacing:4px 1px !important;
+    */
+  }
 
   .table-custom-head th {
     color: #000; 
@@ -63,27 +65,84 @@
     border-top-right-radius: 8px;
   }
   .stanje-column {
-    min-width: 140px;
+    max-width: 100px;
     text-align: center;
     background-color: #d7dce2 !important;
   }
   .IAD-column {
     background-color: #f0d6f2 !important;
+     max-width: 100px;
   }
   .STB-column {
     background-color: #cbd7f1 !important;
+     max-width: 100px;
   }
   .ONT-column {
     background-color: #d9c3ee !important;
+     max-width: 100px;
   }
   .ANTENA-column, .IOT-column, .STB_DTH-column, .LNB-column {
     background-color: #fce4d6 !important;
     min-width: 80px;
   }
-  .azur-column {
+  .azurira-column {
     background-color: #d4e2db !important;
-    max-width: 75px;
+    max-width: 120px;
+    width: 100px;
   }
+ .table tr.red-row,
+  .table tr.red-row td {
+    color: #ee1831;
+  }
+
+  .table tr.green-row,
+  .table tr.green-row td {
+    color: #111 ;
+  }
+  .red-bcg {
+    background-color: #fae5e8 !important;
+   
+  }
+
+  .green-bcg {
+    background-color: #def7eb !important;
+  }
+
+  .table tr.blue-row,
+  .table tr.blue-row td {
+    background-color: #e4eef7 !important;
+  }
+
+    .azur-row-red{
+    color: rgb(234, 114, 114)!important;
+    font-size: 13px;
+  }
+
+   .azur-row-green{
+    color: #65776e!important;
+    font-size: 13px;
+  }
+
+  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
+  .table-emph-h-border td {
+    /* Set the border style for all sides first */
+    border: 1px solid #919394;
+
+    /* Override the top/bottom borders to be thicker */
+    border-top-width: 3px !important;
+    border-bottom-width: 3px !important;
+  }
+
+  .table-emph-h-border th.group-start,
+.table-emph-h-border td.group-start {
+  border-left: 3px solid #495057;
+}
+
+.table-emph-h-border th.group-end,
+.table-emph-h-border td.group-end {
+  border-right: 3px solid #495057;
+}
+
   .btn-edit {
     background-color: #f6f89d;
     background: linear-gradient(to top, #ff8008, #ffc837);
@@ -158,77 +217,10 @@
     white-space: normal;
     text-align: center;
   }
-  .table tr.red-row,
-  .table tr.red-row td {
-    /*background-color: #fae5e8 !important;*/
-    color: #ee1831;
-  }
+ 
 
-  .table tr.green-row,
-  .table tr.green-row td {
-    /*background-color: #def7eb !important;*/
-    color: #111 ;
-  }
-  .red-bcg {
-    background-color: #fae5e8 !important;
-   
-  }
 
-  .green-bcg {
-    background-color: #def7eb !important;
-  }
-
-  .table tr.blue-row,
-  .table tr.blue-row td {
-    background-color: #e4eef7 !important;
-  }
-
-    .azur-row-red{
-    color: rgb(234, 114, 114)!important;
-  
-    font-size: 13px;
-  }
-
-   .azur-row-green{
-    color: #65776e!important;
-    
-    font-size: 13px;
-  }
-
-  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
-
-  .table-emph-h-border td {
-    /* Set the border style for all sides first */
-    border: 1px solid #919394;
-
-    /* Override the top/bottom borders to be thicker */
-    border-top-width: 3px !important;
-    border-bottom-width: 3px !important;
-  }
-
- .dashboard-tabs {
-  border-right: 1px solid #dee2e6;
-  padding-right: 0.5rem;
-}
-
-.dashboard-tabs .nav-link {
-  text-align: left;
-  color: #495057;
-  border-radius: 0.5rem;
-  padding: 0.6rem 0.75rem;
-  transition: all 0.15s ease-in-out;
-}
-
-.dashboard-tabs .nav-link:hover {
-  background-color: #f1f3f5;
-}
-
-.dashboard-tabs .nav-link.active {
-  background: linear-gradient(to right, #be93c5, #7bc6cc);
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-   .info {
+.info {
     display: block;
     font-size: 18px;
     font-weight: 500;
@@ -248,14 +240,13 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
           <thead class="table-custom-head">
             <tr>
-              <th class="stanje-column diagonal-split"><!--CITY COLUMN-->
-                <span class="bottom-left">SKLADIŠTA</span>
-                <!--<span class="top-right">OPREMA</span>-->
+              <th class="stanje-column">
+                SKLADIŠTA
               </th>
               {% if schema %} {% for item in schema %} 
               <th class="{{item.cpe_type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
-              <th class="azur-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
+              <th class="azurira-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
           </thead>
 
@@ -354,23 +345,22 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border">
           <thead class="table-custom-head">
             <tr>
-              <th class="stanje-column diagonal-split"><!--CITY COLUMN-->
-                <span class="bottom-left">SKLADIŠTA</span>
-                <!--<span class="top-right">OPREMA</span>-->
+              <th class="stanje-column">
+                SKLADIŠTA
               </th>
               {% if schema %} {% for item in schema %} 
               <th colspan="3" class="{{item.cpe_type.name}}-column ">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
-              <th class="azur-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
+              <th class="azurira-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
             <tr>
-              <th></th>
+              <th class="group-start"></th>
               {% if schema %} {% for item in schema %} 
-                <th>ND</th>
+                <th  class="group-start">ND</th>
                 <th>NA</th>
-                <th>NDIA</th>
+                <th class="group-end">NDIA</th>
                {% endfor %} {% endif %}
-              <th></th>
+              <th class="group-end"></th>
             </tr>
           </thead>
 
@@ -381,9 +371,9 @@
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
-              <td>{{ r[item.name].remote}}</td>
+              <td class="group-start">{{ r[item.name].remote}}</td>
               <td>{{ r[item.name].adapter}}</td>
-              <td>{{ r[item.name].both}}</td>
+              <td class="group-end">{{ r[item.name].both}}</td>
               {% endfor %}
               {% if r.max_updated_at %}
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
@@ -463,7 +453,9 @@
             {% endfor %}
           </tbody>
         </table>
-       
+         <p>
+         *Napomena: ND- nema daljinski, NA- nema adapter, NDiA- nema daljinski i adapter
+        </p>
       </div>
   </div>
  
