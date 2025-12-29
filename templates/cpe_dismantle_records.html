@@ -338,8 +338,8 @@
                 SKLADIŠTA
               </th>
               {% if schema %} {% for item in schema %} 
-              <!--IF cpe_type OF TYPE STB, COLSPAN IS 3 IF NOT COLSPAN IS 1-->
-              <th colspan="{%if item.cpe_type.name=='STB' %}3{% else %}1{% endif %}" class="{{item.cpe_type.name}}-column ">{{item.label}}</th><!--CPE MODELS COLUMNS-->
+              
+              <th colspan="3" class="{{item.cpe_type.name}}-column ">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
               <th class="azurira-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
@@ -347,11 +347,11 @@
               <th class="group-start"></th>
               {% if schema %} {% for item in schema %} 
               <th class="group-start">NA</th>
-              <!--IF cpe_type OF TYPE STB, DONT SHOW COLUMN-->
-              {% if item.cpe_type.name=='STB'  %}<th  >ND</th>  {% endif %}
+              
+              <th>ND</th> 
              
-              <!--IF cpe_type OF TYPE STB, DONT SHOW COLUMN-->
-              {% if item.cpe_type.name=='STB'%} <th class="group-end">NDIA</th>{% endif %}
+              
+              <th class="group-end">NDIA</th>
               {% endfor %} {% endif %}
               <th class="group-end"></th>
             </tr>
@@ -360,15 +360,29 @@
           <tbody>
             {% for r in missing %}
             <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
+              <td class="group-start  {% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
               <td class="group-start text-center">{{ r[item.name].adapter}}</td>
-              <!--IF cpe_type OF TYPE STB, DONT SHOW COLUMN-->
-              {% if item.cpe_type.name=='STB'%}<td class="text-center">{{ r[item.name].remote}}</td>{% endif %}
-              <!--IF cpe_type OF TYPE STB, DONT SHOW COLUMN-->
-              {% if item.cpe_type.name=='STB'  %}<td class="group-end text-center">{{ r[item.name].both}}</td>{% endif %}
+              
+              <td class="text-center">  
+                <!--This is Conditional content, not conditional structure-->
+                {% if item.has_remote %}
+                {{ r[item.name].remote }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+             
+              <td class="group-end text-center">  
+                <!--This is Conditional content, not conditional structure-->
+                {% if item.has_remote %}
+                {{ r[item.name].both }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
               {% endfor %}
               {% if r.max_updated_at %}
               <td class="group-start {% if r.max_updated_at %}{% if r.max_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">

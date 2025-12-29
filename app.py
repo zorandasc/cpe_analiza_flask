@@ -585,7 +585,7 @@ def cpe_dismantle():
     NO_ADAPTER_ID = 3
     NO_BOTH_ID = 4
 
-    ## row in complete only have objects that have iniside 'dismantle_type_id': 1
+    ## row in complete are rows that only have objects that have iniside 'dismantle_type_id': 1
     complete_rows = grouped_by_type[COMPLETE_ID]
 
     # helper function for missing-grouping
@@ -653,8 +653,22 @@ def cpe_dismantle():
         for item in schema_list:
             missing_grouped[cid][item["name"]]["both"] = row.get(item["name"], 0)
 
-    # Convert to list for template
+    # Convert to list for template HANDELING
     missing_grouped = list(missing_grouped.values())
+
+    # OPTIMALY YOU SHOULD EXTEND cpe_types TABLE WITH ATTRIB has_remote
+    # BUT FOR NOW: ENRICH SCHEMA ONLY IN PYTHON. WHY?
+    # IN TEMPLATE WE MUST HAVE DIFFERENT VIEWS
+    # so we do not hardcode STB in template
+    # we do not want this {% if item.cpe_type.name == 'STB' %}
+    # WE WANT THIS {% if item.has_remote %}
+    # SO WE NEED TO ADD has_remote TO ITEM OBJECT
+    HAS_REMOTE = {"STB"}
+    # HAS_ADAPTER = {"STB", "ONT", "IAD"}
+    for item in schema_list:
+        item["has_remote"] = item["cpe_type"] in HAS_REMOTE
+        # item["has_adapter"] = item["name"] in HAS_ADAPTER
+    # {"id": id, "name": name, "label": label, "cpe_type": type, "has_remote": true}
 
     return render_template(
         "cpe_dismantle_records.html",
