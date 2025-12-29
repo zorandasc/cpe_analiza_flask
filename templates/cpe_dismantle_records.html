@@ -288,7 +288,7 @@
                   title="Ažuritajte posljednje stanje CPE opreme"
                   class="btn btn-sm btn-custom-save"
                   data-bs-toggle="modal"
-                  data-bs-target="#editModal"
+                  data-bs-target="#compModal"
                   data-id="{{ r.id }}"
                   data-city-id="{{ r.city_id }}"
                   data-city="{{ r.city_name }}"
@@ -473,13 +473,13 @@
 </div>
 <!-- MODAL OPENED BY EDIT BUTTON-->
 <!-- Inputs inside modal have ids like modal-CPE-,-->
-<div class="modal fade" id="editModal" tabindex="-1">
+<div class="modal fade" id="compModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
-      <form method="POST" action="{{url_for('update_recent_cpe_inventory')}}">
+      <form method="POST" action="{{url_for('update_recent_cpe_dismantle')}}">
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-            Dodaj novo stanje CPE opreme za datum: {{ today }}
+            Dodaj novo stanje demontirane kompletne TO za datum: {{ today }}
           </h5>
           <button
             type="button"
@@ -582,7 +582,7 @@
   //.getAttribute('data-*') → reads values from button attributes.
   //document.getElementById(...).value = ... → fills the modal inputs with current row values.
   document
-    .getElementById("editModal")
+    .getElementById("compModal")
     .addEventListener("show.bs.modal", function (event) {
       // the Edit button that triggered modal and that carry the data
       const btn = event.relatedTarget; 

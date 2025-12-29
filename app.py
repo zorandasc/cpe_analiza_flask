@@ -458,7 +458,7 @@ def update_recent_cpe_inventory():
     current_week_end = get_current_week_friday()
 
     try:
-        # Iterate through all submitted form items
+        # Iterate through all submitted form items (ALL CPE TYPES)
         for key, value in request.form.items():
             # Keys are formatted as 'cpe-ID-NAME', e.g., 'cpe-1-IADS'
             # from .html form modal inputs
@@ -481,6 +481,8 @@ def update_recent_cpe_inventory():
                 return redirect(url_for("cpe_records"))
 
             # We insert a new record for every CPE type, FOR ONE CITY_ID
+            # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
+            # UPDATE QUANTITY IF EXSIST
             db.session.execute(
                 text("""
                     INSERT INTO cpe_inventory ( 
@@ -554,7 +556,7 @@ def cpe_dismantle():
 
     # SATURDAY of this week
     # to mark row (red) if updated_at less than saturday
-    saturday = date.today() + timedelta(days=(5 - today.weekday()))
+    saturday = get_passed_saturday()
 
     # date of friday in week
     current_week_end = get_current_week_friday()
@@ -663,6 +665,88 @@ def cpe_dismantle():
         complete=complete_rows,
         missing=missing_grouped,
     )
+
+
+# UPDATE ROUTE FOR CPE-RDISMANTLE TABLE, CALLED FROM INSIDE FORME INSIDE cpe-dismantle
+@app.route("/update_cpe-dismantle", methods=["POST"])
+@login_required
+def update_recent_cpe_dismantle():
+    # 1. Extract and Convert Fields
+    city_id_str = request.form.get("city_id")  # <-- GET THE HIDDEN ID
+    city_name = request.form.get("city")
+
+    if not city_id_str or not city_id_str.isdigit():
+        flash("City ID is missing.", "danger")
+        return redirect(url_for("home"))
+
+    city_id = int(city_id_str)
+
+    if not admin_and_user_required(city_id):
+        return redirect(url_for("home"))
+
+    current_week_end = get_current_week_friday()
+
+    try:
+        # Iterate through all submitted form items (ALL CPE TYPES)
+        for key, value in request.form.items():
+            # Keys are formatted as 'cpe-ID-NAME', e.g., 'cpe-1-IADS'
+            # from .html form modal inputs
+            if not key.startswith("cpe-"):
+                continue
+            _, cpe_type_id_str, _ = key.split("-", 2)  # Splits into ['cpe', 'ID']
+
+            try:
+                cpe_type_id = int(cpe_type_id_str)
+            except ValueError:
+                # Skip this record if ID or Quantity is invalid
+                continue
+            if value is None or value.strip() == "":
+                quantity = 0
+            else:
+                quantity = int(value)
+
+            if quantity < 0:
+                flash("Količina ne može biti negativna.", "danger")
+                return redirect(url_for("cpe_dismantle"))
+
+            # We insert a new record for every CPE type, FOR ONE CITY_ID
+            # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
+            # UPDATE QUANTITY IF EXSIST
+            db.session.execute(
+                text("""
+                    INSERT INTO cpe_dismantle ( 
+                                city_id,
+                                cpe_type_id,
+                                dismantle_type_id,
+                                week_end,
+                                quantity)
+                    VALUES (:city_id,
+                            :cpe_type_id,
+                            :dismantle_type_id,
+                            :week_end,
+                            :quantity)
+                    ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
+                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
+                    """),
+                {
+                    "city_id": city_id,
+                    "cpe_type_id": cpe_type_id,
+                    "dismantle_type_id": 1,
+                    "week_end": current_week_end,
+                    "quantity": quantity,
+                },
+            )
+
+        db.session.commit()
+        flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during CpeDismantle batch insert: {e}")
+        flash("Došlo je do greške prilikom unosa u bazu.", "danger")
+
+    # Redirect to Home (Post-Redirect-Get Pattern)
+    # This prevents duplicate form submissions if the user hits refresh.
+    return redirect(url_for("cpe_dismantle"))
 
 
 # ----------PIVOT STB-RECORDS-----------------
