@@ -47,7 +47,10 @@ DB_USER = os.environ.get("DB_USER", "postgres")
 DB_PASS = os.environ.get("DB_PASSWORD", "mypassword")
 DB_NAME = os.environ.get("DB_NAME", "mydb")
 
-# -----------DEFINE APP OBJECT---------------
+
+###########################################################
+# ---------------DEFINE APP OBJECT--------------------------
+############################################################
 
 SQLALCHEMY_DATABASE_URI = (
     f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
@@ -62,7 +65,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # session cookie.
 app.config["SECRET_KEY"] = "a_very_long_and_random_string_for_security"
 
-# ----- INICIALIZE---------
+###########################################################
+# ---------------INICIALIZE APP--------------------------
+############################################################
 # Initialize SQLAlchemy with the app
 db.init_app(app)
 
