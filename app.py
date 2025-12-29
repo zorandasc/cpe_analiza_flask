@@ -88,15 +88,16 @@ def load_user(user_id):
 app.cli.add_command(create_initial_admin)
 app.cli.add_command(create_initial_db)
 
-# ---------------HELPER FUNCTION--------------------------
+###########################################################
+# ---------------HELPER FUNCTIONS FOR PIVOTIG--------------------------
+############################################################
 
 
 # SINGLE SOURCE OF TRUTH FOR WHOLE CPE-RECORDS TABLE
-# THIS IS LIST OF FULL CPETYPE OBJECTS, BUT ONLY IF is_active
+# THIS IS LIST OF FULL CPE_TYPE OBJECTS, BUT ONLY IF is_active
 # FROM THIS SCHEMA LIST:
 # 1. WE USE IT TO BUILD RAW DYNAMIC PIVOT SQL QUERY
-# 2. WE ALSO USE IT IN HTML TABLES TEMPLATES DIS
-# PLAY
+# 2. WE ALSO USE IT IN HTML TABLES TEMPLATES DISPLAY
 def get_cpe_types_column_schema(column_name: str = "is_active_total"):
     filter_column = getattr(CpeTypes, column_name)
     # 2. Get full data (id, name, label, type) from Cpe_Types table
@@ -116,7 +117,7 @@ def get_cpe_types_column_schema(column_name: str = "is_active_total"):
     return schema_list
 
 
-def get_pivoted_cpe_inventory(schema_list: list, week_end: datetime.date):
+def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
         return []
@@ -190,7 +191,7 @@ def get_pivoted_cpe_inventory(schema_list: list, week_end: datetime.date):
     return [row._asdict() for row in result.all()]
 
 
-def get_city_history_cpe_inventory(
+def get_cpe_inventory_city_history(
     city_id: int, schema_list: list, page: int, per_page: int
 ):
     """
@@ -263,7 +264,7 @@ def get_city_history_cpe_inventory(
 # Produce totals per dismantle type
 # Python responsibilities: Split result set by dismantle_type_id,
 # Render:Complete table, Missing parts table (nested headers)
-def get_pivoted_cpe_dismantle(
+def get_cpe_dismantle_pivoted(
     schema_list: list, week_end: datetime.date, city_type: str
 ):
     if not schema_list:
@@ -341,7 +342,17 @@ def get_pivoted_cpe_dismantle(
     return [row._asdict() for row in result.all()]
 
 
-# --------AUTHORIZACIJA--------------------------------------------
+def get_cpe_dismantle_city_history(
+    city_id: int, schema_list: list, page: int, per_page: int
+):
+    pass
+
+
+###########################################################
+# ---------------HELPER FUNCTIONS FOR AUTHORIZATION--------------------------
+############################################################
+
+
 # AUTHORIZATION ZA BILO KOJU AKCIJU: ONLY ADMIN
 def admin_required():
     if current_user.is_authenticated and current_user.role == UserRole.ADMIN:
@@ -378,17 +389,11 @@ def view_required():
     return False
 
 
-# -------------------------------- ROUTES----------------------------
+###########################################################
+# ---------------HELPER FUNCTIONS FOR DATES--------------------------
+############################################################
 
 
-# -------------HOME PAGE---------------------------
-@app.route("/")
-@login_required
-def home():
-    return render_template("home.html")
-
-
-# ---------- ROUTES FOR PIVOT TABLE PAGES-----------------------
 # A business week that runs from Saturday 00:00 → Friday 23:59
 # vraca datum petka za svaku sedmicu
 # If today is Monday (weekday=0): (4-0) % 7 = 4 → add 4 days → Friday
@@ -406,7 +411,21 @@ def get_passed_saturday(today=None):
     return today - timedelta(days=(2 + today.weekday()) % 7)
 
 
-# ----------PIVOT CPE-RECORDS-----------------
+###########################################################
+# ---------------HOME ROUTE--------------------------
+############################################################
+
+
+# -------------HOME PAGE---------------------------
+@app.route("/")
+@login_required
+def home():
+    return render_template("home.html")
+
+
+###########################################################
+# ---------------ROUTES FOR PIVOTED CPE RECORDS--------------------------
+############################################################
 # PIVOTING IN SQL QUERY
 @app.route("/cpe-records")
 @login_required
@@ -426,7 +445,7 @@ def cpe_records():
 
     # 1. Build pivoted cpe_inventory records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
-    records = get_pivoted_cpe_inventory(schema_list, current_week_end)
+    records = get_cpe_inventory_pivoted(schema_list, current_week_end)
 
     return render_template(
         "cpe_records.html",
@@ -439,9 +458,9 @@ def cpe_records():
 
 
 # UPDATE ROUTE FOR CPE-RECORDS TABLE, CALLED FROM INSIDE FORME INSIDE cpe-record
-@app.route("/update_cpe", methods=["POST"])
+@app.route("/cpe-records/update", methods=["POST"])
 @login_required
-def update_recent_cpe_inventory():
+def cpe_records_update():
     # 1. Extract and Convert Fields
     city_id_str = request.form.get("city_id")  # <-- GET THE HIDDEN ID
     city_name = request.form.get("city")
@@ -518,9 +537,9 @@ def update_recent_cpe_inventory():
 
 
 # PIVOTING IN SQL QUERY
-@app.route("/cities/history/<int:id>")
+@app.route("/cpe-records/history/<int:id>")
 @login_required
-def city_history(id):
+def cpe_records_city_history(id):
     # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
     city = Cities.query.get_or_404(id)
 
@@ -534,19 +553,21 @@ def city_history(id):
     schema_list = get_cpe_types_column_schema()
 
     # paginated_records is iterable SimplePagination object
-    paginated_records = get_city_history_cpe_inventory(
+    paginated_records = get_cpe_inventory_city_history(
         city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
     )
 
     return render_template(
-        "city_history.html",
+        "cpe_records_city_history.html",
         records=paginated_records,
         schema=schema_list,
         city=city,
     )
 
 
-# ----------PIVOT CPE-DISMANTLE-RECORDS-----------------
+###########################################################
+# ---------------ROUTES FOR PIVOTED CPE DISMANTLE--------------------------
+############################################################
 # PIVOTING IN SQL QUERY
 @app.route("/cpe-dismantle")
 @login_required
@@ -565,7 +586,7 @@ def cpe_dismantle():
     schema_list = get_cpe_types_column_schema("is_active_dismantle")
 
     # 1. Build pivoted records from schema list but only for current week_end
-    records = get_pivoted_cpe_dismantle(
+    records = get_cpe_dismantle_pivoted(
         schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
     )
     # rows in records look like this:
@@ -659,7 +680,7 @@ def cpe_dismantle():
     # OPTIMALY YOU SHOULD EXTEND cpe_types TABLE WITH ATTRIB has_remote
     # BUT FOR NOW: ENRICH SCHEMA ONLY IN PYTHON. WHY?
     # IN TEMPLATE WE MUST HAVE DIFFERENT VIEWS
-    # so we do not hardcode STB in template
+    # BUT we do not hardcode STB in template
     # we do not want this {% if item.cpe_type.name == 'STB' %}
     # WE WANT THIS {% if item.has_remote %}
     # SO WE NEED TO ADD has_remote TO ITEM OBJECT
@@ -682,9 +703,9 @@ def cpe_dismantle():
 
 
 # UPDATE ROUTE FOR CPE-RDISMANTLE TABLE, CALLED FROM INSIDE FORME INSIDE cpe-dismantle
-@app.route("/update_cpe-dismantle", methods=["POST"])
+@app.route("/cpe-dismantle/update", methods=["POST"])
 @login_required
-def update_recent_cpe_dismantle():
+def cpe_dismantle_update():
     # 1. Extract and Convert Fields
     city_id_str = request.form.get("city_id")  # <-- GET THE HIDDEN ID
     city_name = request.form.get("city")
@@ -763,7 +784,38 @@ def update_recent_cpe_dismantle():
     return redirect(url_for("cpe_dismantle"))
 
 
-# ----------PIVOT STB-RECORDS-----------------
+# PIVOTING IN SQL QUERY
+@app.route("/cpe-dismantle/history/<int:id>")
+@login_required
+def cpe_dismantle_city_history(id):
+    # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
+    city = Cities.query.get_or_404(id)
+
+    if not admin_and_user_required(city.id):
+        return redirect(url_for("home"))
+
+    page = request.args.get("page", 1, int)
+    per_page = 20
+
+    # list of all cpe_types object in db but only if is_active_dismantle
+    schema_list = get_cpe_types_column_schema("is_active_dismantle")
+
+    # paginated_records is iterable SimplePagination object
+    paginated_records = get_cpe_dismantle_city_history(
+        city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
+    )
+
+    return render_template(
+        "cpe_dismantle_city_history.html",
+        records=paginated_records,
+        schema=schema_list,
+        city=city,
+    )
+
+
+###########################################################
+# ---------------ROUTES FOR PIVOTED STB RECORDS--------------------------
+############################################################
 # PIVOTING IN FLASK
 @app.route("/stb-records")
 @login_required
@@ -913,7 +965,9 @@ def update_recent_stb_inventory():
     return redirect(url_for("stb_records"))
 
 
-# ----------PIVOT ONT-RECORDS-----------------
+###########################################################
+# ---------------ROUTES FOR PIVOTED ONT RECORDS--------------------------
+############################################################
 # return date of last day of current month
 def get_current_month_end(today=None):
     # Take today
@@ -1064,17 +1118,25 @@ def update_recent_ont_inventory():
     return redirect(url_for("ont_records"))
 
 
-# ----------AUTHENTICATED AND AUTHORIZED PAGES---------------------
+###########################################################
+# ---------------ROUTES FOR AUTHORIZED PAGES--------------------------
+############################################################
 
 
-# ----------------ADMIN DASHBOARD PAGE-----------
+###########################################################
+# ---------------ROUTES FOR ADMIN DASHBOARD PAGE--------------------------
+############################################################
+
+
 @app.route("/admin/")
 @login_required
 def admin_dashboard():
     return render_template("admin.html")
 
 
-# -------------CPE_INVENTORY CRUD----------------------------------------
+###########################################################
+# ---------------ROUTES FOR CPE INVENTORY CRUD--------------------------
+############################################################
 @app.route("/admin/cpe_inventory")
 @login_required
 def admin_cpe_inventory():
@@ -1195,7 +1257,9 @@ def admin_add_to_cpe_inventory():
     return redirect(url_for("admin_cpe_inventory"))
 
 
-# -------------CPE_DISMANTLE CRUD----------------------------------------
+###########################################################
+# ---------------ROUTES FOR CPE DISMANTLE CRUD--------------------------
+############################################################
 @app.route("/admin/cpe_dismantle")
 @login_required
 def admin_cpe_dismantle():
@@ -1234,7 +1298,9 @@ def admin_cpe_dismantle():
     )
 
 
-# -------------STB_INVENTORY CRUD----------------------------------------
+###########################################################
+# ---------------ROUTES FOR STB INVENTORY CRUD--------------------------
+############################################################
 @app.route("/admin/stb_inventory")
 @login_required
 def admin_stb_inventory():
@@ -1279,7 +1345,9 @@ def admin_stb_inventory():
     )
 
 
-# -------------ONT_INVENTORY CRUD----------------------------------------
+###########################################################
+# ---------------ROUTES FOR ONT INVENTORY CRUD--------------------------
+############################################################
 @app.route("/admin/ont_inventory")
 @login_required
 def admin_ont_inventory():
@@ -1324,7 +1392,9 @@ def admin_ont_inventory():
     )
 
 
-# -----------------CITIES CRUD---------------------
+###########################################################
+# ---------------ROUTES FOR CITIES CRUD--------------------------
+############################################################
 @app.route("/admin/cities")
 @login_required
 def admin_cities():
@@ -1437,7 +1507,9 @@ def admin_delete_city(id):
     return redirect(url_for("admin_cities"))
 
 
-# ------------------USERS CRUD-----------------------------------------
+###########################################################
+# ---------------ROUTES FOR USERS CRUD--------------------------
+############################################################
 @app.route("/admin/users")
 @login_required
 def admin_users():
@@ -1604,7 +1676,9 @@ def admin_delete_user(id):
     return redirect(url_for("admin_users"))
 
 
-# -----------------CPE_TYPES CRUD---------------------
+###########################################################
+# ---------------ROUTES FOR CPE TYPES CRUD--------------------------
+############################################################
 @app.route("/admin/cpe_types")
 @login_required
 def admin_cpe_types():
@@ -1701,7 +1775,9 @@ def admin_edit_cpe_type(id):
     )
 
 
-# -------------STB_TYPES CRUD----------------------------------------
+###########################################################
+# ---------------ROUTES FOR STB TYPES CRUD--------------------------
+############################################################
 @app.route("/admin/stb_types")
 @login_required
 def admin_stb_types():
@@ -1776,7 +1852,11 @@ def admin_edit_stb_type(id):
     return render_template("admin/stb_types_edit.html", stb=stb)
 
 
-# -----------------DISMANTLE TYPES CRUD---------------------
+###########################################################
+# ---------------ROUTES FOR DISMANTLE TYPES CRUD-------------------------
+############################################################
+
+
 @app.route("/admin/dismantle_status")
 @login_required
 def admin_dismantle_status():
@@ -1851,7 +1931,11 @@ def admin_edit_dismantle_status(id):
     return render_template("admin/dismantle_types_edit.html", dismantle=dismantle)
 
 
-# -----------------LOGIN AUTENTIFIKACIJA------------------------
+###########################################################
+# ---------------ROUTE LOGIN AUTENTIFIKACIJA--------------------------
+############################################################
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -1869,7 +1953,11 @@ def login():
     return render_template("login.html")
 
 
-# --------------- LOGGOUT-----------------------
+###########################################################
+# ---------------ROUTE LOGGOUT--------------------------
+############################################################
+
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -1879,10 +1967,13 @@ def logout():
     return redirect(url_for("login"))
 
 
-# -----MAIN LOOP-----------
-# Only needed for local development
-# python app.py
+###########################################################
+# ---------------MAIN LOOP--------------------------
+############################################################
+
+# Only needed for local development (python app.py)
 # During production, your Dockerfile runs Gunicorn instead,
-# so that block never executes.
+# so this block never executes.
+
 if __name__ == "__main__":
     app.run(debug=True)  # <-- This enables the reloader and debugger

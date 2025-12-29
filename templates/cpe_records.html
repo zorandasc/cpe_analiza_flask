@@ -298,7 +298,7 @@
               <td>
                 
             <a
-              href="{{ url_for('city_history', id=r.city_id) }}"
+              href="{{ url_for('cpe_records_city_history', id=r.city_id) }}"
               class="btn btn-sm btn-custom-history"
               title="Istorija promjena"
               >
@@ -332,7 +332,7 @@
 <div class="modal fade" id="editModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
-      <form method="POST" action="{{url_for('update_recent_cpe_inventory')}}">
+      <form method="POST" action="{{url_for('cpe_records_update')}}">
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
             Dodaj novo stanje CPE opreme za datum: {{ today }}

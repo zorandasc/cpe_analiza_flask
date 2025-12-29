@@ -150,7 +150,7 @@ styles %} {{ super() }}
         <li class="page-item">
           <a
             class="page-link"
-            href="{{ url_for('city_history', id=city.id, page=records.prev_num) }}"
+            href="{{ url_for('cpe_records_city_history', id=city.id, page=records.prev_num) }}"
             >Previus</a
           >
         </li>
@@ -158,7 +158,7 @@ styles %} {{ super() }}
         <li class="page-item {% if p == records.page %}active{% endif %}">
           <a
             class="page-link"
-            href="{{ url_for('city_history',id=city.id, page=p) }}"
+            href="{{ url_for('cpe_records_city_history',id=city.id, page=p) }}"
             >{{ p }}</a
           >
         </li>
@@ -168,7 +168,7 @@ styles %} {{ super() }}
         <li class="page-item">
           <a
             class="page-link"
-            href="{{ url_for('city_history',id=city.id, page=records.next_num) }}"
+            href="{{ url_for('cpe_records_city_history',id=city.id, page=records.next_num) }}"
             >Next</a
           >
         </li>
