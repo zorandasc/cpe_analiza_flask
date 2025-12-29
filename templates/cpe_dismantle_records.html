@@ -39,13 +39,23 @@
     margin-left: -200px;
     background: linear-gradient(to right, #be93c5, #7bc6cc);
   }
- 
-  .my-custom-table {
-    /*
-    border-collapse: separate !important;
-    border-spacing:4px 1px !important;
-    */
+
+  .info {
+    display: block;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    line-height: 3em;
+    padding-left: 0.25em;
+    color: rgba(0, 0, 0, 0.4);
+    padding-bottom: 10px;
+    text-align: center;
   }
+ 
+   .my-custom-table {
+  border-collapse: separate !important;
+  border-spacing:1px 1px !important;
+}
 
   .table-custom-head th {
     color: #000; 
@@ -55,6 +65,7 @@
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 14px;
+  
   }
 
   /* Remove border radius from inner th cells to avoid overlapping */
@@ -143,16 +154,6 @@
   border-right: 3px solid #495057;
 }
 
-  .btn-edit {
-    background-color: #f6f89d;
-    background: linear-gradient(to top, #ff8008, #ffc837);
-    border: none; /* remove default border */
-    width: 70px;
-    box-shadow: 1px 1px 2px black;
-  }
-  .btn-edit:hover {
-    background-color: #d8c589;
-  }
   .btn-custom-save {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
     color: whitesmoke;
@@ -171,8 +172,6 @@
     box-shadow: 1px 1px 2px rgb(0, 0, 0);
     margin-bottom: 1rem;
   }
-
-
 
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
@@ -220,17 +219,7 @@
  
 
 
-.info {
-    display: block;
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: 4px;
-    line-height: 3em;
-    padding-left: 0.25em;
-    color: rgba(0, 0, 0, 0.4);
-    padding-bottom: 10px;
-    text-align: center;
-  }
+
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">

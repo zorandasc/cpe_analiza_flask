@@ -39,10 +39,22 @@
     margin-left: -200px;
     background: linear-gradient(to right, #be93c5, #7bc6cc);
   }
+
+     .info {
+    display: block;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    line-height: 3em;
+    padding-left: 0.25em;
+    color: rgba(0, 0, 0, 0.4);
+    padding-bottom: 10px;
+    text-align: center;
+  }
  
   .my-custom-table {
   border-collapse: separate !important;
-  border-spacing:4px 2px !important;
+  border-spacing:1px 1px !important;
 }
 
   .table-custom-head th {
@@ -53,6 +65,7 @@
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 14px;
+
   }
 
   /* Remove border radius from inner th cells to avoid overlapping */
@@ -85,38 +98,6 @@
     max-width: 75px;
   }
 
-/*
-  .diagonal-split {
-  position: relative;
-  height: 100px; 
-  background: linear-gradient(to top right, transparent 49.5%, #858080 49.5%, #858080 50.5%, transparent 50.5%);
-  padding: 0;
-}
-
-.diagonal-split span {
-  position: absolute;
-}
-
-.bottom-left {
-  bottom: 15px;
-  left: 20px;
-}
-
-.top-right {
-  top: 15px;
-  right: 20px;
-}
- */
-  .btn-edit {
-    background-color: #f6f89d;
-    background: linear-gradient(to top, #ff8008, #ffc837);
-    border: none; /* remove default border */
-    width: 70px;
-    box-shadow: 1px 1px 2px black;
-  }
-  .btn-edit:hover {
-    background-color: #d8c589;
-  }
   .btn-custom-save {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
     color: whitesmoke;
@@ -250,17 +231,7 @@
   color: #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
-   .info {
-    display: block;
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: 4px;
-    line-height: 3em;
-    padding-left: 0.25em;
-    color: rgba(0, 0, 0, 0.4);
-    padding-bottom: 10px;
-    text-align: center;
-  }
+
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
@@ -270,9 +241,9 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
           <thead class="table-custom-head">
             <tr>
-              <th class="stanje-column diagonal-split"><!--CITY COLUMN-->
-                <span class="bottom-left">SKLADIŠTA</span>
-                <!--<span class="top-right">OPREMA</span>-->
+              <th class="stanje-column">
+         SKLADIŠTA
+               
               </th>
               {% if schema %} {% for item in schema %} 
               <th class="{{item.cpe_type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
