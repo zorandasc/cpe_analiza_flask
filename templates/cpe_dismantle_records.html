@@ -401,6 +401,7 @@
               <td class="group-start text-center">
               
                 <button
+                disabled
                   type="button"
                   title="Ažuritajte posljednje stanje CPE opreme"
                   class="btn btn-sm btn-custom-save"
@@ -447,6 +448,7 @@
               <td class="text-center">
                 
             <a
+           
               href="{{ url_for('cpe_dismantle_city_history', id=r.city_id) }}"
               class="btn btn-sm btn-custom-history"
               title="Istorija promjena"
