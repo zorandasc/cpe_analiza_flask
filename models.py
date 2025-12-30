@@ -115,6 +115,9 @@ class CpeTypes(db.Model):
         Boolean, server_default=text("true")
     )
 
+    has_remote = mapped_column(Boolean, nullable=False, server_default="false")
+    has_adapter = mapped_column(Boolean, nullable=False, server_default="true")
+
     cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
         "CpeDismantle", back_populates="cpe_type"
     )

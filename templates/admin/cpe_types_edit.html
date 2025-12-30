@@ -22,28 +22,50 @@ content %}
           {% endfor %}
         </select>
       </div>
+       <div class="mb-3 form-check">
+          <input 
+            type="checkbox" 
+            class="form-check-input" 
+            id="has_remote" 
+            name="has_remote"
+            {% if cpe.has_remote %}checked{% endif %}>
+          <label class="form-check-label" for="has_remote">
+              Ima Daljinski
+          </label>
+      </div>
+       <div class="mb-3 form-check">
+          <input 
+            type="checkbox" 
+            class="form-check-input" 
+            id="has_adapter" 
+            name="has_adapter"
+            {% if cpe.has_adapter %}checked{% endif %}>
+          <label class="form-check-label" for="has_adapter">
+              Ima Adapter
+          </label>
+      </div>
       <div class="mb-3 form-check">
-    <input 
-      type="checkbox" 
-      class="form-check-input" 
-      id="is_active_total" 
-      name="is_active_total"
-      {% if cpe.is_active_total %}checked{% endif %}>
-    <label class="form-check-label" for="is_active_total">
-        Aktivan u ukupno
-    </label>
-</div>
- <div class="mb-3 form-check">
-    <input 
-      type="checkbox" 
-      class="form-check-input" 
-      id="is_active_dismantle" 
-      name="is_active_dismantle"
-      {% if cpe.is_active_dismantle %}checked{% endif %}>
-    <label class="form-check-label" for="is_active_dismantle">
-        Aktivan u demontaža
-    </label>
-</div>
+        <input 
+          type="checkbox" 
+          class="form-check-input" 
+          id="is_active_total" 
+          name="is_active_total"
+          {% if cpe.is_active_total %}checked{% endif %}>
+        <label class="form-check-label" for="is_active_total">
+            Aktivan u ukupno
+        </label>
+      </div>
+      <div class="mb-3 form-check">
+          <input 
+            type="checkbox" 
+            class="form-check-input" 
+            id="is_active_dismantle" 
+            name="is_active_dismantle"
+            {% if cpe.is_active_dismantle %}checked{% endif %}>
+          <label class="form-check-label" for="is_active_dismantle">
+              Aktivan u demontaža
+          </label>
+      </div>
       <button type="submit" class="btn btn-success">Save</button>
       <a href="{{ url_for('admin_cpe_types') }}" class="btn btn-secondary"
         >Cancel</a

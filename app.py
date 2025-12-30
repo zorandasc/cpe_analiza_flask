@@ -1771,9 +1771,9 @@ def admin_edit_cpe_type(id):
         cpe.name = name
         cpe.label = label
         cpe.type = type_
-        cpe.is_active_total = (
-            "is_active_total" in request.form
-        )  # THIS IS THE CORRECT WAY
+        cpe.has_remote = "has_remote" in request.form
+        cpe.has_adapter = "has_adapter" in request.form
+        cpe.is_active_total = "is_active_total" in request.form
         cpe.is_active_dismantle = "is_active_dismantle" in request.form
 
         try:
