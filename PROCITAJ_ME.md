@@ -1404,3 +1404,7 @@ That means:
 They belong in data, not in schema code
 
 Tables are made for this.
+
+Final rule you can trust
+
+If users can see it, filter by it, group by it, or you may extend it → use a table

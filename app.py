@@ -309,6 +309,7 @@ def get_cpe_dismantle_pivoted(
                     CT.NAME AS CPE_NAME,
                     CD.QUANTITY,
                     CD.DISMANTLE_TYPE_ID,
+                    DT.CODE AS DISMANTLE_CODE,
                     CD.UPDATED_AT
                 FROM CITIES C
                 LEFT JOIN CPE_DISMANTLE CD
@@ -319,6 +320,7 @@ def get_cpe_dismantle_pivoted(
                         WHERE CD2.CITY_ID = C.ID
                         AND CD2.WEEK_END <= :week_end
                 )
+                JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
                 LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
                 WHERE C.TYPE = :city_type
             )
@@ -326,10 +328,11 @@ def get_cpe_dismantle_pivoted(
                 CITY_ID,
                 CITY_NAME,
                 DISMANTLE_TYPE_ID,
+                DISMANTLE_CODE,
                 {", ".join(case_columns)},
                 MAX(UPDATED_AT) AS max_updated_at
             FROM WEEKLY_DATA
-            GROUP BY CITY_ID, CITY_NAME, DISMANTLE_TYPE_ID
+            GROUP BY CITY_ID, CITY_NAME, DISMANTLE_TYPE_ID,DISMANTLE_CODE
 
             UNION ALL
 
@@ -337,10 +340,11 @@ def get_cpe_dismantle_pivoted(
                 NULL AS city_id,
                 'UKUPNO' AS city_name,
                 DISMANTLE_TYPE_ID,
+                DISMANTLE_CODE,
                 {", ".join(sum_columns)},
                 NULL AS max_updated_at
             FROM WEEKLY_DATA
-            GROUP BY DISMANTLE_TYPE_ID
+            GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
 
             ORDER BY DISMANTLE_TYPE_ID, CITY_ID NULLS LAST;
     """
@@ -598,48 +602,42 @@ def cpe_dismantle():
     records = get_cpe_dismantle_pivoted(
         schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
     )
-    # rows in records look like this:
-    # {'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 1, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,..., 'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)}
-    # {'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 2, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,..., 'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)}
-    # {'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 3, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,..., 'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)}
+
+    # ROWS IN records FROM RAW SQL, LOOK LIKE THIS:
+    """"
+    [{'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 1, 
+    'dismantle_code':COMP, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,...,
+    'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)},...]
+    """
+    # BUT WE WANT TO SHAPE THE RAW SQL DATA (records) IN FORM SUITABLE
+    # FOR TEMPLATE REPRESENTATION (dismantle_grouped). WE WANT DATA TO LOOK LIKE:
+    """[{
+            "city_name": "Sarajevo",
+            "max_updated_at": ...,
+            "IADS": {
+                "complete": 0,
+                "remote": 1,
+                "adapter": 2,
+                "both": 0,
+            },
+            "HG8245": {
+                "complete": 0,
+                "remote": 0,
+                "adapter": 1,
+                "both": 1,
+            },...
+        },...
+    ]"""
 
     grouped_by_type = defaultdict(list)
-
-    # grouped_by_type[1:[completed rows],2:[no remote rows],3:[no adapter rows],4:[no both rows]]
     for row in records:
-        grouped_by_type[row["dismantle_type_id"]].append(row)
+        grouped_by_type[row["dismantle_code"]].append(row)
+    # grouped_by_type.items() is of shape:
+    # ['COMP':[completed rows],'ND':[no remote rows],'NA':[no adapter rows],'NDIA':[no both rows]]
 
-    # MORAJU SE SLAGATI SA ID KAKO SU DEFINISANI U POSTGRES TABELI dismantle_types
-    COMPLETE_ID = 1
-    NO_REMOTE_ID = 2
-    NO_ADAPTER_ID = 3
-    NO_BOTH_ID = 4
-
-    # We want dismantle_grouped to look like:
-    """
-    [
-    {
-        "city_name": "Sarajevo",
-        "max_updated_at": ...,
-        "IADS": {
-            "complete": 0,
-            "remote": 1,
-            "adapter": 2,
-            "both": 0,
-        },
-        "HG8245": {
-            "complete": 0,
-            "remote": 0,
-            "adapter": 1,
-            "both": 1,
-        },
-    },
-    ...
-    ]
-    """
     dismantle_grouped = {}
 
-    # helper function for DISMANTLE-grouping
+    # HELPER FUNCTION WHICH BUILDS STRUCTURE REPRESENTATION
     def ensure_city(city_id, city_name, updated_at):
         if city_id not in dismantle_grouped:
             dismantle_grouped[city_id] = {
@@ -647,55 +645,49 @@ def cpe_dismantle():
                 "city_name": city_name,
                 "max_updated_at": updated_at,
             }
-            for item in schema_list:
-                dismantle_grouped[city_id][item["name"]] = {
+            for cpe_item in schema_list:
+                dismantle_grouped[city_id][cpe_item["name"]] = {
                     "complete": 0,
                     "remote": 0,
                     "adapter": 0,
                     "both": 0,
                 }
 
-    # Fill data for each dismantle type
-    # row is from orginal sql query
-    for row in grouped_by_type[COMPLETE_ID]:
-        cid = row["city_id"]
+    # LEFT SIDE OF DAMAGE_MAP IS FROM DB
+    # RIGHT SIDE IS FOR OUR CUSTOM REPRESENTATION STRUCTURE
+    DAMAGE_MAP = {
+        "COMP": "complete",
+        "ND": "remote",
+        "NA": "adapter",
+        "NDIA": "both",
+    }
 
-        # ovim je filovan city_id, city_name and max_updated_at
-        # ali su quantity nula
-        ensure_city(cid, row["city_name"], row["max_updated_at"])
+    # ITERATIION WHICH FILL STRUCTURE WITH REAL DATA
+    # dismantle_code CAN BE: "COMP", "ND", "NA" "NDIA"
+    for dismantle_code, rows in grouped_by_type.items():
+        # KEY CAN BE: complete,remote,adapter,both
+        KEY = DAMAGE_MAP.get(dismantle_code)
+        for row in rows:
+            cid = row["city_id"]
+            # FILL city_id, city_name AND max_updated_at
+            # BUT QUANTITTIES ARE ALL ZERO
+            ensure_city(cid, row["city_name"], row["max_updated_at"])
 
-        # get the quantity
-        for item in schema_list:
-            dismantle_grouped[cid][item["name"]]["complete"] = row.get(item["name"], 0)
-
-    for row in grouped_by_type[NO_REMOTE_ID]:
-        cid = row["city_id"]
-
-        # ovim je filovan city_id, city_name and max_updated_at
-        # ali su quantity nula
-        ensure_city(cid, row["city_name"], row["max_updated_at"])
-
-        # get the quantity
-        for item in schema_list:
-            dismantle_grouped[cid][item["name"]]["remote"] = row.get(item["name"], 0)
-
-    for row in grouped_by_type[NO_ADAPTER_ID]:
-        cid = row["city_id"]
-
-        ensure_city(cid, row["city_name"], row["max_updated_at"])
-
-        for item in schema_list:
-            dismantle_grouped[cid][item["name"]]["adapter"] = row.get(item["name"], 0)
-
-    for row in grouped_by_type[NO_BOTH_ID]:
-        cid = row["city_id"]
-        ensure_city(cid, row["city_name"], row["max_updated_at"])
-
-        for item in schema_list:
-            dismantle_grouped[cid][item["name"]]["both"] = row.get(item["name"], 0)
+            # NOW WE FILL THE QUANTITIES. FOR EVERY CITY THERE IS ALL CPE_TYPES
+            # AND FOR EVERY CPE_TYPE WE HAVE 4 ATRIBUTES OF DISMANTLES
+            for cpe_item in schema_list:
+                dismantle_grouped[cid][cpe_item["name"]][KEY] = row.get(
+                    cpe_item["name"], 0
+                )
 
     # Convert to list for template HANDELING
     dismantle_grouped = list(dismantle_grouped.values())
+
+    # OBJECT IN dismantle_grouped LOOKS LIKE THIS:
+    # [{'city_id': 3, 'city_name': 'IJ Banja Luka', 'max_updated_at': datetime.datetime(2026, 1, 2, 0, 0), 
+    # 'iads': {'complete': 284, 'remote': 194, 'adapter': 267, 'both': 407}, 
+    # 'VIP4205_VIP4302_1113': {'complete': 118, 'remote': 408, 'adapter': 273, 'both': 273},... '}...]|
+    
 
     return render_template(
         "cpe_dismantle_records.html",
