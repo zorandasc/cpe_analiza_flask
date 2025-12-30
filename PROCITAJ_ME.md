@@ -1326,4 +1326,81 @@ Query = selection
 Python = shaping
 HTML = grouping
 
-# --------------------------
+# -------------------------- RENDERNING HTML TABLE-----------
+
+Why “conditional colspan / conditional <td>” is a bad idea even if it looks OK
+1️⃣ HTML tables must be rectangular
+
+Browsers tolerate broken tables, but they do not guarantee behavior.
+
+What you are relying on:
+
+browser auto-correction
+
+undefined layout rules
+
+coincidence that column counts match
+
+This breaks easily when:
+
+you add sorting
+
+you add pagination
+
+you add sticky headers
+
+you export to Excel
+
+Bootstrap updates
+
+user uses different browser
+
+# What IS acceptable (even recommended)
+
+Conditional content, not conditional structure
+
+This is the key distinction.
+
+✔ Always render the same number of columns
+✔ Always keep the same colspan layout
+✔ Control meaning via content, style, or icons
+
+This is robust, readable, and future-proof.
+
+🧠 Think of it like this
+
+You are building a report, not a free-form layout.
+
+Reports must satisfy:
+
+consistency
+
+predictability
+
+exportability
+
+Conditional <td> violates all three.
+
+# ----------------------------------------------
+
+# ---------dismantle_types AS TABLE OR ENUM--------
+
+Your dismantle types are business data, not a programming constant
+
+These are not just labels like "ASC" / "DESC".
+
+They are:
+
+displayed to users
+
+possibly localized (language)
+
+used in UI grouping
+
+potentially extended later
+
+That means:
+
+They belong in data, not in schema code
+
+Tables are made for this.

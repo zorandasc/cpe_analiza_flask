@@ -105,18 +105,22 @@ app.cli.add_command(create_initial_db)
 # 2. WE ALSO USE IT IN HTML TABLES TEMPLATES DISPLAY
 def get_cpe_types_column_schema(column_name: str = "is_active_total"):
     filter_column = getattr(CpeTypes, column_name)
-    # 2. Get full data (id, name, label, type) from Cpe_Types table
+
     cpe_types = (
-        db.session.query(CpeTypes.id, CpeTypes.name, CpeTypes.label, CpeTypes.type)
-        .filter(filter_column)
-        .order_by(CpeTypes.id)
-        .all()
+        db.session.query(CpeTypes).filter(filter_column).order_by(CpeTypes.id).all()
     )
 
     # Prepare the structured list and separate lists
     schema_list = [
-        {"id": id, "name": name, "label": label, "cpe_type": type}
-        for id, name, label, type in cpe_types
+        {
+            "id": ct.id,
+            "name": ct.name,
+            "label": ct.label,
+            "cpe_type": ct.type,
+            "has_remote": ct.has_remote,
+            "has_adapter": ct.has_adapter,
+        }
+        for ct in cpe_types
     ]
 
     return schema_list
@@ -692,22 +696,6 @@ def cpe_dismantle():
 
     # Convert to list for template HANDELING
     dismantle_grouped = list(dismantle_grouped.values())
-
-    # OPTIMALY YOU SHOULD EXTEND cpe_types TABLE WITH ATTRIB has_remote
-    # BUT FOR NOW: ENRICH SCHEMA ONLY IN PYTHON. WHY?
-    # IN TEMPLATE WE MUST HAVE DIFFERENT VIEWS
-    # BUT we do not hardcode STB in template
-    # we do not want this {% if item.cpe_type.name == 'STB' %}
-    # WE WANT THIS {% if item.has_remote %}
-    # SO WE NEED TO ADD has_remote TO ITEM OBJECT
-    HAS_REMOTE = {"STB"}
-    # HAS_ADAPTER = {"STB", "ONT", "IAD"}
-    for item in schema_list:
-        item["has_remote"] = item["cpe_type"] in HAS_REMOTE
-        # item["has_adapter"] = item["name"] in HAS_ADAPTER
-
-    # EXSTENDED ITEM IN SCHEMA LIST
-    # item= {"id": 1, "name": 'EKV_7800', "label": 'EKV 7800', "cpe_type": STB, "has_remote": true}
 
     return render_template(
         "cpe_dismantle_records.html",
