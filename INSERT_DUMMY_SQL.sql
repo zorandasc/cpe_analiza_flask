@@ -30,12 +30,12 @@ VALUES
 
 -- FOR DISMANTLE_TYPES------------------------------------
 INSERT INTO
-	DISMANTLE_TYPES (ID, LABEL, DESCRIPTION)
+	DISMANTLE_TYPES (ID, CODE, LABEL, GROUP_NAME)
 VALUES
-	(1, 'COMP', 'Kompletna demontaža'),
-	(2, 'ND', 'Nema daljinski'),
-	(3, 'NA', 'Nema adapter'),
-	(4, 'NDIA', 'Nema daljinski i adapter')
+	(1, 'COMP', 'Kompletna demontaža', 'complete'),
+	(2, 'ND', 'Nema daljinski', 'missing_parts'),
+	(3, 'NA', 'Nema adapter', 'missing_parts'),
+	(4, 'NDIA', 'Nema daljinski i adapter', 'missing_parts')
 
 
 -- FOR STB_TYPES------------------------------------

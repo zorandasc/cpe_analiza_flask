@@ -14,15 +14,17 @@ block content %}
   <table class="table table-striped table-bordered shadow-lg">
     <tr>
       <th>Id</th>
+      <th>Kodna oznaka</th>
       <th>Labela</th>
-      <th>Opis</th>
+      <th>Grupa</th>
       <th style="width: 160px">Akcije</th>
     </tr>
     {% for s in status %}
     <tr>
       <td>{{ s.id }}</td>
+      <td>{{ s.code }}</td>
       <td>{{ s.label }}</td>
-      <td>{{ s.description }}</td>
+      <td>{{ s.group_name }}</td>
       <td>
         <a
           href="{{ url_for('admin_edit_dismantle_status', id=s.id) }}"

@@ -5,13 +5,18 @@ block content %}
     <h2>Dodaj novu demontažu</h2>
     <form method="POST">
       <div class="mb-3">
+        <label class="form-label">Kodna oznaka</label>
+        <input type="text" name="code" class="form-control" required />
+      </div>
+      <div class="mb-3">
         <label class="form-label">Labela</label>
         <input type="text" name="label" class="form-control" required />
       </div>
       <div class="mb-3">
-        <label class="form-label">Opis</label>
-        <input type="text" name="description" class="form-control" required />
+        <label class="form-label">Grupa</label>
+        <input type="text" name="group_name" class="form-control" required />
       </div>
+
       <button type="submit" class="btn btn-success">Save</button>
       <a
         href="{{ url_for('admin_dismantle_status') }}"

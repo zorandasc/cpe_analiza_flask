@@ -128,14 +128,11 @@ class CpeTypes(db.Model):
 
 class DismantleTypes(db.Model):
     __tablename__ = "dismantle_types"
-    __table_args__ = (
-        PrimaryKeyConstraint("id", name="dismantle_types_pkey"),
-        UniqueConstraint("label", name="dismantle_types_label_key"),
-    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    label: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(String(100))
+    code: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    label: Mapped[Optional[str]] = mapped_column(String, nullable=False)
+    group_name = mapped_column(String, nullable=False)
 
     cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
         "CpeDismantle", back_populates="dismantle_type"
