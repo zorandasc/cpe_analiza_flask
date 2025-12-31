@@ -247,7 +247,7 @@
               </td>
               {% for item in schema %}
             
-              <td> {{ r.cpe[item.name]['damages'].get('complete', {}).get('quantity', 0) }}</td>
+              <td> {{ r.cpe[item.name]['damages']['complete']['quantity'] }}</td>
               {% endfor %}
               {% if r.max_updated_at %}
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
@@ -270,7 +270,9 @@
                   class="btn btn-sm btn-custom-save"
                   data-bs-toggle="modal"
                   data-bs-target="#compModal"
-                
+                  data-city-id="{{ r.city_id }}"
+                  data-city-name="{{ r.city_name }}"
+                  data-payload='{{ r.cpe| tojson }}'
                   
                 
                 >
@@ -353,12 +355,12 @@
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
-              <td class="group-start text-center">{{ r.cpe[item.name]['damages'].get('adapter', {}).get('quantity', 0) }}</td>
+              <td class="group-start text-center">{{ r.cpe[item.name]['damages']['adapter']['quantity'] }}</td>
               
               <td class="text-center">  
                 <!--This is Conditional content, not conditional structure-->
                 {% if item.has_remote %}
-                {{r.cpe[item.name]['damages'].get('remote', {}).get('quantity', 0)  }}
+                {{r.cpe[item.name]['damages']['remote']['quantity'] }}
                 {% else %}
                   —
                 {% endif %}
@@ -367,7 +369,7 @@
               <td class="group-end text-center">  
                 <!--This is Conditional content, not conditional structure-->
                 {% if item.has_remote %}
-                {{ r.cpe[item.name]['damages'].get('both', {}).get('quantity', 0) }}
+                {{ r.cpe[item.name]['damages']['remote']['quantity'] }}
                 {% else %}
                   —
                 {% endif %}
@@ -389,7 +391,7 @@
               <td class="group-start text-center">
               
                 <button
-                disabled
+               
                   type="button"
                   title="Ažuritajte posljednje stanje CPE opreme"
                   class="btn btn-sm btn-custom-save"
@@ -573,7 +575,7 @@
       // Static field updates
       modal.querySelector("#modal-id").value = btn.getAttribute("data-id");
       modal.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
-      modal.querySelector("#modal-city").value = btn.getAttribute("data-city");
+      modal.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
 
       // Get the number of CPE columns we need to loop through
       const schemaCount = parseInt(btn.getAttribute("data-schema-count"));

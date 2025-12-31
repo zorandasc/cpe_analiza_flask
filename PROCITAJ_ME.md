@@ -1429,3 +1429,11 @@ Raw SQL (fast, correct)
 Python shaping (safe, explicit)
 ↓
 Template (dumb, simple)
+
+# -
+
+Key principle to remember 🧠
+
+Shaping code should be boring
+
+If it feels clever, it’s too complex.

@@ -609,77 +609,28 @@ def cpe_dismantle():
     'dismantle_code':COMP, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,...,
     'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)},...]
     """
+
     # BUT WE WANT TO SHAPE THE RAW SQL DATA (records) IN FORM SUITABLE
-    # FOR TEMPLATE REPRESENTATION (dismantle_grouped). WE WANT DATA TO LOOK LIKE:
-    """"{
-    "city_id":{
-        "city_id": 3,
-        "city_name":"IJ Banja Luka",
-        "max_updated_at": Date(),
-        "cpe":{
-            "cpe_name_1":{
-                "cpe_type_id": 1,
-                "damages":{
-                    "complete":{
-                        "dismantle_type_id": 1,
-                        "quantity": 40
+    # FOR TEMPLATE REPRESENTATION AND UPDATE (dismantle_grouped).
+    # You are essentially doing manual serialization — which is good.
+    def build_empty_city(city_id, city_name, updated_at, schema_list):
+        return {
+            "city_id": city_id,
+            "city_name": city_name,
+            "max_updated_at": updated_at,
+            "cpe": {
+                cpe["name"]: {
+                    "cpe_type_id": cpe["id"],
+                    "damages": {
+                        "complete": {"quantity": 0, "dismantle_type_id": 1},
+                        "remote": {"quantity": 0, "dismantle_type_id": 2},
+                        "adapter": {"quantity": 0, "dismantle_type_id": 3},
+                        "both": {"quantity": 0, "dismantle_type_id": 4},
                     },
-                    "remote":{
-                        "dismantle_type_id": 2,
-                        "quantity": 2
-                    },
-                    "adapter":{
-                        "dismantle_type_id": 3,
-                        "quantity": 1
-                    },
-                    "remote":{
-                        "dismantle_type_id": 4,
-                        "quantity": 0
-                    }
-            },
-            "cpe_name_2":{
-                "cpe_type_id": 2,
-                "damages":{
-                    "complete":{
-                        "dismantle_type_id": 1,
-                        "quantity": 40
-                    },
-                    "remote":{
-                        "dismantle_type_id": 2,
-                        "quantity": 2
-                    },
-                    "adapter":{
-                        "dismantle_type_id": 3,
-                        "quantity": 1
-                    },
-                    "remote":{
-                        "dismantle_type_id": 4,
-                        "quantity": 0
-                    }
                 }
+                for cpe in schema_list
+            },
         }
-            
-    }}"""
-
-    dismantle_grouped = {}
-
-    # HELPER CITY STRUCTURE
-    def ensure_city(cid, name, updated_at):
-        if cid not in dismantle_grouped:
-            dismantle_grouped[cid] = {
-                "city_id": cid,
-                "city_name": name,
-                "max_updated_at": updated_at,
-                "cpe": {},
-            }
-
-    # HELPER FOR CPE STRUCTURE INISDE CITY STRUCTURE
-    def ensure_cpe(cid, cpe_name, cpe_type_id):
-        if cpe_name not in dismantle_grouped[cid]["cpe"]:
-            dismantle_grouped[cid]["cpe"][cpe_name] = {
-                "cpe_type_id": cpe_type_id,
-                "damages": {},
-            }
 
     DAMAGE_MAP = {
         1: "complete",
@@ -688,35 +639,31 @@ def cpe_dismantle():
         4: "both",
     }
 
-    # -------------------------
-    # Build structure AND FILL WITH DATA
-    # -------------------------
+    dismantle_grouped = {}
+
     for row in records:
         cid = row["city_id"]
+
+        if cid not in dismantle_grouped:
+            dismantle_grouped[cid] = build_empty_city(
+                cid, row["city_name"], row["max_updated_at"], schema_list
+            )
+
+        # EVERY ROW IN RECORDS HAS CITY_ID, DISMANTL_TYPE_ID, AND  MUTIPLE CPE_NAMES
+        # SO FOR EVERY CITY_ID THERE IS MUTIPLE ROWS IN RECORDS FOR EVERY DISMANTL_TYPE_ID
         damage_key = DAMAGE_MAP[row["dismantle_type_id"]]
 
-        # FILL STRUCTURE WITH CITY AND DATE
-        ensure_city(cid, row["city_name"], row["max_updated_at"])
-
+        # IN THIS MOMENT ONLY THE QUANTYTIES ARE EMPTY
         for cpe in schema_list:
-            cpe_name = cpe["name"]
-            cpe_type_id = cpe["id"]
+            qty = row.get(cpe["name"], 0)
 
-            # FOR CITY FILL STRUTURE WITH CPE NAME AND ID
-            ensure_cpe(cid, cpe_name, cpe_type_id)
+            dismantle_grouped[cid]["cpe"][cpe["name"]]["damages"][damage_key][
+                "quantity"
+            ] = qty
 
-            # FILL VALUES
-            dismantle_grouped[cid]["cpe"][cpe_name]["damages"][damage_key] = {
-                "dismantle_type_id": row["dismantle_type_id"],
-                "quantity": row.get(cpe_name, 0),
-            }
-
-    # OBJECT IN dismantle_grouped.items() LOOKS LIKE TUPLES:
-
-    # Convert VALUES OF TUPLES TO LIST OF ONJECTS, for template HANDELING
+    # Convert VALUES OF TUPLES TO LIST OF OBJECTS, for template HANDELING
+    # dismantle_grouped=[(1, row),(2,row),.....]
     dismantle_grouped = list(dismantle_grouped.values())
-
-    # OBJECT IN dismantle_grouped NOW LOOKS LIKE THIS:
 
     return render_template(
         "cpe_dismantle_records.html",
