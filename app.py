@@ -680,14 +680,18 @@ def cpe_dismantle():
                     cpe_item["name"], 0
                 )
 
-    # Convert to list for template HANDELING
+    # OBJECT IN dismantle_grouped.items() LOOKS LIKE TUPLES:
+    # (3,{'city_id': 3, 'city_name': 'IJ Banja Luka', 'max_updated_at': datetime.datetime(2026, 1, 2, 0, 0),
+    # 'iads': {'complete': 284, 'remote': 194, 'adapter': 267, 'both': 407},
+    # 'VIP4205_VIP4302_1113': {'complete': 118, 'remote': 408, 'adapter': 273, 'both': 273},... '}})
+
+    # Convert VALUES OF TUPLES TO LIST OF ONJECTS, for template HANDELING
     dismantle_grouped = list(dismantle_grouped.values())
 
-    # OBJECT IN dismantle_grouped LOOKS LIKE THIS:
-    # [{'city_id': 3, 'city_name': 'IJ Banja Luka', 'max_updated_at': datetime.datetime(2026, 1, 2, 0, 0), 
-    # 'iads': {'complete': 284, 'remote': 194, 'adapter': 267, 'both': 407}, 
+    # OBJECT IN dismantle_grouped NOW LOOKS LIKE THIS:
+    # [{'city_id': 3, 'city_name': 'IJ Banja Luka', 'max_updated_at': datetime.datetime(2026, 1, 2, 0, 0),
+    # 'iads': {'complete': 284, 'remote': 194, 'adapter': 267, 'both': 407},
     # 'VIP4205_VIP4302_1113': {'complete': 118, 'remote': 408, 'adapter': 273, 'both': 273},... '}...]|
-    
 
     return render_template(
         "cpe_dismantle_records.html",
