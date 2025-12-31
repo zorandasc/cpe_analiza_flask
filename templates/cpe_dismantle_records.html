@@ -247,7 +247,7 @@
               </td>
               {% for item in schema %}
             
-              <td> {{ r[item.name].complete}}</td>
+              <td> {{ r.cpe[item.name]['damages'].get('complete', {}).get('quantity', 0) }}</td>
               {% endfor %}
               {% if r.max_updated_at %}
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
@@ -270,19 +270,7 @@
                   class="btn btn-sm btn-custom-save"
                   data-bs-toggle="modal"
                   data-bs-target="#compModal"
-                  data-id="{{ r.id }}"
-                  data-city-id="{{ r.city_id }}"
-                  data-city="{{ r.city_name }}"
-                  data-schema-count="{{ schema | length }}"
-                  {% for item in schema %}
-                  {# loop.index starts at 1, which we will use as the key index #}
-                  {# Pass the ID (critical for the update route) #}
-                  data-cpe-id-{{ loop.index}}="{{ item.id }}"
-                  {# Pass the Name (used to look up the quantity from the current record 'r') #}
-                  data-cpe-name-{{ loop.index }}="{{ item.name }}" 
-                  {# Pass the Quantity (using the item.name as the dynamic key to access the 'r' dict) #}
-                  data-cpe-quantity-{{ loop.index }}="{{ r[item.name].complete }}"
-                  {% endfor %}
+                
                   
                 
                 >
@@ -365,12 +353,12 @@
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
-              <td class="group-start text-center">{{ r[item.name].adapter}}</td>
+              <td class="group-start text-center">{{ r.cpe[item.name]['damages'].get('adapter', {}).get('quantity', 0) }}</td>
               
               <td class="text-center">  
                 <!--This is Conditional content, not conditional structure-->
                 {% if item.has_remote %}
-                {{ r[item.name].remote }}
+                {{r.cpe[item.name]['damages'].get('remote', {}).get('quantity', 0)  }}
                 {% else %}
                   —
                 {% endif %}
@@ -379,7 +367,7 @@
               <td class="group-end text-center">  
                 <!--This is Conditional content, not conditional structure-->
                 {% if item.has_remote %}
-                {{ r[item.name].both }}
+                {{ r.cpe[item.name]['damages'].get('both', {}).get('quantity', 0) }}
                 {% else %}
                   —
                 {% endif %}
@@ -407,19 +395,7 @@
                   class="btn btn-sm btn-custom-save"
                   data-bs-toggle="modal"
                   data-bs-target="#editModal"
-                  data-id="{{ r.id }}"
-                  data-city-id="{{ r.city_id }}"
-                  data-city="{{ r.city_name }}"
-                  data-schema-count="{{ schema | length }}"
-                  {% for item in schema %}
-                  {# loop.index starts at 1, which we will use as the key index #}
-                  {# Pass the ID (critical for the update route) #}
-                  data-cpe-id-{{ loop.index}}="{{ item.id }}"
-                  {# Pass the Name (used to look up the quantity from the current record 'r') #}
-                  data-cpe-name-{{ loop.index }}="{{ item.name }}" 
-                  {# Pass the Quantity (using the item.name as the dynamic key to access the 'r' dict) #}
-                  data-cpe-quantity-{{ loop.index }}="{{ r[item.name] }}"
-                  {% endfor %}
+                 
                   
                 
                 >

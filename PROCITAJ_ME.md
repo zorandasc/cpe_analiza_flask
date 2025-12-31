@@ -1408,3 +1408,24 @@ Tables are made for this.
 Final rule you can trust
 
 If users can see it, filter by it, group by it, or you may extend it → use a table
+
+# 5️⃣ Important rule (this is the key ⚠️)
+
+SQL must never invent structure
+
+Python must never invent data
+
+You are respecting this rule ✔
+
+Layer Allowed to define
+SQL quantities, aggregates, max week
+Python structure, defaults, grouping
+Template display only
+
+DB (truth)
+↓
+Raw SQL (fast, correct)
+↓
+Python shaping (safe, explicit)
+↓
+Template (dumb, simple)
