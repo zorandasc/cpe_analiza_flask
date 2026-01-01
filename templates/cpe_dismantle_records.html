@@ -467,7 +467,8 @@
 
 </div>
 <!-- MODAL OPENED BY EDIT BUTTON-->
-<!-- Inputs inside modal have ids like modal-CPE-,-->
+
+
 <div class="modal fade" id="completeModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
@@ -482,46 +483,44 @@
             data-bs-dismiss="modal"
           ></button>
         </div>
+
         <div class="modal-body">
           <input type="hidden" id="modal-id" name="record_id" />
           <input type="hidden" name="city_id" id="modal-city-id" />
 
-          <div
-            class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"
-          >
-            <div
-              class="col-auto me-2 d-flex flex-column justify-content-between stanje-column"
-            >
-              <label class="mb-1">SKLADIŠTE</label>
-              <input
-                class="form-control"
-                id="modal-city"
-                name="city"
-                readonly
-                style="min-width: 150px"
-              />
+          <div class="row mb-4 border-bottom pb-3">
+            <div class="col-md-2">
+              <label class="form-label fw-bold">SKLADIŠTE</label>
+              <input class="form-control" id="modal-city" name="city" readonly />
             </div>
-            {% for item in schema %}
-            <div
-              class="col-auto me-2 d-flex flex-column justify-content-between {{item.cpe_type.name}}-column"
-            >
-              <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
-  
-              <input
-                class="form-control input-cpe-count"
-                data-cpe="{{item.name}}"
-                data-damage="complete"
-                type="number"
-                min="0"
-              />
-            </div>
-            {% endfor %}
           </div>
+
+          <div class="row fw-bold text-center mb-2 d-none d-md-flex">
+            <div class="col-md-3 text-start">Terminalna Oprema</div>
+            <div class="col-md-3 text-start">Kompletna</div>
+          </div>
+
+          {% for item in schema %}
+          <div class="row mb-2 align-items-center py-2 border-bottom  ">
+            
+            <div class="col-md-3 {{item.cpe_type.name}}-row">
+              <label class=" fw-bold p-2">{{item.label}}</label>
+            </div>
+
+            <div class="col-md-3">
+              <div class="input-group">
+                <span class="input-group-text d-md-none">Kompletna</span>
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="complete" type="number" min="0" />
+              </div>
+            </div>
+          </div>
+          {% endfor %}
         </div>
+
         <div class="modal-footer">
           <button type="submit" class="btn btn-custom-save">
             <span class="text-white fw-bold fs-4">
-              <svg
+                <svg
                 fill="#ffffff"
                 height="20px"
                 width="20px"
@@ -699,43 +698,57 @@
 </div>
 
 <script>
-  //event.relatedTarget → gives TO MODAL the Edit button that triggered this modal .
-  //.getAttribute('data-*') → reads values from button attributes.
-  //document.getElementById(...).value = ... → fills the modal inputs with current row values.
+
+  //ATTACH LISTENER TO completeModal MODAL
+   document
+    .getElementById("completeModal")
+    .addEventListener("show.bs.modal", function (event) {
+      
+     // the Edit button that triggered modal and that carry the data
+      const btn = event.relatedTarget; 
+
+       // Static field updates
+      this.querySelector("#modal-id").value = btn.getAttribute("data-id");
+      this.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
+      this.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
+
+      //GET DINAMIC CPE DATA
+      const cpeData = JSON.parse(btn.dataset.payload);
+
+      //FILL THE QUANTITYES
+      fillDismantleModal(this, cpeData);
+    });
+ 
+    //ATTACH LISTENER TO brokenModal MODAL
   document
     .getElementById("brokenModal")
     .addEventListener("show.bs.modal", function (event) {
       // the Edit button that triggered modal and that carry the data
       const btn = event.relatedTarget; 
 
-       // The modal itself to update thair input fields
-      const modal = event.currentTarget;
-
       // Static field updates
-      modal.querySelector("#modal-id").value = btn.getAttribute("data-id");
-      modal.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
-      modal.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
+      this.querySelector("#modal-id").value = btn.getAttribute("data-id");
+      this.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
+      this.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
 
-      const cpeData=JSON.parse(btn.getAttribute("data-payload"));
+      const cpeData = JSON.parse(btn.dataset.payload);
 
+      fillDismantleModal(this, cpeData);
+    });
 
-      // 2. Find the corresponding input fields in the modal
-      modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
+    function fillDismantleModal(modal, payload){
+
+     // 2. Find the corresponding input fields in the modal and fill
+     //it with values from json
+    modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
         const cpeName=input.dataset.cpe;
         const damageKey =input.dataset.damage
 
-        const value=cpeData?.[cpeName]?.damages?.[damageKey]?.quantity??0
-        console.log(value)
+        input.value =payload?.[cpeName]?.damages?.[damageKey]?.quantity ?? 0;
 
-        input.value=value
       })
-    
+  }
 
-      // 3. Update the value (Quantity) in modal inputs
-        
-
-       
-    });
 </script>
 
 {% endblock %}
