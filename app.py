@@ -649,7 +649,7 @@ def cpe_dismantle():
                 cid, row["city_name"], row["max_updated_at"], schema_list
             )
 
-        # EVERY ROW IN RECORDS HAS CITY_ID, DISMANTL_TYPE_ID, AND  MUTIPLE CPE_NAMES
+        # IN RECORDS EVERY ROW  HAS CITY_ID, DISMANTL_TYPE_ID, AND  MUTIPLE CPE_NAMES
         # SO FOR EVERY CITY_ID THERE IS MUTIPLE ROWS IN RECORDS FOR EVERY DISMANTL_TYPE_ID
         damage_key = DAMAGE_MAP[row["dismantle_type_id"]]
 

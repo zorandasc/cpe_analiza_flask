@@ -101,6 +101,21 @@
     max-width: 120px;
     width: 100px;
   }
+  .IAD-row{
+    background-color: #f0d6f2 !important;
+    
+  }
+  .STB-row{
+    background-color: #cbd7f1 !important;
+  }
+  .ONT-row {
+    background-color: #d9c3ee !important;
+  }
+  .ANTENA-row, .IOT-row, .STB_DTH-row, .LNB-row {
+    background-color: #fce4d6 !important;
+  }
+
+
  .table tr.red-row,
   .table tr.red-row td {
     color: #ee1831;
@@ -266,15 +281,13 @@
               
                 <button
                   type="button"
-                  title="Ažuritajte posljednje stanje CPE opreme"
+                  title="Ažuritajte posljednje stanje demontirane kompletne CPE opreme"
                   class="btn btn-sm btn-custom-save"
                   data-bs-toggle="modal"
-                  data-bs-target="#compModal"
+                  data-bs-target="#completeModal"
                   data-city-id="{{ r.city_id }}"
                   data-city-name="{{ r.city_name }}"
                   data-payload='{{ r.cpe| tojson }}'
-                  
-                
                 >
                   <span class="text-white fw-bold fs-4"
                     ><svg
@@ -393,13 +406,13 @@
                 <button
                
                   type="button"
-                  title="Ažuritajte posljednje stanje CPE opreme"
+                  title="Ažuritajte posljednje stanje demontirane nekompetne CPE opreme"
                   class="btn btn-sm btn-custom-save"
                   data-bs-toggle="modal"
-                  data-bs-target="#editModal"
-                 
-                  
-                
+                  data-bs-target="#brokenModal"
+                  data-city-id="{{ r.city_id }}"
+                  data-city-name="{{ r.city_name }}"
+                  data-payload='{{ r.cpe| tojson }}'
                 >
                   <span class="text-white fw-bold fs-4"
                     ><svg
@@ -455,7 +468,7 @@
 </div>
 <!-- MODAL OPENED BY EDIT BUTTON-->
 <!-- Inputs inside modal have ids like modal-CPE-,-->
-<div class="modal fade" id="compModal" tabindex="-1">
+<div class="modal fade" id="completeModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
       <form method="POST" action="{{url_for('cpe_dismantle_update')}}">
@@ -493,11 +506,11 @@
               class="col-auto me-2 d-flex flex-column justify-content-between {{item.cpe_type.name}}-column"
             >
               <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
-    
+  
               <input
                 class="form-control input-cpe-count"
-                id="modal-cpe-{{ loop.index }}" {# loop.index starts at 1. id=modal-cpe-1. Id will be grab by js#}
-                name="" {# The name attribute is intentionally left blank here, JS will set it to cpe-ID-NAME #}
+                data-cpe="{{item.name}}"
+                data-damage="complete"
                 type="number"
                 min="0"
               />
@@ -559,12 +572,138 @@
 </div>
 
 
+<div class="modal fade" id="brokenModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-xxl">
+    <div class="modal-content">
+      <form method="POST" action="{{url_for('cpe_dismantle_update')}}">
+        <div class="modal-header custom-modal-header">
+          <h5 class="modal-title">
+            Dodaj novo stanje demontirane nekompletne TO za datum: {{ today }}
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" id="modal-id" name="record_id" />
+          <input type="hidden" name="city_id" id="modal-city-id" />
+
+          <div class="row mb-4 border-bottom pb-3">
+            <div class="col-md-3">
+              <label class="form-label fw-bold">SKLADIŠTE</label>
+              <input class="form-control" id="modal-city" name="city" readonly />
+            </div>
+          </div>
+
+          <div class="row fw-bold text-center mb-2 d-none d-md-flex">
+            <div class="col-md-3 text-start">Terminalna Oprema</div>
+            <div class="col-md-3 text-start">Nema Adapter</div>
+            <div class="col-md-3 text-start">Nema Daljinski</div>
+            <div class="col-md-3 text-start">Nema Oboje</div>
+          </div>
+
+          {% for item in schema %}
+          <div class="row mb-2 align-items-center py-2 border-bottom  ">
+            
+            <div class="col-md-3  {{item.cpe_type.name}}-row">
+              <label class=" fw-bold p-2">{{item.label}}</label>
+            </div>
+
+            <div class="col-md-3">
+              <div class="input-group">
+                <span class="input-group-text d-md-none">Adapter</span>
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="adapter" type="number" min="0" />
+              </div>
+            </div>
+
+            <div class="col-md-3">
+              {% if item.has_remote %}
+              <div class="input-group">
+                <span class="input-group-text d-md-none">Remote</span>
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="remote" type="number" min="0" />
+              </div>
+              {% else %}
+              <div class="text-start text-muted small">—</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-3">
+              {% if item.has_remote %}
+              <div class="input-group">
+                <span class="input-group-text d-md-none">Both</span>
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="both" type="number" min="0" />
+              </div>
+              {% else %}
+              <div class="text-start text-muted small">—</div>
+              {% endif %}
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-custom-save">
+            <span class="text-white fw-bold fs-4">
+                <svg
+                fill="#ffffff"
+                height="20px"
+                width="20px"
+                version="1.1"
+                id="Layer_1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                viewBox="0 0 512 512"
+                xml:space="preserve"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          d="M128,170.667h256c4.719,0,8.533-3.823,8.533-8.533V42.667c0-4.71-3.814-8.533-8.533-8.533 c-4.719,0-8.533,3.823-8.533,8.533V153.6H136.533V17.067h110.933c4.719,0,8.533-3.823,8.533-8.533S252.186,0,247.467,0H128 c-4.719,0-8.533,3.823-8.533,8.533v153.6C119.467,166.844,123.281,170.667,128,170.667z"
+                        ></path>
+                        <path
+                          d="M384,494.933H42.667c-14.114,0-25.6-11.486-25.6-25.6V42.667c0-14.114,11.486-25.6,25.6-25.6h51.2 c4.719,0,8.533-3.823,8.533-8.533S98.586,0,93.867,0h-51.2C19.14,0,0,19.14,0,42.667v426.667C0,492.86,19.14,512,42.667,512H384 c4.719,0,8.533-3.823,8.533-8.533S388.719,494.933,384,494.933z"
+                        ></path>
+                        <path
+                          d="M509.5,87.834L424.166,2.5c-1.596-1.604-3.763-2.5-6.033-2.5h-68.975c-4.719,0-8.533,3.823-8.533,8.533 c0,1.203,0.256,2.338,0.708,3.379v107.554h-51.2v-102.4h25.6c4.719,0,8.533-3.823,8.533-8.533S320.452,0,315.733,0H281.6 c-4.719,0-8.533,3.823-8.533,8.533V128c0,4.71,3.814,8.533,8.533,8.533h68.267c4.719,0,8.533-3.823,8.533-8.533V17.067h56.201 l80.333,80.333v371.934c0,14.114-11.486,25.6-25.6,25.6h-42.667V281.6c0-4.71-3.814-8.533-8.533-8.533H93.867 c-4.719,0-8.533,3.823-8.533,8.533v187.733c0,4.71,3.814,8.533,8.533,8.533c4.719,0,8.533-3.823,8.533-8.533v-179.2h307.2 v213.333c0,4.71,3.814,8.533,8.533,8.533h51.2C492.86,512,512,492.86,512,469.333V93.867C512,91.605,511.104,89.429,509.5,87.834 z"
+                        ></path>
+                        <path
+                          d="M179.2,426.667h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,426.667,179.2,426.667z"
+                        ></path>
+                        <path
+                          d="M179.2,375.467h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,375.467,179.2,375.467z"
+                        ></path>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </span>
+            Sačuvaj
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
   //event.relatedTarget → gives TO MODAL the Edit button that triggered this modal .
   //.getAttribute('data-*') → reads values from button attributes.
   //document.getElementById(...).value = ... → fills the modal inputs with current row values.
   document
-    .getElementById("compModal")
+    .getElementById("brokenModal")
     .addEventListener("show.bs.modal", function (event) {
       // the Edit button that triggered modal and that carry the data
       const btn = event.relatedTarget; 
@@ -577,32 +716,24 @@
       modal.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
       modal.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
 
-      // Get the number of CPE columns we need to loop through
-      const schemaCount = parseInt(btn.getAttribute("data-schema-count"));
+      const cpeData=JSON.parse(btn.getAttribute("data-payload"));
 
-      // Dynamic field updates for all CPE types
-      for (let i = 1; i <= schemaCount; i++) {
-        // 1. Get the data from the button attributes
-        const cpeId = btn.getAttribute(`data-cpe-id-${i}`);
-        const cpeName = btn.getAttribute(`data-cpe-name-${i}`);
-        const cpeQuantity = btn.getAttribute(`data-cpe-quantity-${i}`);
-      
-        // 2. Find the corresponding input fields in the modal
-        const countInput = modal.querySelector(`#modal-cpe-${i}`);
 
-        // 3. Update the value (Quantity) in modal inputs
-        if (countInput) {
-          countInput.value = cpeQuantity !== null ? cpeQuantity  : '';
-        }
+      // 2. Find the corresponding input fields in the modal
+      modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
+        const cpeName=input.dataset.cpe;
+        const damageKey =input.dataset.damage
 
-        // 4. Update the NAME attribute of the input in modal to include the CPE ID
-        // This is CRITICAL for passing the ID back to the Flask update route
-        if(countInput&& cpeId){
-          // The form submission will now send: cpe-1-IADS=150, cpe-2-VIP5305=50, etc.
-          countInput.name=`cpe-${cpeId}-${cpeName}`
-        }
+        const value=cpeData?.[cpeName]?.damages?.[damageKey]?.quantity??0
+        console.log(value)
 
-      }
+        input.value=value
+      })
+    
+
+      // 3. Update the value (Quantity) in modal inputs
+        
+
        
     });
 </script>

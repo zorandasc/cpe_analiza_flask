@@ -1417,7 +1417,7 @@ Python must never invent data
 
 You are respecting this rule ✔
 
-Layer Allowed to define
+# Layer Allowed to define
 SQL quantities, aggregates, max week
 Python structure, defaults, grouping
 Template display only
@@ -1430,10 +1430,13 @@ Python shaping (safe, explicit)
 ↓
 Template (dumb, simple)
 
-# -
-
-Key principle to remember 🧠
+# Key principle to remember 🧠
 
 Shaping code should be boring
 
 If it feels clever, it’s too complex.
+
+
+# 5️⃣ Golden rule (remember this)
+
+Templates receive data, not rules
