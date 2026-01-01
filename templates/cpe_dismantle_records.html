@@ -499,18 +499,18 @@
           </div>
 
           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
-            <div class="col-md-6 text-start">Terminalna Oprema</div>
-            <div class="col-md-6 text-start">Kompletna</div>
+            <div class="col-md-4 text-start">Terminalna Oprema</div>
+            <div class="col-md-8 text-start">Kompletna</div>
           </div>
 
           {% for item in schema %}
           <div class="row mb-2 align-items-center py-2 border-bottom  ">
             
-            <div class="col-md-6 {{item.cpe_type.name}}-row">
+            <div class="col-md-4 {{item.cpe_type.name}}-row">
               <label class=" fw-bold p-2">{{item.label}}</label>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-8">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Kompletna</span>
                 <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="complete" type="number" min="0" />
@@ -601,27 +601,27 @@
           </div>
 
           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
-            <div class="col-md-6 text-start">Terminalna Oprema</div>
-            <div class="col-md-2 text-start">Nema Adapter</div>
-            <div class="col-md-2 text-start">Nema Daljinski</div>
-            <div class="col-md-2 text-start">Nema Oboje</div>
+            <div class="col-md-3 text-start">Terminalna Oprema</div>
+            <div class="col-md-3 text-start">Nema Adapter</div>
+            <div class="col-md-3 text-start">Nema Daljinski</div>
+            <div class="col-md-3 text-start">Nema Oboje</div>
           </div>
 
           {% for item in schema %}
           <div class="row mb-2 align-items-center py-2 border-bottom  ">
             
-            <div class="col-md-6  {{item.cpe_type.name}}-row">
+            <div class="col-md-3  {{item.cpe_type.name}}-row">
               <label class=" fw-bold p-2">{{item.label}}</label>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-3">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Adapter</span>
                 <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="adapter" type="number" min="0" />
               </div>
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-3">
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Remote</span>
@@ -632,7 +632,7 @@
               {% endif %}
             </div>
 
-            <div class="col-md-2">
+            <div class="col-md-3">
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Both</span>
