@@ -622,22 +622,15 @@ def cpe_dismantle():
                 cpe["name"]: {
                     "cpe_type_id": cpe["id"],
                     "damages": {
-                        "complete": {"quantity": 0, "dismantle_type_id": 1},
-                        "remote": {"quantity": 0, "dismantle_type_id": 2},
-                        "adapter": {"quantity": 0, "dismantle_type_id": 3},
-                        "both": {"quantity": 0, "dismantle_type_id": 4},
+                        "comp": {"quantity": 0, "dismantle_type_id": 1},
+                        "nd": {"quantity": 0, "dismantle_type_id": 2},
+                        "na": {"quantity": 0, "dismantle_type_id": 3},
+                        "ndia": {"quantity": 0, "dismantle_type_id": 4},
                     },
                 }
                 for cpe in schema_list
             },
         }
-
-    DAMAGE_MAP = {
-        1: "complete",
-        2: "remote",
-        3: "adapter",
-        4: "both",
-    }
 
     dismantle_grouped = {}
 
@@ -649,17 +642,18 @@ def cpe_dismantle():
                 cid, row["city_name"], row["max_updated_at"], schema_list
             )
 
-        # IN RECORDS EVERY ROW  HAS CITY_ID, DISMANTL_TYPE_ID, AND  MUTIPLE CPE_NAMES
-        # SO FOR EVERY CITY_ID THERE IS MUTIPLE ROWS IN RECORDS FOR EVERY DISMANTL_TYPE_ID
-        damage_key = DAMAGE_MAP[row["dismantle_type_id"]]
-
+        # IN RECORDS EVERY ROW HAS: CITY_ID, DISMANTL_TYPE_ID, DISMANTLE_CODE
+        # AND  MUTIPLE CPE_NAMES
         # IN THIS MOMENT ONLY THE QUANTYTIES ARE EMPTY
         for cpe in schema_list:
             qty = row.get(cpe["name"], 0)
 
-            dismantle_grouped[cid]["cpe"][cpe["name"]]["damages"][damage_key][
-                "quantity"
-            ] = qty
+            dismantle_grouped[cid]["cpe"][cpe["name"]]["damages"][
+                row["dismantle_code"].lower()
+            ] = {
+                "quantity": qty,
+                "dismantle_type_id": row["dismantle_type_id"],
+            }
 
     # Convert VALUES OF TUPLES TO LIST OF OBJECTS, for template HANDELING
     # dismantle_grouped=[(1, row),(2,row),.....]
@@ -694,63 +688,11 @@ def cpe_dismantle_update():
 
     current_week_end = get_current_week_friday()
 
-    try:
-        # Iterate through all submitted form items (ALL CPE TYPES)
-        for key, value in request.form.items():
-            # Keys are formatted as 'cpe-ID-NAME', e.g., 'cpe-1-IADS'
-            # from .html form modal inputs
-            if not key.startswith("cpe-"):
-                continue
-            _, cpe_type_id_str, _ = key.split("-", 2)  # Splits into ['cpe', 'ID']
+    request.form.items()
 
-            try:
-                cpe_type_id = int(cpe_type_id_str)
-            except ValueError:
-                # Skip this record if ID or Quantity is invalid
-                continue
-            if value is None or value.strip() == "":
-                quantity = 0
-            else:
-                quantity = int(value)
-
-            if quantity < 0:
-                flash("Količina ne može biti negativna.", "danger")
-                return redirect(url_for("cpe_dismantle"))
-
-            # We insert a new record for every CPE type, FOR ONE CITY_ID
-            # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
-            # UPDATE QUANTITY IF EXSIST
-            db.session.execute(
-                text("""
-                    INSERT INTO cpe_dismantle ( 
-                                city_id,
-                                cpe_type_id,
-                                dismantle_type_id,
-                                week_end,
-                                quantity)
-                    VALUES (:city_id,
-                            :cpe_type_id,
-                            :dismantle_type_id,
-                            :week_end,
-                            :quantity)
-                    ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
-                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
-                    """),
-                {
-                    "city_id": city_id,
-                    "cpe_type_id": cpe_type_id,
-                    "dismantle_type_id": 1,
-                    "week_end": current_week_end,
-                    "quantity": quantity,
-                },
-            )
-
-        db.session.commit()
-        flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error during CpeDismantle batch insert: {e}")
-        flash("Došlo je do greške prilikom unosa u bazu.", "danger")
+    for key, value in request.form.items():
+        print("key", key, "\n")
+        print("value", value, "\n")
 
     # Redirect to Home (Post-Redirect-Get Pattern)
     # This prevents duplicate form submissions if the user hits refresh.
@@ -1847,21 +1789,6 @@ def admin_add_dismantle_status():
     if not admin_required():
         return redirect(url_for("admin_dismantle_status"))
 
-    # THIS IS FOR SUMBITING REQUEST
-    if request.method == "POST":
-        label = request.form.get("label")
-        description = request.form.get("description")
-
-        # Validation: LABEL must be unique
-        existing_label = DismantleTypes.query.filter_by(label=label).first()
-        if existing_label:
-            flash("Labela već postoji", "danger")
-            return redirect(url_for("admin_add_dismantle_status"))
-
-        db.session.add(DismantleTypes(label=label, description=description))
-        db.session.commit()
-        return redirect(url_for("admin_dismantle_status"))
-
     # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
     return render_template(
         "admin/dismantle_types_add.html",
@@ -1878,19 +1805,9 @@ def admin_edit_dismantle_status(id):
 
     if request.method == "POST":
         label = request.form.get("label")
-        description = request.form.get("description")
-
-        # Validation: LABEL must be unique
-        existing_label = DismantleTypes.query.filter(
-            DismantleTypes.label == label, DismantleTypes.id != id
-        ).first()
-        if existing_label:
-            flash("Labela već postoji", "danger")
-            return redirect(url_for("admin_dismantle_status"))
 
         dismantle.id = id
         dismantle.label = label
-        dismantle.description = description
 
         try:
             db.session.commit()

@@ -265,7 +265,7 @@
               </td>
               {% for item in schema %}
             
-              <td> {{ r.cpe[item.name]['damages']['complete']['quantity'] }}</td>
+              <td> {{ r.cpe[item.name]['damages']['comp']['quantity'] }}</td>
               {% endfor %}
               {% if r.max_updated_at %}
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
@@ -371,12 +371,12 @@
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
-              <td class="group-start text-center">{{ r.cpe[item.name]['damages']['adapter']['quantity'] }}</td>
+              <td class="group-start text-center">{{ r.cpe[item.name]['damages']['na']['quantity'] }}</td>
               
               <td class="text-center">  
                 <!--This is Conditional content, not conditional structure-->
                 {% if item.has_remote %}
-                {{r.cpe[item.name]['damages']['remote']['quantity'] }}
+                {{r.cpe[item.name]['damages']['nd']['quantity'] }}
                 {% else %}
                   —
                 {% endif %}
@@ -385,7 +385,7 @@
               <td class="group-end text-center">  
                 <!--This is Conditional content, not conditional structure-->
                 {% if item.has_remote %}
-                {{ r.cpe[item.name]['damages']['remote']['quantity'] }}
+                {{ r.cpe[item.name]['damages']['ndia']['quantity'] }}
                 {% else %}
                   —
                 {% endif %}
@@ -513,7 +513,7 @@
             <div class="col-md-8">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Kompletna</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="complete" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="comp" type="number" min="0" />
               </div>
             </div>
           </div>
@@ -617,7 +617,7 @@
             <div class="col-md-3">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Adapter</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="adapter" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="na" type="number" min="0" />
               </div>
             </div>
 
@@ -625,7 +625,7 @@
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Remote</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="remote" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="nd" type="number" min="0" />
               </div>
               {% else %}
               <div class="text-start text-muted small">—</div>
@@ -636,7 +636,7 @@
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Both</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="both" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="ndia" type="number" min="0" />
               </div>
               {% else %}
               <div class="text-start text-muted small">—</div>

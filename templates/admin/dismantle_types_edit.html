@@ -5,16 +5,6 @@
     <h2>Izmjeni demontažu</h2>
     <form method="POST">
       <div class="mb-3">
-        <label class="form-label">Kodna oznaka</label>
-        <input
-          type="text"
-          name="code"
-          class="form-control"
-          value="{{ dismantle.code }}"
-          required
-        />
-      </div>
-      <div class="mb-3">
         <label class="form-label">Labela</label>
         <input
           type="text"
@@ -24,16 +14,7 @@
           required
         />
       </div>
-      <div class="mb-3">
-        <label class="form-label">Grupa</label>
-        <input
-          type="text"
-          name="group_name"
-          class="form-control"
-          value="{{ dismantle.group_name }}"
-          required
-        />
-      </div>
+    
 
       <button type="submit" class="btn btn-success">Save</button>
       <a
