@@ -751,17 +751,17 @@
 
     function fillDismantleModal(modal, payload){
 
-    //Find the corresponding input fields in the modal and fill it with json data
-    modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
-        //CPE NAME AND DAMAGE CODE VEC IMAMO NA INPUT-IMA
-        const cpeName=input.dataset.cpe;
-        const damageKey =input.dataset.damage
+      //Find the corresponding input fields in the modal and fill it with json data
+      modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
+          //CPE NAME AND DAMAGE CODE VEC IMAMO NA INPUT-IMA
+          const cpeName=input.dataset.cpe;
+          const damageKey =input.dataset.damage
 
-        //QUANTITIES AND DISMANTLE TYPE ID DOBIJAMO OD EDIT BUTTONA
-        input.value =payload?.[cpeName]?.damages?.[damageKey]?.quantity ?? 0;
-        input.dataset.dismantleTypeId=payload?.[cpeName]?.damages?.[damageKey]?.dismantle_type_id;
+          //QUANTITIES AND DISMANTLE TYPE ID DOBIJAMO OD EDIT BUTTONA
+          input.value =payload?.[cpeName]?.damages?.[damageKey]?.quantity ?? 0;
+          input.dataset.dismantleTypeId=payload?.[cpeName]?.damages?.[damageKey]?.dismantle_type_id;
 
-      })
+    })
   }
 
 
@@ -771,6 +771,7 @@
   /* WE WANT DATA TO SEND TO LOOK LIKE THIS
   {
   "city_id": 3,
+  "city":"Banja Luka"
   "updates": [
     {
       "cpe_type_id": 1,
@@ -793,7 +794,9 @@
 
   async function submitDismantleUpdate(modalId){
     const modal=document.getElementById(modalId)
+    //THIS IS FOR name ATTRIBUTTE ON INPUT
     const cityId=modal.querySelector("#modal-city-id").value
+    const city=modal.querySelector("#modal-city").value
 
     const updates=[]
 
@@ -814,6 +817,7 @@
       },
       body: JSON.stringify({
         "city_id": cityId,
+        "city":city,
         "updates":updates
       })
      })

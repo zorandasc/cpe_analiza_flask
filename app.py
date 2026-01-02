@@ -679,7 +679,8 @@ def cpe_dismantle():
 def cpe_dismantle_update():
     data = request.get_json()
     # 1. Extract and Convert Fields
-    city_id = data["city_id"]  # <-- GET THE HIDDEN ID
+    city_id = data["city_id"]
+    city_name = data["city"]  # <-- GET THE HIDDEN ID
 
     if not admin_and_user_required(city_id):
         return redirect(url_for("home"))
@@ -712,6 +713,7 @@ def cpe_dismantle_update():
         )
     try:
         db.session.commit()
+        flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
     except Exception as e:
         db.session.rollback()
         print(f"Error during CpeDismantle batch insert: {e}")
