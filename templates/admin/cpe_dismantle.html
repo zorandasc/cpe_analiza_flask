@@ -54,6 +54,7 @@ content%}
           <th>Ime CPE opreme</th>
           <th>Količina</th>
           <th>Tip demontaže</th>
+          <th>Sedmica</th>
           <th>
             <a
               href="{{ url_for('admin_cpe_dismantle', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
@@ -77,6 +78,7 @@ content%}
           <td>{{ r.cpe_type.name }}</td>
           <td>{{ r.quantity }}</td>
           <td>{{ r.dismantle_type.label }}</td>
+          <td>{{ r.week_end }}</td>
           <td>{{ r.created_at }}</td>
           <td>{{ r.updated_at }}</td>
         </tr>

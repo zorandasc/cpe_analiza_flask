@@ -475,7 +475,7 @@
 <div class="modal fade" id="completeModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
-      <form method="POST" action="{{url_for('cpe_dismantle_update')}}">
+      <form method="POST" >
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
             Dodaj novo stanje demontirane kompletne TO za datum: {{ today }}
@@ -521,7 +521,11 @@
         </div>
 
         <div class="modal-footer">
-          <button type="submit" class="btn btn-custom-save">
+          <button 
+            type="button" 
+            class="btn btn-custom-save" 
+            onclick="submitDismantleUpdate('completeModal')"
+          >
             <span class="text-white fw-bold fs-4">
                 <svg
                 fill="#ffffff"
@@ -577,7 +581,7 @@
 <div class="modal fade" id="brokenModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
-      <form method="POST" action="{{url_for('cpe_dismantle_update')}}">
+      <form method="POST">
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
             Dodaj novo stanje demontirane nekompletne TO za datum: {{ today }}
@@ -648,7 +652,10 @@
         </div>
 
         <div class="modal-footer">
-          <button type="submit" class="btn btn-custom-save">
+          <button 
+            type="button" 
+            class="btn btn-custom-save" 
+            onclick="submitDismantleUpdate('brokenModal')">
             <span class="text-white fw-bold fs-4">
                 <svg
                 fill="#ffffff"
@@ -792,24 +799,31 @@
 
     //QUERY BY CSS CLASS ALL INPUTS IN MODAL
      modal.querySelectorAll(".input-cpe-count").forEach(input=>{
+    
       updates.push({
-        cpe_type_id: Number(input.dataset.cpeTypeId),
+        cpe_type_id: Number(input.dataset.cpetypeid),
         dismantle_type_id: Number(input.dataset.dismantleTypeId),
         quantity: Number(input.value) || 0
       })
      })
 
-     await fetch("/cpe-dismantle/update", {
-      method:' POST',
+     const res=await fetch("/cpe-dismantle/update", {
+      method:'POST',
       headers:{
-        "Content-Type": "application/json",
-        "X-CSRFToken": "{{ csrf_token() }}"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         "city_id": cityId,
         "updates":updates
       })
      })
+
+     //CLOSE MODAL AND RELOAD PAGE
+     if (res.ok) {
+      const modalEl = document.getElementById(modalId);
+      bootstrap.Modal.getInstance(modalEl).hide();
+      location.reload();
+    }
   }
 
 </script>

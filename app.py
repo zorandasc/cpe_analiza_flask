@@ -673,6 +673,7 @@ def cpe_dismantle():
 # ⚠⚠⚠⚠⚠⚠ BIG WARNING: USING HARDCODED ROW VALUES FROM DISMANTLE_TYPE_TABLE
 # INSIDE ROUTE AND TEMPLATE: COMP, ND, NA, NIDA
 # SO ADING NEW ITEM IN DAMAGES TYPE TABLE VIA ADMIN DASHPANEL IS DISABLED
+# BECAUSE OF HARDCODING THAT WHOUD BREJK THE APP
 @app.route("/cpe-dismantle/update", methods=["POST"])
 @login_required
 def cpe_dismantle_update():
@@ -716,7 +717,8 @@ def cpe_dismantle_update():
         print(f"Error during CpeDismantle batch insert: {e}")
         flash("Došlo je do greške prilikom unosa u bazu.", "danger")
 
-    return redirect(url_for("cpe_dismantle"))
+    # WE ARE USING JSON PAYLOAD
+    return {"status": "ok"}
 
 
 # PIVOTING IN SQL QUERY
