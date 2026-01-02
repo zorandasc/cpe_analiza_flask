@@ -234,7 +234,7 @@
             <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">{{ r.city_name }}</td>
               {% for item in schema %}
-              <td>{{ r.get(item.name) if r.get(item.name) is not none else 0}}</td>
+              <td>{{ r.cpe[item.name]['quantity'] }}</td>
               {% endfor %}
               {% if r.max_updated_at %}
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
@@ -260,18 +260,7 @@
                   data-id="{{ r.id }}"
                   data-city-id="{{ r.city_id }}"
                   data-city="{{ r.city_name }}"
-                  data-schema-count="{{ schema | length }}"
-                  {% for item in schema %}
-                  {# loop.index starts at 1, which we will use as the key index #}
-                  {# Pass the ID (critical for the update route) #}
-                  data-cpe-id-{{ loop.index}}="{{ item.id }}"
-                  {# Pass the Name (used to look up the quantity from the current record 'r') #}
-                  data-cpe-name-{{ loop.index }}="{{ item.name }}" 
-                  {# Pass the Quantity (using the item.name as the dynamic key to access the 'r' dict) #}
-                  data-cpe-quantity-{{ loop.index }}="{{ r[item.name] }}"
-                  {% endfor %}
-                  
-                
+                  data-payload='{{ r.cpe| tojson }}'
                 >
                   <span class="text-white fw-bold fs-4"
                     ><svg
@@ -332,7 +321,7 @@
 <div class="modal fade" id="editModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-xxl">
     <div class="modal-content">
-      <form method="POST" action="{{url_for('cpe_records_update')}}">
+      <form method="POST">
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
             Dodaj novo stanje CPE opreme za datum: {{ today }}
@@ -370,8 +359,8 @@
     
               <input
                 class="form-control input-cpe-count"
-                id="modal-cpe-{{ loop.index }}" {# loop.index starts at 1. id=modal-cpe-1. Id will be grab by js#}
-                name="" {# The name attribute is intentionally left blank here, JS will set it to cpe-ID-NAME #}
+                data-cpe="{{item.name}}" 
+                data-cpeTypeId="{{item.id}}"
                 type="number"
                 min="0"
               />
@@ -380,7 +369,10 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-custom-save">
+          <button 
+            type="button" 
+            class="btn btn-custom-save" 
+            onclick="submitDismantleUpdate('editModal')">
             <span class="text-white fw-bold fs-4">
               <svg
                 fill="#ffffff"
@@ -434,9 +426,9 @@
 
 
 <script>
-  //event.relatedTarget → gives TO MODAL the Edit button that triggered this modal .
-  //.getAttribute('data-*') → reads values from button attributes.
-  //document.getElementById(...).value = ... → fills the modal inputs with current row values.
+  //######################################
+  //    THIS IS FOR SENDING DATA FROM BUTTON TO MODAL, DISPLAY DATA IN FORM
+  //######################################
   document
     .getElementById("editModal")
     .addEventListener("show.bs.modal", function (event) {
@@ -451,34 +443,79 @@
       modal.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
       modal.querySelector("#modal-city").value = btn.getAttribute("data-city");
 
-      // Get the number of CPE columns we need to loop through
-      const schemaCount = parseInt(btn.getAttribute("data-schema-count"));
+      const cpeData = JSON.parse(btn.dataset.payload);
 
-      // Dynamic field updates for all CPE types
-      for (let i = 1; i <= schemaCount; i++) {
-        // 1. Get the data from the button attributes
-        const cpeId = btn.getAttribute(`data-cpe-id-${i}`);
-        const cpeName = btn.getAttribute(`data-cpe-name-${i}`);
-        const cpeQuantity = btn.getAttribute(`data-cpe-quantity-${i}`);
+      modal.querySelectorAll("[data-cpe]").forEach(input=>{
+          //CPE NAME VEC IMAMO NA INPUT-IMA
+          const cpeName=input.dataset.cpe;
       
-        // 2. Find the corresponding input fields in the modal
-        const countInput = modal.querySelector(`#modal-cpe-${i}`);
+          //QUANTITIES DOBIJAMO OD EDIT BUTTONA
+          input.value=cpeData?.[cpeName]?.quantity ?? 0;
+    })  
+});
 
-        // 3. Update the value (Quantity) in modal inputs
-        if (countInput) {
-          countInput.value = cpeQuantity !== null ? cpeQuantity  : '';
-        }
+//##############################################
+  //    THIS IS FOR SENDING UPDATED DATA FROM MODAL TO BACKEND
+  //##############################################
+  /* WE WANT DATA TO SEND TO LOOK LIKE THIS
+  {
+  "city_id": 3,
+  "city":"Banja Luka"
+  "updates": [
+    {
+      "cpe_type_id": 1,
+      "quantity": 120
+    },
+    {
+      "cpe_type_id": 1,
+      "quantity": 15
+    },
+    {
+      "cpe_type_id": 3,
+      "quantity": 8
+    }
+  ]
+}
+  */
+  async function submitDismantleUpdate(modalId){
+    const modal=document.getElementById(modalId)
+    //THIS IS FOR name ATTRIBUTTE ON INPUT
+    const cityId=modal.querySelector("#modal-city-id").value
+    const city=modal.querySelector("#modal-city").value
 
-        // 4. Update the NAME attribute of the input in modal to include the CPE ID
-        // This is CRITICAL for passing the ID back to the Flask update route
-        if(countInput&& cpeId){
-          // The form submission will now send: cpe-1-IADS=150, cpe-2-VIP5305=50, etc.
-          countInput.name=`cpe-${cpeId}-${cpeName}`
-        }
+    const updates=[]
 
-      }
-       
-    });
+    //QUERY BY CSS CLASS ALL INPUTS IN MODAL
+     modal.querySelectorAll(".input-cpe-count").forEach(input=>{
+    
+      updates.push({
+        cpe_type_id: Number(input.dataset.cpetypeid),
+        quantity: Number(input.value) || 0
+      })
+     })
+
+     const res=await fetch("/cpe-records/update", {
+      method:'POST',
+      headers:{
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        "city_id": cityId,
+        "city":city,
+        "updates":updates
+      })
+     })
+
+     //CLOSE MODAL AND RELOAD PAGE
+     if (res.ok) {
+      const modalEl = document.getElementById(modalId);
+      bootstrap.Modal.getInstance(modalEl).hide();
+      location.reload();
+    }
+  }
+
+
+
 </script>
 
 {% endblock %}

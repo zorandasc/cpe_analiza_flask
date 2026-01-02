@@ -460,12 +460,46 @@ def cpe_records():
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
     records = get_cpe_inventory_pivoted(schema_list, current_week_end)
 
+    # BUT WE WANT TO SHAPE THE RAW SQL DATA (records) IN FORM SUITABLE
+    # FOR TEMPLATE REPRESENTATION AND UPDATE
+    def build_empty_city(city_id, city_name, updated_at, schema_list):
+        return {
+            "city_id": city_id,
+            "city_name": city_name,
+            "max_updated_at": updated_at,
+            "cpe": {
+                cpe["name"]: {
+                    "cpe_type_id": cpe["id"],
+                    "quantity": 0,
+                }
+                for cpe in schema_list
+            },
+        }
+
+    records_grouped = {}
+
+    for row in records:
+        cid = row["city_id"]
+
+        if cid not in records_grouped:
+            records_grouped[cid] = build_empty_city(
+                cid, row["city_name"], row["max_updated_at"], schema_list
+            )
+
+        # IN THIS MOMENT ONLY THE QUANTYTIES ARE EMPTY
+        for cpe in schema_list:
+            qty = row.get(cpe["name"], 0)
+
+            records_grouped[cid]["cpe"][cpe["name"]]["quantity"] = qty
+
+    records_grouped = list(records_grouped.values())
+
     return render_template(
         "cpe_records.html",
         today=today.strftime("%d-%m-%Y"),
         saturday=saturday,
         current_week_end=current_week_end.strftime("%d-%m-%Y"),
-        records=records,
+        records=records_grouped,
         schema=schema_list,
     )
 
@@ -474,69 +508,46 @@ def cpe_records():
 @app.route("/cpe-records/update", methods=["POST"])
 @login_required
 def cpe_records_update():
+    data = request.get_json()
     # 1. Extract and Convert Fields
-    city_id_str = request.form.get("city_id")  # <-- GET THE HIDDEN ID
-    city_name = request.form.get("city")
-
-    if not city_id_str or not city_id_str.isdigit():
-        flash("City ID is missing.", "danger")
-        return redirect(url_for("home"))
-
-    city_id = int(city_id_str)
+    city_id = data["city_id"]
+    city_name = data["city"]  # <-- GET THE HIDDEN ID
 
     if not admin_and_user_required(city_id):
         return redirect(url_for("home"))
 
     current_week_end = get_current_week_friday()
 
-    try:
-        # Iterate through all submitted form items (ALL CPE TYPES)
-        for key, value in request.form.items():
-            # Keys are formatted as 'cpe-ID-NAME', e.g., 'cpe-1-IADS'
-            # from .html form modal inputs
-            if not key.startswith("cpe-"):
-                continue
-            _, cpe_type_id_str, _ = key.split("-", 2)  # Splits into ['cpe', 'ID']
+    updates = data["updates"]
 
-            try:
-                cpe_type_id = int(cpe_type_id_str)
-            except ValueError:
-                # Skip this record if ID or Quantity is invalid
-                continue
-            if value is None or value.strip() == "":
-                quantity = 0
-            else:
-                quantity = int(value)
-
-            if quantity < 0:
-                flash("Količina ne može biti negativna.", "danger")
-                return redirect(url_for("cpe_records"))
-
-            # We insert a new record for every CPE type, FOR ONE CITY_ID
-            # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
-            # UPDATE QUANTITY IF EXSIST
-            db.session.execute(
-                text("""
-                    INSERT INTO cpe_inventory ( 
-                                city_id,
-                                cpe_type_id,
-                                week_end,
-                                quantity)
+    # We insert a new record for FOR ONE CITY_ID AND EVERY CPE type
+    # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
+    # UPDATE QUANTITY IF EXSIST
+    for u in updates:
+        stmt = text("""
+            INSERT INTO cpe_inventory ( 
+                        city_id,
+                        cpe_type_id,
+                        week_end,
+                        quantity)
                     VALUES (:city_id,
                             :cpe_type_id,
                             :week_end,
                             :quantity)
                     ON CONFLICT (city_id, cpe_type_id, week_end)
                     DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
-                    """),
-                {
-                    "city_id": city_id,
-                    "cpe_type_id": cpe_type_id,
-                    "week_end": current_week_end,
-                    "quantity": quantity,
-                },
-            )
+                    """)
 
+        db.session.execute(
+            stmt,
+            {
+                "city_id": city_id,
+                "cpe_type_id": u["cpe_type_id"],
+                "week_end": current_week_end,
+                "quantity": u["quantity"],
+            },
+        )
+    try:
         db.session.commit()
         flash(f"Novo stanje za skladište {city_name} uspješno sačuvano!", "success")
     except Exception as e:
@@ -544,9 +555,8 @@ def cpe_records_update():
         print(f"Error during CpeInventory batch insert: {e}")
         flash("Došlo je do greške prilikom unosa u bazu.", "danger")
 
-    # Redirect to Home (Post-Redirect-Get Pattern)
-    # This prevents duplicate form submissions if the user hits refresh.
-    return redirect(url_for("cpe_records"))
+    # WE ARE USING JSON PAYLOAD
+    return {"status": "ok"}
 
 
 # PIVOTING IN SQL QUERY
