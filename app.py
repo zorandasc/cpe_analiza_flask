@@ -1,6 +1,6 @@
 import os
 from collections import defaultdict
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, abort, render_template, redirect, url_for, request, flash
 from sqlalchemy import text, func
 
 # My IMPLEMENTATION OF PAGINATION FUNCIONALITY
@@ -358,7 +358,68 @@ def get_cpe_dismantle_pivoted(
 def get_cpe_dismantle_city_history(
     city_id: int, schema_list: list, page: int, per_page: int
 ):
-    pass
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
+    # We need a separate query to get the total count for pagination
+    count_query = text(
+        """SELECT 
+                COUNT(DISTINCT WEEK_END) 
+            FROM CPE_DISMANTLE
+            WHERE CITY_ID=:city_id
+        """
+    )
+
+    total_count = db.session.execute(count_query, {"city_id": city_id}).scalar()
+
+    # Calculate offset
+    offset = (page - 1) * per_page
+
+    case_columns = []
+
+    for model in schema_list:
+        case_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN ct.name = '{model["name"]}' THEN cd.quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+
+    SQL_QUERY = f"""
+    SELECT
+            WEEK_END,
+            DT.CODE AS DISMANTLE_CODE,
+            {", ".join(case_columns)}
+        FROM cpe_dismantle cd
+        JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
+        LEFT JOIN cpe_types ct ON ct.id=cd.cpe_type_id
+        WHERE cd.city_id = :city_id
+        GROUP BY cd.WEEK_END, DISMANTLE_CODE
+        ORDER BY cd.week_end DESC
+        LIMIT :limit
+        OFFSET :offset
+    """
+
+    params = {
+        "city_id": city_id,
+        "limit": per_page,
+        "offset": offset,
+    }
+
+    result = db.session.execute(text(SQL_QUERY), params)
+
+    # pivoted_data is now list
+    pivoted_data = [row._asdict() for row in result.all()]
+
+    # paginate is iterable SimplePagination object
+    paginate = SimplePagination(
+        page=page, per_page=per_page, total=total_count, items=pivoted_data
+    )
+
+    return paginate
 
 
 ###########################################################
@@ -454,7 +515,7 @@ def cpe_records():
     current_week_end = get_current_week_friday()
 
     # list of all cpe_types object in db THAT ARE ACTIVE
-    schema_list = get_cpe_types_column_schema()
+    schema_list = get_cpe_types_column_schema("is_active_total")
 
     # 1. Build pivoted cpe_inventory records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
@@ -573,7 +634,7 @@ def cpe_records_city_history(id):
     per_page = 20
 
     # THIS IS LIST OF CPE TYPE OBJECTS, BUT ONLY ONE is_active
-    schema_list = get_cpe_types_column_schema()
+    schema_list = get_cpe_types_column_schema("is_active_total")
 
     # paginated_records is iterable SimplePagination object
     paginated_records = get_cpe_inventory_city_history(
@@ -671,7 +732,7 @@ def cpe_dismantle():
     # AFTER dismantle_grouped=[row,row,.....]
 
     return render_template(
-        "cpe_dismantle_records.html",
+        "cpe_dismantle.html",
         today=today.strftime("%d-%m-%Y"),
         saturday=saturday,
         current_week_end=current_week_end.strftime("%d-%m-%Y"),
@@ -734,14 +795,18 @@ def cpe_dismantle_update():
 
 
 # PIVOTING IN SQL QUERY
-@app.route("/cpe-dismantle/history/<int:id>")
+# ⚠⚠⚠⚠⚠⚠ BIG WARNING: USING HARDCODED ROW VALUES FROM DISMANTLE_TYPE_TABLE
+@app.route("/cpe-dismantle/history/<int:id>/<category>")
 @login_required
-def cpe_dismantle_city_history(id):
+def cpe_dismantle_city_history(id, category):
     # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
     city = Cities.query.get_or_404(id)
 
     if not admin_and_user_required(city.id):
         return redirect(url_for("home"))
+
+    if category not in ("complete", "damage"):
+        abort(404)
 
     page = request.args.get("page", 1, int)
     per_page = 20
@@ -750,13 +815,51 @@ def cpe_dismantle_city_history(id):
     schema_list = get_cpe_types_column_schema("is_active_dismantle")
 
     # paginated_records is iterable SimplePagination object
-    paginated_records = get_cpe_dismantle_city_history(
+    records = get_cpe_dismantle_city_history(
         city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
     )
 
+    def build_empty_week_end(week_end, schema_list):
+        return {
+            "week": week_end,
+            "cpe": {
+                cpe["name"]: {
+                    "cpe_type_id": cpe["id"],
+                    "damages": {
+                        "comp": {"quantity": 0},
+                        "nd": {"quantity": 0},
+                        "na": {"quantity": 0},
+                        "ndia": {"quantity": 0},
+                    },
+                }
+                for cpe in schema_list
+            },
+        }
+
+    dismantle_grouped = {}
+
+    for row in records.items:
+        week = row["week_end"]
+
+        if week not in dismantle_grouped:
+            dismantle_grouped[week] = build_empty_week_end(week, schema_list)
+
+        # IN THIS MOMENT ONLY THE QUANTYTIES ARE EMPTY
+        for cpe in schema_list:
+            qty = row.get(cpe["name"], 0)
+
+            damage_key = row["dismantle_code"].lower()
+
+            dismantle_grouped[week]["cpe"][cpe["name"]]["damages"][damage_key][
+                "quantity"
+            ] = qty
+
+    records.items = list(dismantle_grouped.values())
+
     return render_template(
         "cpe_dismantle_city_history.html",
-        records=paginated_records,
+        records=records,
+        category=category,
         schema=schema_list,
         city=city,
     )

@@ -317,7 +317,7 @@
               <td class="text-center">
                 
             <a
-              href="{{ url_for('cpe_dismantle_city_history', id=r.city_id) }}"
+              href="{{ url_for('cpe_dismantle_city_history', id=r.city_id, category='complete') }}"
               class="btn btn-sm btn-custom-history"
               title="Istorija promjena"
               >
@@ -354,10 +354,7 @@
               <th class="group-start"></th>
               {% if schema %} {% for item in schema %} 
               <th class="group-start">NA</th>
-              
               <th>ND</th> 
-             
-              
               <th class="group-end">NDIA</th>
               {% endfor %} {% endif %}
               <th class="group-end"></th>
@@ -443,7 +440,7 @@
                 
             <a
            
-              href="{{ url_for('cpe_dismantle_city_history', id=r.city_id) }}"
+              href="{{ url_for('cpe_dismantle_city_history', id=r.city_id, category='damage') }}"
               class="btn btn-sm btn-custom-history"
               title="Istorija promjena"
               >
