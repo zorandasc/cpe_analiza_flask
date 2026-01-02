@@ -656,8 +656,9 @@ def cpe_dismantle():
             }
 
     # Convert VALUES OF TUPLES TO LIST OF OBJECTS, for template HANDELING
-    # dismantle_grouped=[(1, row),(2,row),.....]
+    # BEFORE dismantle_grouped=[(1, row),(2,row),.....]
     dismantle_grouped = list(dismantle_grouped.values())
+    # AFTER dismantle_grouped=[row,row,.....]
 
     return render_template(
         "cpe_dismantle_records.html",
@@ -669,33 +670,52 @@ def cpe_dismantle():
     )
 
 
-# UPDATE ROUTE FOR CPE-RDISMANTLE TABLE, CALLED FROM INSIDE FORME INSIDE cpe-dismantle
+# ⚠⚠⚠⚠⚠⚠ BIG WARNING: USING HARDCODED ROW VALUES FROM DISMANTLE_TYPE_TABLE
+# INSIDE ROUTE AND TEMPLATE: COMP, ND, NA, NIDA
+# SO ADING NEW ITEM IN DAMAGES TYPE TABLE VIA ADMIN DASHPANEL IS DISABLED
 @app.route("/cpe-dismantle/update", methods=["POST"])
 @login_required
 def cpe_dismantle_update():
+    data = request.get_json()
     # 1. Extract and Convert Fields
-    city_id_str = request.form.get("city_id")  # <-- GET THE HIDDEN ID
-    city_name = request.form.get("city")
-
-    if not city_id_str or not city_id_str.isdigit():
-        flash("City ID is missing.", "danger")
-        return redirect(url_for("home"))
-
-    city_id = int(city_id_str)
+    city_id = data["city_id"]  # <-- GET THE HIDDEN ID
 
     if not admin_and_user_required(city_id):
         return redirect(url_for("home"))
 
-    current_week_end = get_current_week_friday()
+    week_end = get_current_week_friday()
 
-    request.form.items()
+    updates = data["updates"]
 
-    for key, value in request.form.items():
-        print("key", key, "\n")
-        print("value", value, "\n")
+    for u in updates:
+        stmt = text("""
+            INSERT INTO cpe_dismantle (
+                  city_id, cpe_type_id, dismantle_type_id, week_end, quantity 
+                ) 
+            VALUES (:city_id, :cpe_type_id, :dismantle_type_id, :week_end, :quantity)
+            ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
+            DO UPDATE SET 
+                quantity = EXCLUDED.quantity,
+                updated_at = now()
 
-    # Redirect to Home (Post-Redirect-Get Pattern)
-    # This prevents duplicate form submissions if the user hits refresh.
+        """)
+        db.session.execute(
+            stmt,
+            {
+                "city_id": city_id,
+                "cpe_type_id": u["cpe_type_id"],
+                "dismantle_type_id": u["dismantle_type_id"],
+                "week_end": week_end,
+                "quantity": u["quantity"],
+            },
+        )
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error during CpeDismantle batch insert: {e}")
+        flash("Došlo je do greške prilikom unosa u bazu.", "danger")
+
     return redirect(url_for("cpe_dismantle"))
 
 

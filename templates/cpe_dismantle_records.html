@@ -513,7 +513,7 @@
             <div class="col-md-8">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Kompletna</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="comp" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-damage="comp" type="number" min="0" />
               </div>
             </div>
           </div>
@@ -617,7 +617,7 @@
             <div class="col-md-3">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Adapter</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="na" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-damage="na" type="number" min="0" />
               </div>
             </div>
 
@@ -625,7 +625,7 @@
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Remote</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="nd" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-damage="nd" type="number" min="0" />
               </div>
               {% else %}
               <div class="text-start text-muted small">—</div>
@@ -636,7 +636,7 @@
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Both</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-damage="ndia" type="number" min="0" />
+                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-damage="ndia" type="number" min="0" />
               </div>
               {% else %}
               <div class="text-start text-muted small">—</div>
@@ -701,6 +701,9 @@
 </div>
 
 <script>
+  //######################################
+  //    THIS IS FOR SENDING DATA FROM BUTTON TO MODAL, DISPLAY DATA IN FORM
+  //######################################
 
   //ATTACH LISTENER TO completeModal MODAL
    document
@@ -741,15 +744,72 @@
 
     function fillDismantleModal(modal, payload){
 
-     // 2. Find the corresponding input fields in the modal and fill
-     //it with values from json
+    //Find the corresponding input fields in the modal and fill it with json data
     modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
+        //CPE NAME AND DAMAGE CODE VEC IMAMO NA INPUT-IMA
         const cpeName=input.dataset.cpe;
         const damageKey =input.dataset.damage
 
+        //QUANTITIES AND DISMANTLE TYPE ID DOBIJAMO OD EDIT BUTTONA
         input.value =payload?.[cpeName]?.damages?.[damageKey]?.quantity ?? 0;
+        input.dataset.dismantleTypeId=payload?.[cpeName]?.damages?.[damageKey]?.dismantle_type_id;
 
       })
+  }
+
+
+  //##############################################
+  //    THIS IS FOR SENDING UPDATED DATA FROM MODAL TO BACKEND
+  //##############################################
+  /* WE WANT DATA TO SEND TO LOOK LIKE THIS
+  {
+  "city_id": 3,
+  "updates": [
+    {
+      "cpe_type_id": 1,
+      "dismantle_type_id": 1,
+      "quantity": 120
+    },
+    {
+      "cpe_type_id": 1,
+      "dismantle_type_id": 2,
+      "quantity": 15
+    },
+    {
+      "cpe_type_id": 3,
+      "dismantle_type_id": 3,
+      "quantity": 8
+    }
+  ]
+}
+  */
+
+  async function submitDismantleUpdate(modalId){
+    const modal=document.getElementById(modalId)
+    const cityId=modal.querySelector("#modal-city-id").value
+
+    const updates=[]
+
+    //QUERY BY CSS CLASS ALL INPUTS IN MODAL
+     modal.querySelectorAll(".input-cpe-count").forEach(input=>{
+      updates.push({
+        cpe_type_id: Number(input.dataset.cpeTypeId),
+        dismantle_type_id: Number(input.dataset.dismantleTypeId),
+        quantity: Number(input.value) || 0
+      })
+     })
+
+     await fetch("/cpe-dismantle/update", {
+      method:' POST',
+      headers:{
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token() }}"
+      },
+      body: JSON.stringify({
+        "city_id": cityId,
+        "updates":updates
+      })
+     })
   }
 
 </script>
