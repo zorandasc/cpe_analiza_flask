@@ -1,3 +1,10 @@
+# USAGE:
+# records = SimplePagination(
+# page=page, per_page=per_page, total=total_count, items=pivoted_data)
+# records are now SimplePagination objects-->
+# SimplePagination class returns the actual list inside:self.items, records.items
+
+
 class SimplePagination:
     def __init__(self, page, per_page, total, items):
         self.page = page

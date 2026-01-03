@@ -1418,6 +1418,7 @@ Python must never invent data
 You are respecting this rule ✔
 
 # Layer Allowed to define
+
 SQL quantities, aggregates, max week
 Python structure, defaults, grouping
 Template display only
@@ -1436,7 +1437,24 @@ Shaping code should be boring
 
 If it feels clever, it’s too complex.
 
-
 # 5️⃣ Golden rule (remember this)
 
 Templates receive data, not rules
+
+# That sentence maps exactly to the composite unique key.
+
+Think of this table as:
+
+“For THIS city, in THIS week, for THIS CPE, in THIS condition → quantity”
+
+# Why NOT include quantity in UNIQUE
+
+Because quantity:
+
+changes over time
+
+is the value, not the identity
+
+# 🧠 Rule of thumb (remember this)
+
+A column should be UNIQUE only if it fully identifies the row by itself.

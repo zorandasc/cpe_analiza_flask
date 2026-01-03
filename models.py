@@ -169,7 +169,7 @@ class CpeDismantle(db.Model):
             "week_end",
             name="uq_city_cpe_dismantle_week",
         ),
-        # Data integrity only friday of week is enforced at DB level
+        # Data integrity only fridays of week is enforced at DB level
         CheckConstraint("EXTRACT(DOW FROM week_end) = 5", name="ck_week_end_friday"),
     )
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -273,6 +273,18 @@ class StbInventory(db.Model):
         "StbTypes", back_populates="stb_inventory"
     )
 
+class IptvUsers(db.Model):
+    __tablename__ = "iptv_users"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    total_users: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Adding 'unique=True' prevents duplicate entries for the same week
+    #A column should be UNIQUE only if it fully identifies the row by itself.
+    week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False, unique=True)
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), # Recommended for Postgres
+        server_default=text("now()"),
+        onupdate=text("now()"),
+    )
 
 class Users(db.Model, UserMixin):
     __tablename__ = "users"
