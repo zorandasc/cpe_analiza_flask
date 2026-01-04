@@ -96,10 +96,14 @@ styles %} {{ super() }}
     flex: 1; /* Allows input to fill the remaining horizontal space */
     max-width: 200px; /* Optional: Prevents inputs from getting too wide */
   }
+
+  .total-iptv {
+    max-width: 130px;
+  }
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
-  <h2 class="mb-4 text-center title">Stanje STB uređaja - IPTV platforma</h2>
+  <h2 class="mb-4 text-center title">Stanje STB uređaja i IPTV korisnika</h2>
   <button
     type="button"
     title="Ažuritajte posljednje stanje STB opreme"
@@ -110,11 +114,10 @@ styles %} {{ super() }}
     + Dodaj / Izmjeni Sedmični Unos
   </button>
   <span class="info"
-    >Posljedne ažuriranje {% if last_updated %} {{
-    last_updated.strftime('%Y-%m-%d %H:%M') }} {% else %} never {% endif
-    %}</span
-  >
-  <table class="table table-bordered table-striped shadow">
+    >Posljedne ažurirano: {% if last_updated %} {{
+    last_updated.strftime('%d.%m.%Y %H:%M') }} {% else %} never {% endif %}
+  </span>
+  <table class="table table-bordered table-striped shadow mb-4">
     <thead class="table-primary">
       <tr>
         <th>STB Uređaji</th>
@@ -137,6 +140,37 @@ styles %} {{ super() }}
         <td>Total</td>
         {% for week in weeks %}
         <td>{{ totals[week] }}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+  <button
+    type="button"
+    title="Ažuritajte posljednje stanje STB opreme"
+    data-bs-toggle="modal"
+    data-bs-target="#iptvEditModal"
+    class="btn btn-custom-stb-add mt-4"
+  >
+    + Dodaj / Izmjeni Sedmični Unos
+  </button>
+  <span class="info">
+    Posljednje ažurirano: {{ iptv_users[-1]['updated_at'].strftime('%d.%m.%Y
+    %H:%M') }}
+  </span>
+  <table class="table table-bordered table-striped shadow">
+    <thead class="table-primary">
+      <tr>
+        <th></th>
+        {% for row in iptv_users %}
+        <th>{{ row['week_end'] }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="fw-bold total-iptv">Ukupan broj IPTV korisnika</td>
+        {% for row in iptv_users%}
+        <td>{{row['total_users']}}</td>
         {% endfor %}
       </tr>
     </tbody>

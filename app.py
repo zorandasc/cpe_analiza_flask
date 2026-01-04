@@ -872,7 +872,25 @@ def cpe_dismantle_city_history(id, category):
 @app.route("/stb-records")
 @login_required
 def stb_records():
-    SQL_QUERY = """
+    # FOR GETTING THE IPTV USERS
+    SQL_QUERY_IPTV_USERS = """
+            SELECT
+               *
+            FROM
+                IPTV_USERS
+            ORDER BY
+                WEEK_END DESC
+            LIMIT
+                4
+    """
+
+    iptv_users_rows = db.session.execute(text(SQL_QUERY_IPTV_USERS)).fetchall()
+
+    iptv_users = [row._asdict() for row in iptv_users_rows]
+    iptv_users.reverse()
+
+    # FOR GETTING THE STB
+    SQL_QUERY_STB = """
             WITH
             LAST_WEEK AS (
                 SELECT DISTINCT
@@ -899,7 +917,8 @@ def stb_records():
     """
     # returns all rows as a list of tuples
     #  ('STB-100', '2025-11-25', 90),
-    rows = db.session.execute(text(SQL_QUERY)).fetchall()
+
+    rows = db.session.execute(text(SQL_QUERY_STB)).fetchall()
 
     # get time when table stb_inventory lates updated
     last_updated = db.session.execute(
@@ -956,6 +975,7 @@ def stb_records():
         table=table,
         totals=totals,
         last_updated=last_updated,
+        iptv_users=iptv_users,
     )
 
 
