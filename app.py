@@ -644,7 +644,7 @@ def cpe_records_city_history(id):
     )
 
     return render_template(
-        "cpe_records_city_history.html",
+        "cpe_records_history.html",
         records=paginated_records,
         schema=schema_list,
         city=city,
@@ -860,7 +860,7 @@ def cpe_dismantle_city_history(id, category):
     records.items = list(dismantle_grouped.values())
 
     return render_template(
-        "cpe_dismantle_city_history.html",
+        "cpe_dismantle_history.html",
         records=records,
         category=category,
         schema=schema_list,
