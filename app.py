@@ -479,6 +479,8 @@ def get_current_week_friday(today=None):
     return today + timedelta(days=(4 - today.weekday()) % 7)
 
 
+# MAYBE YOU DON NEED THIS SATURDAY
+# CAN BE CALCULATED FORM FRIDAY, current_week_frida
 def get_passed_saturday(today=None):
     today = today or date.today()
     # Friday = 4
@@ -660,7 +662,8 @@ def cpe_dismantle():
     today = date.today()
 
     # SATURDAY of this week
-    # to mark row (red) if updated_at less than saturday
+    # to mark row (red) if updated_at less than
+
     saturday = get_passed_saturday()
 
     # date of friday in week
@@ -971,7 +974,7 @@ def stb_records():
     return render_template(
         "stb_records.html",
         weeks=weeks,
-        current_week_end=current_week_end,
+        current_week_end=current_week_end.strftime("%d-%m-%Y"),
         table=table,
         totals=totals,
         last_updated=last_updated,
@@ -979,7 +982,7 @@ def stb_records():
     )
 
 
-@app.route("/update_stb", methods=["POST"])
+@app.route("/stb-records/update_stb", methods=["POST"])
 @login_required
 def update_recent_stb_inventory():
     current_week_end = get_current_week_friday()
@@ -1034,6 +1037,41 @@ def update_recent_stb_inventory():
 
     # Redirect to Home (Post-Redirect-Get Pattern)
     # This prevents duplicate form submissions if the user hits refresh.
+    return redirect(url_for("stb_records"))
+
+
+@app.route("/stb-records/update_iptv_users", methods=["POST"])
+@login_required
+def update_iptv_users_count():
+    current_week_end = get_current_week_friday()
+
+    qty = request.form.get("qty")
+    if not qty or not qty.isdigit():
+        flash("Molimo unesite ispravan broj.", "warning")
+        return redirect(url_for("stb_records"))
+
+    try:
+        db.session.execute(
+            text("""
+                    INSERT INTO iptv_users ( week_end, total_users)
+                    VALUES ( :week_end, :total_users)
+                    ON CONFLICT ( week_end)
+                    DO UPDATE SET total_users = EXCLUDED.total_users, updated_at = NOW();
+                    """),
+            {
+                "week_end": current_week_end,
+                "total_users": qty,
+            },
+        )
+        db.session.commit()
+        flash(
+            f"Novo stanje za {current_week_end} uspješno sačuvano!",
+            "success",
+        )
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        flash("Greška prilikom čuvanja podataka.", "danger")
     return redirect(url_for("stb_records"))
 
 
