@@ -310,3 +310,28 @@ FROM
 		FROM
 			GENERATE_SERIES(0, 4) AS W
 	) AS F;
+
+
+
+INSERT INTO
+	IPTV_USERS (TOTAL_USERS, WEEK_END, UPDATED_AT)
+SELECT
+	(FLOOR(RANDOM() * 1000) + 1)::INT,
+	DATE_VAL,
+	DATE_VAL
+FROM(
+		-- Generate dates and filter for Fridays (DOW = 5)
+		SELECT
+			('2025-01-01'::DATE + I) AS DATE_VAL
+		FROM
+			GENERATE_SERIES(0, 333) I
+		WHERE
+			EXTRACT(
+				DOW
+				FROM
+					('2025-01-01'::DATE + I)
+			) = 5)
+ORDER BY
+	RANDOM()
+LIMIT
+	300
