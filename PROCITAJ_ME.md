@@ -1458,3 +1458,20 @@ is the value, not the identity
 # 🧠 Rule of thumb (remember this)
 
 A column should be UNIQUE only if it fully identifies the row by itself.
+
+# report_date: Using a DATE type instead of a full timestamp for the "week" makes it much easier to group data and prevents duplicate entries for the same week.
+
+# TIMESTAMPTZ: Always use "timestamp with time zone" in Postgres to avoid headaches with server offsets.
+
+# SQL responsibilities:
+
+Fetch latest week, Aggregate per city
+Produce totals per dismantle type
+
+# Python responsibilities:
+
+Split result set by dismantle_type_id,
+
+# Render:
+
+Complete table, Missing parts table (nested headers)

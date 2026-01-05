@@ -269,10 +269,7 @@ def get_cpe_inventory_city_history(
     return paginate
 
 
-# SQL responsibilities: Fetch latest week, Aggregate per city
-# Produce totals per dismantle type
-# Python responsibilities: Split result set by dismantle_type_id,
-# Render:Complete table, Missing parts table (nested headers)
+
 def get_cpe_dismantle_pivoted(
     schema_list: list, week_end: datetime.date, city_type: str
 ):
