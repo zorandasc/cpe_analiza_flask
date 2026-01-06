@@ -269,7 +269,6 @@ def get_cpe_inventory_city_history(
     return paginate
 
 
-
 def get_cpe_dismantle_pivoted(
     schema_list: list, week_end: datetime.date, city_type: str
 ):
@@ -651,7 +650,10 @@ def cpe_records_city_history(id):
 ###########################################################
 # ---------------ROUTES FOR PIVOTED CPE DISMANTLE--------------------------
 ############################################################
-# PIVOTING IN SQL QUERY
+# # ⚠⚠⚠⚠⚠⚠ BIG WARNING: USING HARDCODED ROW VALUES FROM DISMANTLE_TYPE_TABLE
+# INSIDE ROUTE AND TEMPLATE: COMP, ND, NA, NIDA
+# SO ADING NEW ITEM IN DAMAGES TYPE TABLE VIA ADMIN DASHPANEL IS DISABLED
+# BECAUSE OF HARDCODING THAT WHOUD BREJK THE APP
 @app.route("/cpe-dismantle")
 @login_required
 def cpe_dismantle():
@@ -681,7 +683,7 @@ def cpe_dismantle():
     'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)},...]
     """
 
-    # BUT WE WANT TO SHAPE THE RAW SQL DATA (records) IN FORM SUITABLE
+    # 2. BUT WE WANT TO SHAPE THE RAW SQL DATA (records) IN FORM SUITABLE
     # FOR TEMPLATE REPRESENTATION AND UPDATE (dismantle_grouped).
     # You are essentially doing manual serialization — which is good.
     def build_empty_city(city_id, city_name, updated_at, schema_list):
@@ -713,8 +715,6 @@ def cpe_dismantle():
                 cid, row["city_name"], row["max_updated_at"], schema_list
             )
 
-        # IN RECORDS EVERY ROW HAS: CITY_ID, DISMANTL_TYPE_ID, DISMANTLE_CODE
-        # AND  MUTIPLE CPE_NAMES
         # IN THIS MOMENT ONLY THE QUANTYTIES ARE EMPTY
         for cpe in schema_list:
             qty = row.get(cpe["name"], 0)
@@ -741,17 +741,52 @@ def cpe_dismantle():
     )
 
 
-# ⚠⚠⚠⚠⚠⚠ BIG WARNING: USING HARDCODED ROW VALUES FROM DISMANTLE_TYPE_TABLE
-# INSIDE ROUTE AND TEMPLATE: COMP, ND, NA, NIDA
-# SO ADING NEW ITEM IN DAMAGES TYPE TABLE VIA ADMIN DASHPANEL IS DISABLED
-# BECAUSE OF HARDCODING THAT WHOUD BREJK THE APP
+# Temporal Snapshot with Partial Mutation
+def ensure_snapshot(city_id, week_end):
+    # 1. CHECK IF CITY_ID WEEK_END ALREADY EXISTS
+    # Detect first update of week
+    exists = db.session.execute(
+        text("""
+      SELECT 1 FROM cpe_dismantle
+      WHERE city_id = :city_id AND week_end = :week_end
+      LIMIT 1
+    """),
+        {"city_id": city_id, "week_end": week_end},
+    ).scalar()
+
+    # 2. IF YES RETURN
+    if exists:
+        return
+
+    # 3. IF NO COPY DATA FROM LAST WEEK_END TO THIS WEEK_END
+    # clone previous week row: week_end < :week_end
+    db.session.execute(
+        text("""
+      INSERT INTO cpe_dismantle (
+        city_id, cpe_type_id, dismantle_type_id, week_end, quantity
+      )
+      SELECT
+        city_id, cpe_type_id, dismantle_type_id, :week_end, quantity
+      FROM cpe_dismantle
+      WHERE city_id = :city_id
+        AND week_end = (
+          SELECT MAX(week_end)
+          FROM cpe_dismantle
+          WHERE city_id = :city_id
+            AND week_end < :week_end
+        )
+    """),
+        {"city_id": city_id, "week_end": week_end},
+    )
+
+
 @app.route("/cpe-dismantle/update", methods=["POST"])
 @login_required
 def cpe_dismantle_update():
     data = request.get_json()
-    # 1. Extract and Convert Fields
+
     city_id = data["city_id"]
-    city_name = data["city"]  # <-- GET THE HIDDEN ID
+    city_name = data["city"]
 
     if not admin_and_user_required(city_id):
         return redirect(url_for("home"))
@@ -760,7 +795,13 @@ def cpe_dismantle_update():
 
     updates = data["updates"]
 
+    # Temporal Snapshot with Partial Mutation
+    ensure_snapshot(city_id, week_end)
+
+    # 3: Apply updates
     for u in updates:
+        if u["quantity"] is None:
+            continue
         stmt = text("""
             INSERT INTO cpe_dismantle (
                   city_id, cpe_type_id, dismantle_type_id, week_end, quantity 
@@ -794,7 +835,6 @@ def cpe_dismantle_update():
     return {"status": "ok"}
 
 
-# PIVOTING IN SQL QUERY
 # ⚠⚠⚠⚠⚠⚠ BIG WARNING: USING HARDCODED ROW VALUES FROM DISMANTLE_TYPE_TABLE
 @app.route("/cpe-dismantle/history/<int:id>/<category>")
 @login_required

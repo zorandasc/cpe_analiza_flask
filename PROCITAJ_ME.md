@@ -1409,6 +1409,8 @@ Final rule you can trust
 
 If users can see it, filter by it, group by it, or you may extend it → use a table
 
+# -------------- SQL -PYTHON STRUCTUREES----------------------------------------------------------------
+
 # 5️⃣ Important rule (this is the key ⚠️)
 
 SQL must never invent structure
@@ -1475,3 +1477,27 @@ Split result set by dismantle_type_id,
 # Render:
 
 Complete table, Missing parts table (nested headers)
+
+# --------------------------------------------------------------
+
+# def cpe_dismantle_update():
+
+#Temporal Snapshot with Partial Mutation
+
+# STORAGE DB:
+
+One physical table: cpe_dismantle
+
+Rows represent:
+
+(city, cpe_type, dismantle_type, week_end) → quantity
+
+# Presentation (Views)
+
+Two logical views (HTML tables):
+
+Complete
+
+Missing parts (NA / ND / NDIA)
+
+These are views, not tables — this is exactly right.
