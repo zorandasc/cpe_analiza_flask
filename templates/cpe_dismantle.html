@@ -75,7 +75,7 @@
   .table-custom-head th:last-child {
     border-top-right-radius: 8px;
   }
-  .stanje-column {
+  .city-column {
     max-width: 100px;
     text-align: center;
     background-color: #d7dce2 !important;
@@ -97,7 +97,7 @@
     min-width: 80px;
   }
   .azurira-column {
-    background-color: #d4e2db !important;
+    background-color: #d7dce2 !important;
     max-width: 120px;
     width: 100px;
   }
@@ -134,8 +134,8 @@
     background-color: #def7eb !important;
   }
 
-  .table tr.blue-row,
-  .table tr.blue-row td {
+  .table tr.total-row,
+  .table tr.total-row td {
     background-color: #e4eef7 !important;
   }
 
@@ -155,8 +155,8 @@
     border: 1px solid #919394;
 
     /* Override the top/bottom borders to be thicker */
-    border-top-width: 3px !important;
-    border-bottom-width: 3px !important;
+    border-top-width: 1px !important;
+    border-bottom-width: 1px !important;
   }
 
   .table-emph-h-border th.group-start,
@@ -247,7 +247,7 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
           <thead class="table-custom-head">
             <tr>
-              <th class="stanje-column">
+              <th class="city-column">
                 SKLADIŠTA
               </th>
               {% if schema %} {% for item in schema %} 
@@ -259,22 +259,22 @@
 
           <tbody>
             {% for r in dismantle %}
-            <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
+            <tr class="{% if not r.city_id %}fw-bold total-row{% endif %}">
+              <td class="{% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
             
               <td> {{ r.cpe[item.name]['damages']['comp']['quantity'] }}</td>
               {% endfor %}
-              {% if r.max_updated_at %}
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
-                {{ r.max_updated_at.strftime('%Y-%m-%d
+              {% if r.complete_updated_at %}
+              <td class="{% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+                {{ r.complete_updated_at.strftime('%Y-%m-%d
                 %H:%M:%S') }} 
               </td>
               {% endif %}
               <!--PRIKAZI EDIT BUTTON  AKO VRIJE POSTOJI-->
-                {% if r.max_updated_at  %}
+                {% if r.complete_updated_at  %}
                 <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
                   {% if ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))  %}
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
@@ -341,7 +341,7 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border">
           <thead class="table-custom-head">
             <tr>
-              <th class="stanje-column">
+              <th class="city-column">
                 SKLADIŠTA
               </th>
               {% if schema %} {% for item in schema %} 
@@ -363,8 +363,8 @@
 
           <tbody>
             {% for r in dismantle %}
-            <tr class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-row{% else %}green-row{% endif %}{% else %}fw-bold blue-row{% endif %}">
-              <td class="group-start  {% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
+            <tr class="{% if not r.city_id %}fw-bold total-row{% endif %}">
+              <td class="group-start {% if r.missing_updated_at %}{% if r.missing_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}
               </td>
               {% for item in schema %}
@@ -388,14 +388,14 @@
                 {% endif %}
               </td>
               {% endfor %}
-              {% if r.max_updated_at %}
-              <td class="group-start {% if r.max_updated_at %}{% if r.max_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
-                {{ r.max_updated_at.strftime('%Y-%m-%d
+              {% if r.missing_updated_at %}
+              <td class="group-start {% if r.missing_updated_at %}{% if r.missing_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+                {{ r.missing_updated_at.strftime('%Y-%m-%d
                 %H:%M:%S') }} 
               </td>
               {% endif %}
               <!--PRIKAZI EDIT BUTTON  AKO VRIJE POSTOJI-->
-                {% if r.max_updated_at  %}
+                {% if r.missing_updated_at  %}
                 <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
                   {% if ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))  %}
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->

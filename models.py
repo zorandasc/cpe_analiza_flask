@@ -185,12 +185,7 @@ class CpeDismantle(db.Model):
         DateTime, server_default=text("now()")
     )
 
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime,
-        server_default=text("now()"),
-        # You want updated_at to change automatically whenever quantity changes
-        onupdate=text("now()"),
-    )
+    updated_at = mapped_column(DateTime(timezone=True), nullable=True)
 
     city = relationship("Cities", back_populates="cpe_dismantle")
     cpe_type = relationship("CpeTypes", back_populates="cpe_dismantle")
@@ -273,18 +268,20 @@ class StbInventory(db.Model):
         "StbTypes", back_populates="stb_inventory"
     )
 
+
 class IptvUsers(db.Model):
     __tablename__ = "iptv_users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     total_users: Mapped[int] = mapped_column(Integer, nullable=False)
     # Adding 'unique=True' prevents duplicate entries for the same week
-    #A column should be UNIQUE only if it fully identifies the row by itself.
+    # A column should be UNIQUE only if it fully identifies the row by itself.
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False, unique=True)
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), # Recommended for Postgres
+        DateTime(timezone=True),  # Recommended for Postgres
         server_default=text("now()"),
         onupdate=text("now()"),
     )
+
 
 class Users(db.Model, UserMixin):
     __tablename__ = "users"

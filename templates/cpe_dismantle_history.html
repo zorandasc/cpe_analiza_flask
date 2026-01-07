@@ -245,7 +245,7 @@ styles %} {{ super() }}
 </style>
 {% endblock %} {% block content%}
 <div class="container py-5">
-    {% if category == "complete" %}
+  {% if category == "complete" %}
   <div class="table-responsive">
     <h1 class="mb-4 text-center">
       Istorija demontirane kompletne CPE opreme za {{ city.name }}
@@ -284,12 +284,10 @@ styles %} {{ super() }}
     <table class="table table-hover align-middle table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
-          <th class="azurira-column">AŽURIRANO</th>
+          <th class="azurira-column">SEDMICA</th>
           <!--CPE MODELS COLUMNS-->
           {% if schema %} {% for item in schema %}
-          <th class="{{item.cpe_type.name}}-column ">
-            {{item.label}}
-          </th>
+          <th class="{{item.cpe_type.name}}-column ">{{item.label}}</th>
 
           {% endfor %} {% endif %}
         </tr>
@@ -353,7 +351,7 @@ styles %} {{ super() }}
     <table class="table table-hover align-middle table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
-          <th class="azurira-column">AŽURIRANO</th>
+          <th class="azurira-column">SEDMICA</th>
           {% if schema %} {% for item in schema %}
           <th colspan="3" class="{{item.cpe_type.name}}-column ">
             {{item.label}}

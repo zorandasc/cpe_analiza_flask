@@ -326,7 +326,12 @@ def get_cpe_dismantle_pivoted(
                 DISMANTLE_TYPE_ID,
                 DISMANTLE_CODE,
                 {", ".join(case_columns)},
-                MAX(UPDATED_AT) AS max_updated_at
+                MAX(updated_at) FILTER (
+                WHERE dismantle_type_id = 1
+                ) AS complete_updated_at,
+                MAX(updated_at) FILTER (
+                WHERE dismantle_type_id IN (2,3,4)
+                ) AS missing_updated_at
             FROM WEEKLY_DATA
             GROUP BY CITY_ID, CITY_NAME, DISMANTLE_TYPE_ID,DISMANTLE_CODE
 
@@ -338,7 +343,8 @@ def get_cpe_dismantle_pivoted(
                 DISMANTLE_TYPE_ID,
                 DISMANTLE_CODE,
                 {", ".join(sum_columns)},
-                NULL AS max_updated_at
+                NULL AS complete_updated_at,
+                NULL AS missing_updated_at
             FROM WEEKLY_DATA
             GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
 
@@ -662,7 +668,6 @@ def cpe_dismantle():
 
     # SATURDAY of this week
     # to mark row (red) if updated_at less than
-
     saturday = get_passed_saturday()
 
     # date of friday in week
@@ -680,17 +685,25 @@ def cpe_dismantle():
     """"
     [{'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 1, 
     'dismantle_code':COMP, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,...,
-    'max_updated_at': datetime.datetime(2025, 12, 26, 0, 0)},...]
+    'complete_updated_at': datetime.datetime(2025, 12, 26, 0, 0),
+    'missing_updated_at':datetime.datetime(2025, 12, 26, 0, 0)}...]
     """
 
     # 2. BUT WE WANT TO SHAPE THE RAW SQL DATA (records) IN FORM SUITABLE
     # FOR TEMPLATE REPRESENTATION AND UPDATE (dismantle_grouped).
     # You are essentially doing manual serialization — which is good.
-    def build_empty_city(city_id, city_name, updated_at, schema_list):
+    def build_empty_city(
+        city_id,
+        city_name,
+        complete_updated_at,
+        missing_updated_at,
+        schema_list,
+    ):
         return {
             "city_id": city_id,
             "city_name": city_name,
-            "max_updated_at": updated_at,
+            "complete_updated_at": complete_updated_at,
+            "missing_updated_at": missing_updated_at,
             "cpe": {
                 cpe["name"]: {
                     "cpe_type_id": cpe["id"],
@@ -712,8 +725,31 @@ def cpe_dismantle():
 
         if cid not in dismantle_grouped:
             dismantle_grouped[cid] = build_empty_city(
-                cid, row["city_name"], row["max_updated_at"], schema_list
+                cid,
+                row["city_name"],
+                row["complete_updated_at"],
+                row["missing_updated_at"],
+                schema_list,
             )
+        else:
+            city = dismantle_grouped[cid]
+
+            # Never overwrite timestamps once initialized
+            # Always take the MAX defensively in Python
+            # Update timestamps using max() while looping, just like SQL does.
+            if row["complete_updated_at"]:
+                city["complete_updated_at"] = max(
+                    filter(
+                        None, [city["complete_updated_at"], row["complete_updated_at"]]
+                    )
+                )
+
+            if row["missing_updated_at"]:
+                city["missing_updated_at"] = max(
+                    filter(
+                        None, [city["missing_updated_at"], row["missing_updated_at"]]
+                    )
+                )
 
         # IN THIS MOMENT ONLY THE QUANTYTIES ARE EMPTY
         for cpe in schema_list:
@@ -743,7 +779,7 @@ def cpe_dismantle():
 
 # Temporal Snapshot with Partial Mutation
 def ensure_snapshot(city_id, week_end):
-    # 1. CHECK IF CITY_ID WEEK_END ALREADY EXISTS
+    # 1. CHECK IF CITY_ID/WEEK_END COMBINATION ALREADY EXISTS
     # Detect first update of week
     exists = db.session.execute(
         text("""
@@ -763,10 +799,10 @@ def ensure_snapshot(city_id, week_end):
     db.session.execute(
         text("""
       INSERT INTO cpe_dismantle (
-        city_id, cpe_type_id, dismantle_type_id, week_end, quantity
+        city_id, cpe_type_id, dismantle_type_id, week_end, quantity, updated_at
       )
       SELECT
-        city_id, cpe_type_id, dismantle_type_id, :week_end, quantity
+        city_id, cpe_type_id, dismantle_type_id, :week_end, quantity, updated_at
       FROM cpe_dismantle
       WHERE city_id = :city_id
         AND week_end = (
