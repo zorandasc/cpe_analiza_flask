@@ -347,13 +347,13 @@ def get_cpe_dismantle_pivoted(
                 NULL AS missing_updated_at
             FROM WEEKLY_DATA
             GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
-
             ORDER BY DISMANTLE_TYPE_ID, CITY_ID NULLS LAST;
     """
 
     params = {"week_end": week_end, "city_type": city_type}
 
     result = db.session.execute(text(SQL_QUERY), params)
+
     return [row._asdict() for row in result.all()]
 
 
