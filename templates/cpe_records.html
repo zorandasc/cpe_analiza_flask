@@ -335,21 +335,14 @@
           <input type="hidden" id="modal-id" name="record_id" />
           <input type="hidden" name="city_id" id="modal-city-id" />
 
-          <div
-            class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"
-          >
-            <div
-              class="col-auto me-2 d-flex flex-column justify-content-between city-column"
-            >
-              <label class="mb-1">SKLADIŠTE</label>
-              <input
-                class="form-control"
-                id="modal-city"
-                name="city"
-                readonly
-                style="min-width: 150px"
-              />
+           <div class="row mb-4 border-bottom pb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">SKLADIŠTE</label>
+              <input class="form-control" id="modal-city" name="city" readonly />
             </div>
+          </div>
+
+          <div class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"> 
             {% for item in schema %}
             <div
               class="col-auto me-2 d-flex flex-column justify-content-between {{item.cpe_type.name}}-column"

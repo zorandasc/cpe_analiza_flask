@@ -103,13 +103,15 @@
   }
   .IAD-row{
     background-color: #f0d6f2 !important;
-    
+   
   }
   .STB-row{
     background-color: #cbd7f1 !important;
+     
   }
   .ONT-row {
     background-color: #d9c3ee !important;
+  
   }
   .ANTENA-row, .IOT-row, .STB_DTH-row, .LNB-row {
     background-color: #fce4d6 !important;
@@ -208,7 +210,7 @@
   .modal-xxl {
     /* Set the max-width of the entire modal dialog.
        90% of the viewport width is generally a safe large size. */
-    --bs-modal-width: 90vw;
+    --bs-modal-width: 60vw;
     /* The modal-dialog will take up 90% of the screen width */
     max-width: var(--bs-modal-width);
   }
@@ -468,7 +470,7 @@
 
 
 <div class="modal fade" id="completeModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-xxl">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <form method="POST" >
         <div class="modal-header custom-modal-header">
@@ -494,18 +496,18 @@
           </div>
 
           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
-            <div class="col-md-4 text-start">Terminalna Oprema</div>
-            <div class="col-md-8 text-start">Kompletna</div>
+            <div class="col-md-6 text-start">Terminalna Oprema</div>
+            <div class="col-md-6 text-start">Kompletna</div>
           </div>
 
           {% for item in schema %}
-          <div class="row mb-2 align-items-center py-2 border-bottom  ">
+          <div class="row mb-2 align-items-center border-bottom  ">
             
-            <div class="col-md-4 {{item.cpe_type.name}}-row">
+            <div class="col-md-6 {{item.cpe_type.name}}-row">
               <label class=" fw-bold p-2">{{item.label}}</label>
             </div>
 
-            <div class="col-md-8">
+            <div class="col-md-6">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Kompletna</span>
                 <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-damage="comp" type="number" min="0" />
@@ -574,7 +576,7 @@
 
 
 <div class="modal fade" id="brokenModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-xxl">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <form method="POST">
         <div class="modal-header custom-modal-header">
@@ -600,27 +602,27 @@
           </div>
 
           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
-            <div class="col-md-3 text-start">Terminalna Oprema</div>
-            <div class="col-md-3 text-start">Nema Adapter</div>
-            <div class="col-md-3 text-start">Nema Daljinski</div>
-            <div class="col-md-3 text-start">Nema Oboje</div>
+            <div class="col-md-6 text-start">Terminalna Oprema</div>
+            <div class="col-md-2 text-start">Nema Adapter</div>
+            <div class="col-md-2 text-start">Nema Daljinski</div>
+            <div class="col-md-2 text-start">Nema Oboje</div>
           </div>
 
           {% for item in schema %}
-          <div class="row mb-2 align-items-center py-2 border-bottom  ">
+          <div class="row mb-2 align-items-center border-bottom  ">
             
-            <div class="col-md-3  {{item.cpe_type.name}}-row">
+            <div class="col-md-6  {{item.cpe_type.name}}-row">
               <label class=" fw-bold p-2">{{item.label}}</label>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Adapter</span>
                 <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-damage="na" type="number" min="0" />
               </div>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Remote</span>
@@ -631,7 +633,7 @@
               {% endif %}
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
               {% if item.has_remote %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Both</span>
