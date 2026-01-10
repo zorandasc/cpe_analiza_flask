@@ -517,6 +517,78 @@ def get_iptv_users():
     return iptv_users
 
 
+def get_last_4_months():
+    SQL = """ 
+        SELECT DISTINCT month_end
+        FROM ont_inventory
+        ORDER BY month_end DESC
+        LIMIT 4
+    """
+    rows = db.session.execute(text(SQL))
+
+    return [row[0] for row in rows.all()]  # LIST OF DATES
+
+
+def get_ont_inventory_pivoted(months: list):
+    pivot_cols = []
+
+    # This prevents SQL injection by using parameterized queries.
+    params = {}
+
+    # idx is number: 0,1,2,3,
+    # m is date object
+    for idx, m in enumerate(months):
+        place_holder = f"m{idx}"  # THIS IS JUST PLACEHOLDERS m0,m1,m2,m3
+        pivot_cols.append(
+            f'MAX(CASE WHEN i.month_end=:{place_holder} THEN i.quantity END) AS "{m}"'
+        )
+        params[place_holder] = m
+
+    # params={'m0': datetime.date(2026, 1, 9), 'm1': datetime.date(2026, 1, 2),
+    # 'm2': datetime.date(2025, 11, 28), 'm3': datetime.date(2025, 11, 21)}
+
+    # monthly_data is pivoted data
+    SQL = f"""
+        WITH monthly_data AS(SELECT
+            c.id,
+            c.name,
+            {", ".join(pivot_cols)},
+            max(i.updated_at) AS last_updated
+        FROM cities c
+        LEFT JOIN ont_inventory i
+            ON c.id=i.city_id
+        WHERE C.TYPE = 'IJ'
+        GROUP BY c.id, c.name
+        ),
+        final_data AS (
+            SELECT
+                id,
+                name,
+                {", ".join([f'"{m}"' for m in months])},
+                last_updated
+            FROM monthly_data
+
+            UNION ALL
+
+            SELECT
+                NULL AS id,
+                'UKUPNO' AS name,
+                {", ".join([f'COALESCE(SUM("{m}"),0)' for m in months])},
+                NULL AS last_updated
+            FROM monthly_data
+        )
+        SELECT * 
+        FROM final_data
+        ORDER BY
+            CASE WHEN name = 'UKUPNO' THEN 1 ELSE 0 END,
+            id; 
+    """
+
+    rows = db.session.execute(text(SQL), params)
+
+    return [row._asdict() for row in rows.all()]
+
+
 ###########################################################
 # ---------------HELPER FUNCTIONS FOR AUTHORIZATION--------------------------
 ############################################################
@@ -1062,6 +1134,7 @@ def stb_records():
     # key → internal identifier (used in SQL + dict keys)
     week_keys = [w["key"] for w in weeks]
 
+    # get the pivoted data from db
     records = get_stb_inventory_pivoted(week_keys)
 
     # records are:
@@ -1069,6 +1142,7 @@ def stb_records():
     # {'id': 2, 'label': 'STB B', '2025-01-05': 9, ...},
     # {'id': None, 'label': 'UKUPNO', '2025-01-05': 21, ...}]
 
+    # structure the data for view template
     def build_empty_stb(stb_id, stb_label, last_updated, weeks):
         return {
             "id": stb_id,
@@ -1229,109 +1303,99 @@ def get_current_month_end(today=None):
 @app.route("/ont-records")
 @login_required
 def ont_records():
-    SQL_QUERY = """
-            WITH
-            LAST_MONTH AS (
-                SELECT DISTINCT
-                    MONTH_END
-                FROM
-                    ONT_INVENTORY
-                ORDER BY
-                    MONTH_END DESC
-                LIMIT
-                    4
-            )
-            SELECT
-                c.id, 
-                c.name, 
-                i.month_end, 
-                i.quantity 
-            FROM
-                CITIES C
-                LEFT JOIN ONT_INVENTORY I 
-                    ON I.CITY_ID = C.ID
-                    AND I.MONTH_END IN (SELECT MONTH_END FROM LAST_MONTH)
-            WHERE C.TYPE = 'IJ'
-            ORDER BY  C.ID, i.month_end DESC ;
-    """
-
-    rows = db.session.execute(text(SQL_QUERY)).fetchall()
-
-    # get time when table ont_inventory lates updated
-    last_updated = db.session.execute(
-        text("""SELECT
-        MAX(updated_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Sarajevo')
-        FROM ont_inventory;""")
-    ).scalar()
-
-    # The statement creates a dictionary of dictionaries
-    # defaultdict(default_factory)
-    # default_factory: This is a function (or constructor) that provides
-    #  the default value for the key.
-    # The innermost defaultdict(int) uses int as its default factory.
-    # The function: lambda: (takes no arguments) returns defaultdict(int).
-    table = defaultdict(lambda: {"name": None, "data": defaultdict(int)})
-
-    months = set()
-
-    # Transforming rows into a pivot-friendly structure
-    for r in rows:
-        table[r.id]["name"] = r.name
-        quantity = r.quantity or 0
-        if r.month_end is not None:
-            table[r.id]["data"][r.month_end] += quantity
-            months.add(r.month_end)
-
-    # table is in format:
-    # table = {1: {"name": "STB-100","data": {date(2025,12,27): 90,date(2025,12,20): 80}},
-    #          2: {"name": "STB-200","data": {date(2025,12,27): 10,date(2025,12,20): 80}},
-    #           ....}}
-
-    # sortija od najveceg do najmanjeg i odaberi samo prvo 4 recorda
-    months = sorted(months)
-
     # calculate current week week_end date
     current_month_end = get_current_month_end()
 
-    # calculate tottal SABERI KVANTITETE PO MIJESECIMA
-    totals = {
-        month: sum(t["data"].get(month, 0) for t in table.values()) for month in months
-    }
+    # month is used in SQL + and for structure of html table
+    # covert datetime.date to date string
+    # label → presentation used only in the table header
+    # key → internal identifier (used in SQL + structure of html table)
+    # w.isoformat()='YYYY-MM-DD'
+    months = [
+        {"key": m.isoformat(), "label": m.strftime("%d-%m-%Y")}
+        for m in sorted(get_last_4_months())
+    ]
+
+    month_keys = [m["key"] for m in months]
+
+    # get the pivoted data from db
+    records = get_ont_inventory_pivoted(month_keys)
+
+    # structure the data for view template
+    def build_empty_city(city_id, city_name, last_updated, months):
+        return {
+            "id": city_id,
+            "name": city_name,
+            "last_updated": last_updated,
+            "dates": {
+                month: {
+                    "quantity": 0,
+                }
+                for month in months
+            },
+        }
+
+    records_grouped = {}
+
+    TOTAL_KEY = "__TOTAL__"
+
+    for row in records:
+        cityid = row["id"]
+
+        if cityid is None:
+            cityid = TOTAL_KEY
+
+        # make object structure
+        if cityid not in records_grouped:
+            records_grouped[cityid] = build_empty_city(
+                cityid, row["name"], row["last_updated"], month_keys
+            )
+            # add bollean field "is_total" to every object
+            records_grouped[cityid]["is_total"] = cityid == TOTAL_KEY
+
+        # fill quantities
+        for month in month_keys:
+            records_grouped[cityid]["dates"][month]["quantity"] = row.get(month, 0)
+
+    records_grouped = list(records_grouped.values())
 
     return render_template(
         "ont_records.html",
-        months=months,
         current_month_end=current_month_end,
-        table=table,
-        totals=totals,
-        last_updated=last_updated,
+        months=months,
+        records=records_grouped,
     )
 
 
-@app.route("/update_ont", methods=["POST"])
+@app.route("/ont-records/update_ont", methods=["POST"])
 @login_required
 def update_recent_ont_inventory():
     current_month_end = get_current_month_end()
+
     try:
         for key, value in request.form.items():
-            if not key.startswith("qty_"):
+            if key == "__TOTAL__":
                 continue
             try:
-                # key je tima qty_1, qty_2,....
-                city_id = int(key.split("_", 1)[1])
+                city_id = int(key)
                 quantity = int(value or 0)
+
             except ValueError:
                 # Skip this record if ID or Quantity is invalid
                 continue
 
+            # because of UNIQUE (city_id, week_end) constraints
+            # added when defining table OntInventory in postgres
+            # business logic is: “For this month, insert if missing, update if exists”
+            # That is exactly what PostgreSQL ON CONFLICT DO UPDATE is for.
+            # ORM add_all() cannot do UPSERT cleanly
             db.session.execute(
                 text("""
-
-            INSERT INTO ont_inventory (city_id, month_end, quantity)
+                    INSERT INTO ont_inventory (city_id, month_end, quantity)
                     VALUES (:city_id, :month_end, :quantity)
                     ON CONFLICT (city_id, month_end)
                     DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
-            """),
+                """),
                 {
                     "city_id": city_id,
                     "month_end": current_month_end,
@@ -1350,12 +1414,13 @@ def update_recent_ont_inventory():
             f"Novo stanje za {current_month_end} uspješno sačuvano!",
             "success",
         )
-
     except Exception as e:
         db.session.rollback()
         print(e)
         flash("Greška prilikom čuvanja podataka.", "danger")
 
+    # Redirect to Home (Post-Redirect-Get Pattern)
+    # This prevents duplicate form submissions if the user hits refresh.
     return redirect(url_for("ont_records"))
 
 

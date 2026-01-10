@@ -97,36 +97,31 @@ styles %} {{ super() }}
   >
     + Dodaj / Izmjeni Mjesečni Unos
   </button>
-  <span class="info"
-    >Posljedne ažuriranje {% if last_updated %} {{
-    last_updated.strftime('%d.%m.%Y %H:%M') }} {% else %} never {% endif
-    %}</span
-  >
-  <table class="table table-bordered table-striped shadow">
+
+  <!--EVERY RECORD SHOULD HAVE SAME last_updated-->
+  <span class="info">
+    Posljedne ažurirano: {% if records[0] %}
+    {{records[0]['last_updated'].strftime('%d-%m-%Y %H:%M')}} {% endif %}
+  </span>
+
+  <table class="table table-bordered table-striped shadow mb-4">
     <thead class="table-primary">
       <tr>
         <th>Skladište</th>
         {% for month in months %}
-        <th>{{ month }}</th>
+        <th>{{ month.label}}</th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for city_id, city in table.items()%}
-      <tr>
-        <td>{{city.name}}</td>
-        {% for month in months%}
-        <td>{{city.data.get(month, 0)}}</td>
+      {% for r in records%}
+      <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
+        <td>{{r.name}}</td>
+        {% for month in months %}
+        <td>{{r['dates'][month.key]['quantity']}}</td>
         {% endfor %}
       </tr>
       {% endfor %}
-      <!-- Total row -->
-      <tr style="font-weight: bold" class="table-success">
-        <td>Total</td>
-        {% for month in months %}
-        <td>{{ totals[month] }}</td>
-        {% endfor %}
-      </tr>
     </tbody>
   </table>
 </div>
@@ -134,10 +129,10 @@ styles %} {{ super() }}
 <div class="modal fade" id="ontEditModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="post" action="{{url_for('update_recent_ont_inventory')}}">
+      <form method="POST" action="{{url_for('update_recent_ont_inventory')}}">
         <div class="modal-header custom-modal-header">
           <h4 class="modal-title">
-            Dodaj novo stanje za: {{ current_month_end }}
+            Dodaj novo stanje za: {{ current_week_end }}
           </h4>
           <button
             type="button"
@@ -146,19 +141,18 @@ styles %} {{ super() }}
           ></button>
         </div>
         <div class="modal-body">
-          {% for city_id, city in table.items()%}
+          {% for r in records %} {% if not r.is_total %}
           <div class="d-flex mb-2">
-            <div class="cpe-label-wrap">{{ city.name }}</div>
-
+            <div class="cpe-label-wrap">{{r.name}}</div>
             <input
               class="form-control input-cpe-count"
-              name="qty_{{ city_id }}"
+              name="{{ r.id }}"
               type="number"
-              value="{{ city.data.get(current_month_end, 0) }}"
+              value="{{ r['dates'][months[-1].key]['quantity']}}"
               min="0"
             />
           </div>
-          {% endfor %}
+          {% endif %} {% endfor %}
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-custom-save">
