@@ -156,7 +156,7 @@ FROM (
     ) d
 ) sub
 ORDER BY RANDOM() 
-LIMIT 300;
+LIMIT 600;
 
 --  ONT_INVENTORY------------------------------------
 --In PostgreSQL, the most reliable way to get the 

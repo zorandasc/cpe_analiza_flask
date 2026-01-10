@@ -424,6 +424,99 @@ def get_cpe_dismantle_city_history(
     return paginate
 
 
+def get_last_4_weeks():
+    SQL = """ 
+        SELECT DISTINCT week_end
+        FROM stb_inventory
+        ORDER BY week_end DESC
+        LIMIT 4
+    """
+    rows = db.session.execute(text(SQL))
+
+    return [row[0] for row in rows.all()]  # LIST OF DATES
+
+
+def get_stb_inventory_pivoted(weeks: list):
+    pivot_cols = []
+
+    # This prevents SQL injection by using parameterized queries.
+    params = {}
+
+    # idx is number: 0,1,2,3,
+    # w is week date object
+    for idx, w in enumerate(weeks):
+        place_holder = f"w{idx}"  # THIS IS JUST PLACEHOLDERS w0,w1,w2,w3
+        pivot_cols.append(
+            f'MAX(CASE WHEN i.week_end=:{place_holder} THEN i.quantity END) AS "{w}"'
+        )
+        params[place_holder] = w
+
+    # params={'w0': datetime.date(2026, 1, 9), 'w1': datetime.date(2026, 1, 2),
+    # 'w2': datetime.date(2025, 11, 28), 'w3': datetime.date(2025, 11, 21)}
+
+    # weekly_data is pivoted data
+    SQL = f"""
+        WITH weekly_data AS(SELECT
+            t.id,
+            t.label,
+            {", ".join(pivot_cols)},
+            max(i.updated_at) AS last_updated
+        FROM stb_types t
+        LEFT JOIN stb_inventory i
+            ON t.id=i.stb_type_id
+        WHERE t.is_active=TRUE
+        GROUP BY t.id, t.label
+        ),
+        final_data AS (
+            SELECT
+                id,
+                label,
+                {", ".join([f'"{w}"' for w in weeks])},
+                last_updated
+            FROM weekly_data
+
+            UNION ALL
+
+            SELECT
+                NULL AS id,
+                'UKUPNO' AS label,
+                {", ".join([f'COALESCE(SUM("{w}"),0)' for w in weeks])},
+                NULL AS last_updated
+            FROM weekly_data
+        )
+        SELECT * 
+        FROM final_data
+        ORDER BY
+            CASE WHEN label = 'UKUPNO' THEN 1 ELSE 0 END,
+            label; 
+    """
+
+    rows = db.session.execute(text(SQL), params)
+
+    return [row._asdict() for row in rows.all()]
+
+
+def get_iptv_users():
+    SQL_QUERY_IPTV_USERS = """
+            SELECT
+               *
+            FROM
+                IPTV_USERS
+            ORDER BY
+                WEEK_END DESC
+            LIMIT
+                4
+    """
+
+    iptv_users_rows = db.session.execute(text(SQL_QUERY_IPTV_USERS)).fetchall()
+
+    iptv_users = [row._asdict() for row in iptv_users_rows]
+
+    iptv_users.reverse()
+
+    return iptv_users
+
+
 ###########################################################
 # ---------------HELPER FUNCTIONS FOR AUTHORIZATION--------------------------
 ############################################################
@@ -778,6 +871,11 @@ def cpe_dismantle():
 
 
 # Temporal Snapshot with Partial Mutation
+# WHY ensure_snapshot()? BECAUSE WE HAVE PARTIAL UPDATE POSSIBILITY
+# AND WE IN CPE_DISMANTLE ROUTE HOME DEMAND TO RETURN
+# FOR ONE WEEK ALL DISMANTLE_TYPES
+# IF WE MAKE PARTIAL UPDATED FOR NEW WEEK, WE WILL GET NULL FOR OTHER
+# SO FOR NEW WEEK WE COPY OLD UNUPDATE DATA AND AFTER THAT UPSERT NEW UPDATED DATA
 def ensure_snapshot(city_id, week_end):
     # 1. CHECK IF CITY_ID/WEEK_END COMBINATION ALREADY EXISTS
     # Detect first update of week
@@ -948,110 +1046,72 @@ def cpe_dismantle_city_history(id, category):
 @app.route("/stb-records")
 @login_required
 def stb_records():
-    # FOR GETTING THE IPTV USERS
-    SQL_QUERY_IPTV_USERS = """
-            SELECT
-               *
-            FROM
-                IPTV_USERS
-            ORDER BY
-                WEEK_END DESC
-            LIMIT
-                4
-    """
-
-    iptv_users_rows = db.session.execute(text(SQL_QUERY_IPTV_USERS)).fetchall()
-
-    iptv_users = [row._asdict() for row in iptv_users_rows]
-    iptv_users.reverse()
-
-    # FOR GETTING THE STB
-    SQL_QUERY_STB = """
-            WITH
-            LAST_WEEK AS (
-                SELECT DISTINCT
-                    WEEK_END
-                FROM
-                    STB_INVENTORY
-                ORDER BY
-                    WEEK_END DESC
-                LIMIT
-                    4
-            )
-            SELECT
-                T.ID,
-                T.LABEL,
-                I.WEEK_END,
-                I.QUANTITY
-            FROM
-                STB_TYPES T
-                LEFT JOIN STB_INVENTORY I 
-                    ON I.STB_TYPE_ID = T.ID
-                    AND I.WEEK_END IN (SELECT WEEK_END FROM LAST_WEEK)
-            WHERE t.is_active = true
-            ORDER BY i.week_end DESC;
-    """
-    # returns all rows as a list of tuples
-    #  ('STB-100', '2025-11-25', 90),
-
-    rows = db.session.execute(text(SQL_QUERY_STB)).fetchall()
-
-    # get time when table stb_inventory lates updated
-    last_updated = db.session.execute(
-        text("""SELECT
-        MAX(updated_at AT TIME ZONE 'UTC' AT TIME ZONE 'Europe/Sarajevo')
-        FROM stb_inventory;""")
-    ).scalar()
-
-    # Creates a dictionary of dictionary
-    # dictionary of lambda funkcija
-    # lambda prima 1 vrijednost vraca objekat
-    # "name" is name of STB, data is {date1:quantity1, date2:quantity2,...}
-    table = defaultdict(lambda: {"name": None, "data": defaultdict(int)})
-
-    # Collects all unique weeks from the query, so we know which columns to display.
-    weeks = set()
-
-    # Transforming rows into a pivot-friendly structure
-    for r in rows:
-        table[r.id]["name"] = r.label
-        quantity = r.quantity or 0
-        # Check if week_end actually exists before adding it to the se
-        if r.week_end is not None:
-            table[r.id]["data"][r.week_end] += quantity
-            weeks.add(r.week_end)
-
-    # table is in format:
-    # table = {1: {"name": "STB-100","data": {date(2025,12,27): 90,date(2025,12,20): 80}},
-    #          2: {"name": "STB-200","data": {date(2025,12,27): 10,date(2025,12,20): 80}},
-    #           ....
-    # }}
-
-    # Sorts weeks ascending (latest week last)
-    weeks = sorted(weeks)
-
     # calculate current week week_end date
     current_week_end = get_current_week_friday()
 
-    # Calculate totals quantityes per week
-    # table.values() → each STB
-    # t["data"] → dict {week → quantity}
-    # .get(week, 0) → safe for missing weeks
-    totals = {
-        week: sum(t["data"].get(week, 0) for t in table.values()) for week in weeks
-    }
-    # totals is a dictionary like:
-    # {'2025-11-25': 210, '2025-11-18': 95, '2025-11-11': 0, '2025-11-04': 0}
-    # totals: {datetime.date(2025, 12, 27): 3721, datetime.date(2025, 12, 20),.....}:
+    iptv_users = get_iptv_users()
+
+    # covert datetime.date to date string
+    # label → presentation (used only in the template
+    # w.isoformat()='YYYY-MM-DD'
+    weeks = [
+        {"key": w.isoformat(), "label": w.strftime("%d-%m-%Y")}
+        for w in sorted(get_last_4_weeks())
+    ]
+
+    # key → internal identifier (used in SQL + dict keys)
+    week_keys = [w["key"] for w in weeks]
+
+    records = get_stb_inventory_pivoted(week_keys)
+
+    # records are:
+    # [{'id': 1, 'label': 'STB A', '2025-01-05': 12, ...},
+    # {'id': 2, 'label': 'STB B', '2025-01-05': 9, ...},
+    # {'id': None, 'label': 'UKUPNO', '2025-01-05': 21, ...}]
+
+    def build_empty_stb(stb_id, stb_label, last_updated, weeks):
+        return {
+            "id": stb_id,
+            "label": stb_label,
+            "last_updated": last_updated,
+            "dates": {
+                week: {
+                    "quantity": 0,
+                }
+                for week in weeks
+            },
+        }
+
+    records_grouped = {}
+
+    TOTAL_KEY = "__TOTAL__"
+
+    for row in records:
+        stbid = row["id"]
+
+        if stbid is None:
+            stbid = TOTAL_KEY
+
+        # make object structure
+        if stbid not in records_grouped:
+            records_grouped[stbid] = build_empty_stb(
+                stbid, row["label"], row["last_updated"], week_keys
+            )
+            # add bollean field "is_total" to every object
+            records_grouped[stbid]["is_total"] = stbid == TOTAL_KEY
+
+        # fill quantities
+        for week in week_keys:
+            records_grouped[stbid]["dates"][week]["quantity"] = row.get(week, 0)
+
+    records_grouped = list(records_grouped.values())
 
     return render_template(
         "stb_records.html",
-        weeks=weeks,
         current_week_end=current_week_end.strftime("%d-%m-%Y"),
-        table=table,
-        totals=totals,
-        last_updated=last_updated,
         iptv_users=iptv_users,
+        weeks=weeks,
+        records=records_grouped,
     )
 
 
@@ -1061,12 +1121,10 @@ def update_recent_stb_inventory():
     current_week_end = get_current_week_friday()
     try:
         for key, value in request.form.items():
-            if not key.startswith("qty_"):
+            if key == "__TOTAL__":
                 continue
             try:
-                # key je tima qty_1, qty_2,....
-                stb_type_id = int(key.split("_", 1)[1])
-
+                stb_type_id = int(key)
                 quantity = int(value or 0)
 
             except ValueError:

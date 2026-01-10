@@ -114,36 +114,32 @@ styles %} {{ super() }}
     + Dodaj / Izmjeni Sedmični Unos
   </button>
   <span class="info"
-    >Posljedne ažurirano: {% if last_updated %} {{
-    last_updated.strftime('%d-%m-%Y %H:%M') }} {% else %} never {% endif %}
+    >Posljedne ažurirano: {{ records[-2]['last_updated'].strftime('%d-%m-%Y
+    %H:%M') }}
   </span>
+ 
   <table class="table table-bordered table-striped shadow mb-4">
     <thead class="table-primary">
       <tr>
         <th>STB Uređaji</th>
         {% for week in weeks %}
-        <th>{{ week.strftime('%d-%m-%Y') }}</th>
+        <th>{{ week.label}}</th>
         {% endfor %}
       </tr>
     </thead>
     <tbody>
-      {% for stb_id, stb in table.items()%}
-      <tr>
-        <td>{{stb.name}}</td>
+      {% for r in records%}
+      <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
+        <td>{{r.label}}</td>
         {% for week in weeks%}
-        <td>{{stb.data.get(week, 0)}}</td>
+        <td>{{r['dates'][week.key]['quantity']}}</td>
         {% endfor %}
       </tr>
       {% endfor %}
-      <!-- Total row -->
-      <tr style="font-weight: bold" class="table-success">
-        <td>Total</td>
-        {% for week in weeks %}
-        <td>{{ totals[week] }}</td>
-        {% endfor %}
-      </tr>
+     
     </tbody>
   </table>
+
   <button
     type="button"
     title="Ažuritajte posljednje stanje STB opreme"
@@ -175,6 +171,7 @@ styles %} {{ super() }}
       </tr>
     </tbody>
   </table>
+  
 </div>
 
 <div class="modal fade" id="stbEditModal" tabindex="-1">
@@ -192,18 +189,19 @@ styles %} {{ super() }}
           ></button>
         </div>
         <div class="modal-body">
-          {% for stb_id, stb in table.items()%}
-          <div class="d-flex mb-2">
-            <div class="cpe-label-wrap">{{ stb.name }}</div>
-
-            <input
-              class="form-control input-cpe-count"
-              name="qty_{{ stb_id }}"
-              type="number"
-              value="{{ stb.data.get(current_week_end, 0) }}"
-              min="0"
-            />
-          </div>
+          {% for r in records %}
+            {% if not r.is_total %}
+              <div class="d-flex mb-2">
+                <div class="cpe-label-wrap">{{r.label }}</div>
+                <input
+                  class="form-control input-cpe-count"
+                  name="{{ r.id }}"
+                  type="number"
+                  value="{{ r['dates'][weeks[-1].key]['quantity']}}"
+                  min="0"
+                />
+              </div>
+            {% endif %}
           {% endfor %}
         </div>
         <div class="modal-footer">

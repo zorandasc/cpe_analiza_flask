@@ -1501,3 +1501,50 @@ Complete
 Missing parts (NA / ND / NDIA)
 
 These are views, not tables — this is exactly right.
+
+# -------- STB RECORDS-------------------
+
+# 🧠 Architectural verdict
+
+Layer Responsibility Status
+SQL Pivot + aggregation ✅ correct
+Python Normalize shape ✅ correct
+Template Display only ✅ correct
+
+This is exactly how a Flask + SQL reporting page should be structured.
+
+# Use this weeks list everywhere
+
+SQL pivot aliases
+
+grouping logic
+
+template header rendering
+
+This guarantees alignmen
+
+# weeks is table structure, not data
+
+weeks defines:
+
+how many columns exist
+
+their order
+
+their labels
+
+That is metadata about the table, not row data.
+
+Your records are:
+
+row values
+
+quantities per week
+
+Mixing structure with data leads to fragile templates.
+
+# Final recommendation (clear answer)
+
+✔ Keep passing weeks separately
+✔ Treat it as table schema / metadata
+✔ Do not infer structure from data
