@@ -9,16 +9,17 @@ while ! nc -z db 5432; do
 done
 echo "PostgreSQL started."
 
-# --- NEW STEP: INITIALIZE DATABASE SCHEMA ---
+# --2. INITIALIZE DATABASE SCHEMA ---
+# 'flask' is the main executable, 'init-db' is your custom command.
 echo "Running database initialization (creating tables)..."
 flask init-db
 
-# 2. Run your initial setup command
+# --3. CREATE ADMIN USER----------
 # 'flask' is the main executable, 'create-admin' is your custom command.
 echo "Running create-admin command..."
 flask create-admin
 
-# 3. Start the main application
+# --4. START THE APLICATION---
 echo "Starting Flask server..."
 
 # Use the production-ready server (e.g., gunicorn) instead of 'flask run'

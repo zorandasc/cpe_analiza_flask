@@ -1,6 +1,6 @@
 # commands.py (or cli.py)
 from flask.cli import with_appcontext
-import click  # Import current_app for the command context
+import click
 from werkzeug.security import generate_password_hash
 from models import db, Users, UserRole
 import datetime
@@ -24,13 +24,13 @@ def create_initial_admin(username="admin", plain_password="123"):
 
     existing_user = db.session.query(Users).filter_by(username=username).first()
     if existing_user:
-        print(f"Admin user '{username}' already exists. Skipping insertion.")
+        click.echo(f"Admin user '{username}' already exists. Skipping insertion.")
         return
 
     try:
         db.session.add(admin)
         db.session.commit()
-        print(f"Successfully created initial ADMIN user: {username}")
+        click.echo(f"Successfully created initial ADMIN user: {username}")
     except Exception as e:
         db.session.rollback()
-        print(f"Error creating admin user: {e}")
+        click.echo(f"Error creating admin user: {e}")
