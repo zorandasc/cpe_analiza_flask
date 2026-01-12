@@ -75,6 +75,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
     params = {"week_end": week_end}
 
     result = db.session.execute(text(SQL_QUERY), params)
+
     return [row._asdict() for row in result.all()]
 
 

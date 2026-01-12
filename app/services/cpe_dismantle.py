@@ -174,15 +174,18 @@ def _group_records(records, schema_list):
                     )
                 )
 
-        for cpe in schema_list:
-            qty = row.get(cpe["name"], 0)
+        # IF ADDING NEW CITY "dismantle_code WILL BE NULL
+        # If dismantle_code is None, it means it's an empty city row from the LEFT JOIN
+        if row.get("dismantle_code"):
+            for cpe in schema_list:
+                qty = row.get(cpe["name"], 0)
 
-            grouped[cid]["cpe"][cpe["name"]]["damages"][
-                row["dismantle_code"].lower()
-            ] = {
-                "quantity": qty,
-                "dismantle_type_id": row["dismantle_type_id"],
-            }
+                grouped[cid]["cpe"][cpe["name"]]["damages"][
+                    row["dismantle_code"].lower()
+                ] = {
+                    "quantity": qty,
+                    "dismantle_type_id": row["dismantle_type_id"],
+                }
 
     return list(grouped.values())
 
@@ -254,11 +257,16 @@ def _group_history_records(records, schema_list):
                 },
             }
 
-        for cpe in schema_list:
-            qty = row.get(cpe["name"], 0)
+        # IF ADDING NEW CITY "dismantle_code WILL BE NULL
+        # If dismantle_code is None, it means it's an empty city row from the LEFT JOIN
+        if row.get("dismantle_code"):
+            for cpe in schema_list:
+                qty = row.get(cpe["name"], 0)
 
-            damage_key = row["dismantle_code"].lower()
+                damage_key = row["dismantle_code"].lower()
 
-            grouped[week]["cpe"][cpe["name"]]["damages"][damage_key]["quantity"] = qty
+                grouped[week]["cpe"][cpe["name"]]["damages"][damage_key]["quantity"] = (
+                    qty
+                )
 
     return list(grouped.values())

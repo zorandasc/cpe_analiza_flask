@@ -51,7 +51,7 @@ def get_cpe_dismantle_pivoted(
                         WHERE CD2.CITY_ID = C.ID
                         AND CD2.WEEK_END <= :week_end
                 )
-                JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
+                LEFT JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
                 LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
                 WHERE C.TYPE = :city_type
             )
@@ -82,7 +82,7 @@ def get_cpe_dismantle_pivoted(
                 NULL AS missing_updated_at
             FROM WEEKLY_DATA
             GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
-            ORDER BY DISMANTLE_TYPE_ID, CITY_ID NULLS LAST;
+            ORDER BY CITY_ID, DISMANTLE_TYPE_ID NULLS LAST;
     """
 
     params = {"week_end": week_end, "city_type": city_type}
