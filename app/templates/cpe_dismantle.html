@@ -276,7 +276,7 @@
               </td>
               {% endif %}
               <!--PRIKAZI EDIT BUTTON  AKO VRIJE POSTOJI-->
-                {% if r.complete_updated_at  %}
+                {% if r.city_id   %}
                 <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
                   {% if ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))  %}
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
