@@ -1,0 +1,207 @@
+{% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  /* Modern table header */
+  .table-custom-head th {
+    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
+    color: #000; /* black text */
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 14px;
+  }
+
+  /* Remove border radius from inner th cells to avoid overlapping */
+  .table-custom-head th:first-child {
+    border-top-left-radius: 8px;
+  }
+  .table-custom-head th:last-child {
+    border-top-right-radius: 8px;
+  }
+  .stanje-column {
+    min-width: 140px;
+    text-align: center;
+    background-color: #d7dce2 !important;
+  }
+  .IAD-column {
+    background-color: #f0d6f2 !important;
+  }
+  .STB-column {
+    background-color: #cbd7f1 !important;
+  }
+  .ONT-column {
+    background-color: #d9c3ee !important;
+  }
+  .ANTENA-column,
+  .IOT-column,
+  .STB_DTH-column,
+  .LNB-column {
+    background-color: #fce4d6 !important;
+    min-width: 80px;
+  }
+  .azur-column {
+    background-color: #d4e2db !important;
+  }
+  .btn-edit {
+    background-color: #f6f89d;
+    background: linear-gradient(to top, #ff8008, #ffc837);
+    border: none; /* remove default border */
+    width: 70px;
+    box-shadow: 1px 1px 2px black;
+  }
+  .btn-edit:hover {
+    background-color: #d8c589;
+  }
+  .btn-custom-save {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+  }
+  .custom-modal-header {
+    background: linear-gradient(to right, #7bc6cc, #be93c5);
+  }
+
+  .plus-icon-bg {
+    color: white;
+    background-color: #0d6efd; /* Bootstrap primary */
+    padding: 4px 6px;
+    border-radius: 50%;
+    font-size: 18px;
+  }
+
+  .active .page-link {
+    background-color: #8ec8f7 !important;
+  }
+
+  /* Custom class for an extra-extra large modal */
+  .modal-xxl {
+    /* Set the max-width of the entire modal dialog.
+       90% of the viewport width is generally a safe large size. */
+    --bs-modal-width: 90vw;
+    /* The modal-dialog will take up 90% of the screen width */
+    max-width: var(--bs-modal-width);
+  }
+
+  /* Optional: Ensure the content (modal-content) also respects this width */
+  .modal-xxl .modal-content {
+    width: 100%;
+  }
+
+  .input-cpe-count {
+    /* Set a specific maximum width for the small number fields */
+    max-width: 80px;
+    /* Ensures they don't stretch beyond this point */
+    margin: 0 auto;
+  }
+  .cpe-label-wrap {
+    /* Set max width slightly wider than the input (80px) to accommodate text */
+    max-width: 90px;
+    /* Allows the text to flow to the next line */
+    white-space: normal;
+    text-align: center;
+  }
+  .table tr.red-row,
+  .table tr.red-row td {
+    /*background-color: #fae5e8 !important;*/
+    color: #ee1831 !important;
+  }
+
+  .table tr.green-row,
+  .table tr.green-row td {
+    /*background-color: #def7eb !important;*/
+    color: #111 !important;
+  }
+  .red-bcg {
+    background-color: #fae5e8 !important;
+  }
+
+  .green-bcg {
+    background-color: #def7eb !important;
+  }
+
+  .table tr.blue-row,
+  .table tr.blue-row td {
+    background-color: #e4eef7 !important;
+  }
+
+  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
+
+  .table-emph-h-border td {
+    /* Set the border style for all sides first */
+    border: 1px solid #919394;
+
+    /* Override the top/bottom borders to be thicker */
+    border-top-width: 3px !important;
+    border-bottom-width: 3px !important;
+  }
+  .weekend-column {
+    min-width: 120px;
+  }
+</style>
+{% endblock %} {% block content%}
+<div class="container py-5">
+  <div class="table-responsive">
+    <h1 class="mb-4 text-center">Istorija CPE opreme za {{ city.name }}</h1>
+    <nav>
+      <ul class="pagination">
+        {% if records.has_prev %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_inventory.cpe_records_city_history', id=city.id, page=records.prev_num) }}"
+            >Previus</a
+          >
+        </li>
+        {% endif %} {% for p in records.iter_pages() %} {% if p %}
+        <li class="page-item {% if p == records.page %}active{% endif %}">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_inventory.cpe_records_city_history',id=city.id, page=p) }}"
+            >{{ p }}</a
+          >
+        </li>
+        {% else%}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif%} {% endfor %} {% if records.has_next %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_inventory.cpe_records_city_history',id=city.id, page=records.next_num) }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <table class="table table-hover align-middle table-sm table-emph-h-border">
+      <thead class="table-custom-head">
+        <tr>
+          <th class="azur-column">SEDMICA</th>
+          {% if schema %} {% for item in schema %}
+          <th class="{{item.cpe_type.name}}-column">{{item.label}}</th>
+          <!--CPE MODELS COLUMNS-->
+          {% endfor %} {% endif %}
+        </tr>
+      </thead>
+      <!--records are now SimplePagination objects-->
+      <!--Your SimplePagination class returns the actual list inside:self.items, records.items-->
+      <tbody>
+        {% for r in records.items %}
+        <tr>
+          <td class="weekend-column">
+            {% if r.week_end %} {{ r.week_end.strftime('%Y-%m-%d') }} {% else %}
+            N/A {% endif %}
+          </td>
+          {% for item in schema %}
+          <td>{{ r[item.name]}}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

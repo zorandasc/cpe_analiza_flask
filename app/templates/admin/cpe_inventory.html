@@ -1,0 +1,172 @@
+{% extends "base.html" %} {% block title %}CPE inventar{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  /* Modern table header */
+  .table-custom-head th {
+    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
+    color: #000; /* black text */
+    font-weight: 600;
+    vertical-align: middle;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 16px;
+  }
+
+  .btn-custom-save {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+    margin-bottom: 1rem;
+  }
+  .custom-modal-header {
+    background: linear-gradient(to right, #7bc6cc, #be93c5);
+  }
+
+  .plus-icon-bg {
+    color: white;
+    background-color: #0d6efd; /* Bootstrap primary */
+    padding: 4px 6px;
+    border-radius: 50%;
+    font-size: 18px;
+  }
+
+  .active .page-link {
+    background-color: #8ec8f7 !important;
+  }
+
+  /* Custom class for an extra-extra large modal */
+  .modal-xxl {
+    /* Set the max-width of the entire modal dialog.
+       90% of the viewport width is generally a safe large size. */
+    --bs-modal-width: 90vw;
+    /* The modal-dialog will take up 90% of the screen width */
+    max-width: var(--bs-modal-width);
+  }
+
+  /* Optional: Ensure the content (modal-content) also respects this width */
+  .modal-xxl .modal-content {
+    width: 100%;
+  }
+
+  .input-cpe-count {
+    /* Set a specific maximum width for the small number fields */
+    max-width: 80px;
+    /* Ensures they don't stretch beyond this point */
+    margin: 0 auto;
+  }
+  .cpe-label-wrap {
+    /* Set max width slightly wider than the input (80px) to accommodate text */
+    max-width: 90px;
+    /* Allows the text to flow to the next line */
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
+  .table-emph-h-border td {
+    /* Set the border style for all sides first */
+    border: 1px solid #919394;
+
+    /* Override the top/bottom borders to be thicker */
+    border-top-width: 3px !important;
+    border-bottom-width: 3px !important;
+  }
+</style>
+{% endblock %} {% block content%}
+<div class="container py-4">
+  <h2>Unosi CPE Stanja</h2>
+  <div class="table-responsive">
+    <!--
+    <button
+      type="button"
+      title="Dodaj novi CPE model u inventori"
+      class="btn btn-custom-save"
+      data-bs-toggle="modal"
+      data-bs-target="#addRecordModal"
+    >
+      + Dodaj Novi Unos
+    </button>
+-->
+    <nav>
+      <ul class="pagination">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin.cpe_inventory', page=pagination.prev_num, sort=sort_by, direction=direction) }}"
+            >Previus</a
+          >
+        </li>
+        {% endif %} {% for p in pagination.iter_pages() %} {% if p %}
+        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+          <a
+            class="page-link"
+            href="{{ url_for('admin.cpe_inventory', page=p, sort=sort_by, direction=direction) }}"
+            >{{ p }}</a
+          >
+        </li>
+        {% else%}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif%} {% endfor %} {% if pagination.has_next %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin.cpe_inventory', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <table
+      class="table table-bordered table-striped table-hover align-middle shadow-lg table-sm"
+    >
+      <thead class="table-custom-head">
+        <tr>
+          <td>
+            <a
+              href="{{ url_for('admin.cpe_inventory', sort='id', direction='asc' if direction=='desc' else 'desc') }}"
+              >Id</a
+            >
+          </td>
+          <th>
+            <a
+              href="{{ url_for('admin.cpe_inventory', sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
+              >Skladišta</a
+            >
+          </th>
+          <th>Ime CPE opreme</th>
+          <th>Količina</th>
+          <th>Sedmica</th>
+          <th>
+            <a
+              href="{{ url_for('admin.cpe_inventory', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              >Kreirano</a
+            >
+          </th>
+          <th>
+            <a
+              href="{{ url_for('admin.cpe_inventory', sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
+              >Ažurirano</a
+            >
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>{{ r.city.name }}</td>
+          <td>{{ r.cpe_type.name }}</td>
+          <td>{{ r.quantity }}</td>
+          <td>{{ r.week_end }}</td>
+          <td>{{ r.created_at }}</td>
+          <td>{{ r.updated_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

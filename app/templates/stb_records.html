@@ -1,0 +1,342 @@
+{% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  .title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    padding-bottom: 5px;
+  }
+
+  .title:before {
+    width: 28px;
+    height: 6px;
+    display: block;
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    margin-left: -14px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
+  .title:after {
+    width: 400px;
+    height: 2px;
+    display: block;
+    content: "";
+    position: relative;
+    margin-top: 25px;
+    left: 50%;
+    margin-left: -200px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+  .info {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    line-height: 3em;
+    padding-left: 0.25em;
+    color: rgba(0, 0, 0, 0.4);
+    padding-bottom: 10px;
+  }
+
+  .btn-custom-save {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+  }
+
+  .btn-custom-stb-add {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: rgb(0, 0, 0);
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+    margin-bottom: 1rem;
+    /*text-shadow: 1px 1px #f0ebeb;*/
+    font-weight: 600;
+  }
+
+  .custom-modal-header {
+    background: linear-gradient(to right, #7bc6cc, #be93c5);
+  }
+
+  .input-cpe-count {
+    /* Set a specific maximum width for the small number fields */
+    max-width: 80px;
+    /* Ensures they don't stretch beyond this point */
+    margin: 0 auto;
+  }
+  .cpe-label-wrap {
+    white-space: normal;
+    text-align: center;
+    height: 38px; /* Bootstrap input height */
+    line-height: 1.2;
+  }
+
+  .d-flex.mb-2 {
+    display: flex;
+    align-items: center; /* Vertically centers label and input in the row */
+    margin-bottom: 10px;
+  }
+
+  /* The Label Wrapper */
+  .cpe-label-wrap {
+    flex: 0 0 150px; /* Does not grow, does not shrink, stays 150px wide */
+    max-width: 150px; /* Ensures it doesn't expand */
+    margin-right: 15px; /* Space between label and input */
+    word-wrap: break-word; /* Prevents long text from breaking layout */
+  }
+
+  /* The Input Field */
+  .input-cpe-count {
+    flex: 1; /* Allows input to fill the remaining horizontal space */
+    max-width: 200px; /* Optional: Prevents inputs from getting too wide */
+  }
+
+  .total-iptv {
+    max-width: 130px;
+  }
+</style>
+{% endblock %} {% block content%}
+<div class="container py-5">
+  <h2 class="mb-4 text-center title">Stanje STB uređaja i IPTV korisnika</h2>
+  <button
+    type="button"
+    title="Ažuritajte posljednje stanje STB opreme"
+    data-bs-toggle="modal"
+    data-bs-target="#stbEditModal"
+    class="btn btn-custom-stb-add"
+  >
+    + Dodaj / Izmjeni Sedmični Unos
+  </button>
+  <!--EVERY RECORD SHOULD HAVE SAME last_updated-->
+  <span class="info">
+    Posljedne ažurirano:{% if records[0] %} {{
+    records[0]['last_updated'].strftime('%d-%m-%Y%H:%M') }} {% endif %}
+  </span>
+
+  <table class="table table-bordered table-striped shadow mb-4">
+    <thead class="table-primary">
+      <tr>
+        <th>STB Uređaji</th>
+        {% for week in weeks %}
+        <th>{{ week.label}}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records%}
+      <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
+        <td>{{r.label}}</td>
+        {% for week in weeks%}
+        <td>{{r['dates'][week.key]['quantity']}}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <button
+    type="button"
+    title="Ažuritajte posljednje stanje STB opreme"
+    data-bs-toggle="modal"
+    data-bs-target="#iptvEditModal"
+    class="btn btn-custom-stb-add mt-4"
+  >
+    + Dodaj / Izmjeni Sedmični Unos
+  </button>
+  <span class="info">
+    Posljednje ažurirano: {% if iptv_users[-1] %} {{
+    iptv_users[-1]['updated_at'].strftime('%d-%m-%Y %H:%M') }} {% endif %}
+  </span>
+  <table class="table table-bordered table-striped shadow">
+    <thead class="table-primary">
+      <tr>
+        <th></th>
+        {% for row in iptv_users %}
+        <th>{{ row['week_end'].strftime('%d-%m-%Y') }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="fw-bold total-iptv">Ukupan broj IPTV korisnika</td>
+        {% for row in iptv_users%}
+        <td>{{row['total_users']}}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="modal fade" id="stbEditModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form
+        method="POST"
+        action="{{url_for('stb_inventory.update_stb_inventory')}}"
+      >
+        <div class="modal-header custom-modal-header">
+          <h4 class="modal-title">
+            Dodaj novo stanje za: {{ current_week_end }}
+          </h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          {% for r in records %} {% if not r.is_total %}
+          <div class="d-flex mb-2">
+            <div class="cpe-label-wrap">{{r.label }}</div>
+            <input
+              class="form-control input-cpe-count"
+              name="{{ r.id }}"
+              type="number"
+              value="{{ r['dates'][weeks[-1].key]['quantity']}}"
+              min="0"
+            />
+          </div>
+          {% endif %} {% endfor %}
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-custom-save">
+            <span class="text-white fw-bold fs-4">
+              <svg
+                fill="#ffffff"
+                height="20px"
+                width="20px"
+                version="1.1"
+                id="Layer_1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                viewBox="0 0 512 512"
+                xml:space="preserve"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          d="M128,170.667h256c4.719,0,8.533-3.823,8.533-8.533V42.667c0-4.71-3.814-8.533-8.533-8.533 c-4.719,0-8.533,3.823-8.533,8.533V153.6H136.533V17.067h110.933c4.719,0,8.533-3.823,8.533-8.533S252.186,0,247.467,0H128 c-4.719,0-8.533,3.823-8.533,8.533v153.6C119.467,166.844,123.281,170.667,128,170.667z"
+                        ></path>
+                        <path
+                          d="M384,494.933H42.667c-14.114,0-25.6-11.486-25.6-25.6V42.667c0-14.114,11.486-25.6,25.6-25.6h51.2 c4.719,0,8.533-3.823,8.533-8.533S98.586,0,93.867,0h-51.2C19.14,0,0,19.14,0,42.667v426.667C0,492.86,19.14,512,42.667,512H384 c4.719,0,8.533-3.823,8.533-8.533S388.719,494.933,384,494.933z"
+                        ></path>
+                        <path
+                          d="M509.5,87.834L424.166,2.5c-1.596-1.604-3.763-2.5-6.033-2.5h-68.975c-4.719,0-8.533,3.823-8.533,8.533 c0,1.203,0.256,2.338,0.708,3.379v107.554h-51.2v-102.4h25.6c4.719,0,8.533-3.823,8.533-8.533S320.452,0,315.733,0H281.6 c-4.719,0-8.533,3.823-8.533,8.533V128c0,4.71,3.814,8.533,8.533,8.533h68.267c4.719,0,8.533-3.823,8.533-8.533V17.067h56.201 l80.333,80.333v371.934c0,14.114-11.486,25.6-25.6,25.6h-42.667V281.6c0-4.71-3.814-8.533-8.533-8.533H93.867 c-4.719,0-8.533,3.823-8.533,8.533v187.733c0,4.71,3.814,8.533,8.533,8.533c4.719,0,8.533-3.823,8.533-8.533v-179.2h307.2 v213.333c0,4.71,3.814,8.533,8.533,8.533h51.2C492.86,512,512,492.86,512,469.333V93.867C512,91.605,511.104,89.429,509.5,87.834 z"
+                        ></path>
+                        <path
+                          d="M179.2,426.667h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,426.667,179.2,426.667z"
+                        ></path>
+                        <path
+                          d="M179.2,375.467h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,375.467,179.2,375.467z"
+                        ></path>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </span>
+            Sačuvaj
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="iptvEditModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form
+        method="POST"
+        action="{{url_for('stb_inventory.update_iptv_users')}}"
+      >
+        <div class="modal-header custom-modal-header">
+          <h4 class="modal-title">
+            Dodaj novo stanje za: {{ current_week_end }}
+          </h4>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex mb-2">
+            <label>Broj IPTV korisnika:</label>
+            <input
+              class="form-control input-cpe-count"
+              name="qty"
+              type="number"
+              value="{{ iptv_users[-1]['total_users'] }}"
+              min="0"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-custom-save">
+            <span class="text-white fw-bold fs-4">
+              <svg
+                fill="#ffffff"
+                height="20px"
+                width="20px"
+                version="1.1"
+                id="Layer_1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                viewBox="0 0 512 512"
+                xml:space="preserve"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          d="M128,170.667h256c4.719,0,8.533-3.823,8.533-8.533V42.667c0-4.71-3.814-8.533-8.533-8.533 c-4.719,0-8.533,3.823-8.533,8.533V153.6H136.533V17.067h110.933c4.719,0,8.533-3.823,8.533-8.533S252.186,0,247.467,0H128 c-4.719,0-8.533,3.823-8.533,8.533v153.6C119.467,166.844,123.281,170.667,128,170.667z"
+                        ></path>
+                        <path
+                          d="M384,494.933H42.667c-14.114,0-25.6-11.486-25.6-25.6V42.667c0-14.114,11.486-25.6,25.6-25.6h51.2 c4.719,0,8.533-3.823,8.533-8.533S98.586,0,93.867,0h-51.2C19.14,0,0,19.14,0,42.667v426.667C0,492.86,19.14,512,42.667,512H384 c4.719,0,8.533-3.823,8.533-8.533S388.719,494.933,384,494.933z"
+                        ></path>
+                        <path
+                          d="M509.5,87.834L424.166,2.5c-1.596-1.604-3.763-2.5-6.033-2.5h-68.975c-4.719,0-8.533,3.823-8.533,8.533 c0,1.203,0.256,2.338,0.708,3.379v107.554h-51.2v-102.4h25.6c4.719,0,8.533-3.823,8.533-8.533S320.452,0,315.733,0H281.6 c-4.719,0-8.533,3.823-8.533,8.533V128c0,4.71,3.814,8.533,8.533,8.533h68.267c4.719,0,8.533-3.823,8.533-8.533V17.067h56.201 l80.333,80.333v371.934c0,14.114-11.486,25.6-25.6,25.6h-42.667V281.6c0-4.71-3.814-8.533-8.533-8.533H93.867 c-4.719,0-8.533,3.823-8.533,8.533v187.733c0,4.71,3.814,8.533,8.533,8.533c4.719,0,8.533-3.823,8.533-8.533v-179.2h307.2 v213.333c0,4.71,3.814,8.533,8.533,8.533h51.2C492.86,512,512,492.86,512,469.333V93.867C512,91.605,511.104,89.429,509.5,87.834 z"
+                        ></path>
+                        <path
+                          d="M179.2,426.667h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,426.667,179.2,426.667z"
+                        ></path>
+                        <path
+                          d="M179.2,375.467h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,375.467,179.2,375.467z"
+                        ></path>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </span>
+            Sačuvaj
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

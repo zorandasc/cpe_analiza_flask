@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% block title %}Izmjeni tip demontaže{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
+    <h2>Izmjeni demontažu</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Labela</label>
+        <input
+          type="text"
+          name="label"
+          class="form-control"
+          value="{{ dismantle.label }}"
+          required
+        />
+      </div>
+    
+
+      <button type="submit" class="btn btn-success">Save</button>
+      <a
+        href="{{ url_for('admin.dismantle_status') }}"
+        class="btn btn-secondary"
+        >Cancel</a
+      >
+    </form>
+  </div>
+</div>
+
+{% endblock %}

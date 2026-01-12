@@ -1,0 +1,406 @@
+{% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  @media (min-width: 1400px) {
+    .container,
+    .container-lg,
+    .container-md,
+    .container-sm,
+    .container-xl,
+    .container-xxl {
+      max-width: 1420px;
+    }
+  }
+  .title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    padding-bottom: 5px;
+  }
+
+  .title:before {
+    width: 28px;
+    height: 6px;
+    display: block;
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    margin-left: -14px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
+  .title:after {
+    width: 400px;
+    height: 2px;
+    display: block;
+    content: "";
+    position: relative;
+    margin-top: 25px;
+    left: 50%;
+    margin-left: -200px;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
+  .info {
+    display: block;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    line-height: 3em;
+    padding-left: 0.25em;
+    color: rgba(0, 0, 0, 0.4);
+    padding-bottom: 10px;
+    text-align: center;
+  }
+
+  .my-custom-table {
+    border-collapse: separate !important;
+    border-spacing: 1px 1px !important;
+  }
+
+  .table-custom-head th {
+    color: #000;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-size: 14px;
+  }
+
+  /* Remove border radius from inner th cells to avoid overlapping */
+  .table-custom-head th:first-child {
+    border-top-left-radius: 8px;
+  }
+  .table-custom-head th:last-child {
+    border-top-right-radius: 8px;
+  }
+  .stanje-column {
+    max-width: 100px;
+    text-align: center;
+    background-color: #d7dce2 !important;
+  }
+  .IAD-column {
+    background-color: #f0d6f2 !important;
+    max-width: 100px;
+  }
+  .STB-column {
+    background-color: #cbd7f1 !important;
+    max-width: 100px;
+  }
+  .ONT-column {
+    background-color: #d9c3ee !important;
+    max-width: 80px;
+  }
+  .ANTENA-column,
+  .IOT-column,
+  .STB_DTH-column,
+  .LNB-column {
+    background-color: #fce4d6 !important;
+    min-width: 80px;
+  }
+  .azurira-column {
+    background-color: #d4e2db !important;
+    max-width: 120px;
+    width: 100px;
+  }
+  .IAD-row {
+    background-color: #f0d6f2 !important;
+  }
+  .STB-row {
+    background-color: #cbd7f1 !important;
+  }
+  .ONT-row {
+    background-color: #d9c3ee !important;
+  }
+  .ANTENA-row,
+  .IOT-row,
+  .STB_DTH-row,
+  .LNB-row {
+    background-color: #fce4d6 !important;
+  }
+
+  .table tr.red-row,
+  .table tr.red-row td {
+    color: #ee1831;
+  }
+
+  .table tr.green-row,
+  .table tr.green-row td {
+    color: #111;
+  }
+  .red-bcg {
+    background-color: #fae5e8 !important;
+  }
+
+  .green-bcg {
+    background-color: #def7eb !important;
+  }
+
+  .table tr.blue-row,
+  .table tr.blue-row td {
+    background-color: #e4eef7 !important;
+  }
+
+  .azur-row-red {
+    color: rgb(234, 114, 114) !important;
+    font-size: 13px;
+  }
+
+  .azur-row-green {
+    color: #65776e !important;
+    font-size: 13px;
+  }
+
+  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
+  .table-emph-h-border td {
+    /* Set the border style for all sides first */
+    border: 1px solid #919394;
+
+    /* Override the top/bottom borders to be thicker */
+    border-top-width: 3px !important;
+    border-bottom-width: 3px !important;
+  }
+
+  .table-emph-h-border th.group-start,
+  .table-emph-h-border td.group-start {
+    border-left: 3px solid #495057;
+  }
+
+  .table-emph-h-border th.group-end,
+  .table-emph-h-border td.group-end {
+    border-right: 3px solid #495057;
+  }
+
+  .btn-custom-save {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+  }
+  .btn-custom-history {
+    background: linear-gradient(to right, #ada996, #f2f2f2, #dbdbdb, #eaeaea);
+    color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+  }
+
+  .btn-custom-stb-add {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: whitesmoke;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0);
+    margin-bottom: 1rem;
+  }
+
+  .custom-modal-header {
+    background: linear-gradient(to right, #7bc6cc, #be93c5);
+  }
+
+  .plus-icon-bg {
+    color: white;
+    background-color: #0d6efd; /* Bootstrap primary */
+    padding: 4px 6px;
+    border-radius: 50%;
+    font-size: 18px;
+  }
+
+  .active .page-link {
+    background-color: #8ec8f7 !important;
+  }
+
+  /* Custom class for an extra-extra large modal */
+  .modal-xxl {
+    /* Set the max-width of the entire modal dialog.
+       90% of the viewport width is generally a safe large size. */
+    --bs-modal-width: 90vw;
+    /* The modal-dialog will take up 90% of the screen width */
+    max-width: var(--bs-modal-width);
+  }
+
+  /* Optional: Ensure the content (modal-content) also respects this width */
+  .modal-xxl .modal-content {
+    width: 100%;
+  }
+
+  .input-cpe-count {
+    /* Set a specific maximum width for the small number fields */
+    max-width: 80px;
+    /* Ensures they don't stretch beyond this point */
+    margin: 0 auto;
+  }
+  .cpe-label-wrap {
+    /* Set max width slightly wider than the input (80px) to accommodate text */
+    max-width: 90px;
+    /* Allows the text to flow to the next line */
+    white-space: normal;
+    text-align: center;
+  }
+
+  .modal-body .row:hover {
+    background-color: #f8f9fa;
+    transition: background-color 0.2s ease;
+  }
+</style>
+{% endblock %} {% block content%}
+<div class="container py-5">
+  {% if category == "complete" %}
+  <div class="table-responsive">
+    <h1 class="mb-4 text-center">
+      Istorija demontirane kompletne CPE opreme za {{ city.name }}
+    </h1>
+    <nav>
+      <ul class="pagination">
+        {% if records.has_prev %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=city.id,category=category, page=records.prev_num) }}"
+            >Previus</a
+          >
+        </li>
+        {% endif %} {% for p in records.iter_pages() %} {% if p %}
+        <li class="page-item {% if p == records.page %}active{% endif %}">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=p) }}"
+            >{{ p }}</a
+          >
+        </li>
+        {% else%}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif%} {% endfor %} {% if records.has_next %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=records.next_num) }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <table class="table table-hover align-middle table-sm table-emph-h-border">
+      <thead class="table-custom-head">
+        <tr>
+          <th class="azurira-column">SEDMICA</th>
+          <!--CPE MODELS COLUMNS-->
+          {% if schema %} {% for item in schema %}
+          <th class="{{item.cpe_type.name}}-column ">{{item.label}}</th>
+
+          {% endfor %} {% endif %}
+        </tr>
+      </thead>
+      <!--records are now SimplePagination objects-->
+      <!--Your SimplePagination class returns the actual list inside:self.items, records.items-->
+      <tbody>
+        {% for r in records.items %}
+        <tr>
+          <td class="weekend-column">
+            {% if r.week %} {{ r.week.strftime('%Y-%m-%d') }} {% else %} N/A {%
+            endif %}
+          </td>
+          {% for item in schema %}
+          <td class="group-start text-center">
+            {{ r.cpe[item.name]['damages']['comp']['quantity'] }}
+          </td>
+
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="table-responsive">
+    <h1 class="mb-4 text-center">
+      Istorija demontirane nekompletne CPE opreme za {{ city.name }}
+    </h1>
+    <nav>
+      <ul class="pagination">
+        {% if records.has_prev %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=city.id,category=category, page=records.prev_num) }}"
+            >Previus</a
+          >
+        </li>
+        {% endif %} {% for p in records.iter_pages() %} {% if p %}
+        <li class="page-item {% if p == records.page %}active{% endif %}">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=p) }}"
+            >{{ p }}</a
+          >
+        </li>
+        {% else%}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif%} {% endfor %} {% if records.has_next %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=records.next_num) }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <table class="table table-hover align-middle table-sm table-emph-h-border">
+      <thead class="table-custom-head">
+        <tr>
+          <th class="azurira-column">SEDMICA</th>
+          {% if schema %} {% for item in schema %}
+          <th colspan="3" class="{{item.cpe_type.name}}-column ">
+            {{item.label}}
+          </th>
+          <!--CPE MODELS COLUMNS-->
+          {% endfor %} {% endif %}
+        </tr>
+        <tr>
+          <th class="group-start"></th>
+          {% if schema %} {% for item in schema %}
+          <th>NA</th>
+          <th>ND</th>
+          <th class="group-end">NDIA</th>
+          {% endfor %} {% endif %}
+        </tr>
+      </thead>
+      <!--records are now SimplePagination objects-->
+      <!--Your SimplePagination class returns the actual list inside:self.items, records.items-->
+      <tbody>
+        {% for r in records.items %}
+        <tr>
+          <td class="weekend-column">
+            {% if r.week %} {{ r.week.strftime('%Y-%m-%d') }} {% else %} N/A {%
+            endif %}
+          </td>
+          {% for item in schema %}
+          <td class="group-start text-center">
+            {{ r.cpe[item.name]['damages']['na']['quantity'] }}
+          </td>
+
+          <td class="text-center">
+            <!--This is Conditional content, not conditional structure-->
+            {% if item.has_remote %}
+            {{r.cpe[item.name]['damages']['nd']['quantity'] }} {% else %} — {%
+            endif %}
+          </td>
+          <td class="group-end text-center">
+            <!--This is Conditional content, not conditional structure-->
+            {% if item.has_remote %} {{
+            r.cpe[item.name]['damages']['ndia']['quantity'] }} {% else %} — {%
+            endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

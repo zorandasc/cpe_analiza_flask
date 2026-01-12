@@ -1,0 +1,140 @@
+# Business logic + write operations
+from sqlalchemy import text
+from app.extensions import db
+from app.utils.dates import get_current_week_friday
+from app.queries.stb_inventory import (
+    get_last_4_weeks,
+    get_stb_inventory_pivoted,
+    get_iptv_users,
+)
+
+TOTAL_KEY = "__TOTAL__"
+
+
+def get_stb_records_view_data():
+    # calculate current week week_end date
+    current_week_end = get_current_week_friday()
+
+    # covert datetime.date to date string
+    # label → presentation (used only in the template
+    # w.isoformat()='YYYY-MM-DD'
+    weeks = [
+        {"key": w.isoformat(), "label": w.strftime("%d-%m-%Y")}
+        for w in sorted(get_last_4_weeks())
+    ]
+
+    # key → internal identifier (used in SQL + dict keys)
+    week_keys = [w["key"] for w in weeks]
+
+    # get the pivoted data from db
+    records = get_stb_inventory_pivoted(week_keys)
+
+    # records are:
+    # [{'id': 1, 'label': 'STB A', '2025-01-05': 12, ...},
+    # {'id': 2, 'label': 'STB B', '2025-01-05': 9, ...},
+    # {'id': None, 'label': 'UKUPNO', '2025-01-05': 21, ...}]
+
+    records_grouped = _group_records(records, week_keys)
+
+    iptv_users = get_iptv_users()
+
+    return {
+        "current_week_end": current_week_end.strftime("%d-%m-%Y"),
+        "weeks": weeks,
+        "records": records_grouped,
+        "iptv_users": iptv_users,
+    }
+
+
+def update_recent_stb_inventory(form_data):
+    current_week_end = get_current_week_friday()
+
+    try:
+        for key, value in form_data.items():
+            if key == TOTAL_KEY:
+                continue
+
+            try:
+                stb_type_id = int(key)
+                quantity = int(value or 0)
+            except ValueError:
+                continue
+
+            db.session.execute(
+                text("""
+                    INSERT INTO stb_inventory (stb_type_id, week_end, quantity)
+                    VALUES (:stb_id, :week_end, :quantity)
+                    ON CONFLICT (stb_type_id, week_end)
+                    DO UPDATE SET
+                        quantity = EXCLUDED.quantity,
+                        updated_at = NOW();
+                """),
+                {
+                    "stb_id": stb_type_id,
+                    "week_end": current_week_end,
+                    "quantity": quantity,
+                },
+            )
+
+        db.session.commit()
+        return True, f"Novo stanje za {current_week_end} uspješno sačuvano!"
+
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        return False, "Greška prilikom čuvanja podataka."
+
+
+def update_iptv_users_count(form_data):
+    current_week_end = get_current_week_friday()
+
+    qty = form_data.get("qty")
+    if not qty or not qty.isdigit():
+        return False, "Molimo unesite ispravan broj.", "warning"
+       
+
+    try:
+        db.session.execute(
+            text("""
+                    INSERT INTO iptv_users ( week_end, total_users)
+                    VALUES ( :week_end, :total_users)
+                    ON CONFLICT ( week_end)
+                    DO UPDATE SET total_users = EXCLUDED.total_users, updated_at = NOW();
+                    """),
+            {
+                "week_end": current_week_end,
+                "total_users": qty,
+            },
+        )
+        db.session.commit()
+        return True, f"Novo stanje za {current_week_end} uspješno sačuvano!",
+        
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        return False, "Greška prilikom čuvanja podataka.", "danger"
+   
+
+
+# -------------------------
+# INTERNAL HELPERS
+# -------------------------
+def _group_records(records, week_keys):
+    grouped = {}
+
+    for row in records:
+        stbid = row["id"] or TOTAL_KEY
+
+        if stbid not in grouped:
+            grouped[stbid] = {
+                "id": stbid,
+                "label": row["label"],
+                "last_updated": row["last_updated"],
+                "is_total": stbid == TOTAL_KEY,
+                "dates": {week: {"quantity": 0} for week in week_keys},
+            }
+
+        for week in week_keys:
+            grouped[stbid]["dates"][week]["quantity"] = row.get(week, 0)
+
+    return list(grouped.values())

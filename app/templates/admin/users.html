@@ -1,0 +1,43 @@
+{% extends "base.html" %} {% block title %}Users{% endblock %} {% block content
+%}
+<div class="container py-4">
+  <h2>Korisnici</h2>
+
+  <a href="{{ url_for('admin.add_user') }}" class="btn btn-primary my-3"
+    >Dodaj korisnika</a
+  >
+  {% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  <table class="table table-striped table-bordered shadow-lg">
+    <tr>
+      <th>ID</th>
+      <th>Korisničko Ime</th>
+      <th>Role</th>
+      <th>Organizacija</th>
+      <th style="width: 160px">Akcije</th>
+    </tr>
+    {% for user in users %}
+    <tr>
+      <td>{{ user.id }}</td>
+      <td>{{ user.username }}</td>
+      <td>{{ user.role }}</td>
+      <td>{{ user.city.name if user.city else "—" }}</td>
+      <td>
+        <a
+          href="{{ url_for('admin.edit_user', id=user.id) }}"
+          class="btn btn-warning btn-sm"
+          >Edit</a
+        >
+        <a
+          href="{{ url_for('admin.delete_user', id=user.id) }}"
+          class="btn btn-danger btn-sm"
+          onclick="return confirm('Delete user?')"
+          >Delete</a
+        >
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

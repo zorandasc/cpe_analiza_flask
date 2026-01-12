@@ -1,0 +1,51 @@
+{% extends "base.html" %} {% block title %}Izmjeni STB tip{% endblock %} {%
+block content %}
+<div class="container py-4">
+  <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
+    <h2>Izmjeni STB model</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Ime</label>
+        <input
+          type="text"
+          name="name"
+          class="form-control"
+          value="{{ stb.name }}"
+          required
+        />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Labela</label>
+        <input
+          type="text"
+          name="label"
+          class="form-control"
+          value="{{ stb.label }}"
+          required
+        />
+      </div>
+
+      <div class="mb-3 form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="is_active"
+          name="is_active"
+          {%
+          if
+          stb.is_active
+          %}checked{%
+          endif
+          %}
+        />
+        <label class="form-check-label" for="is_active"> Aktivan </label>
+      </div>
+      <button type="submit" class="btn btn-success">Save</button>
+      <a href="{{ url_for('admin.stb_types') }}" class="btn btn-secondary"
+        >Cancel</a
+      >
+    </form>
+  </div>
+</div>
+
+{% endblock %}

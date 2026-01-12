@@ -1,0 +1,90 @@
+{% extends "base.html" %} {% block title %}Cities{% endblock %} {% block
+content%}
+<div class="container py-4">
+  <h2>Unosi demontirane CPE opreme</h2>
+  <div class="table-responsive">
+    <nav>
+      <ul class="pagination">
+        {% if pagination.has_prev %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin.cpe_dismantle', page=pagination.prev_num, sort=sort_by, direction=direction) }}"
+            >Previus</a
+          >
+        </li>
+        {% endif %} {% for p in pagination.iter_pages() %} {% if p %}
+        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+          <a
+            class="page-link"
+            href="{{ url_for('admin.cpe_dismantle', page=p, sort=sort_by, direction=direction) }}"
+            >{{ p }}</a
+          >
+        </li>
+        {% else%}
+        <li class="page-item disabled"><span class="page-link">...</span></li>
+        {% endif%} {% endfor %} {% if pagination.has_next %}
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('admin.cpe_dismantle', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+            >Next</a
+          >
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    <table
+      class="table table-bordered table-striped table-hover align-middle shadow-lg table-sm"
+    >
+      <thead class="table-custom-head">
+        <tr>
+          <td>
+            <a
+              href="{{ url_for('admin.cpe_dismantle', sort='id', direction='asc' if direction=='desc' else 'desc') }}"
+              >Id</a
+            >
+          </td>
+          <th>
+            <a
+              href="{{ url_for('admin.cpe_dismantle', sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
+              >Skladište</a
+            >
+          </th>
+          <th>Ime CPE opreme</th>
+          <th>Količina</th>
+          <th>Tip demontaže</th>
+          <th>Sedmica</th>
+          <th>
+            <a
+              href="{{ url_for('admin.cpe_dismantle', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              >Kreirano</a
+            >
+          </th>
+          <th>
+            <a
+              href="{{ url_for('admin.cpe_dismantle', sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
+              >Ažurirano</a
+            >
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for r in records %}
+        <tr>
+          <td>{{ r.id }}</td>
+          <td>{{ r.city.name }}</td>
+          <td>{{ r.cpe_type.name }}</td>
+          <td>{{ r.quantity }}</td>
+          <td>{{ r.dismantle_type.label }}</td>
+          <td>{{ r.week_end }}</td>
+          <td>{{ r.created_at }}</td>
+          <td>{{ r.updated_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %} {% block title %}Edit City{% endblock %} {% block
+content %}
+<div class="container py-4">
+   <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
+  <h2>Izmjeni skladište</h2>
+  <form method="POST">
+    <div class="mb-3">
+      <label class="form-label">Ime skladišta</label>
+      <input type="text" name="name" class="form-control" value="{{ city.name }}" required></input>
+    </div>
+     <div class="mb-3">
+      <label class="form-label">Tip skladišta</label>
+       <select name="type" class="form-control">
+    {% for t in types %}
+    <option value="{{ t }}" {% if t == city.type.value %}selected{% endif %}>
+        {{ t }}
+    </option>
+    {% endfor %}
+</select>
+
+      
+    </div>
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="{{ url_for('admin.cities') }}" class="btn btn-secondary">Cancel</a>
+  </form>
+  </div>
+</div>
+{% endblock %}

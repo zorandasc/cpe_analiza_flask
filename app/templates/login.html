@@ -1,0 +1,66 @@
+{% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
+styles%} {{ super() }}
+
+<style>
+  body {
+    background: url("{{ url_for('static', filename='login-raketa.jpg') }}")
+      no-repeat center center fixed;
+    background-size: cover;
+  }
+  .login-container {
+    max-width: 400px;
+    /*margin: 80px auto;*/
+    margin-top: 6rem;
+    padding: 30px;
+    background: white;
+    border-radius: 10px;
+  }
+  .form-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .btn-custom {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: #000; /* text color */
+    border: 2px solid black; /* remove default border */
+  }
+  .btn-custom:hover {
+    border: 2px solid black;
+    background: whitesmoke;
+  }
+</style>
+
+{% endblock %} {% block content %}
+<div class="login-container">
+  <div class="form-title">Login</div>
+
+  {% if message %}
+  <div class="alert alert-danger">{{ message }}</div>
+  {% endif %}
+
+  <form method="POST" action="{{ url_for('auth.login') }}">
+    {% if form %} {{ form.hidden_tag() }} {% endif %}
+
+    <div class="mb-3">
+      <label class="form-label">Username</label>
+      <input
+        type="text"
+        name="username"
+        class="form-control"
+        required
+        autofocus
+      />
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" name="password" class="form-control" required />
+    </div>
+
+    <button type="submit" class="btn btn-custom w-100">Log In</button>
+  </form>
+</div>
+{% endblock %}

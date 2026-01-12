@@ -1548,3 +1548,16 @@ Mixing structure with data leads to fragile templates.
 ✔ Keep passing weeks separately
 ✔ Treat it as table schema / metadata
 ✔ Do not infer structure from data
+
+
+# $ flask routes
+Endpoint                            Methods    Rule
+----------------------------------  ---------  ------------------------------
+auth.login                          GET, POST  /login
+auth.logout                         GET        /logout
+main.home                           GET        /
+static                              GET        /static/<path:filename>
+stb_inventory.stb_records           GET        /stb-records/
+stb_inventory.update_iptv_users     POST       /stb-records/update_iptv_users
+stb_inventory.update_stb_inventory  POST       /stb-records/update_stb
+(.venv)

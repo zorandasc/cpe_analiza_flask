@@ -1,0 +1,48 @@
+{% extends "base.html" %} {% block title %}Tipovi Demontaža{% endblock %} {%
+block content %}
+<div class="container py-4">
+  <h2>Tipovi demontaža CPE opreme</h2>
+  <!--
+  <a
+    href="{{ url_for('admin.add_dismantle_status') }}"
+    class="btn btn-primary my-3"
+    >Dodaj demontažu</a
+  >
+  -->
+  {% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  <table class="table table-striped table-bordered shadow-lg mt-4">
+    <tr>
+      <th>Id</th>
+      <th>Kodna oznaka</th>
+      <th>Labela</th>
+      <th>Grupa</th>
+      <th style="width: 160px">Akcije</th>
+    </tr>
+    {% for s in status %}
+    <tr>
+      <td>{{ s.id }}</td>
+      <td>{{ s.code }}</td>
+      <td>{{ s.label }}</td>
+      <td>{{ s.group_name }}</td>
+      <td>
+        <a
+          href="{{ url_for('admin.edit_dismantle_status', id=s.id) }}"
+          class="btn btn-warning btn-sm"
+          >Edit</a
+        >
+        <button
+          disabled
+          href=""
+          class="btn btn-danger btn-sm"
+          onclick="return confirm('Delete user?')"
+        >
+          Delete
+        </button>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
