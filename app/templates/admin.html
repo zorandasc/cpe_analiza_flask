@@ -130,6 +130,17 @@ block styles %} {{ super() }}
       </a>
     </div>
 
+     <div class="col-md-6">
+      <a href="{{ url_for('admin.stb_dashboard') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Grafik STB opreme</h4>
+            <p></p>
+          </div>
+        </div>
+      </a>
+    </div>
+
     <div class="col-md-6">
       <a href="{{ url_for('admin.cpe_dismantle') }}" class="dashboard-link">
         <div class="card dashboard-card shadow p-3">

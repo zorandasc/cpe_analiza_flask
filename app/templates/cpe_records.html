@@ -218,9 +218,7 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
           <thead class="table-custom-head">
             <tr>
-              <th class="city-column">
-                SKLADIŠTA
-              </th>
+              <th class="city-column">SKLADIŠTA</th>
               {% if schema %} {% for item in schema %} 
               <th class="{{item.cpe_type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
@@ -231,7 +229,9 @@
           <tbody>
             {% for r in records %}
             <tr class="{% if not r.city_id %}fw-bold total-row{% endif %}">
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">{{ r.city_name }}</td>
+              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
+                {{ r.city_name }}
+              </td>
               {% for item in schema %}
               <td>{{ r.cpe[item.name]['quantity'] }}</td>
               {% endfor %}
@@ -241,8 +241,8 @@
                 %H:%M:%S') }} 
               </td>
               {% endif %}
-              <!--PRIKAZI EDIT BUTTON  AKO VRIJE POSTOJI-->
-                {% if r.max_updated_at  %}
+              <!--PRIKAZI EDIT BUTTON  AKO CITY_ID POSTOJI-->
+                {% if r.city_id  %}
                 <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
                   {% if ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))  %}
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->

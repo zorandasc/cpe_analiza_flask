@@ -1,7 +1,11 @@
 from datetime import datetime
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_login import login_required, current_user
 from sqlalchemy import func
+from werkzeug.security import generate_password_hash
 from app.extensions import db
+from app.utils.permissions import view_required, admin_required
+from app.services.admin import get_stb_quantity_chart_data
 from app.models import (
     Cities,
     CityTypeEnum,
@@ -16,9 +20,7 @@ from app.models import (
     UserRole,
     Users,
 )
-from flask_login import login_required, current_user
-from app.utils.permissions import view_required, admin_required
-from werkzeug.security import generate_password_hash
+
 
 admin_bp = Blueprint(
     "admin",
@@ -291,34 +293,31 @@ def cities():
 @login_required
 def add_city():
     if not admin_required():
-        return redirect(url_for("admin_cities"))
+        return redirect(url_for("admin.cities"))
 
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
         name = request.form.get("name")
         type_string = request.form.get("type")
-        print("type_string ", type_string)
 
         # 1. Validation: Convert string to Enum object safely
         try:
             selected_type = CityTypeEnum(type_string)
         except ValueError:
             flash("Izabrani tip nije važeći.", "danger")
-            return redirect(url_for("admin_add_city"))
+            return redirect(url_for("admin.add_city"))
 
         # Validation: name must be unique
         existing_city = Cities.query.filter_by(name=name).first()
         if existing_city:
             flash("Skladište već postoji", "danger")
-            return redirect(url_for("admin_add_city"))
+            return redirect(url_for("admin.add_city"))
 
-        print("type", type)
         db.session.add(Cities(name=name, type=selected_type))
         db.session.commit()
-        return redirect(url_for("admin_cities"))
+        return redirect(url_for("admin.cities"))
 
     types = [t.value for t in CityTypeEnum]
-    print("types", types)
     # THIS IS FOR GET REQUEST WHEN OPENING ADD FORM
     return render_template("admin/cities_add.html", types=types)
 
@@ -327,7 +326,7 @@ def add_city():
 @login_required
 def edit_city(id):
     if not admin_required():
-        return redirect(url_for("admin_cities"))
+        return redirect(url_for("admin.cities"))
 
     city = Cities.query.get_or_404(id)
 
@@ -340,7 +339,7 @@ def edit_city(id):
             selected_type = CityTypeEnum(type_string)
         except ValueError:
             flash("Izabrani tip nije važeći.", "danger")
-            return redirect(url_for("admin_edit_city", id=id))
+            return redirect(url_for("admin.edit_city", id=id))
 
         # name uniqueness (except current name)
         existing_city = Cities.query.filter(
@@ -348,7 +347,7 @@ def edit_city(id):
         ).first()
         if existing_city:
             flash("Skladiste već postoji!", "danger")
-            return redirect(url_for("admin_edit_city", id=id))
+            return redirect(url_for("admin.edit_city", id=id))
 
         city.name = name
         city.type = selected_type
@@ -356,11 +355,11 @@ def edit_city(id):
         try:
             db.session.commit()
             flash("Skladiste uspješno izmijenjeno!", "success")
-            return redirect(url_for("admin_cities", id=id))
+            return redirect(url_for("admin.cities", id=id))
         except Exception as e:
             db.session.rollback()
             flash(f"Greška prilikom izmjene: {e}", "danger")
-            return redirect(url_for("admin_edit_city", id=id))
+            return redirect(url_for("admin.edit_city", id=id))
 
     types = [t.value for t in CityTypeEnum]
 
@@ -371,21 +370,16 @@ def edit_city(id):
 @login_required
 def delete_city(id):
     if not admin_required():
-        return redirect(url_for("admin_cities"))
+        return redirect(url_for("admin.cities"))
 
     city = Cities.query.get_or_404(id)
 
     # PROTECT CITY DELETE: block if related rows exist
-    if city.cpe_records or city.users:
-        flash("Cannot delete this city because it has related data.", "danger")
-        return render_template(
-            "admin/cities_list.html",
-            cities=Cities.query.all(),
-        )
+
     flash("City deleted!", "success")
     db.session.delete(city)
     db.session.commit()
-    return redirect(url_for("admin_cities"))
+    return redirect(url_for("admin.cities"))
 
 
 ###########################################################
@@ -750,7 +744,7 @@ def dismantle_status():
 @login_required
 def add_dismantle_status():
     if not admin_required():
-        return redirect(url_for("admin_dismantle_status"))
+        return redirect(url_for("admin.dismantle_status"))
 
     # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
     return render_template(
@@ -762,7 +756,7 @@ def add_dismantle_status():
 @login_required
 def edit_dismantle_status(id):
     if not admin_required():
-        return redirect(url_for("admin_dismantle_status"))
+        return redirect(url_for("admin.dismantle_status"))
 
     dismantle = DismantleTypes.query.get_or_404(id)
 
@@ -775,10 +769,21 @@ def edit_dismantle_status(id):
         try:
             db.session.commit()
             flash("Tip demontaže uspješno izmijenjen!", "success")
-            return redirect(url_for("admin_dismantle_status"))
+            return redirect(url_for("admin.dismantle_status"))
         except Exception as e:
             db.session.rollback()
             flash(f"Greška prilikom izmjene tipa demontaže: {e}", "danger")
-            return redirect(url_for("admin_edit_dismantle_status", id=id))
+            return redirect(url_for("admin.edit_dismantle_status", id=id))
 
     return render_template("admin/dismantle_types_edit.html", dismantle=dismantle)
+
+
+###########################################################
+# ---------------ROUTES FOR GRAPHICAL-------------------------
+############################################################
+@admin_bp.route("/stb-dashboard")
+@login_required
+def stb_dashboard():
+    chart_data = get_stb_quantity_chart_data()
+
+    return render_template("charts/stb_dashboard.html", chart_data=chart_data)

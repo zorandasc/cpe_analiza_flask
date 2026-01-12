@@ -1,0 +1,39 @@
+{% extends "base.html" %} {% block title %}Grafikoni{% endblock %} {% block
+content %}
+<div class="container py-4">
+  <canvas id="stbChart" height="520"></canvas>
+</div>
+
+<script id="chart-data" type="application/json">
+  {{ chart_data | tojson }}
+</script>
+
+<script>
+  const chartData = JSON.parse(
+    document.getElementById("chart-data").textContent
+  );
+
+  const ctx = document.getElementById("stbChart").getContext("2d");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: chartData.labels,
+      datasets: [{
+        label: "STB quantity",
+        data: chartData.data,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}
