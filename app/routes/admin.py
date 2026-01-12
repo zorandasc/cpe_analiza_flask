@@ -29,6 +29,9 @@ admin_bp = Blueprint(
 )
 
 
+###########################################################
+# ---------------ROUTES FOR MAIN TABLES-------------------------
+############################################################
 @admin_bp.route("/cpe_inventory")
 @login_required
 def cpe_inventory():
@@ -75,78 +78,6 @@ def cpe_inventory():
         # cities=cities,
         # cpe_types=cpe_types,
     )
-
-
-@admin_bp.route("/cpe_inventory/add", methods=["POST"])
-@login_required
-def add_to_cpe_inventory():
-    if not admin_required():  # AUTHORIZE
-        return redirect(url_for("admin_dashboard"))
-
-    cpe_type_id = request.form.get("cpe_type_id", type=int)
-
-    current_time = datetime.now()
-    records_to_add = []
-
-    # --- STEP 1: PRE-FETCH MAX UPDATED_AT FOR ALL CITIES ---
-    # This prevents running 10+ separate queries inside the loop.
-    max_update_times = (
-        db.session.query(
-            CpeInventory.city_id, func.max(CpeInventory.updated_at).label("max_time")
-        )
-        .group_by(CpeInventory.city_id)
-        .all()
-    )
-
-    # Convert the list of tuples/rows into a dictionary for fast lookup
-    # The result is a dictionary: {city_id: max_updated_at, ...}
-    max_update_map = {row.city_id: row.max_time for row in max_update_times}
-
-    for key, value in request.form.items():
-        if key.startswith("city-"):
-            parts = key.split("-", 1)
-            if len(parts) == 2:
-                city_id_str = parts[1]
-                try:
-                    city_id = int(city_id_str)
-                    quantity = int(value or 0)
-                except ValueError:
-                    # Skip this record if ID or Quantity is invalid
-                    continue
-
-                # --- STEP 3: DETERMINE UPDATED_AT TIMESTAMP ---
-                # Use the max timestamp found in STEP 1 for this city.
-                # If the city has NO existing records, use the current_time (or NULL, depending on your schema)
-                # Using the current time is safer if the city is new or empty.
-                latest_update_time = max_update_map.get(city_id, current_time)
-                # batch save on every city for selected cpe_type_id
-                # FOR EVERY CITY_ID FIND MAX UPDATED_AT
-
-                new_record = CpeInventory(
-                    city_id=city_id,
-                    cpe_type_id=cpe_type_id,
-                    quantity=quantity,
-                    created_at=current_time,
-                    updated_at=latest_update_time,
-                )
-            records_to_add.append(new_record)
-
-    # 4. Execute Single Batch Transaction
-    if records_to_add:
-        try:
-            db.session.add_all(records_to_add)
-            db.session.commit()
-            flash("Novo stanje za CPE inventori uspješno sačuvano!", "success")
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error during CpeInventory batch insert: {e}")
-            flash("Došlo je do greške prilikom unosa u bazu.", "danger")
-    else:
-        flash("Nije pronađen nijedan CPE za unos.", "warning")
-
-    # Redirect to Home (Post-Redirect-Get Pattern)
-    # This prevents duplicate form submissions if the user hits refresh.
-    return redirect(url_for("admin_cpe_inventory"))
 
 
 @admin_bp.route("/cpe_dismantle")
@@ -399,7 +330,7 @@ def users():
 @login_required  # AUTHENTICATE
 def add_user():
     if not admin_required():  # AUTHORIZE
-        return redirect(url_for("admin_users"))
+        return redirect(url_for("admin.users"))
 
     # THIS IS FOR SUMBITING A NEW REQUEST
     if request.method == "POST":
@@ -415,17 +346,17 @@ def add_user():
             selected_role = UserRole(role_string)
         except ValueError:
             flash("Izabrana rola nije važeća.", "danger")
-            return redirect(url_for("admin_add_user"))
+            return redirect(url_for("admin.add_user"))
 
         # Validation: username must be unique
         existing_user = Users.query.filter_by(username=username).first()
         if existing_user:
             flash("Username already exists", "danger")
-            return redirect(url_for("admin_add_user"))
+            return redirect(url_for("admin.add_user"))
 
         if selected_role == UserRole.USER and (not city_id or city_id == 0):
             flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
-            return redirect(url_for("admin_add_user"))
+            return redirect(url_for("admin.add_user"))
 
         password_hash = generate_password_hash(plain_password)
 
@@ -439,11 +370,11 @@ def add_user():
             db.session.add(user)
             db.session.commit()
             flash("User created successfully", "success")
-            return redirect(url_for("admin_users"))
+            return redirect(url_for("admin.users"))
         except Exception as e:
             db.session.rollback()
             flash(f"Error creating user: {e}", "danger")
-            return redirect(url_for("admin_add_user"))
+            return redirect(url_for("admin.add_user"))
 
     # GET Request
     cities = Cities.query.order_by(Cities.name).all()
@@ -458,7 +389,7 @@ def add_user():
 @login_required
 def edit_user(id):
     if not admin_required():
-        return redirect(url_for("admin_users"))
+        return redirect(url_for("admin.users"))
 
     user = Users.query.get_or_404(id)
 
@@ -475,7 +406,7 @@ def edit_user(id):
             selected_role = UserRole(role_string)
         except ValueError:
             flash("Izabrana rola nije važeća.", "danger")
-            return redirect(url_for("admin_edit_user", id=id))
+            return redirect(url_for("admin.edit_user", id=id))
 
         # Username uniqueness (except current user)
         existing_user = Users.query.filter(
@@ -484,12 +415,12 @@ def edit_user(id):
 
         if existing_user:
             flash("Username već postoji!", "danger")
-            return redirect(url_for("admin_edit_user", id=id))
+            return redirect(url_for("admin.edit_user", id=id))
 
         if plain_password1 or plain_password2:
             if plain_password1 != plain_password2:
                 flash("Šifre nisu iste!", "danger")
-                return redirect(url_for("admin_edit_user", id=id))
+                return redirect(url_for("admin.edit_user", id=id))
             # Update password hash only if a new password is entered
             user.password_hash = generate_password_hash(plain_password1)
 
@@ -500,12 +431,12 @@ def edit_user(id):
             and selected_role != UserRole.ADMIN
         ):
             flash("Ne možete ukloniti svoju admin ulogu!", "danger")
-            return redirect(url_for("admin_edit_user", id=id))
+            return redirect(url_for("admin.edit_user", id=id))
 
         # if role changed to user
         if selected_role == UserRole.USER and (not city_id or city_id == 0):
             flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
-            return redirect(url_for("admin_add_user"))
+            return redirect(url_for("admin.add_user"))
 
         user.username = username
         user.city_id = city_id if city_id != 0 else None
@@ -515,11 +446,11 @@ def edit_user(id):
         try:
             db.session.commit()
             flash("Korisnik uspješno izmijenjen!", "success")
-            return redirect(url_for("admin_users"))
+            return redirect(url_for("admin.users"))
         except Exception as e:
             db.session.rollback()
             flash(f"Greška prilikom izmjene korisnika: {e}", "danger")
-            return redirect(url_for("admin_edit_user", id=id))
+            return redirect(url_for("admin.edit_user", id=id))
 
     # GET Request
     cities = Cities.query.order_by(Cities.name).all()
@@ -535,7 +466,7 @@ def edit_user(id):
 @login_required
 def delete_user(id):
     if not admin_required():
-        return redirect(url_for("admin_users"))
+        return redirect(url_for("admin.users"))
 
     user = Users.query.get_or_404(id)
 
@@ -543,12 +474,12 @@ def delete_user(id):
         admin_count = Users.query.filter_by(role=UserRole.ADMIN).count()
         if admin_count < 2:
             flash("Ne možete obrisati posljednjeg admina!", "danger")
-            return redirect(url_for("admin_users"))
+            return redirect(url_for("admin.users"))
 
     db.session.delete(user)
     db.session.commit()
     flash("User deleted", "success")
-    return redirect(url_for("admin_users"))
+    return redirect(url_for("admin.users"))
 
 
 ###########################################################
@@ -568,7 +499,7 @@ def cpe_types():
 @login_required
 def add_cpe_type():
     if not admin_required():
-        return redirect(url_for("admin_cpe_types"))
+        return redirect(url_for("admin.cpe_types"))
 
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
@@ -581,11 +512,11 @@ def add_cpe_type():
         existing_cpe_type = CpeTypes.query.filter_by(name=name).first()
         if existing_cpe_type:
             flash("Tip CPE već postoji", "danger")
-            return redirect(url_for("admin_add_cpe_type"))
+            return redirect(url_for("admin.add_cpe_type"))
 
         db.session.add(CpeTypes(name=name, label=label, type=type))
         db.session.commit()
-        return redirect(url_for("admin_cpe_types"))
+        return redirect(url_for("admin.cpe_types"))
 
     # PROBLEM WITH THIS IT IS ONLY GIVE ME TYPES OF ALREADY
     # EXISISTING RECORDS, IF IT DOESNOT EXISISTIN TABLE IT WONT LIST
@@ -601,7 +532,7 @@ def add_cpe_type():
 @login_required
 def edit_cpe_type(id):
     if not admin_required():
-        return redirect(url_for("admin_cpe_types"))
+        return redirect(url_for("admin.cpe_types"))
 
     cpe = CpeTypes.query.get_or_404(id)
 
@@ -618,12 +549,12 @@ def edit_cpe_type(id):
         ).first()
         if existing_cpe_type:
             flash("Tip CPE opreme već postoji!", "danger")
-            return redirect(url_for("admin_edit_cpe_type", id=id))
+            return redirect(url_for("admin.edit_cpe_type", id=id))
 
         # Validation: type must be valid
         if type_ not in types:
             flash("Invalid tip", "danger")
-            return redirect(url_for("admin_edit_cpe_type", id=id))
+            return redirect(url_for("admin.edit_cpe_type", id=id))
 
         cpe.id = id
         cpe.name = name
@@ -637,11 +568,11 @@ def edit_cpe_type(id):
         try:
             db.session.commit()
             flash("Cpe tip uspješno izmijenjen!", "success")
-            return redirect(url_for("admin_cpe_types"))
+            return redirect(url_for("admin.cpe_types"))
         except Exception as e:
             db.session.rollback()
             flash(f"Greška prilikom izmjene CPE tipa: {e}", "danger")
-            return redirect(url_for("admin_edit_cpe_type", id=id))
+            return redirect(url_for("admin.edit_cpe_type", id=id))
 
     return render_template(
         "admin/cpe_types_edit.html",
@@ -667,7 +598,7 @@ def stb_types():
 @login_required
 def add_stb_type():
     if not admin_required():
-        return redirect(url_for("admin_stb_types"))
+        return redirect(url_for("admin.stb_types"))
 
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
@@ -678,11 +609,11 @@ def add_stb_type():
         existing_stb_type = StbTypes.query.filter_by(name=name).first()
         if existing_stb_type:
             flash("Tip STB već postoji", "danger")
-            return redirect(url_for("admin_add_stb_type"))
+            return redirect(url_for("admin.add_stb_type"))
 
         db.session.add(StbTypes(name=name, label=label))
         db.session.commit()
-        return redirect(url_for("admin_stb_types"))
+        return redirect(url_for("admin.stb_types"))
 
     # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
     return render_template(
@@ -694,7 +625,7 @@ def add_stb_type():
 @login_required
 def edit_stb_type(id):
     if not admin_required():
-        return redirect(url_for("admin_stb_types"))
+        return redirect(url_for("admin.stb_types"))
 
     stb = StbTypes.query.get_or_404(id)
 
@@ -708,7 +639,7 @@ def edit_stb_type(id):
         ).first()
         if existing_stb_type:
             flash("Tip STB opreme već postoji!", "danger")
-            return redirect(url_for("admin_edit_stb_type", id=id))
+            return redirect(url_for("admin.edit_stb_type", id=id))
 
         stb.id = id
         stb.name = name
@@ -718,11 +649,11 @@ def edit_stb_type(id):
         try:
             db.session.commit()
             flash("Stb tip uspješno izmijenjen!", "success")
-            return redirect(url_for("admin_stb_types"))
+            return redirect(url_for("admin.stb_types"))
         except Exception as e:
             db.session.rollback()
             flash(f"Greška prilikom izmjene stb tipa: {e}", "danger")
-            return redirect(url_for("admin_edit_stb_type", id=id))
+            return redirect(url_for("admin.edit_stb_type", id=id))
 
     return render_template("admin/stb_types_edit.html", stb=stb)
 
