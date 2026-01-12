@@ -259,8 +259,6 @@ def _group_history_records(records, schema_list):
 
             damage_key = row["dismantle_code"].lower()
 
-            grouped[week]["cpe"][cpe["name"]]["damages"][damage_key][
-                "quantity"
-            ] = qty
+            grouped[week]["cpe"][cpe["name"]]["damages"][damage_key]["quantity"] = qty
 
     return list(grouped.values())
