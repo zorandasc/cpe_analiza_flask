@@ -1,6 +1,7 @@
 from sqlalchemy import text
 from app.extensions import db
 
+
 def get_last_4_months():
     SQL = """ 
         SELECT DISTINCT month_end
@@ -14,6 +15,10 @@ def get_last_4_months():
 
 
 def get_ont_inventory_pivoted(months: list):
+    if not months:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
     pivot_cols = []
 
     # This prevents SQL injection by using parameterized queries.
@@ -71,4 +76,3 @@ def get_ont_inventory_pivoted(months: list):
     rows = db.session.execute(text(SQL), params)
 
     return [row._asdict() for row in rows.all()]
-

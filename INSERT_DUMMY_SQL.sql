@@ -166,35 +166,6 @@ LIMIT 600;
 --+ interval '1 month' jumps to the first day of the next month.
 --- interval '1 day' rolls it back to the last day of the intended month.
 
-INSERT INTO ont_inventory (
-    city_id, 
-    month_end, 
-    quantity,
-    created_at, 
-    updated_at
-)
-SELECT 
-    sub.city_id, 
-    sub.month_end, 
-    (FLOOR(RANDOM() * 100) + 1)::INT,
-    NOW(), 
-    NOW()
-FROM (
-    SELECT 
-        c.id as city_id, 
-        d.last_day as month_end
-    FROM 
-        -- 1. City IDs from 3 to 11
-        generate_series(3, 11) AS c(id)
-    CROSS JOIN (
-        -- 2. Generate the last day of each month for 2025
-        SELECT (date_trunc('month', '2025-01-01'::date + (m || ' month')::interval) 
-                + interval '1 month' - interval '1 day')::date as last_day
-        FROM generate_series(0, 11) m
-    ) d
-) sub
-ORDER BY RANDOM() 
-LIMIT 600;
 
 -- Dynamic Range: I replaced the static '2022-01-01' with NOW() - interval '5 years'. 
 --This ensures your query always looks back exactly 5 years from the day you run it.
@@ -241,46 +212,6 @@ ORDER BY RANDOM()
 LIMIT 600;
 
 
--------OLD  CPE_INVENTORY------------------------------------
---created a timestamp variable ts in the subquery. This ensures 
---created_at and updated_at are identical for each row, which is 
---standard for a fresh insert.
---Step A: Get the CPE types.
---Step B: Multiply them by the Cities (creating a "Type per City" grid).
---Step C: Multiply that grid by the Timestamps (creating a "Type per City per Time" grid).
-INSERT INTO cpe_inventory (
-    cpe_type_id, 
-    city_id, 
-    quantity,
-    created_at, 
-    updated_at
-)
-SELECT 
-    sub.cpe_type_id, 
-    sub.city_id, 
-    (FLOOR(RANDOM() * 100) + 1)::INT,
-    sub.friday_date, 
-    sub.friday_date
-FROM (
-    SELECT 
-        t.type_id as cpe_type_id, 
-        c.id as city_id,
-        d.friday_date
-    FROM 
-        generate_series(1, 11) AS t(type_id)
-    CROSS JOIN 
-        generate_series(1, 13) AS c(id)
-    CROSS JOIN (
-        -- Generate the last 4 Fridays
-        SELECT (date_trunc('week', NOW()) + interval '4 days' - (w || ' weeks')::interval)::date as friday_date
-        --1 exclude current week
-		FROM generate_series(1, 4) w
-    ) d
-) sub
-ORDER BY RANDOM();
-
-
-
 --A CROSS JOIN (also known as a Cartesian Product) is the most "aggressive" way 
 --to join tables. Unlike a regular join where you look for matching IDs, 
 --a Cross Join tells the database: "Take every single row from Table A 
@@ -293,33 +224,33 @@ ORDER BY RANDOM();
 --✔ Let uniqueness enforce correctness
 --✔ Dummy data should look like real business data
 INSERT INTO
-	CPE_INVENTORY (
-		CITY_ID,
-		CPE_TYPE_ID,
-		QUANTITY,
-		WEEK_END,
-		CREATED_AT,
-		UPDATED_AT
-	)
+    CPE_INVENTORY (
+        CITY_ID,
+        CPE_TYPE_ID,
+        QUANTITY,
+        WEEK_END,
+        CREATED_AT,
+        UPDATED_AT
+    )
 SELECT
-	C.ID AS CITY_ID,
-	T.ID AS CPE_TYPE_ID,
-	(FLOOR(RANDOM() * 500) + 1)::INT AS QUANTITY,
-	F.FRIDAY_DATE AS WEEK_END,
-	F.FRIDAY_DATE AS CREATED_AT,
-	F.FRIDAY_DATE AS UPDATED_AT
+    C.ID AS CITY_ID,
+    T.ID AS CPE_TYPE_ID,
+    (FLOOR(RANDOM() * 500) + 1)::INT AS QUANTITY,
+    F.FRIDAY_DATE AS WEEK_END,
+    F.FRIDAY_DATE AS CREATED_AT,
+    F.FRIDAY_DATE AS UPDATED_AT
 FROM
-	CITIES C
-	CROSS JOIN CPE_TYPES T
-	CROSS JOIN (
-		-- last 4 completed Fridays
-		SELECT
-			(
-				DATE_TRUNC('week', NOW()) + INTERVAL '4 days' - (W || ' weeks')::INTERVAL
-			)::DATE AS FRIDAY_DATE
-		FROM
-			GENERATE_SERIES(0, 4) AS W
-	)as F;
+    CITIES C
+    CROSS JOIN CPE_TYPES T
+    CROSS JOIN (
+        -- Generates the last 80 Fridays
+        SELECT
+            (
+                DATE_TRUNC('week', NOW()) + INTERVAL '4 days' - (W || ' weeks')::INTERVAL
+            )::DATE AS FRIDAY_DATE
+        FROM
+            GENERATE_SERIES(0, 79) AS W
+    ) AS F;
 
 
 --CPE_DISMANTLE_INVENTORY---------------

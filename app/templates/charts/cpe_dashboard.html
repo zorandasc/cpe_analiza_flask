@@ -1,0 +1,112 @@
+{% extends "base.html" %} 
+{% block title %}Grafikoni{% endblock %} 
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 text-secondary mb-0">Pregled CPE Opreme</h2>
+        <span class="badge bg-primary">Ažurirano: {{ "now"|datetimeformat if datetimeformat else "Danas" }}</span>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Grad</label>
+                    <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
+                        {% for city in cities %}
+                        <option value="{{ city.id }}" {% if city.id == selected_id %}selected{% endif %}>
+                            {{ city.name |capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Tip CPE uređaja</label>
+                    <select name="cpe_id" class="form-select shadow-sm" onchange="this.form.submit()">
+                        {% for cpe in cpes %}
+                        <option value="{{ cpe.id }}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
+                            {{ cpe.label|capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Vremenski period</label>
+                    <select name="weeks" class="form-select shadow-sm" onchange="this.form.submit()">
+                        <option value="">Sve dostupno</option>
+                        {% for w in [5, 10, 20, 50] %}
+                        <option value="{{ w }}" {% if w == selected_weeks %}selected{% endif %}>
+                            Poslednjih {{ w }} nedelja
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline-secondary w-100">
+                        Poništi
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0">Analitika količine</h5>
+        </div>
+        <div class="card-body">
+            <div style="position: relative; height: 500px;">
+                <canvas id="stbChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="chart-data" type="application/json">
+    {{ chart_data | tojson }}
+</script>
+
+<script>
+    const chartData = JSON.parse(document.getElementById("chart-data").textContent);
+    const ctx = document.getElementById("stbChart").getContext("2d");
+
+    // Creating a gradient for the bar chart
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(13, 110, 253, 0.8)');
+    gradient.addColorStop(1, 'rgba(13, 110, 253, 0.2)');
+
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: "Količina (kom)",
+                data: chartData.data,
+                backgroundColor: gradient,
+                borderColor: '#0d6efd',
+                borderWidth: 2,
+                borderRadius: 5,
+                hoverBackgroundColor: '#0b5ed7'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false } // Hiding legend for a cleaner look
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f0f0f0' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        },
+    });
+</script>
+{% endblock %}

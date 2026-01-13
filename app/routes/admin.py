@@ -5,10 +5,16 @@ from werkzeug.security import generate_password_hash
 from app.extensions import db
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import (
-    get_stb_quantity_chart_data,
-    get_stb_types_with_inventory,
-    get_ont_quantity_chart_data,
-    get_cities_with_inventory,
+    get_cpe_inventory_chart_data,
+    get_cpe_within_cpe_inventory,
+    get_cities_within_cpe_inventory,
+    get_cpe__dismantle_inventory_chart_data,
+    get_cities_within_cpe_dismantle_inventory,
+    get_cpe_within_cpe_dismantle_inventory,
+    get_stb_inventory_chart_data,
+    get_stb_within_stb_inventory,
+    get_ont_inventory_chart_data,
+    get_cities_within_ont_inventory,
 )
 from app.models import (
     Cities,
@@ -715,17 +721,17 @@ def edit_dismantle_status(id):
 ###########################################################
 # ---------------ROUTES FOR GRAPHICAL-------------------------
 ############################################################
-@admin_bp.route("/stb-dashboard", methods=["GET"])
+@admin_bp.route("/stb-charts", methods=["GET"])
 @login_required
-def stb_dashboard():
+def stb_dashboard_charts():
     # But still → submit GET params, GET + query parameter
     selected_id = request.args.get("id", type=int)
 
     selected_weeks = request.args.get("weeks", type=int)
 
-    stbs = get_stb_types_with_inventory()
+    stbs = get_stb_within_stb_inventory()
 
-    chart_data = get_stb_quantity_chart_data(
+    chart_data = get_stb_inventory_chart_data(
         stb_type_id=selected_id, weeks=selected_weeks
     )
 
@@ -738,17 +744,17 @@ def stb_dashboard():
     )
 
 
-@admin_bp.route("/ont-dashboard", methods=["GET"])
+@admin_bp.route("/ont-charts", methods=["GET"])
 @login_required
-def ont_dashboard():
+def ont_dashboard_charts():
     # But still → submit GET params, GET + query parameter
     selected_id = request.args.get("id", type=int)
 
     selected_months = request.args.get("months", type=int)
 
-    cities = get_cities_with_inventory()
+    cities = get_cities_within_ont_inventory()
 
-    chart_data = get_ont_quantity_chart_data(
+    chart_data = get_ont_inventory_chart_data(
         city_id=selected_id, months=selected_months
     )
 
@@ -758,4 +764,33 @@ def ont_dashboard():
         cities=cities,
         selected_id=selected_id,
         selected_months=selected_months,
+    )
+
+
+@admin_bp.route("/cpe-charts", methods=["GET"])
+@login_required
+def cpe_dashboard_charts():
+    # But still → submit GET params, GET + query parameter
+    selected_cpe_id = request.args.get("cpe_id", type=int)
+
+    selected_city_id = request.args.get("city_id", type=int)
+
+    selected_weeks = request.args.get("weeks", type=int)
+
+    cities = get_cities_within_cpe_inventory()
+
+    cpes = get_cpe_within_cpe_inventory()
+
+    chart_data = get_cpe_inventory_chart_data(
+        city_id=selected_city_id, cpe_type_id=selected_cpe_id, weeks=selected_weeks
+    )
+
+    return render_template(
+        "charts/cpe_dashboard.html",
+        chart_data=chart_data,
+        cities=cities,
+        cpes=cpes,
+        selected_cpe_id=selected_cpe_id,
+        selected_city_id=selected_city_id,
+        selected_weeks=selected_weeks,
     )

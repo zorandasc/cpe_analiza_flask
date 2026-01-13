@@ -281,7 +281,7 @@ styles %} {{ super() }}
               class="form-control input-cpe-count"
               name="qty"
               type="number"
-              value="{{ iptv_users[-1]['total_users'] }}"
+              value="{{ (iptv_users | last)['total_users'] if iptv_users else 0 }}"
               min="0"
             />
           </div>

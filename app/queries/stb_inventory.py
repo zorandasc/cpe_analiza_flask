@@ -1,6 +1,7 @@
 from sqlalchemy import text
 from app.extensions import db
 
+
 def get_last_4_weeks():
     SQL = """ 
         SELECT DISTINCT week_end
@@ -14,6 +15,10 @@ def get_last_4_weeks():
 
 
 def get_stb_inventory_pivoted(weeks: list):
+    if not weeks:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
     pivot_cols = []
 
     # This prevents SQL injection by using parameterized queries.
