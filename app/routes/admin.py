@@ -1,11 +1,15 @@
 from datetime import datetime
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
-from sqlalchemy import func
 from werkzeug.security import generate_password_hash
 from app.extensions import db
 from app.utils.permissions import view_required, admin_required
-from app.services.admin import get_stb_quantity_chart_data
+from app.services.admin import (
+    get_stb_quantity_chart_data,
+    get_stb_types_with_inventory,
+    get_ont_quantity_chart_data,
+    get_cities_with_inventory,
+)
 from app.models import (
     Cities,
     CityTypeEnum,
@@ -506,7 +510,6 @@ def add_cpe_type():
         name = request.form.get("name")
         label = request.form.get("label")
         type = request.form.get("type")
-        print("type", type)
 
         # Validation: name must be unique
         existing_cpe_type = CpeTypes.query.filter_by(name=name).first()
@@ -712,9 +715,47 @@ def edit_dismantle_status(id):
 ###########################################################
 # ---------------ROUTES FOR GRAPHICAL-------------------------
 ############################################################
-@admin_bp.route("/stb-dashboard")
+@admin_bp.route("/stb-dashboard", methods=["GET"])
 @login_required
 def stb_dashboard():
-    chart_data = get_stb_quantity_chart_data()
+    # But still → submit GET params, GET + query parameter
+    selected_id = request.args.get("id", type=int)
 
-    return render_template("charts/stb_dashboard.html", chart_data=chart_data)
+    selected_weeks = request.args.get("weeks", type=int)
+
+    stbs = get_stb_types_with_inventory()
+
+    chart_data = get_stb_quantity_chart_data(
+        stb_type_id=selected_id, weeks=selected_weeks
+    )
+
+    return render_template(
+        "charts/stb_dashboard.html",
+        chart_data=chart_data,
+        stbs=stbs,
+        selected_id=selected_id,
+        selected_weeks=selected_weeks,
+    )
+
+
+@admin_bp.route("/ont-dashboard", methods=["GET"])
+@login_required
+def ont_dashboard():
+    # But still → submit GET params, GET + query parameter
+    selected_id = request.args.get("id", type=int)
+
+    selected_months = request.args.get("months", type=int)
+
+    cities = get_cities_with_inventory()
+
+    chart_data = get_ont_quantity_chart_data(
+        city_id=selected_id, months=selected_months
+    )
+
+    return render_template(
+        "charts/ont_dashboard.html",
+        chart_data=chart_data,
+        cities=cities,
+        selected_id=selected_id,
+        selected_months=selected_months,
+    )

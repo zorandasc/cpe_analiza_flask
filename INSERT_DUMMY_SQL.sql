@@ -194,7 +194,51 @@ FROM (
     ) d
 ) sub
 ORDER BY RANDOM() 
-LIMIT 300;
+LIMIT 600;
+
+-- Dynamic Range: I replaced the static '2022-01-01' with NOW() - interval '5 years'. 
+--This ensures your query always looks back exactly 5 years from the day you run it.
+
+-- Generate Series by Interval: Instead of generating numbers (0–11) and adding them to a date, 
+--Postgres allows you to generate a series directly using intervals (e.g., '1 month'). 
+--This is cleaner and handles year transitions automatically.
+
+--Month-End Logic: The logic date_trunc('month', ...) + interval '1 month - 1 day' 
+--is a standard Postgres "trick" to find the last day of any given month.
+
+
+
+INSERT INTO ont_inventory (
+    city_id, 
+    month_end, 
+    quantity,
+    created_at, 
+    updated_at
+)
+SELECT 
+    sub.city_id, 
+    sub.month_end, 
+    (FLOOR(RANDOM() * 100) + 1)::INT,
+    NOW(), 
+    NOW()
+FROM (
+    SELECT 
+        c.id as city_id, 
+        -- Calculates the last day of the month for each date in the series
+        (date_trunc('month', d.month_date) + interval '1 month - 1 day')::date as month_end
+    FROM 
+        generate_series(3, 11) AS c(id)
+    CROSS JOIN (
+        -- Generates a series of dates from 5 years ago to today, stepping by 1 month
+        SELECT generate_series(
+            date_trunc('month', NOW() - interval '5 years'), 
+            date_trunc('month', NOW()), 
+            '1 month'::interval
+        ) AS month_date
+    ) d
+) sub
+ORDER BY RANDOM() 
+LIMIT 600;
 
 
 -------OLD  CPE_INVENTORY------------------------------------

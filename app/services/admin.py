@@ -2,21 +2,110 @@ from sqlalchemy import text
 from app.extensions import db
 
 
-def get_stb_quantity_chart_data():
-    rows = db.session.execute(
-        text("""
-    SELECT week_end, SUM(quantity) AS total
-    FROM stb_inventory 
-    GROUP BY week_end
-        ORDER BY week_end                      
+def get_stb_quantity_chart_data(stb_type_id=None, weeks=None):
+    params = {}
 
-    """)
-    ).fetchall()
+    where = ""
+    if stb_type_id:
+        where = "AND stb_type_id= :stb_type_id"
+        params["stb_type_id"] = stb_type_id
 
-    labels = [r.week_end.strftime("%d-%m-%Y") for r in rows]
-    data = [r.total for r in rows]
+    if weeks:
+        sql = f"""
+        WITH last_week AS (
+        SELECT DISTINCT week_end
+        FROM stb_inventory 
+        WHERE 1=1 {where}
+        ORDER BY week_end DESC
+        LIMIT :weeks
+        )
+        SELECT i.week_end, SUM(i.quantity) AS total
+        FROM stb_inventory i
+        JOIN last_week w ON w.week_end=i.week_end
+        WHERE 1=1 {where}
+        GROUP BY i.week_end
+        ORDER BY i.week_end
+        """
+        params["weeks"] = weeks
+    else:
+        sql = f"""
+        SELECT week_end, SUM(quantity) AS total
+        FROM stb_inventory
+        WHERE 1=1 {where}
+        GROUP BY week_end
+        ORDER BY week_end
+        """
+
+    rows = db.session.execute(text(sql), params).fetchall()
 
     return {
-        "labels": labels,
-        "data": data,
+        "labels": [r.week_end.strftime("%Y-%m-%d") for r in rows],
+        "data": [r.total for r in rows],
     }
+
+
+def get_stb_types_with_inventory():
+    return db.session.execute(
+        text(
+            """
+        SELECT DISTINCT t.id, t.label
+        FROM stb_inventory i
+        JOIN stb_types t ON t.id = i.stb_type_id
+        ORDER BY t.id
+        """
+        )
+    ).fetchall()
+
+
+def get_ont_quantity_chart_data(city_id=None, months=None):
+    params = {}
+
+    where = ""
+    if city_id:
+        where = "AND city_id= :city_id"
+        params["city_id"] = city_id
+
+    if months:
+        sql = f"""
+        WITH last_month AS (
+        SELECT DISTINCT month_end
+        FROM ont_inventory 
+        WHERE 1=1 {where}
+        ORDER BY month_end DESC
+        LIMIT :months
+        )
+        SELECT i.month_end, SUM(i.quantity) AS total
+        FROM ont_inventory i
+        JOIN last_month m ON m.month_end=i.month_end
+        WHERE 1=1 {where}
+        GROUP BY i.month_end
+        ORDER BY i.month_end
+        """
+        params["months"] = months
+    else:
+        sql = f"""
+        SELECT month_end, SUM(quantity) AS total
+        FROM ont_inventory
+        WHERE 1=1 {where}
+        GROUP BY month_end
+        ORDER BY month_end
+        """
+
+    rows = db.session.execute(text(sql), params).fetchall()
+
+    return {
+        "labels": [r.month_end.strftime("%Y-%m-%d") for r in rows],
+        "data": [r.total for r in rows],
+    }
+
+def get_cities_with_inventory():
+    return db.session.execute(
+        text(
+            """
+            SELECT DISTINCT c.id, c.name
+            FROM ont_inventory i
+            JOIN cities c ON c.id = i.city_id
+            ORDER BY c.id
+        """
+        )
+    ).fetchall()

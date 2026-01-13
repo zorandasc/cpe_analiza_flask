@@ -1549,15 +1549,30 @@ Mixing structure with data leads to fragile templates.
 ✔ Treat it as table schema / metadata
 ✔ Do not infer structure from data
 
-
 # $ flask routes
-Endpoint                            Methods    Rule
-----------------------------------  ---------  ------------------------------
-auth.login                          GET, POST  /login
-auth.logout                         GET        /logout
-main.home                           GET        /
-static                              GET        /static/<path:filename>
-stb_inventory.stb_records           GET        /stb-records/
-stb_inventory.update_iptv_users     POST       /stb-records/update_iptv_users
-stb_inventory.update_stb_inventory  POST       /stb-records/update_stb
+
+Endpoint Methods Rule
+
+---
+
+auth.login GET, POST /login
+auth.logout GET /logout
+main.home GET /
+static GET /static/<path:filename>
+stb_inventory.stb_records GET /stb-records/
+stb_inventory.update_iptv_users POST /stb-records/update_iptv_users
+stb_inventory.update_stb_inventory POST /stb-records/update_stb
 (.venv)
+
+# Rule of thumb (worth remembering)
+
+Filters = GET REQUEST
+
+Edits = POST REQUEST
+
+Modals = edits, not filters
+
+# in sql Rule:
+
+Always filter before grouping
+Always use week_end, not NOW() math in Python

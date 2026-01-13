@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4 text-secondary mb-0">Pregled STB Opreme</h2>
+        <h2 class="h4 text-secondary mb-0">Pregled ONT Opreme</h2>
         <span class="badge bg-primary">Ažurirano: {{ "now"|datetimeformat if datetimeformat else "Danas" }}</span>
     </div>
 
@@ -12,12 +12,12 @@
         <div class="card-body bg-light">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label fw-bold">Tip STB uređaja</label>
+                    <label class="form-label fw-bold">Grad</label>
                     <select name="id" class="form-select shadow-sm" onchange="this.form.submit()">
-                        <option value="">-- Svi tipovi --</option>
-                        {% for stb in stbs %}
-                        <option value="{{ stb.id }}" {% if stb.id == selected_id %}selected{% endif %}>
-                            {{ stb.label|capitalize }}
+                        <option value="">-- Svi Gradovi --</option>
+                        {% for city in cities %}
+                        <option value="{{ city.id }}" {% if city.id == selected_id %}selected{% endif %}>
+                            {{ city.name |capitalize }}
                         </option>
                         {% endfor %}
                     </select>
@@ -25,11 +25,11 @@
 
                 <div class="col-md-5">
                     <label class="form-label fw-bold">Vremenski period</label>
-                    <select name="weeks" class="form-select shadow-sm" onchange="this.form.submit()">
+                    <select name="months" class="form-select shadow-sm" onchange="this.form.submit()">
                         <option value="">Sve dostupno</option>
-                        {% for w in [5, 10, 20, 50] %}
-                        <option value="{{ w }}" {% if w == selected_weeks %}selected{% endif %}>
-                            Poslednjih {{ w }} nedelja
+                        {% for m in [5, 10, 20, 50] %}
+                        <option value="{{ m }}" {% if m == selected_months %}selected{% endif %}>
+                            Poslednjih {{ m }} mijeseci
                         </option>
                         {% endfor %}
                     </select>
@@ -50,7 +50,7 @@
         </div>
         <div class="card-body">
             <div style="position: relative; height: 500px;">
-                <canvas id="stbChart"></canvas>
+                <canvas id="ontChart"></canvas>
             </div>
         </div>
     </div>
@@ -62,7 +62,7 @@
 
 <script>
     const chartData = JSON.parse(document.getElementById("chart-data").textContent);
-    const ctx = document.getElementById("stbChart").getContext("2d");
+    const ctx = document.getElementById("ontChart").getContext("2d");
 
     // Creating a gradient for the bar chart
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
