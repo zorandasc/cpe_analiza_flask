@@ -1566,11 +1566,9 @@ stb_inventory.update_stb_inventory POST /stb-records/update_stb
 
 # Rule of thumb (worth remembering)
 
-Filters = GET REQUEST
+ FOR FILTERS USE GET REQUEST + query parameter IN URL, NOT POST REQUEST
 
-Edits = POST REQUEST
-
-Modals = edits, not filters
+FOR NEW/Edits USE MODALS WITH POST REQUEST (NEW/EDIT REQUEST TO DB)
 
 # in sql Rule:
 

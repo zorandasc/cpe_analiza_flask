@@ -129,9 +129,12 @@ block styles %} {{ super() }}
         </div>
       </a>
     </div>
-    
+
     <div class="col-md-6">
-      <a href="{{ url_for('admin.cpe_dashboard_charts') }}" class="dashboard-link">
+      <a
+        href="{{ url_for('admin.cpe_dashboard_charts') }}"
+        class="dashboard-link"
+      >
         <div class="card dashboard-card shadow p-3">
           <div class="card-body text-center">
             <h4 class="card-title">Grafik CPE opreme</h4>
@@ -150,7 +153,19 @@ block styles %} {{ super() }}
         </div>
       </a>
     </div>
-
+    <div class="col-md-6">
+      <a
+        href="{{ url_for('admin.cpe_dismantle_dashboard_charts') }}"
+        class="dashboard-link"
+      >
+        <div class="card dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <h4 class="card-title">Grafik Demontirane CPE opreme</h4>
+            <p></p>
+          </div>
+        </div>
+      </a>
+    </div>
     <div class="col-md-6">
       <a href="{{ url_for('admin.stb_inventory') }}" class="dashboard-link">
         <div class="card dashboard-card shadow p-3">
@@ -162,7 +177,10 @@ block styles %} {{ super() }}
       </a>
     </div>
     <div class="col-md-6">
-      <a href="{{ url_for('admin.stb_dashboard_charts') }}" class="dashboard-link">
+      <a
+        href="{{ url_for('admin.stb_dashboard_charts') }}"
+        class="dashboard-link"
+      >
         <div class="card dashboard-card shadow p-3">
           <div class="card-body text-center">
             <h4 class="card-title">Grafik STB opreme</h4>
@@ -184,7 +202,10 @@ block styles %} {{ super() }}
     </div>
 
     <div class="col-md-6">
-      <a href="{{ url_for('admin.ont_dashboard_charts') }}" class="dashboard-link">
+      <a
+        href="{{ url_for('admin.ont_dashboard_charts') }}"
+        class="dashboard-link"
+      >
         <div class="card dashboard-card shadow p-3">
           <div class="card-body text-center">
             <h4 class="card-title">Grafik ONT opreme</h4>

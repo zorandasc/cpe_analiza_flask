@@ -11,6 +11,7 @@ from app.services.admin import (
     get_cpe__dismantle_inventory_chart_data,
     get_cities_within_cpe_dismantle_inventory,
     get_cpe_within_cpe_dismantle_inventory,
+    get_dismantles_within_cpe_dismantle_inventory,
     get_stb_inventory_chart_data,
     get_stb_within_stb_inventory,
     get_ont_inventory_chart_data,
@@ -791,6 +792,45 @@ def cpe_dashboard_charts():
         cities=cities,
         cpes=cpes,
         selected_cpe_id=selected_cpe_id,
+        selected_city_id=selected_city_id,
+        selected_weeks=selected_weeks,
+    )
+
+
+@admin_bp.route("/cpe-dismantle-charts", methods=["GET"])
+@login_required
+def cpe_dismantle_dashboard_charts():
+    # But still → submit GET params, GET + query parameter
+
+    selected_city_id = request.args.get("city_id", type=int)
+
+    selected_cpe_id = request.args.get("cpe_id", type=int)
+
+    selected_dismantle_id = request.args.get("dismantle_id", type=int)
+
+    selected_weeks = request.args.get("weeks", type=int)
+
+    cities = get_cities_within_cpe_dismantle_inventory()
+
+    cpes = get_cpe_within_cpe_dismantle_inventory()
+
+    dismantles = get_dismantles_within_cpe_dismantle_inventory()
+
+    chart_data = get_cpe__dismantle_inventory_chart_data(
+        city_id=selected_city_id,
+        cpe_type_id=selected_cpe_id,
+        dismantle_type_id=selected_dismantle_id,
+        weeks=selected_weeks,
+    )
+
+    return render_template(
+        "charts/cpe_dismantle_dashboard.html",
+        chart_data=chart_data,
+        cities=cities,
+        cpes=cpes,
+        dismantles=dismantles,
+        selected_cpe_id=selected_cpe_id,
+        selected_dismantle_id=selected_dismantle_id,
         selected_city_id=selected_city_id,
         selected_weeks=selected_weeks,
     )
