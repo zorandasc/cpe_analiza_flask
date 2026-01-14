@@ -183,8 +183,8 @@
           <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item">
               <a
-                class="nav-link {% if request.path == url_for('main.admin_dashboard') %}active{% endif %}"
-                href="{{ url_for('main.admin_dashboard') }}"
+                class="nav-link {% if request.path == url_for('admin.dashboard') %}active{% endif %}"
+                href="{{ url_for('admin.dashboard') }}"
               >
                 Admin Panel
               </a>

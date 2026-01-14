@@ -34,6 +34,12 @@ admin_bp = Blueprint(
 )
 
 
+@admin_bp.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("admin.html")
+
+
 ###########################################################
 # ---------------ROUTES FOR MAIN TABLES-------------------------
 ############################################################

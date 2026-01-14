@@ -12,9 +12,3 @@ main_bp = Blueprint(
 @login_required
 def home():
     return render_template("home.html")
-
-
-@main_bp.route("/dashboard")
-@login_required
-def admin_dashboard():
-    return render_template("admin.html")
