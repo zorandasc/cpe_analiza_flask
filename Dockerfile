@@ -61,4 +61,4 @@ ENTRYPOINT ["entrypoint.sh"]
 
 # Set the default command (will be run by exec in the entrypoint script)
 # Command for production (Gunicorn)
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
