@@ -8,6 +8,61 @@ block styles %} {{ super() }}
     background-size: contain;
   }
 
+  /* Sidebar Styling */
+  .sidebar {
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    top: 85px;
+    left: 0;
+    background-color: #2b3a55; /* Solid color for better readability */
+    padding-top: 2rem;
+    z-index: 1000;
+    padding-bottom: 6rem;
+    transition: all 0.3s;
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .sidebar a {
+    padding: 12px 20px;
+    text-decoration: none;
+    font-size: 1.1rem;
+    color: #cbd5e0;
+    display: block;
+    transition: 0.3s;
+  }
+
+  .sidebar a:hover {
+    background-color: #3e4f71;
+    color: white;
+    padding-left: 25px;
+  }
+
+  .sidebar .active {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: white;
+  }
+
+  .sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .sidebar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+  }
+
+  [id] {
+    scroll-margin-top: 10rem;
+  }
+
+  /* Main Content Adjustment */
+  .main-content {
+    margin-left: 250px; /* Same as sidebar width */
+    padding: 20px;
+    width: calc(100% - 250px);
+  }
   /* Main container */
   .admin-wrapper {
     margin-top: 4rem;
@@ -112,168 +167,233 @@ block styles %} {{ super() }}
   .dashboard-link {
     text-decoration: none;
   }
+
+  .custom-icon {
+    height: 50px;
+    margin-bottom: 0.5rem;
+  }
 </style>
 
 {% endblock %} {% block content %}
-<div class="container admin-wrapper">
-  <h1 class="text-center mb-5 title">Admin Dashboard</h1>
+<div class="d-flex">
+  <nav class="sidebar shadow">
+    <div class="text-center mb-4">
+      <h4 class="text-white">Admin Panel</h4>
+    </div>
+    <a href="#top" class="active">Trendovi</a>
+    <hr class="text-white" />
+    <a href="{{ url_for('admin.cpe_dashboard_charts') }}">CPE oprema </a>
+    <a href="{{ url_for('admin.cpe_dismantle_dashboard_charts') }}"
+      >CPE Demontirana oprema</a
+    >
+    <a href="{{ url_for('admin.stb_dashboard_charts') }}">STB oprema</a>
+    <a href="{{ url_for('admin.ont_dashboard_charts') }}">ONT oprema</a>
+    <hr class="text-white" />
+    <a href="#meadle" class="active">Glavne Liste</a>
+    <hr class="text-white" />
+    <a href="{{ url_for('admin.cpe_inventory') }}">CPE Inventori</a>
+    <a href="{{ url_for('admin.cpe_dismantle') }}">CPE Demontirana Inventori</a>
+    <a href="{{ url_for('admin.stb_inventory') }}">STB Inventori</a>
+    <a href="{{ url_for('admin.ont_inventory') }}">ONT Inventori</a>
+    <hr class="text-white" />
+    <a href="#bottom" class="active">Pomoćne Liste</a>
+    <hr class="text-white" />
+    <a href="{{ url_for('admin.users') }}">Korisnici Aplikacije</a>
+    <a href="{{ url_for('admin.cities') }}">Skladišta</a>
+    <a href="{{ url_for('admin.cpe_types') }}">Modeli CPE opreme</a>
+    <a href="{{ url_for('admin.dismantle_status') }}">Tipovi demontaža</a>
+    <a href="{{ url_for('admin.stb_types') }}">Modeli STB opreme</a>
+  </nav>
+  <div class="main-content">
+    <div class="container-fluid admin-wrapper">
+      <h1 class="text-center mb-5 title">Admin Dashboard</h1>
 
-  <div class="row g-4 mb-5">
-    <div class="col-md-6">
-      <a href="{{ url_for('admin.cpe_inventory') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Stanje raspoložive CPE opreme</h4>
-            <p>Pregled ukupnog stanja CPE opreme</p>
-          </div>
+      <h2 id="top" class="h5 admin-title mb-4">Trendovi</h2>
+      <div class="row g-4 mb-5">
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('admin.cpe_dashboard_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Grafik CPE opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
 
-    <div class="col-md-6">
-      <a
-        href="{{ url_for('admin.cpe_dashboard_charts') }}"
-        class="dashboard-link"
-      >
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Grafik CPE opreme</h4>
-            <p></p>
-          </div>
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('admin.cpe_dismantle_dashboard_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Grafik Demontirane CPE opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
-    <div class="col-md-6">
-      <a href="{{ url_for('admin.cpe_dismantle') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Stanje demontirane CPE opreme</h4>
-            <p>Pregled ukupnog stanja demontirane CPE opreme</p>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-6">
-      <a
-        href="{{ url_for('admin.cpe_dismantle_dashboard_charts') }}"
-        class="dashboard-link"
-      >
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Grafik Demontirane CPE opreme</h4>
-            <p></p>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-6">
-      <a href="{{ url_for('admin.stb_inventory') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Stanje raspoložive STB opreme</h4>
-            <p>Pregled ukupnog stanja STB opreme</p>
-          </div>
-        </div>
-      </a>
-    </div>
-    <div class="col-md-6">
-      <a
-        href="{{ url_for('admin.stb_dashboard_charts') }}"
-        class="dashboard-link"
-      >
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Grafik STB opreme</h4>
-            <p></p>
-          </div>
-        </div>
-      </a>
-    </div>
 
-    <div class="col-md-6">
-      <a href="{{ url_for('admin.ont_inventory') }}" class="dashboard-link">
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Stanje raspoložive ONT opreme</h4>
-            <p>Pregled ukupnog stanja ONT opreme</p>
-          </div>
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('admin.stb_dashboard_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Grafik STB opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
-
-    <div class="col-md-6">
-      <a
-        href="{{ url_for('admin.ont_dashboard_charts') }}"
-        class="dashboard-link"
-      >
-        <div class="card dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Grafik ONT opreme</h4>
-            <p></p>
-          </div>
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('admin.ont_dashboard_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Grafik ONT opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
-  </div>
+      </div>
 
-  <h2 class="h5 admin-title mb-4">
-    Administracija i Upravljanje Pomoćnim Listama
-  </h2>
-
-  <div class="row g-4 mb-5">
-    <div class="col-md-3 col-sm-6">
-      <a href="{{ url_for('admin.users') }}" class="dashboard-link">
-        <div class="card side_dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Korisnici aplikacije</h4>
-            <p>Kreiraj, izmijeni, obriši korisnika</p>
-          </div>
+      <h2 id="meadle" class="h5 admin-title mb-4">
+        Administracija i Upravljanje Glavnim Listama
+      </h2>
+      <div class="row g-4 mb-5">
+        <div class="col-md-6">
+          <a href="{{ url_for('admin.cpe_inventory') }}" class="dashboard-link">
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Stanje raspoložive CPE opreme</h4>
+                <p>Pregled ukupnog stanja CPE opreme</p>
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
 
-    <div class="col-md-3 col-sm-6">
-      <a href="{{ url_for('admin.cities') }}" class="dashboard-link">
-        <div class="card side_dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Skladišta opreme</h4>
-            <p>Upravljanje skladištima i IJ</p>
-          </div>
+        <div class="col-md-6">
+          <a href="{{ url_for('admin.cpe_dismantle') }}" class="dashboard-link">
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Stanje demontirane CPE opreme</h4>
+                <p>Pregled ukupnog stanja demontirane CPE opreme</p>
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
 
-    <div class="col-md-3 col-sm-6">
-      <a href="{{ url_for('admin.cpe_types') }}" class="dashboard-link">
-        <div class="card side_dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Modeli CPE opreme</h4>
-            <p>Upravljanje tipovima CPE opreme</p>
-          </div>
+        <div class="col-md-6">
+          <a href="{{ url_for('admin.stb_inventory') }}" class="dashboard-link">
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Stanje raspoložive STB opreme</h4>
+                <p>Pregled ukupnog stanja STB opreme</p>
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
 
-    <div class="col-md-3 col-sm-6">
-      <a href="{{ url_for('admin.dismantle_status') }}" class="dashboard-link">
-        <div class="card side_dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Tipovi demontaža</h4>
-            <p>Stanja u kojima se može naći demontirana CPE opreme</p>
-          </div>
+        <div class="col-md-6">
+          <a href="{{ url_for('admin.ont_inventory') }}" class="dashboard-link">
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Stanje raspoložive ONT opreme</h4>
+                <p>Pregled ukupnog stanja ONT opreme</p>
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
-    </div>
+      </div>
 
-    <div class="col-md-3 col-sm-6">
-      <a href="{{ url_for('admin.stb_types') }}" class="dashboard-link">
-        <div class="card side_dashboard-card shadow p-3">
-          <div class="card-body text-center">
-            <h4 class="card-title">Modeli STB opreme</h4>
-            <p>Upravljanje tipovima STB opreme</p>
-          </div>
+      <h2 id="bottom" class="h5 admin-title mb-4">
+        Administracija i Upravljanje Pomoćnim Listama
+      </h2>
+
+      <div class="row g-4 mb-5">
+        <div class="col-md-3 col-sm-6">
+          <a href="{{ url_for('admin.users') }}" class="dashboard-link">
+            <div class="card side_dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Korisnici aplikacije</h4>
+                <p>Kreiraj, izmijeni, obriši korisnika</p>
+              </div>
+            </div>
+          </a>
         </div>
-      </a>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="{{ url_for('admin.cities') }}" class="dashboard-link">
+            <div class="card side_dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Skladišta opreme</h4>
+                <p>Upravljanje skladištima i IJ</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="{{ url_for('admin.cpe_types') }}" class="dashboard-link">
+            <div class="card side_dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Modeli CPE opreme</h4>
+                <p>Upravljanje tipovima CPE opreme</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a
+            href="{{ url_for('admin.dismantle_status') }}"
+            class="dashboard-link"
+          >
+            <div class="card side_dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Tipovi demontaža</h4>
+                <p>Stanja demontirana CPE opreme</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-3 col-sm-6">
+          <a href="{{ url_for('admin.stb_types') }}" class="dashboard-link">
+            <div class="card side_dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Modeli STB opreme</h4>
+                <p>Upravljanje tipovima STB opreme</p>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </div>
