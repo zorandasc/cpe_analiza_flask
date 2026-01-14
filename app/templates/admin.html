@@ -172,6 +172,14 @@ block styles %} {{ super() }}
     height: 50px;
     margin-bottom: 0.5rem;
   }
+
+  .custom-icon-sidebar {
+    height: 25px;
+    width: 25px;
+    margin-left: 1rem;
+    margin-bottom: 0.3rem;
+    color: whitesmoke;
+  }
 </style>
 
 {% endblock %} {% block content %}
@@ -180,7 +188,14 @@ block styles %} {{ super() }}
     <div class="text-center mb-4">
       <h4 class="text-white">Admin Panel</h4>
     </div>
-    <a href="#top" class="active">Trendovi</a>
+    <a href="#top" class="active"
+      >Trendovi
+      <img
+        src="{{ url_for('static', filename='diagram.png') }}"
+        alt="Icon"
+        class="card-icon custom-icon-sidebar"
+      />
+    </a>
     <hr class="text-white" />
     <a href="{{ url_for('admin.cpe_dashboard_charts') }}">CPE oprema </a>
     <a href="{{ url_for('admin.cpe_dismantle_dashboard_charts') }}"
@@ -189,14 +204,26 @@ block styles %} {{ super() }}
     <a href="{{ url_for('admin.stb_dashboard_charts') }}">STB oprema</a>
     <a href="{{ url_for('admin.ont_dashboard_charts') }}">ONT oprema</a>
     <hr class="text-white" />
-    <a href="#meadle" class="active">Glavne Liste</a>
+    <a href="#meadle" class="active"
+      >Glavne Liste
+      <img
+        src="{{ url_for('static', filename='database.png') }}"
+        alt="Icon"
+        class="card-icon custom-icon-sidebar"
+    /></a>
     <hr class="text-white" />
     <a href="{{ url_for('admin.cpe_inventory') }}">CPE Inventori</a>
     <a href="{{ url_for('admin.cpe_dismantle') }}">CPE Demontirana Inventori</a>
     <a href="{{ url_for('admin.stb_inventory') }}">STB Inventori</a>
     <a href="{{ url_for('admin.ont_inventory') }}">ONT Inventori</a>
     <hr class="text-white" />
-    <a href="#bottom" class="active">Pomoćne Liste</a>
+    <a href="#bottom" class="active"
+      >Pomoćne Liste
+      <img
+        src="{{ url_for('static', filename='rescue.png') }}"
+        alt="Icon"
+        class="card-icon custom-icon-sidebar"
+    /></a>
     <hr class="text-white" />
     <a href="{{ url_for('admin.users') }}">Korisnici Aplikacije</a>
     <a href="{{ url_for('admin.cities') }}">Skladišta</a>
@@ -287,7 +314,7 @@ block styles %} {{ super() }}
           >
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
-                <h4 class="card-title">ONT oprema</h4>
+                <h4 class="card-title">Trend ONT opreme</h4>
                 <img
                   src="{{ url_for('static', filename='charts.png') }}"
                   alt="Icon"
