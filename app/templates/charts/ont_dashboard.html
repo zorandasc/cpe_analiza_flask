@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <a href="{{ url_for('admin.dashboard') }}" 
             class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
-            <span class="me-2">⬅</span> Back
+            <span class="me-2">⬅</span> Natrag
         </a>
         <h2 class="h4 text-secondary mb-0">Trendovi ONT opreme</h2>
         <span class="badge bg-primary">Ažurirano: {{ "now"|datetimeformat if datetimeformat else "Danas" }}</span>
@@ -58,6 +58,9 @@
             </div>
         </div>
     </div>
+    <button class="btn btn-sm btn-outline-secondary mb-4 mt-4" id="exportChart">
+    Export chart (PNG)
+    </button>
 </div>
 
 <script id="chart-data" type="application/json">
@@ -73,12 +76,12 @@
     gradient.addColorStop(0, 'rgba(13, 110, 253, 0.8)');
     gradient.addColorStop(1, 'rgba(13, 110, 253, 0.2)');
 
-    new Chart(ctx, {
+    const chart=new Chart(ctx, {
         type: "bar",
         data: {
             labels: chartData.labels,
             datasets: [{
-                label: "Količina (kom)",
+                label: "Količina ONT opreme (kom)",
                 data: chartData.data,
                 backgroundColor: gradient,
                 borderColor: '#0d6efd',
@@ -91,7 +94,7 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false } // Hiding legend for a cleaner look
+                legend: { display: true } 
             },
             scales: {
                 y: {
@@ -104,5 +107,14 @@
             }
         },
     });
+</script>
+
+<script>
+  document.getElementById("exportChart").addEventListener("click", () => {
+    const link = document.createElement("a");
+    link.href = chart.toBase64Image();
+    link.download = "stanje_ont_opreme.png";
+    link.click();
+  });
 </script>
 {% endblock %}
