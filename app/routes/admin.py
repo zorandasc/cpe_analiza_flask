@@ -680,6 +680,30 @@ def edit_stb_type(id):
     return render_template("admin/stb_types_edit.html", stb=stb)
 
 
+@admin_bp.route("/stb_types/delete/<int:id>")
+@login_required
+def delete_stb_type(id):
+    if not admin_required():
+        return redirect(url_for("admin.stb_types"))
+
+    stb = StbTypes.query.get_or_404(id)
+
+    stb_count = len(stb.stb_inventory)
+
+    # PROTECT CITY DELETE: block if related rows exist
+    if stb_count > 0:
+        flash(
+            "Nemože biti brisano! STB ima aktivan unose. Možete ga onemogućit.",
+            "danger",
+        )
+        return redirect(url_for("admin.stb_types"))
+
+    flash("Stb tip obrisan!", "success")
+    db.session.delete(stb)
+    db.session.commit()
+    return redirect(url_for("admin.stb_types"))
+
+
 ###########################################################
 # ---------------ROUTES FOR DISMANTLE TYPES CRUD-------------------------
 ############################################################

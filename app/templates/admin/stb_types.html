@@ -30,9 +30,9 @@
           >Edit</a
         >
         <a
-          href=""
+          href="{{ url_for('admin.delete_stb_type', id=stb.id) }}"
           class="btn btn-danger btn-sm"
-          onclick="return confirm('Delete stb?')"
+          onclick="return confirm('Obriši stb?')"
           >Delete</a
         >
       </td>
