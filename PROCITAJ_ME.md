@@ -1549,12 +1549,11 @@ Mixing structure with data leads to fragile templates.
 ✔ Treat it as table schema / metadata
 ✔ Do not infer structure from data
 
-# $ flask routes
+# $ flask Endpoint Methods Rule
 
-Endpoint Methods Rule
-
----
-
+```bash
+flask routes
+```
 auth.login GET, POST /login
 auth.logout GET /logout
 main.home GET /
