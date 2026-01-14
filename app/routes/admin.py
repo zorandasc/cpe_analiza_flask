@@ -9,6 +9,7 @@ from app.services.admin import (
     get_cpe__dismantle_chart_data,
     get_stb_inventory_chart_data,
     get_ont_inventory_chart_data,
+    get_iptv_inventory_chart_data,
     get_distinct_joined_values,
 )
 from app.models import (
@@ -804,6 +805,22 @@ def stb_dashboard_charts():
         chart_data=chart_data,
         stbs=stbs,
         selected_id=selected_id,
+        selected_weeks=selected_weeks,
+    )
+
+
+@admin_bp.route("/iptv-users-charts", methods=["GET"])
+@login_required
+def iptv_dashboard_charts():
+    # But still → submit GET params, GET + query parameter
+
+    selected_weeks = request.args.get("weeks", type=int)
+
+    chart_data = get_iptv_inventory_chart_data(weeks=selected_weeks)
+
+    return render_template(
+        "charts/iptv_users_dashboard.html",
+        chart_data=chart_data,
         selected_weeks=selected_weeks,
     )
 

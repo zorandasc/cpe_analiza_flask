@@ -48,7 +48,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
     rows = db.session.execute(text(sql), params).fetchall()
 
     return {
-        "labels": [r.week_end.strftime("%Y-%m-%d") for r in rows],
+        "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
         "data": [r.total for r in rows],
     }
 
@@ -105,7 +105,7 @@ def get_cpe__dismantle_chart_data(
     rows = db.session.execute(text(sql), params).fetchall()
 
     return {
-        "labels": [r.week_end.strftime("%Y-%m-%d") for r in rows],
+        "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
         "data": [r.total for r in rows],
     }
 
@@ -148,7 +148,41 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
     rows = db.session.execute(text(sql), params).fetchall()
 
     return {
-        "labels": [r.week_end.strftime("%Y-%m-%d") for r in rows],
+        "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
+        "data": [r.total for r in rows],
+    }
+
+
+# iptv users charts
+def get_iptv_inventory_chart_data(weeks=None):
+    params = {}
+    if weeks:
+        sql = """
+        WITH last_week AS (
+        SELECT DISTINCT week_end
+        FROM iptv_users 
+        ORDER BY week_end DESC
+        LIMIT :weeks
+        )
+        SELECT i.week_end, SUM(i.total_users) AS total
+        FROM iptv_users i
+        JOIN last_week w ON w.week_end=i.week_end
+        GROUP BY i.week_end
+        ORDER BY i.week_end
+        """
+        params["weeks"] = weeks
+    else:
+        sql = """
+        SELECT week_end, SUM(total_users) AS total
+        FROM iptv_users
+        GROUP BY week_end
+        ORDER BY week_end
+        """
+
+    rows = db.session.execute(text(sql), params).fetchall()
+
+    return {
+        "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
         "data": [r.total for r in rows],
     }
 
@@ -191,7 +225,7 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
     rows = db.session.execute(text(sql), params).fetchall()
 
     return {
-        "labels": [r.month_end.strftime("%Y-%m-%d") for r in rows],
+        "labels": [r.month_end.strftime("%d-%m-%Y") for r in rows],
         "data": [r.total for r in rows],
     }
 

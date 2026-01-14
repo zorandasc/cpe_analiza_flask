@@ -217,7 +217,7 @@ block styles %} {{ super() }}
           >
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
-                <h4 class="card-title">Grafik CPE opreme</h4>
+                <h4 class="card-title">Trend CPE opreme</h4>
                 <img
                   src="{{ url_for('static', filename='charts.png') }}"
                   alt="Icon"
@@ -235,7 +235,7 @@ block styles %} {{ super() }}
           >
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
-                <h4 class="card-title">Grafik Demontirane CPE opreme</h4>
+                <h4 class="card-title">Trend Demontirane CPE opreme</h4>
                 <img
                   src="{{ url_for('static', filename='charts.png') }}"
                   alt="Icon"
@@ -253,7 +253,24 @@ block styles %} {{ super() }}
           >
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
-                <h4 class="card-title">Grafik STB opreme</h4>
+                <h4 class="card-title">Trend STB opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('admin.iptv_dashboard_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Trend IPTV korisnika</h4>
                 <img
                   src="{{ url_for('static', filename='charts.png') }}"
                   alt="Icon"
@@ -270,7 +287,7 @@ block styles %} {{ super() }}
           >
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
-                <h4 class="card-title">Grafik ONT opreme</h4>
+                <h4 class="card-title">ONT oprema</h4>
                 <img
                   src="{{ url_for('static', filename='charts.png') }}"
                   alt="Icon"
@@ -336,7 +353,7 @@ block styles %} {{ super() }}
       </h2>
 
       <div class="row g-4 mb-5">
-        <div class="col-md-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <a href="{{ url_for('admin.users') }}" class="dashboard-link">
             <div class="card side_dashboard-card shadow p-3">
               <div class="card-body text-center">
@@ -347,7 +364,7 @@ block styles %} {{ super() }}
           </a>
         </div>
 
-        <div class="col-md-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <a href="{{ url_for('admin.cities') }}" class="dashboard-link">
             <div class="card side_dashboard-card shadow p-3">
               <div class="card-body text-center">
@@ -358,7 +375,7 @@ block styles %} {{ super() }}
           </a>
         </div>
 
-        <div class="col-md-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <a href="{{ url_for('admin.cpe_types') }}" class="dashboard-link">
             <div class="card side_dashboard-card shadow p-3">
               <div class="card-body text-center">
@@ -383,7 +400,7 @@ block styles %} {{ super() }}
           </a>
         </div>
 
-        <div class="col-md-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <a href="{{ url_for('admin.stb_types') }}" class="dashboard-link">
             <div class="card side_dashboard-card shadow p-3">
               <div class="card-body text-center">
