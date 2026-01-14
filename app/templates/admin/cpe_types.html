@@ -38,9 +38,9 @@ block content %}
           >Edit</a
         >
         <a
-          href=""
+          href="{{ url_for('admin.delete_cpe_type', id=cpe.id) }}"
           class="btn btn-danger btn-sm"
-          onclick="return confirm('Delete CPE opremu?')"
+          onclick="return confirm('Obriši CPE opremu?')"
           >Delete</a
         >
       </td>

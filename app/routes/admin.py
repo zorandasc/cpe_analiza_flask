@@ -603,6 +603,31 @@ def edit_cpe_type(id):
     )
 
 
+@admin_bp.route("/cpe_types/delete/<int:id>")
+@login_required
+def delete_cpe_type(id):
+    if not admin_required():
+        return redirect(url_for("admin.cpe_types"))
+
+    cpe = CpeTypes.query.get_or_404(id)
+
+    cpe_count = len(cpe.cpe_inventory)
+    cpe_dismantle_count = len(cpe.cpe_dismantle)
+
+    # PROTECT CPE DELETE: block if related rows exist
+    if cpe_count > 0 or cpe_dismantle_count > 0:
+        flash(
+            "Nemože biti brisano! CPE ima aktivan unose. Možete ga onemogućit.",
+            "danger",
+        )
+        return redirect(url_for("admin.cpe_types"))
+
+    flash("CPE tip obrisan!", "success")
+    db.session.delete(cpe)
+    db.session.commit()
+    return redirect(url_for("admin.cpe_types"))
+
+
 ###########################################################
 # ---------------ROUTES FOR STB TYPES CRUD--------------------------
 ############################################################
