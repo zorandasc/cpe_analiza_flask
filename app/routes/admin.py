@@ -257,6 +257,7 @@ def add_city():
 
         db.session.add(Cities(name=name, type=selected_type))
         db.session.commit()
+        flash("Novo skladište dodano", "success")
         return redirect(url_for("admin.cities"))
 
     types = [t.value for t in CityTypeEnum]
@@ -316,9 +317,20 @@ def delete_city(id):
 
     city = Cities.query.get_or_404(id)
 
-    # PROTECT CITY DELETE: block if related rows exist
+    cpe_count = len(city.cpe_inventory)
+    cpe_dismantle_count = len(city.cpe_dismantle)
+    ont_count = len(city.ont_inventory)
+    users_count = len(city.users)
 
-    flash("City deleted!", "success")
+    # PROTECT CITY DELETE: block if related rows exist
+    if cpe_count > 0 or cpe_dismantle_count > 0 or ont_count > 0 or users_count > 0:
+        flash(
+            "Nemože biti brisano! Skladište ima aktivne unose. Možete ga onemogućit.",
+            "danger",
+        )
+        return redirect(url_for("admin.cities"))
+
+    flash("Skladište obrisano!", "success")
     db.session.delete(city)
     db.session.commit()
     return redirect(url_for("admin.cities"))
