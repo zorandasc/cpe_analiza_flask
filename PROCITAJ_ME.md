@@ -73,6 +73,8 @@ Servers
 
 # docker compose -f docker-compose.prod.localy.yml up -d --build
 
+# docker compose -f docker-compose.prod.localy.yml build --no-cache
+
 # -----------------------IN PRODUCTION----------
 
 # EXPORT DOCKER IMAGES:
@@ -1554,6 +1556,7 @@ Mixing structure with data leads to fragile templates.
 ```bash
 flask routes
 ```
+
 auth.login GET, POST /login
 auth.logout GET /logout
 main.home GET /
