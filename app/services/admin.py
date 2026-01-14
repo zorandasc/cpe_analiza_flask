@@ -53,34 +53,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
     }
 
 
-def get_cpe_within_cpe_inventory():
-    return db.session.execute(
-        text(
-            """
-        SELECT DISTINCT t.id, t.label
-        FROM cpe_inventory i
-        JOIN cpe_types t ON t.id = i.cpe_type_id
-        ORDER BY t.id
-        """
-        )
-    ).fetchall()
-
-
-def get_cities_within_cpe_inventory():
-    return db.session.execute(
-        text(
-            """
-            SELECT DISTINCT c.id, c.name
-            FROM cpe_inventory i
-            JOIN cities c ON c.id = i.city_id
-            ORDER BY c.id
-        """
-        )
-    ).fetchall()
-
-
 # cpe dismantles
-def get_cpe__dismantle_inventory_chart_data(
+def get_cpe__dismantle_chart_data(
     city_id=None, cpe_type_id=None, dismantle_type_id=None, weeks=None
 ):
     params = {}
@@ -136,45 +110,6 @@ def get_cpe__dismantle_inventory_chart_data(
     }
 
 
-def get_cpe_within_cpe_dismantle_inventory():
-    return db.session.execute(
-        text(
-            """
-        SELECT DISTINCT t.id, t.label
-        FROM cpe_dismantle i
-        JOIN cpe_types t ON t.id = i.cpe_type_id
-        ORDER BY t.id
-        """
-        )
-    ).fetchall()
-
-
-def get_cities_within_cpe_dismantle_inventory():
-    return db.session.execute(
-        text(
-            """
-            SELECT DISTINCT c.id, c.name
-            FROM cpe_dismantle i
-            JOIN cities c ON c.id = i.city_id
-            ORDER BY c.id
-        """
-        )
-    ).fetchall()
-
-
-def get_dismantles_within_cpe_dismantle_inventory():
-    return db.session.execute(
-        text(
-            """
-        SELECT DISTINCT t.id, t.label
-        FROM cpe_dismantle i
-        JOIN dismantle_types t ON t.id = i.dismantle_type_id
-        ORDER BY t.id
-        """
-        )
-    ).fetchall()
-
-
 # stb inventory
 def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
     params = {}
@@ -216,19 +151,6 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
         "labels": [r.week_end.strftime("%Y-%m-%d") for r in rows],
         "data": [r.total for r in rows],
     }
-
-
-def get_stb_within_stb_inventory():
-    return db.session.execute(
-        text(
-            """
-        SELECT DISTINCT t.id, t.label
-        FROM stb_inventory i
-        JOIN stb_types t ON t.id = i.stb_type_id
-        ORDER BY t.id
-        """
-        )
-    ).fetchall()
 
 
 # ont inventory
@@ -274,14 +196,72 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
     }
 
 
-def get_cities_within_ont_inventory():
-    return db.session.execute(
-        text(
-            """
-            SELECT DISTINCT c.id, c.name
-            FROM ont_inventory i
-            JOIN cities c ON c.id = i.city_id
-            ORDER BY c.id
-        """
-        )
-    ).fetchall()
+BASE_TABLES = {
+    "cpe": "cpe_inventory",
+    "cpe_dis": "cpe_dismantle",
+    "stb": "stb_inventory",
+    "ont": "ont_inventory",
+}
+
+JOIN_TABLES = {
+    "city": {
+        "table": "cities",
+        "pk": "id",
+        "cols": "j.id, j.name",
+        "order_by": "j.name",
+    },
+    "cpe_type": {
+        "table": "cpe_types",
+        "pk": "id",
+        "cols": "j.id, j.label",
+        "order_by": "j.label",
+    },
+    "stb_type": {
+        "table": "stb_types",
+        "pk": "id",
+        "cols": "j.id, j.label",
+        "order_by": "j.label",
+    },
+    "dis_type": {
+        "table": "dismantle_types",
+        "pk": "id",
+        "cols": "j.id, j.label",
+        "order_by": "j.label",
+    },
+}
+
+
+def get_distinct_joined_values(base_key: str, join_key: str, base_fk: str):
+    base_table = BASE_TABLES.get(base_key)
+    join_meta = JOIN_TABLES.get(join_key)
+
+    if not base_table or not join_meta:
+        raise ValueError("Invalid base or join table")
+
+    join_table = join_meta["table"]
+    join_pk = join_meta["pk"]
+    select_cols = join_meta["cols"]
+
+    sql = f"""
+        SELECT DISTINCT {select_cols}
+        FROM {base_table} b
+        JOIN {join_table} j ON j.{join_pk}=b.{base_fk}
+        ORDER BY {select_cols}
+    """
+
+    return db.session.execute(text(sql)).fetchall()
+
+
+# ONE EXAMPLE OF get_distinct_joined_values() FUNCTION ABSTRACTION:
+"""
+SELECT DISTINCT c.id, c.name
+FROM ont_inventory i
+JOIN cities c ON c.id = i.city_id
+ORDER BY c.id
+"""
+"""
+SELECT DISTINCT t.id, t.label
+FROM cpe_dismantle i
+JOIN dismantle_types t ON t.id = i.dismantle_type_id
+ORDER BY t.id
+"""

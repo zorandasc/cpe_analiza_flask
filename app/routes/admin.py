@@ -6,16 +6,10 @@ from app.extensions import db
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import (
     get_cpe_inventory_chart_data,
-    get_cpe_within_cpe_inventory,
-    get_cities_within_cpe_inventory,
-    get_cpe__dismantle_inventory_chart_data,
-    get_cities_within_cpe_dismantle_inventory,
-    get_cpe_within_cpe_dismantle_inventory,
-    get_dismantles_within_cpe_dismantle_inventory,
+    get_cpe__dismantle_chart_data,
     get_stb_inventory_chart_data,
-    get_stb_within_stb_inventory,
     get_ont_inventory_chart_data,
-    get_cities_within_ont_inventory,
+    get_distinct_joined_values,
 )
 from app.models import (
     Cities,
@@ -730,7 +724,9 @@ def stb_dashboard_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
-    stbs = get_stb_within_stb_inventory()
+    stbs = get_distinct_joined_values(
+        base_key="stb", join_key="stb_type", base_fk="stb_type_id"
+    )
 
     chart_data = get_stb_inventory_chart_data(
         stb_type_id=selected_id, weeks=selected_weeks
@@ -753,7 +749,9 @@ def ont_dashboard_charts():
 
     selected_months = request.args.get("months", type=int)
 
-    cities = get_cities_within_ont_inventory()
+    cities = get_distinct_joined_values(
+        base_key="ont", join_key="city", base_fk="city_id"
+    )
 
     chart_data = get_ont_inventory_chart_data(
         city_id=selected_id, months=selected_months
@@ -778,9 +776,13 @@ def cpe_dashboard_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
-    cities = get_cities_within_cpe_inventory()
+    cities = get_distinct_joined_values(
+        base_key="cpe", join_key="city", base_fk="city_id"
+    )
 
-    cpes = get_cpe_within_cpe_inventory()
+    cpes = get_distinct_joined_values(
+        base_key="cpe", join_key="cpe_type", base_fk="cpe_type_id"
+    )
 
     chart_data = get_cpe_inventory_chart_data(
         city_id=selected_city_id, cpe_type_id=selected_cpe_id, weeks=selected_weeks
@@ -810,13 +812,19 @@ def cpe_dismantle_dashboard_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
-    cities = get_cities_within_cpe_dismantle_inventory()
+    cities = get_distinct_joined_values(
+        base_key="cpe_dis", join_key="city", base_fk="city_id"
+    )
 
-    cpes = get_cpe_within_cpe_dismantle_inventory()
+    cpes = get_distinct_joined_values(
+        base_key="cpe_dis", join_key="cpe_type", base_fk="cpe_type_id"
+    )
 
-    dismantles = get_dismantles_within_cpe_dismantle_inventory()
+    dismantles = get_distinct_joined_values(
+        base_key="cpe_dis", join_key="dis_type", base_fk="dismantle_type_id"
+    )
 
-    chart_data = get_cpe__dismantle_inventory_chart_data(
+    chart_data = get_cpe__dismantle_chart_data(
         city_id=selected_city_id,
         cpe_type_id=selected_cpe_id,
         dismantle_type_id=selected_dismantle_id,

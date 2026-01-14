@@ -1566,7 +1566,7 @@ stb_inventory.update_stb_inventory POST /stb-records/update_stb
 
 # Rule of thumb (worth remembering)
 
- FOR FILTERS USE GET REQUEST + query parameter IN URL, NOT POST REQUEST
+FOR FILTERS USE GET REQUEST + query parameter IN URL, NOT POST REQUEST
 
 FOR NEW/Edits USE MODALS WITH POST REQUEST (NEW/EDIT REQUEST TO DB)
 
@@ -1574,3 +1574,13 @@ FOR NEW/Edits USE MODALS WITH POST REQUEST (NEW/EDIT REQUEST TO DB)
 
 Always filter before grouping
 Always use week_end, not NOW() math in Python
+
+# Index recommendation (very important for charts)
+
+For good performance, make sure you have:
+
+CREATE INDEX ON cpe_inventory (week_end);
+CREATE INDEX ON cpe_inventory (city_id, week_end);
+CREATE INDEX ON cpe_inventory (cpe_type_id, week_end);
+
+If the table grows, this will matter a lot.
