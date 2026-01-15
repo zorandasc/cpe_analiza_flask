@@ -26,9 +26,15 @@ def get_cpe_records_view_data():
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("is_active_total")
 
+    for s in schema_list:
+        print(s, "\n")
+
     # 1. Build pivoted cpe_inventory records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
     records = get_cpe_inventory_pivoted(schema_list, current_week_end)
+
+    for r in records:
+        print(r, "\n")
 
     records_grouped = _group_records(records, schema_list)
 

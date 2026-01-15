@@ -53,12 +53,16 @@
     </button>
 </div>
 
+<!--GET CHAR_DATA FROM BACKEND AND PIPE TO JSON-->
 <script id="chart-data" type="application/json">
     {{ chart_data | tojson }}
 </script>
 
 <script>
+    //PARSE JSON DATA FROM BACKEND
     const chartData = JSON.parse(document.getElementById("chart-data").textContent);
+    
+     //GET CANVAL HTML ELEMENT
     const ctx = document.getElementById("iptvChart").getContext("2d");
 
     // Creating a gradient for the bar chart
@@ -66,6 +70,7 @@
     gradient.addColorStop(0, 'rgba(13, 110, 253, 0.8)');
     gradient.addColorStop(1, 'rgba(13, 110, 253, 0.2)');
 
+    //MAKE CHART.JS OBJECT
     const chart=new Chart(ctx, {
         type: "bar",
         data: {

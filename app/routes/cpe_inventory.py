@@ -61,3 +61,10 @@ def cpe_records_city_history(id):
         schema=schema_list,
         city=city,
     )
+
+
+
+@cpe_inventory_bp.route("/export/cpe-records.xlsx")
+@login_required
+def export_cpe_pivot_excel():
+    pass

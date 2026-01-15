@@ -48,8 +48,8 @@ def dashboard():
 @login_required
 def cpe_inventory():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
 
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
@@ -96,8 +96,8 @@ def cpe_inventory():
 @login_required
 def cpe_dismantle():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
 
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
@@ -134,8 +134,8 @@ def cpe_dismantle():
 @login_required
 def stb_inventory():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
 
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
@@ -178,8 +178,8 @@ def stb_inventory():
 @login_required
 def ont_inventory():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
 
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
@@ -225,8 +225,8 @@ def ont_inventory():
 @login_required
 def cities():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
 
     cities = Cities.query.order_by(Cities.id).all()
     return render_template("admin/cities.html", cities=cities)
@@ -344,8 +344,8 @@ def delete_city(id):
 @login_required
 def users():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
     users = Users.query.order_by(Users.id).all()
     return render_template("admin/users.html", users=users)
 
@@ -513,8 +513,8 @@ def delete_user(id):
 @login_required
 def cpe_types():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
     cpes = CpeTypes.query.order_by(CpeTypes.id).all()
     return render_template("admin/cpe_types.html", cpes=cpes)
 
@@ -636,8 +636,8 @@ def delete_cpe_type(id):
 @login_required
 def stb_types():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
     stbs = StbTypes.query.order_by(StbTypes.id).all()
     return render_template("admin/stb_types.html", stbs=stbs)
 
@@ -737,8 +737,8 @@ def delete_stb_type(id):
 @login_required
 def dismantle_status():
     if not view_required():
-        # return "Forbidden", 403
-        return redirect(url_for("admin_dashboard"))
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
     status = DismantleTypes.query.order_by(DismantleTypes.id).all()
     return render_template("admin/dismantle_types.html", status=status)
 
