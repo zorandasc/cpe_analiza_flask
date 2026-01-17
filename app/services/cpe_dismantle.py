@@ -126,9 +126,87 @@ def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
     return city, records, schema_list, category, None
 
 
+def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "missing"
+    current_week_end = get_current_week_friday()
+
+    schema_list = get_cpe_types_column_schema("is_active_dismantle")
+
+    records = get_cpe_dismantle_pivoted(
+        schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
+    )
+
+    grouped = _group_records(records, schema_list)
+
+    # APPLY Excel adapter
+    headers_main = ["Skladišta"]
+    headers_sub = [""]
+
+    rows = []
+
+    # FOR COMPLETE HEADER, SUBHEADER:
+    # If cpe["label"] is "Router"
+    # headers_main.append("Router")
+    # headers_main: ["Skladišta", "Router", "Azururano"]
+    # headers_sub:  ["",          "kolicina",     ""]
+
+    # FOR DAMAGE HEADER, SUBHEADER:
+    # If cpe["label"] is "Router"
+    # headers_main.extend(["Router", "Router", "Router"])
+    # headers_main: ["Skladišta", "Router",     "Router",   "Router",   "Azururano"]
+    # headers_sub:  ["",    "Bez daljinskog", "Bez adaptera", "Bez oba",    ""]
+
+    # append would have accidentally put a whole list inside your list,
+    # extend keeps the list "flat" so you can iterate through it easily
+
+    if mode == "complete":
+        for cpe in schema_list:
+            headers_main.append(cpe["label"])
+            headers_sub.append("Količina")
+    else:
+        for cpe in schema_list:
+            headers_main.extend([cpe["label"]] * 3)
+            headers_sub.extend(["Bez adaptera", "Bez daljinskog", "Bez oba"])
+
+    headers_main.append("Ažurirano")
+
+    headers_sub.append("")
+
+    # FOR COMPLETE DATA:
+    # row=["ij banja luka", 10, "update_at","ij prijedor", 10, "update_at",...]
+    # FOR DEMAGE DATA:
+    # row=["ij banja luka", 10, 20, 30 "update_at", "ij prijedor", 10,20,30 "update_at"...]
+    for city in grouped:
+        row = [city["city_name"]]
+
+        for cpe in schema_list:
+            if mode == "complete":
+                row.append(city["cpe"][cpe["name"]]["damages"]["comp"]["quantity"])
+            else:
+                row.extend(
+                    [
+                        city["cpe"][cpe["name"]]["damages"]["na"]["quantity"],
+                        city["cpe"][cpe["name"]]["damages"]["nd"]["quantity"],
+                        city["cpe"][cpe["name"]]["damages"]["ndia"]["quantity"],
+                    ]
+                )
+        updated_at = (
+            city["complete_updated_at"]
+            if mode == "complete"
+            else city["missing_updated_at"]
+        )
+
+        row.append(updated_at.strftime("%Y-%m-%d %H:%M") if updated_at else "")
+
+        rows.append(row)
+
+    return headers_main, headers_sub, rows, schema_list, current_week_end
+
+
 # -------------------------
 # INTERNAL HELPERS
 # -------------------------
+# _group_records Treat it as canonical domain model:
+# data modeling, reporting needs, future exports
 def _group_records(records, schema_list):
     grouped = {}
 

@@ -16,9 +16,9 @@
         <div class="card-body bg-light">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label fw-bold">Grad</label>
+                    <label class="form-label fw-bold">Skladište</label>
                     <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
-                        <option value="">-- Svi Gradovi --</option>
+                        <option value="">-- Sva Skladišta --</option>
                         {% for city in cities %}
                         <option value="{{ city.id }}" {% if city.id == selected_id %}selected{% endif %}>
                             {{ city.name |capitalize }}
@@ -27,9 +27,9 @@
                     </select>
                 </div>
                 <div class="col-md-5">
-                    <label class="form-label fw-bold">Tip CPE uređaja</label>
+                    <label class="form-label fw-bold">CPE uređaj</label>
                     <select name="cpe_id" class="form-select shadow-sm" onchange="this.form.submit()">
-                         <option value="">-- Svi tipovi --</option>
+                         <option value="">-- Svi uređaji --</option>
                         {% for cpe in cpes %}
                         <option value="{{ cpe.id }}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
                             {{ cpe.label|capitalize }}

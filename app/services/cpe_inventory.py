@@ -26,15 +26,9 @@ def get_cpe_records_view_data():
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("is_active_total")
 
-    for s in schema_list:
-        print(s, "\n")
-
     # 1. Build pivoted cpe_inventory records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
     records = get_cpe_inventory_pivoted(schema_list, current_week_end)
-
-    for r in records:
-        print(r, "\n")
 
     records_grouped = _group_records(records, schema_list)
 
@@ -120,6 +114,34 @@ def get_cpe_records_history(
     )
 
     return city, records, schema_list, None
+
+
+def get_cpe_records_excel_export():
+    current_week_end = get_current_week_friday()
+
+    schema_list = get_cpe_types_column_schema("is_active_total")
+
+    records = get_cpe_inventory_pivoted(schema_list, current_week_end)
+
+    # ---- HEADERS ----
+    headers = ["Skladišta"] + [s["label"] for s in schema_list] + ["Ažurirano"]
+
+    # ---- ROWS ----
+    rows = []
+    for r in records:
+        row = (
+            [r["city_name"]]
+            + [r.get(s["name"], 0) for s in schema_list]
+            + [
+                r["max_updated_at"].strftime("%Y-%m-%d %H:%M")
+                if r["max_updated_at"]
+                else ""
+            ]
+        )
+
+        rows.append(row)
+
+    return headers, rows
 
 
 # -------------------------

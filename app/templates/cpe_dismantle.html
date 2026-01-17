@@ -335,7 +335,10 @@
             {% endfor %}
           </tbody>
         </table>
-       
+          <a class="btn btn-sm btn-outline-secondary"
+            href="{{ url_for('cpe_dismantle_inventory.export_cpe_dismantle_excel', category='complete')}}">
+            Export Excel
+          </a>
       </div>
      <h2 class="text-center title">Stanje demontirane ispravne i nekompletne TO za dan: {{ today }}</h2>
       <span class="info">Sedmica ažuriranja {{current_week_end}} (Petak)</span>
@@ -461,6 +464,10 @@
          <p>
          *Napomena: ND- nema daljinski, NA- nema adapter, NDiA- nema daljinski i adapter
         </p>
+      <a class="btn btn-sm btn-outline-secondary"
+            href="{{ url_for('cpe_dismantle_inventory.export_cpe_dismantle_excel', category='damage')}}">
+            Export Excel
+          </a>
       </div>
   </div>
  

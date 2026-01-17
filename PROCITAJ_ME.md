@@ -1586,3 +1586,40 @@ CREATE INDEX ON cpe_inventory (city_id, week_end);
 CREATE INDEX ON cpe_inventory (cpe_type_id, week_end);
 
 If the table grows, this will matter a lot.
+
+# 1️⃣ What \_group_records() really is (important)
+
+It is a domain transformation:
+
+SQL rows
+↓
+\_city → cpe → damage → quantities
+
+That structure:
+
+```python
+grouped[city]["cpe"][cpe]["damages"][damage_type]
+```
+
+is your canonical dismantle model.
+
+✔ It merges SQL rows
+✔ It resolves timestamps
+✔ It normalizes dismantle types
+✔ It’s presentation-agnos
+
+
+# ADAPTER
+
+Correct architecture (this is the key)
+Keep _group_records() as-is
+
+Then create two adapters:
+
+_group_records()
+   ↓
+┌────────────────────┬────────────────────┐
+│ HTML table adapter │ Excel export adapter│
+└────────────────────┴────────────────────┘
+
+HTML adapter IS TEMPLATE
