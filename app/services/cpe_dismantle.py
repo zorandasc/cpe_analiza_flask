@@ -143,38 +143,29 @@ def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "mi
 
     rows = []
 
-    # FOR COMPLETE HEADER, SUBHEADER:
-    # If cpe["label"] is "Router"
-    # headers_main.append("Router")
-    # headers_main: ["Skladišta", "Router", "Azururano"]
-    # headers_sub:  ["",          "kolicina",     ""]
-
-    # FOR DAMAGE HEADER, SUBHEADER:
-    # If cpe["label"] is "Router"
-    # headers_main.extend(["Router", "Router", "Router"])
-    # headers_main: ["Skladišta", "Router",     "Router",   "Router",   "Azururano"]
-    # headers_sub:  ["",    "Bez daljinskog", "Bez adaptera", "Bez oba",    ""]
-
-    # append would have accidentally put a whole list inside your list,
-    # extend keeps the list "flat" so you can iterate through it easily
-
+    # -------------------------
+    # HEADERS
+    # -------------------------
     if mode == "complete":
         for cpe in schema_list:
             headers_main.append(cpe["label"])
             headers_sub.append("Količina")
     else:
         for cpe in schema_list:
-            headers_main.extend([cpe["label"]] * 3)
-            headers_sub.extend(["Bez adaptera", "Bez daljinskog", "Bez oba"])
+            subcols = get_missing_subcolumns(cpe)
+
+            if not subcols:
+                continue
+
+            headers_main.extend([cpe["label"]] * len(subcols))
+            headers_sub.extend([label for _, label in subcols])
 
     headers_main.append("Ažurirano")
-
     headers_sub.append("")
 
-    # FOR COMPLETE DATA:
-    # row=["ij banja luka", 10, "update_at","ij prijedor", 10, "update_at",...]
-    # FOR DEMAGE DATA:
-    # row=["ij banja luka", 10, 20, 30 "update_at", "ij prijedor", 10,20,30 "update_at"...]
+    # -------------------------
+    # ROWS
+    # -------------------------
     for city in grouped:
         row = [city["city_name"]]
 
@@ -182,13 +173,10 @@ def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "mi
             if mode == "complete":
                 row.append(city["cpe"][cpe["name"]]["damages"]["comp"]["quantity"])
             else:
-                row.extend(
-                    [
-                        city["cpe"][cpe["name"]]["damages"]["na"]["quantity"],
-                        city["cpe"][cpe["name"]]["damages"]["nd"]["quantity"],
-                        city["cpe"][cpe["name"]]["damages"]["ndia"]["quantity"],
-                    ]
-                )
+                subcols = get_missing_subcolumns(cpe)
+                for code, _ in subcols:
+                    row.append(city["cpe"][cpe["name"]]["damages"][code]["quantity"])
+                    
         updated_at = (
             city["complete_updated_at"]
             if mode == "complete"
@@ -348,3 +336,22 @@ def _group_history_records(records, schema_list):
                 )
 
     return list(grouped.values())
+
+
+# FOR BUILDING DINAMIC SUBHEADERS IN EXCEL
+def get_missing_subcolumns(cpe):
+    """
+    Returns dismantle subcolumns based on CPE capabilities.
+    """
+    sub = []
+
+    if cpe["has_adapter"]:
+        sub.append(("na", "Bez adaptera"))
+
+    if cpe["has_remote"]:
+        sub.append(("nd", "Bez daljinskog"))
+
+    if cpe["has_adapter"] and cpe["has_remote"]:
+        sub.append(("ndia", "Bez oba"))
+
+    return sub
