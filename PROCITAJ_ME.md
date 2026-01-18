@@ -1623,3 +1623,4 @@ _group_records()
 └────────────────────┴────────────────────┘
 
 HTML adapter IS TEMPLATE
+

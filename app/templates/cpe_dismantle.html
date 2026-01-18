@@ -351,18 +351,20 @@
               </th>
               {% if schema %} {% for item in schema %} 
               
-              <th colspan="3" class="{{item.cpe_type.name}}-column ">{{item.label}}</th><!--CPE MODELS COLUMNS-->
+              <th {% if item.has_remote %} colspan="3"{% endif %} class="{{item.cpe_type.name}}-column ">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
               <th class="azurira-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
             <tr>
               <th class="group-start"></th>
               {% if schema %} {% for item in schema %} 
-              <th class="group-start">NA</th>
-              <th>ND</th> 
-              <th class="group-end">NDIA</th>
-              {% endfor %} {% endif %}
-              <th class="group-end"></th>
+                <th class="group-start">NA</th>
+                {% if item.has_remote %}
+                    <th>ND</th> 
+                    <th class="group-end">NDIA</th>
+                  {% endif %}
+                  {% endfor %} {% endif %}
+                  <th class="group-end"></th>
             </tr>
           </thead>
 
@@ -374,24 +376,16 @@
               </td>
               {% for item in schema %}
               <td class="group-start text-center">{{ r.cpe[item.name]['damages']['na']['quantity'] }}</td>
-              
+              {% if item.has_remote %}
               <td class="text-center">  
                 <!--This is Conditional content, not conditional structure-->
-                {% if item.has_remote %}
                 {{r.cpe[item.name]['damages']['nd']['quantity'] }}
-                {% else %}
-                  —
-                {% endif %}
               </td>
-             
               <td class="group-end text-center">  
-                <!--This is Conditional content, not conditional structure-->
-                {% if item.has_remote %}
+                <!--This is Condtional content, not conditional structure-->
                 {{ r.cpe[item.name]['damages']['ndia']['quantity'] }}
-                {% else %}
-                  —
-                {% endif %}
               </td>
+              {% endif %}
               {% endfor %}
               {% if r.missing_updated_at %}
               <td class="group-start {% if r.missing_updated_at %}{% if r.missing_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">

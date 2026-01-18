@@ -16,9 +16,9 @@
         <div class="card-body bg-light">
             <form method="get" class="row g-3 align-items-end">
                 <div class="col-md-5">
-                    <label class="form-label fw-bold">Tip STB uređaja</label>
+                    <label class="form-label fw-bold">STB uređaj</label>
                     <select name="id" class="form-select shadow-sm" onchange="this.form.submit()">
-                        <option value="">-- Svi tipovi --</option>
+                        <option value="">-- Svi uređaji --</option>
                         {% for stb in stbs %}
                         <option value="{{ stb.id }}" {% if stb.id == selected_id %}selected{% endif %}>
                             {{ stb.label|capitalize }}
