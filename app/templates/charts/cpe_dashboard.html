@@ -20,7 +20,7 @@
                     <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
                         <option value="">-- Sva Skladišta --</option>
                         {% for city in cities %}
-                        <option value="{{ city.id }}" {% if city.id == selected_id %}selected{% endif %}>
+                        <option value="{{ city.id }}" {% if city.id == selected_city_id %}selected{% endif %}>
                             {{ city.name |capitalize }}
                         </option>
                         {% endfor %}
