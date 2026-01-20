@@ -79,7 +79,7 @@
         </div>
         <div class="card-body">
             <div style="position: relative; height: 500px;">
-                <canvas id="stbChart"></canvas>
+                <canvas id="ctxChart"></canvas>
             </div>
         </div>
     </div>
@@ -98,7 +98,7 @@
     //PARSE JSON DATA FROM BACKEND
     const chartData = JSON.parse(document.getElementById("chart-data").textContent);
      //GET CANVAL HTML ELEMENT
-    const ctx = document.getElementById("stbChart").getContext("2d");
+    const ctx = document.getElementById("ctxChart").getContext("2d");
 
     //GET TYPE OF CHART FROM LOCALSTORAGE
     let chartType = localStorage.getItem("chartType") || "bar";
@@ -142,7 +142,7 @@
                     legend: { display: true }
                 },
                 scales: {
-                    y: { beginAtZero: true },
+                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
                     x: {}
                 }
             }

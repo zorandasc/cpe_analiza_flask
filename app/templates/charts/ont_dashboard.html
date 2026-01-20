@@ -51,10 +51,14 @@
     <div class="card shadow-sm">
         <div class="card-header bg-white py-3">
             <h5 class="card-title mb-0">Analitika količine</h5>
+             <select id="chartType" class="form-select form-select-sm w-auto">
+        <option value="bar" selected>Bar chart</option>
+        <option value="line">Line chart</option>
+    </select>
         </div>
         <div class="card-body">
             <div style="position: relative; height: 500px;">
-                <canvas id="ontChart"></canvas>
+                <canvas id="ctxChart"></canvas>
             </div>
         </div>
     </div>
@@ -69,48 +73,69 @@
 </script>
 
 <script>
-     //PARSE JSON DATA FROM BACKEND
+
+    //PARSE JSON DATA FROM BACKEND
     const chartData = JSON.parse(document.getElementById("chart-data").textContent);
-    
-     //GET CANVAS HTML ELEMENT
-    const ctx = document.getElementById("ontChart").getContext("2d");
+     //GET CANVAL HTML ELEMENT
+    const ctx = document.getElementById("ctxChart").getContext("2d");
+
+    //GET TYPE OF CHART FROM LOCALSTORAGE
+    let chartType = localStorage.getItem("chartType") || "bar";
+    let chart;
 
     // Creating a gradient for the bar chart
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(13, 110, 253, 0.8)');
     gradient.addColorStop(1, 'rgba(13, 110, 253, 0.2)');
 
-    //MAKE CHART.JS OBJECT
-    const chart=new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: "Količina ONT opreme (kom)",
-                data: chartData.data,
-                backgroundColor: gradient,
-                borderColor: '#0d6efd',
-                borderWidth: 2,
-                borderRadius: 5,
-                hoverBackgroundColor: '#0b5ed7'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: true } 
+    //SET HTML SELECTOR TO VALUE FROM LOCALSTORAGE
+    document.getElementById("chartType").value = chartType;
+
+    function createChart(type) {
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: "Količina ONT opreme (kom)",
+                    data: chartData.data,
+                    backgroundColor:
+                        type === "bar"
+                            ? gradient
+                            : "rgba(0,0,0,0)",
+                    borderColor: "#0d6efd",
+                    borderRadius: 5,
+                    borderWidth: 2,
+                    hoverBackgroundColor: '#0b5ed7',
+                    tension: 0.3,   // smooth line
+                    fill: false,
+                    pointRadius: type === "line" ? 4 : 0
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f0f0f0' }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true }
                 },
-                x: {
-                    grid: { display: false }
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
+                    x: {}
                 }
             }
-        },
+        });
+    }
+
+    // initial render
+    createChart(chartType);
+
+    // listen for type change
+    document.getElementById("chartType").addEventListener("change", (e) => {
+        chartType = e.target.value;
+        localStorage.setItem("chartType", chartType);
+        createChart(chartType);
     });
 </script>
 
