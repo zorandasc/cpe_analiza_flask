@@ -786,7 +786,7 @@ def edit_dismantle_status(id):
 ############################################################
 @admin_bp.route("/stb-charts", methods=["GET"])
 @login_required
-def stb_dashboard_charts():
+def stb_inventory_charts():
     # But still → submit GET params, GET + query parameter
     selected_id = request.args.get("id", type=int)
 
@@ -811,7 +811,7 @@ def stb_dashboard_charts():
 
 @admin_bp.route("/iptv-users-charts", methods=["GET"])
 @login_required
-def iptv_dashboard_charts():
+def iptv_inventory_charts():
     # But still → submit GET params, GET + query parameter
 
     selected_weeks = request.args.get("weeks", type=int)
@@ -827,7 +827,7 @@ def iptv_dashboard_charts():
 
 @admin_bp.route("/ont-charts", methods=["GET"])
 @login_required
-def ont_dashboard_charts():
+def ont_inventory_charts():
     # But still → submit GET params, GET + query parameter
     selected_id = request.args.get("id", type=int)
 
@@ -852,7 +852,7 @@ def ont_dashboard_charts():
 
 @admin_bp.route("/cpe-charts", methods=["GET"])
 @login_required
-def cpe_dashboard_charts():
+def cpe_inventory_charts():
     # But still → submit GET params, GET + query parameter
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
@@ -885,7 +885,7 @@ def cpe_dashboard_charts():
 
 @admin_bp.route("/cpe-dismantle-charts", methods=["GET"])
 @login_required
-def cpe_dismantle_dashboard_charts():
+def cpe_dismantle_inventory_charts():
     # But still → submit GET params, GET + query parameter
 
     selected_city_id = request.args.get("city_id", type=int)
