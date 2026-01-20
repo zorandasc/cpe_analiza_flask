@@ -80,7 +80,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
     # ------------------------
     # Pivot for Chart.js
     # ------------------------
-    
+
     # This line is a very efficient "Pythonic" way to perform three tasks at once:
     # extracting, de-duplicating, and ordering your data.
     # The Set Comprehension: {r.week_end for r in rows}
@@ -96,7 +96,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
     for r in rows:
         # setdefault checks if r.cpe_name exists. If it doesn't, it creates it
         # If it does exist, it does nothing and moves on.
-        datasets_dict.setdefault(r.cpe_name, {d: 0 for d in labels})
+        datasets_dict.setdefault(r.cpe_name, {lab: 0 for lab in labels})
         # Now that we are sure the dictionary for that specific cpe_name exists,
         # update its value from 0 to the actual total
         datasets_dict[r.cpe_name][r.week_end] = r.total
@@ -159,37 +159,94 @@ def get_cpe_dismantle_chart_data(
     if conditions:
         where_clause = " AND " + " AND ".join(conditions)
 
+    limit_clause = ""
     if weeks:
-        sql = f"""
-            WITH last_weeks AS (
+        limit_clause = """
+            AND i.week_end IN (
                 SELECT DISTINCT week_end
                 FROM cpe_dismantle
-                WHERE 1=1 {where_clause}
                 ORDER BY week_end DESC
                 LIMIT :weeks
             )
-            SELECT i.week_end, SUM(i.quantity) AS total
+        """
+        params["weeks"] = weeks
+
+    # 🔁 CASE 1 — one CPE selected → single dataset
+    if cpe_type_id is not None:
+        sql = f"""
+            SELECT 
+                i.week_end, 
+                SUM(i.quantity) AS total
             FROM cpe_dismantle i
-            JOIN last_weeks w ON w.week_end = i.week_end
-            WHERE 1=1 {where_clause}
+            WHERE 1=1
+            {where_clause}
+            {limit_clause}
             GROUP BY i.week_end
             ORDER BY i.week_end
         """
-        params["weeks"] = weeks
-    else:
-        sql = f"""
-            SELECT week_end, SUM(quantity) AS total
-            FROM cpe_dismantle
-            WHERE 1=1 {where_clause}
-            GROUP BY week_end
-            ORDER BY week_end
-        """
+
+        rows = db.session.execute(text(sql), params).fetchall()
+
+        return {
+            "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
+            "datasets": [
+                {
+                    "label": "Total",
+                    "data": [r.total for r in rows],
+                }
+            ],
+        }
+
+    # 🔁 CASE 2 — no CPE selected → multiple datasets
+    sql = f"""
+    SELECT 
+        i.week_end,
+        i.cpe_type_id,
+        ct.name AS cpe_name,
+        SUM(i.quantity) AS total
+    FROM cpe_dismantle i
+    JOIN cpe_types ct ON ct.id = i.cpe_type_id
+    WHERE 1=1
+    {where_clause}
+    {limit_clause}
+    GROUP BY i.week_end, i.cpe_type_id, ct.name
+    ORDER BY i.week_end
+
+    """
 
     rows = db.session.execute(text(sql), params).fetchall()
+    # [ (datetime.date(2026, 1, 23), 6, 'Skyworth STBHD/4K HP44H', 375),...]
+
+    # ------------------------
+    # Pivot for Chart.js
+    # ------------------------
+
+    # This line is a very efficient "Pythonic" way to perform three tasks at once:
+    # extracting, de-duplicating, and ordering your data.
+    labels = sorted({r.week_end for r in rows})
+
+    # This initializes an empty dictionary
+    dataset_dict = {}
+    for r in rows:
+        # setdefault checks if r.cpe_name exists.
+        # it creates it empty totals
+        dataset_dict.setdefault(r.cpe_name, {lab: 0 for lab in labels})
+        # # update its value from 0 to the actual total
+        dataset_dict[r.cpe_name][r.week_end] = r.total
+
+    # dataset_dict={('Router_A': {'Jan 1': 10, 'Jan 8': 0, 'Jan 15': 5})..,
+
+    chart_datasets = []
+    for cpe_name, values in dataset_dict.items():
+        chart_datasets.append(
+            # take only numbers
+            {"label": cpe_name, "data": [values[lab] for lab in labels]}
+        )
+    # chart_datasets=[{"label":'Router_A', "data":[10, 0, 5]}..,]
 
     return {
-        "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-        "data": [r.total for r in rows],
+        "labels": [lab.strftime("%d-%m-%Y") for lab in labels],
+        "datasets": chart_datasets,
     }
 
 
