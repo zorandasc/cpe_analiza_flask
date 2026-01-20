@@ -62,8 +62,8 @@
         <div class="card-header bg-white py-3">
             <h5 class="card-title mb-0">Analitika količine</h5>
             <select id="chartType" class="form-select form-select-sm w-auto">
-        <option value="bar" selected>Bar chart</option>
-        <option value="line">Line chart</option>
+        <option value="bar" >Bar chart</option>
+        <option value="line" selected>Line chart</option>
     </select>
         </div>
         <div class="card-body">
@@ -91,7 +91,7 @@
     const ctx = document.getElementById("ctxChart").getContext("2d");
 
     //GET TYPE OF CHART FROM LOCALSTORAGE
-    let chartType = localStorage.getItem("chartType") || "bar";
+    let chartType = localStorage.getItem("chartType") || "line";
     let chart;
 
     //SET HTML SELECTOR TO VALUE FROM LOCALSTORAGE
