@@ -6,7 +6,7 @@ from app.extensions import db
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import (
     get_cpe_inventory_chart_data,
-    get_cpe__dismantle_chart_data,
+    get_cpe_dismantle_chart_data,
     get_stb_inventory_chart_data,
     get_ont_inventory_chart_data,
     get_iptv_inventory_chart_data,
@@ -872,6 +872,7 @@ def cpe_inventory_charts():
         city_id=selected_city_id, cpe_type_id=selected_cpe_id, weeks=selected_weeks
     )
 
+
     return render_template(
         "charts/cpe_dashboard.html",
         chart_data=chart_data,
@@ -908,7 +909,7 @@ def cpe_dismantle_inventory_charts():
         base_key="cpe_dis", join_key="dis_type", base_fk="dismantle_type_id"
     )
 
-    chart_data = get_cpe__dismantle_chart_data(
+    chart_data = get_cpe_dismantle_chart_data(
         city_id=selected_city_id,
         cpe_type_id=selected_cpe_id,
         dismantle_type_id=selected_dismantle_id,
