@@ -784,6 +784,7 @@ def edit_dismantle_status(id):
 ###########################################################
 # ---------------ROUTES FOR GRAPHICAL-------------------------
 ############################################################
+# GET REQUEST + query parameter FOR FILTERS
 @admin_bp.route("/stb-charts", methods=["GET"])
 @login_required
 def stb_inventory_charts():
@@ -809,6 +810,7 @@ def stb_inventory_charts():
     )
 
 
+# GET REQUEST + query parameter FOR FILTERS
 @admin_bp.route("/iptv-users-charts", methods=["GET"])
 @login_required
 def iptv_inventory_charts():
@@ -825,6 +827,7 @@ def iptv_inventory_charts():
     )
 
 
+# GET REQUEST + query parameter FOR FILTERS
 @admin_bp.route("/ont-charts", methods=["GET"])
 @login_required
 def ont_inventory_charts():
@@ -850,10 +853,10 @@ def ont_inventory_charts():
     )
 
 
+# GET REQUEST + query parameter FOR FILTERS
 @admin_bp.route("/cpe-charts", methods=["GET"])
 @login_required
 def cpe_inventory_charts():
-    # But still → submit GET params, GET + query parameter
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
     selected_city_id = request.args.get("city_id", type=int)
@@ -872,7 +875,6 @@ def cpe_inventory_charts():
         city_id=selected_city_id, cpe_type_id=selected_cpe_id, weeks=selected_weeks
     )
 
-
     return render_template(
         "charts/cpe_dashboard.html",
         chart_data=chart_data,
@@ -884,11 +886,10 @@ def cpe_inventory_charts():
     )
 
 
+# GET REQUEST + query parameter FOR FILTERS
 @admin_bp.route("/cpe-dismantle-charts", methods=["GET"])
 @login_required
 def cpe_dismantle_inventory_charts():
-    # But still → submit GET params, GET + query parameter
-
     selected_city_id = request.args.get("city_id", type=int)
 
     selected_cpe_id = request.args.get("cpe_id", type=int)
@@ -898,7 +899,14 @@ def cpe_dismantle_inventory_charts():
     selected_weeks = request.args.get("weeks", type=int)
 
     cities = get_distinct_joined_values(
-        base_key="cpe_dis", join_key="city", base_fk="city_id"
+        base_key="cpe_dis",
+        join_key="city",
+        base_fk="city_id",
+        extra_joins="""
+        LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
+        """,
+        where_clause="AND j.type=:city_type",
+        params={"city_type": CityTypeEnum.IJ.value},
     )
 
     cpes = get_distinct_joined_values(

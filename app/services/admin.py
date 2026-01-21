@@ -405,25 +405,38 @@ JOIN_TABLES = {
 }
 
 
-def get_distinct_joined_values(base_key: str, join_key: str, base_fk: str):
+def get_distinct_joined_values(
+    base_key: str,
+    join_key: str,
+    base_fk: str,
+    extra_joins: str = "",
+    where_clause: str = "",
+    params: dict | None = None,
+):
     base_table = BASE_TABLES.get(base_key)
     join_meta = JOIN_TABLES.get(join_key)
 
     if not base_table or not join_meta:
         raise ValueError("Invalid base or join table")
 
+    params = params or {}
+
     join_table = join_meta["table"]
     join_pk = join_meta["pk"]
     select_cols = join_meta["cols"]
+    order_by = join_meta["order_by"]
 
     sql = f"""
         SELECT DISTINCT {select_cols}
         FROM {base_table} b
         JOIN {join_table} j ON j.{join_pk}=b.{base_fk}
-        ORDER BY {select_cols}
+        {extra_joins}
+        WHERE 1=1
+        {where_clause}
+        ORDER BY {order_by}
     """
 
-    return db.session.execute(text(sql)).fetchall()
+    return db.session.execute(text(sql), params).fetchall()
 
 
 # ONE EXAMPLE OF get_distinct_joined_values() FUNCTION ABSTRACTION:
