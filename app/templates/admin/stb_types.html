@@ -2,10 +2,11 @@
 %}
 <div class="container py-4">
   <h2>Tipovi STB opreme</h2>
-
+{% if ( current_user.role== 'admin') %}
   <a href="{{ url_for('admin.add_stb_type') }}" class="btn btn-primary my-3"
     >Dodaj STB model</a
   >
+   {%endif%}
   {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
@@ -24,6 +25,7 @@
       <td>{{ stb.label }}</td>
       <td>{{ stb.is_active }}</td>
       <td>
+        {% if ( current_user.role== 'admin') %}
         <a
           href="{{ url_for('admin.edit_stb_type', id=stb.id) }}"
           class="btn btn-warning btn-sm"
@@ -35,6 +37,7 @@
           onclick="return confirm('Obriši stb?')"
           >Delete</a
         >
+        {%endif%}
       </td>
     </tr>
     {% endfor %}

@@ -2,11 +2,11 @@
 %}
 <div class="container py-4">
   <h2>Skladišta i Izvršne Jedinice</h2>
-
+{% if ( current_user.role== 'admin') %}
   <a href="{{ url_for('admin.add_city') }}" class="btn btn-primary my-3"
     >Dodaj Novo Skladište</a
   >
-
+ {%endif%}
   <table class="table table-striped table-bordered shadow-lg">
     <tr>
       <th>ID</th>
@@ -19,6 +19,7 @@
       <td>{{ city.id }}</td>
       <td>{{ city.name }}</td>
       <td>{{ city.type }}</td>
+      {% if ( current_user.role== 'admin') %}
       <td>
         <a
           href="{{ url_for('admin.edit_city', id=city.id) }}"
@@ -28,10 +29,11 @@
         <a
           href="{{ url_for('admin.delete_city', id=city.id) }}"
           class="btn btn-danger btn-sm"
-          onclick="return confirm('Obrišite skladište?')"
+          onclick="return confirm('Obrišite skladište?');"
           >Delete</a
         >
       </td>
+      {%endif%}
     </tr>
     {% endfor %}
   </table>
