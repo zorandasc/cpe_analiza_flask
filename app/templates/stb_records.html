@@ -119,27 +119,28 @@ styles %} {{ super() }}
     records[0]['last_updated'].strftime('%d-%m-%Y%H:%M') }} {% endif %}
   </span>
 
-  <table class="table table-bordered table-striped shadow mb-4">
-    <thead class="table-primary">
-      <tr>
-        <th>STB Uređaji</th>
-        {% for week in weeks %}
-        <th>{{ week.label}}</th>
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped shadow mb-4">
+      <thead class="table-primary">
+        <tr>
+          <th>STB Uređaji</th>
+          {% for week in weeks %}
+          <th>{{ week.label}}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in records%}
+        <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
+          <td>{{r.label}}</td>
+          {% for week in weeks%}
+          <td>{{r['dates'][week.key]['quantity']}}</td>
+          {% endfor %}
+        </tr>
         {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in records%}
-      <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
-        <td>{{r.label}}</td>
-        {% for week in weeks%}
-        <td>{{r['dates'][week.key]['quantity']}}</td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
+      </tbody>
+    </table>
+  </div>
   <button
     type="button"
     title="Ažuritajte posljednje stanje STB opreme"
@@ -171,6 +172,12 @@ styles %} {{ super() }}
       </tr>
     </tbody>
   </table>
+   <a
+      class="btn btn-sm btn-outline-secondary mb-2"
+      href="{{ url_for('stb_inventory.export_stb_records_excel')}}"
+    >
+      Export Excel
+    </a>
 </div>
 
 <div class="modal fade" id="stbEditModal" tabindex="-1">

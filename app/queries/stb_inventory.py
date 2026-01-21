@@ -81,7 +81,9 @@ def get_stb_inventory_pivoted(weeks: list):
 def get_iptv_users():
     SQL_QUERY_IPTV_USERS = """
             SELECT
-               *
+               total_users,
+               week_end,
+               updated_at
             FROM
                 IPTV_USERS
             ORDER BY

@@ -127,8 +127,10 @@ def get_cpe_records_excel_export():
     headers = ["Skladišta"] + [s["label"] for s in schema_list] + ["Ažurirano"]
 
     # ---- ROWS ----
+    # OVDIJE NISAM KORISTIO GROUPED RECORDS, MADA SAM MOGAO
     rows = []
     for r in records:
+        
         row = (
             [r["city_name"]]
             + [r.get(s["name"], 0) for s in schema_list]
@@ -141,7 +143,7 @@ def get_cpe_records_excel_export():
 
         rows.append(row)
 
-    return headers, rows
+    return headers, rows, current_week_end
 
 
 # -------------------------

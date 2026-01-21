@@ -91,7 +91,6 @@ def update_iptv_users_count(form_data):
     qty = form_data.get("qty")
     if not qty or not qty.isdigit():
         return False, "Molimo unesite ispravan broj.", "warning"
-       
 
     try:
         db.session.execute(
@@ -107,13 +106,57 @@ def update_iptv_users_count(form_data):
             },
         )
         db.session.commit()
-        return True, f"Novo stanje za {current_week_end} uspješno sačuvano!",
-        
+        return (
+            True,
+            f"Novo stanje za {current_week_end} uspješno sačuvano!",
+        )
+
     except Exception as e:
         db.session.rollback()
         print(e)
         return False, "Greška prilikom čuvanja podataka.", "danger"
-   
+
+
+def get_stb_records_excel_export():
+    # calculate current week week_end date
+    current_week_end = get_current_week_friday()
+
+    weeks = [
+        {"key": w.isoformat(), "label": w.strftime("%d-%m-%Y")}
+        for w in sorted(get_last_4_weeks())
+    ]
+
+    week_keys = [w["key"] for w in weeks]
+
+    # get the pivoted data from db
+    records = get_stb_inventory_pivoted(week_keys)
+
+    records_grouped = _group_records(records, week_keys)
+
+    iptv_users = get_iptv_users()
+
+    # ----STB HEADERS ----
+    headers_stb = ["STB Uređaji"] + week_keys
+
+    # ----STB ROWS ----
+    rows_stb = []
+    for stb in records_grouped:
+        row = [stb["label"]] + [stb["dates"][w]["quantity"] for w in week_keys]
+        rows_stb.append(row)
+
+    # header row
+    headers_iptv = [""]
+
+    # data row
+    row_iptv = ["Ukupan broj IPTV korisnika"]
+
+    for r in iptv_users:
+        headers_iptv.append(r["week_end"].strftime("%d-%m-%Y"))
+        row_iptv.append(r["total_users"])
+
+    rows_iptv = [row_iptv]
+
+    return headers_stb, rows_stb, headers_iptv, rows_iptv, current_week_end
 
 
 # -------------------------

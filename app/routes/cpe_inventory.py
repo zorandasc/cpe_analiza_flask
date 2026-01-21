@@ -82,7 +82,7 @@ def cpe_records_city_history(id):
 @cpe_inventory_bp.route("/export/cpe-records.xlsx")
 @login_required
 def export_cpe_records_excel():
-    headers, rows = get_cpe_records_excel_export()
+    headers, rows, current_week_end = get_cpe_records_excel_export()
 
     wb = Workbook()
     ws = wb.active
@@ -90,6 +90,7 @@ def export_cpe_records_excel():
 
     meta = wb.create_sheet("Info")
     meta.append(["Kreirano:", datetime.now().strftime("%d-%m-%Y %H:%M")])
+    meta.append(["Sedmica Ažuriranja:", current_week_end.strftime("%d-%m-%Y %H:%M")])
 
     ws.append(headers)
 
