@@ -1,0 +1,81 @@
+{% if chart_data %}
+<!--GET CHAR_DATA FROM BACKEND AND PIPE TO JSON-->
+<script id="chart-data" type="application/json">
+  {{ chart_data | tojson }}
+</script>
+
+<script>
+  //Encapsulation: By wrapping the script in an IIFE
+  //(the (function() { ... })(); part), you prevent your chart variables
+  //from leaking into the global scope and clashing with other scripts
+  (function () {
+    //GET ABOVE SCRIPT TAG ID, WHICH HOLDS JSON DATA FROM BACKEND
+    const dataElement = document.getElementById("chart-data");
+    //CANVAS HTML ELEMENT
+    const canvasElement = document.getElementById("ctxChart");
+
+    //FROM SELECTOR HTML ELEMNT
+    const selectorElement = document.getElementById("chartType");
+
+    // Safety check: only run if the elements exist on this page
+    if (!dataElement || !canvasElement) return;
+
+    //PARSE JSON DATA FROM BACKEND
+    const chartData = JSON.parse(dataElement.textContent);
+
+    //GET CANVAS HTML ELEMENT
+    const ctx = canvasElement.getContext("2d");
+
+    //GET TYPE OF CHART FROM LOCALSTORAGE
+    let chartType = localStorage.getItem("chartType") || "line";
+
+    if (selectorElement) selectorElement.value = chartType;
+
+    let chart;
+
+    function createChart(type) {
+      if (chart) chart.destroy();
+
+      chart = new Chart(ctx, {
+        type: type,
+        data: {
+          labels: chartData.labels,
+          datasets: chartData.datasets.map((dataset) => ({
+            ...dataset,
+            // line vs bar behavior
+            tension: type === "line" ? 0.3 : 0,
+            fill: false,
+            borderWidth: 2,
+            hoverBackgroundColor: "#0b5ed7",
+            pointRadius: type === "line" ? 4 : 0,
+            borderRadius: type === "bar" ? 5 : 0,
+          })),
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true },
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: "#f0f0f0" } },
+            x: {},
+          },
+        },
+      });
+    }
+
+    // initial render
+    createChart(chartType);
+
+    if (selectorElement) {
+      // listen for type change
+      selectorElement.addEventListener("change", (e) => {
+        chartType = e.target.value;
+        localStorage.setItem("chartType", chartType);
+        createChart(chartType);
+      });
+    }
+  })();
+</script>
+{% endif %}

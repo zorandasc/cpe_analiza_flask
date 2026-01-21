@@ -18,7 +18,7 @@
                 <div class="col-md-5">
                     <label class="form-label fw-bold">Skladište</label>
                     <select name="id" class="form-select shadow-sm" onchange="this.form.submit()">
-                        <option value="">-- Sva Skladišta --</option>
+                        <option value="">--Ukupno Sva Skladišta --</option>
                         {% for city in cities %}
                         <option value="{{ city.id }}" {% if city.id == selected_id %}selected{% endif %}>
                             {{ city.name |capitalize }}
@@ -67,71 +67,6 @@
     </button>
 </div>
 
-<!--GET CHAR_DATA FROM BACKEND AND PIPE TO JSON-->
-<script id="chart-data" type="application/json">
-    {{ chart_data | tojson }}
-</script>
-
-<script>
-
-    //PARSE JSON DATA FROM BACKEND
-    const chartData = JSON.parse(document.getElementById("chart-data").textContent);
-     //GET CANVAL HTML ELEMENT
-    const ctx = document.getElementById("ctxChart").getContext("2d");
-
-    //GET TYPE OF CHART FROM LOCALSTORAGE
-    let chartType = localStorage.getItem("chartType") || "bar";
-    let chart;
-
-
-    //SET HTML SELECTOR TO VALUE FROM LOCALSTORAGE
-    document.getElementById("chartType").value = chartType;
-
-    
-    function createChart(type) {
-        if (chart) chart.destroy();
-
-        chart = new Chart(ctx, {
-            type: type,
-            data: {
-                labels: chartData.labels,
-                datasets: chartData.datasets.map(dataset=>({
-                    ...dataset,
-                // line vs bar behavior
-                tension: type === "line" ? 0.3 : 0,
-                fill: false,
-                borderWidth: 2,
-                hoverBackgroundColor: '#0b5ed7',
-                pointRadius: type === "line" ? 4 : 0,
-                borderRadius: type === "bar" ? 5 : 0
-                    
-                }))
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: true }
-                },
-                scales: {
-                    y: { beginAtZero: true, grid: { color: '#f0f0f0' } },
-                    x: {}
-                }
-            }
-        });
-    }
-
-    // initial render
-    createChart(chartType);
-
-    // listen for type change
-    document.getElementById("chartType").addEventListener("change", (e) => {
-        chartType = e.target.value;
-        localStorage.setItem("chartType", chartType);
-        createChart(chartType);
-    });
-</script>
-
 <script>
   document.getElementById("exportChart").addEventListener("click", () => {
     const link = document.createElement("a");
@@ -140,4 +75,9 @@
     link.click();
   });
 </script>
+
+{% block scripts %}
+    {% include "charts/_chart_logic.html" %}
+{% endblock %}
+
 {% endblock %}
