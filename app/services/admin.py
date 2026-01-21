@@ -4,8 +4,15 @@ from app.extensions import db
 
 # cpe inventory
 def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
+    EXCLUDED_CITY_ID = 13  # RASPOLOZIV OPREMA
     params = {}
     conditions = []
+
+    # IF CITY ID IS NOT SELECTED THAN CALCULATE SUM ON ALL CITIES
+    # BUT EXCLUDE CITY_ID=13, RASPOLOZIVA OPREMA
+    if city_id is None:
+        conditions.append("i.city_id != :excluded_city_id")
+        params["excluded_city_id"] = EXCLUDED_CITY_ID
 
     if city_id is not None:
         conditions.append("city_id = :city_id")
