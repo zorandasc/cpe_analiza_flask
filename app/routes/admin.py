@@ -502,7 +502,7 @@ def delete_user(id):
 
     db.session.delete(user)
     db.session.commit()
-    flash("User deleted", "success")
+    flash("Korisnik obrisan", "success")
     return redirect(url_for("admin.users"))
 
 
@@ -623,7 +623,7 @@ def delete_cpe_type(id):
         )
         return redirect(url_for("admin.cpe_types"))
 
-    flash("CPE tip obrisan!", "success")
+    flash("CPE uređaj obrisan!", "success")
     db.session.delete(cpe)
     db.session.commit()
     return redirect(url_for("admin.cpe_types"))
@@ -724,7 +724,7 @@ def delete_stb_type(id):
         )
         return redirect(url_for("admin.stb_types"))
 
-    flash("Stb tip obrisan!", "success")
+    flash("Stb uređaj obrisan!", "success")
     db.session.delete(stb)
     db.session.commit()
     return redirect(url_for("admin.stb_types"))
