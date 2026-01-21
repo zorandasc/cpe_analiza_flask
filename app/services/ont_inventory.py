@@ -88,6 +88,38 @@ def update_recent_ont_inventory(form_data):
         return False, "Greška prilikom čuvanja podataka."
 
 
+def get_ont_records_excel_export():
+    current_month_end = get_current_month_end()
+
+    # month is used in SQL + and for structure of html table
+    # covert datetime.date to date string
+    # label → presentation used only in the table header
+    # key → internal identifier (used in SQL + structure of html table)
+    # w.isoformat()='YYYY-MM-DD'
+    months = [
+        {"key": m.isoformat(), "label": m.strftime("%d-%m-%Y")}
+        for m in sorted(get_last_4_months())
+    ]
+
+    month_keys = [m["key"] for m in months]
+
+    # get the pivoted data from db
+    records = get_ont_inventory_pivoted(month_keys)
+
+    records_grouped = _group_records(records, month_keys)
+
+    # ---- HEADERS ----
+    # ----STB HEADERS ----
+    headers = ["Skladišta"] + month_keys
+
+    rows = []
+    for ont in records_grouped:
+        row = [ont["name"]] + [ont["dates"][m]["quantity"] for m in month_keys]
+        rows.append(row)
+
+    return headers, rows, current_month_end
+
+
 # -------------------------
 # INTERNAL HELPERS
 # -------------------------

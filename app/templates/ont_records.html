@@ -124,6 +124,12 @@ styles %} {{ super() }}
       {% endfor %}
     </tbody>
   </table>
+  <a
+      class="btn btn-sm btn-outline-secondary mb-2"
+      href="{{ url_for('ont_inventory.export_ont_records_excel')}}"
+    >
+      Export Excel
+    </a>
 </div>
 
 <div class="modal fade" id="ontEditModal" tabindex="-1">
