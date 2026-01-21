@@ -289,7 +289,7 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
 
     return {
         "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-        "data": [r.total for r in rows],
+        "datasets": [{"label": "STB Uređaji", "data": [r.total for r in rows]}],
     }
 
 
@@ -323,7 +323,7 @@ def get_iptv_inventory_chart_data(weeks=None):
 
     return {
         "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-        "data": [r.total for r in rows],
+        "datasets": [{"label": "IPTV korisnici", "data": [r.total for r in rows]}],
     }
 
 
@@ -366,7 +366,7 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
 
     return {
         "labels": [r.month_end.strftime("%d-%m-%Y") for r in rows],
-        "data": [r.total for r in rows],
+        "datasets": [{"label": "ONT uređaji", "data": [r.total for r in rows]}],
     }
 
 

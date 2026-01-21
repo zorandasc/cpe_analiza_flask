@@ -73,14 +73,10 @@
     let chartType = localStorage.getItem("chartType") || "bar";
     let chart;
 
-    // Creating a gradient for the bar chart
-    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(13, 110, 253, 0.8)');
-    gradient.addColorStop(1, 'rgba(13, 110, 253, 0.2)');
-
     //SET HTML SELECTOR TO VALUE FROM LOCALSTORAGE
     document.getElementById("chartType").value = chartType;
 
+    
     function createChart(type) {
         if (chart) chart.destroy();
 
@@ -88,21 +84,17 @@
             type: type,
             data: {
                 labels: chartData.labels,
-                datasets: [{
-                    label: "Broj IPTV korisnika (broj)",
-                    data: chartData.data,
-                    backgroundColor:
-                        type === "bar"
-                            ? gradient
-                            : "rgba(0,0,0,0)",
-                    borderColor: "#0d6efd",
-                    borderRadius: 5,
-                    borderWidth: 2,
-                    hoverBackgroundColor: '#0b5ed7',
-                    tension: 0.3,   // smooth line
-                    fill: false,
-                    pointRadius: type === "line" ? 4 : 0
-                }]
+                datasets: chartData.datasets.map(dataset=>({
+                    ...dataset,
+                // line vs bar behavior
+                tension: type === "line" ? 0.3 : 0,
+                fill: false,
+                borderWidth: 2,
+                hoverBackgroundColor: '#0b5ed7',
+                pointRadius: type === "line" ? 4 : 0,
+                borderRadius: type === "bar" ? 5 : 0
+                    
+                }))
             },
             options: {
                 responsive: true,
