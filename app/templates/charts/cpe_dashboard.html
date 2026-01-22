@@ -28,7 +28,8 @@
                 </div>
                 <div class="col-md-5">
                     <label class="form-label fw-bold">CPE uređaj</label>
-                    <select name="cpe_id" class="form-select shadow-sm" onchange="this.form.submit()">
+                    <!--SELECT CPE_ID AND CPE_TYPE ARE mutual exclusiv ON FRONTEND, ROUTE, QUERY -->
+                    <select name="cpe_id" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_type]').value=''; this.form.submit()">
                          <option value="">-- Svi uređaji --</option>
                         {% for cpe in cpes %}
                         <option value="{{ cpe.id }}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
@@ -48,7 +49,18 @@
                         {% endfor %}
                     </select>
                 </div>
-
+                 <div class="col-md-5">
+                    <label class="form-label fw-bold">Tip CPE uređaja</label>
+                      <!--document.querySelector('[name=cpe_id]').value='' IS FOR mutual exclusivity ON FRONTEND-->
+                    <select name="cpe_type" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_id]').value=''; this.form.submit()">
+                         <option value="">-- Svi Tipovi --</option>
+                        {% for cpe_type in types %}
+                        <option value="{{ cpe_type}}" {% if cpe_type == selected_cpe_type %}selected{% endif %}>
+                            {{ cpe_type }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-md-2">
                     <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline-secondary w-100">
                         Poništi

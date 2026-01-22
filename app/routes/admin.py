@@ -859,6 +859,16 @@ def ont_inventory_charts():
 def cpe_inventory_charts():
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
+    selected_cpe_type = request.args.get("cpe_type", type=str)
+
+    # convert empty string ""  →  None
+    if not selected_cpe_type:
+        selected_cpe_type = None
+
+    # mutual exclusivity
+    if selected_cpe_id:
+        selected_cpe_type = None
+
     selected_city_id = request.args.get("city_id", type=int)
 
     selected_weeks = request.args.get("weeks", type=int)
@@ -872,15 +882,22 @@ def cpe_inventory_charts():
     )
 
     chart_data = get_cpe_inventory_chart_data(
-        city_id=selected_city_id, cpe_type_id=selected_cpe_id, weeks=selected_weeks
+        city_id=selected_city_id,
+        cpe_id=selected_cpe_id,
+        cpe_type=selected_cpe_type,
+        weeks=selected_weeks,
     )
+
+    types = [member.value for member in CpeTypeEnum]
 
     return render_template(
         "charts/cpe_dashboard.html",
         chart_data=chart_data,
         cities=cities,
         cpes=cpes,
+        types=types,
         selected_cpe_id=selected_cpe_id,
+        selected_cpe_type=selected_cpe_type,
         selected_city_id=selected_city_id,
         selected_weeks=selected_weeks,
     )

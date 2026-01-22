@@ -3,7 +3,7 @@ from app.extensions import db
 
 
 # cpe inventory
-def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
+def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
     EXCLUDED_CITY_ID = 13  # RASPOLOZIV OPREMA
     params = {}
     conditions = []
@@ -18,9 +18,13 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
         conditions.append("city_id = :city_id")
         params["city_id"] = city_id
 
-    if cpe_type_id is not None:
-        conditions.append("cpe_type_id = :cpe_type_id")
-        params["cpe_type_id"] = cpe_type_id
+    if cpe_id is not None:
+        conditions.append("cpe_type_id = :cpe_id")
+        params["cpe_id"] = cpe_id
+    elif cpe_type is not None:
+        # This tells Postgres explicitly This parameter is an enum, not text
+        conditions.append("ct.type = CAST(:cpe_type AS cpe_type_enum)")
+        params["cpe_type"] = cpe_type
 
     where_clause = ""
     if conditions:
@@ -39,7 +43,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
         params["weeks"] = weeks
 
     # 🔁 CASE 1 — one CPE selected → single dataset
-    if cpe_type_id is not None:
+    if cpe_id is not None:
         sql = f"""    
             SELECT 
                 i.week_end, 
@@ -127,20 +131,10 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_type_id=None, weeks=None):
         "datasets": chart_datasets,
     }
 
-    # {
-    # "labels": ["01-12-2025", "08-12-2025", "15-12-2025"],
+    # {"labels": ["01-12-2025", "08-12-2025", "15-12-2025"],
     # "datasets": [
-    # {
-    #   "label": "CPE Router",
-    #   "data": [120, 140, 160]
-    # },
-    # {
-    #   "label": "CPE Modem",
-    #   "data": [80, 90, 110]
-    # },
-    # ...
-    # ]
-    # }
+    # {"label": "CPE Router","data": [120, 140, 160] },
+    # {"label": "CPE Modem","data": [80, 90, 110]},...]}
 
 
 # cpe dismantles
