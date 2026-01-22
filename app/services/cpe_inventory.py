@@ -26,11 +26,16 @@ def get_cpe_records_view_data():
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("is_active_total")
 
-    # 1. Build pivoted cpe_inventory records fOR schema list but only for current week
+    # Build pivoted cpe_inventory records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
+    # SQL → records (flat rows)
     records = get_cpe_inventory_pivoted(schema_list, current_week_end)
 
+    # list of grouped dicts for sending to template
     records_grouped = _group_records(records, schema_list)
+
+    # ordering of rows, total penultimate, Rasploziva Oprema last
+    records_grouped = _reorder_cpe_records(records_grouped)
 
     return {
         "today": today.strftime("%d-%m-%Y"),
@@ -130,7 +135,6 @@ def get_cpe_records_excel_export():
     # OVDIJE NISAM KORISTIO GROUPED RECORDS, MADA SAM MOGAO
     rows = []
     for r in records:
-        
         row = (
             [r["city_name"]]
             + [r.get(s["name"], 0) for s in schema_list]
@@ -149,10 +153,13 @@ def get_cpe_records_excel_export():
 # -------------------------
 # INTERNAL HELPERS
 # -------------------------
+# _group_records Treat it as canonical domain model:
+# data modeling, reporting needs, future exports
 def _group_records(records, schema_list):
     grouped = {}
 
     for row in records:
+        # city_id is None for TOTAL (UKUPNO) row
         cid = row["city_id"]
 
         if cid not in grouped:
@@ -174,3 +181,30 @@ def _group_records(records, schema_list):
             grouped[cid]["cpe"][cpe["name"]]["quantity"] = qty
 
     return list(grouped.values())
+
+
+# SET TOTAL ROW PENULTIMATE (PREDZADNJI)
+# SET CITY_ID 13 (RASPOLOZIVA OPREMA) LAST
+def _reorder_cpe_records(records, excluded_city_id=13):
+    total_row = None
+    warehouse_row = None
+    normal_rows = []
+
+    for row in records:
+        if row["city_id"] is None:
+            # UKUPNO
+            total_row = row
+        elif row["city_id"] == excluded_city_id:
+            warehouse_row = row
+        else:
+            normal_rows.append(row)
+
+    ordered = normal_rows
+
+    if total_row:
+        ordered.append(total_row)
+
+    if warehouse_row:
+        ordered.append(warehouse_row)
+
+    return ordered

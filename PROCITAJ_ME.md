@@ -1624,3 +1624,16 @@ _group_records()
 
 HTML adapter IS TEMPLATE
 
+# cpe record ukupno predzadnje, rasploziva oprema zadnje:
+
+SQL
+ └─ calculates correct numbers
+
+_group_records()
+ └─ shapes data
+
+_reorder_cpe_records()
+ └─ presentation ordering
+
+Jinja template
+ └─ rendering only
