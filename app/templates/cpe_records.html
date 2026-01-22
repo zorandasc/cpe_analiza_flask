@@ -229,7 +229,7 @@
 
           <tbody>
             {% for r in records %}
-            <tr class="{% if not r.city_id %}fw-bold total-row{% endif %}">
+            <tr class="{% if not r.city_id %}fw-bold total-row {% elif r.city_id == 13 %}table-secondary text-muted{% endif %}">
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}
               </td>
