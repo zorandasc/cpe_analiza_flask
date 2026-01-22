@@ -865,7 +865,7 @@ def cpe_inventory_charts():
     if not selected_cpe_type:
         selected_cpe_type = None
 
-    # mutual exclusivity
+    # mutual exclusivity ON BACKEND
     if selected_cpe_id:
         selected_cpe_type = None
 
@@ -881,6 +881,8 @@ def cpe_inventory_charts():
         base_key="cpe", join_key="cpe_type", base_fk="cpe_type_id"
     )
 
+    cpe_types = [member.value for member in CpeTypeEnum]
+
     chart_data = get_cpe_inventory_chart_data(
         city_id=selected_city_id,
         cpe_id=selected_cpe_id,
@@ -888,14 +890,12 @@ def cpe_inventory_charts():
         weeks=selected_weeks,
     )
 
-    types = [member.value for member in CpeTypeEnum]
-
     return render_template(
         "charts/cpe_dashboard.html",
         chart_data=chart_data,
         cities=cities,
         cpes=cpes,
-        types=types,
+        types=cpe_types,
         selected_cpe_id=selected_cpe_id,
         selected_cpe_type=selected_cpe_type,
         selected_city_id=selected_city_id,
@@ -911,10 +911,21 @@ def cpe_dismantle_inventory_charts():
 
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
+    selected_cpe_type = request.args.get("cpe_type", type=str)
+
+    # convert empty string ""  →  None
+    if not selected_cpe_type:
+        selected_cpe_type = None
+
+    # mutual exclusivity ON BACKEND
+    if selected_cpe_id:
+        selected_cpe_type = None
+
     selected_dismantle_id = request.args.get("dismantle_id", type=int)
 
     selected_weeks = request.args.get("weeks", type=int)
 
+    # FOR DISMANTLE TABLE WE NEED TO QUERY ONLY IJ CITIES
     cities = get_distinct_joined_values(
         base_key="cpe_dis",
         join_key="city",
@@ -926,17 +937,25 @@ def cpe_dismantle_inventory_charts():
         params={"city_type": CityTypeEnum.IJ.value},
     )
 
+    # SHOW ONLY CPES THAT ARE ACTIVE IN DISMANTLE
     cpes = get_distinct_joined_values(
-        base_key="cpe_dis", join_key="cpe_type", base_fk="cpe_type_id"
+        base_key="cpe_dis", join_key="cpe_type", base_fk="cpe_type_id",extra_joins="""
+        LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
+        """,
+        where_clause="AND j.is_active_dismantle=:is_active",
+        params={"is_active": True},
     )
 
     dismantles = get_distinct_joined_values(
         base_key="cpe_dis", join_key="dis_type", base_fk="dismantle_type_id"
     )
 
+    cpe_types = [member.value for member in CpeTypeEnum]
+
     chart_data = get_cpe_dismantle_chart_data(
         city_id=selected_city_id,
-        cpe_type_id=selected_cpe_id,
+        cpe_id=selected_cpe_id,
+        cpe_type=selected_cpe_type,
         dismantle_type_id=selected_dismantle_id,
         weeks=selected_weeks,
     )
@@ -946,8 +965,10 @@ def cpe_dismantle_inventory_charts():
         chart_data=chart_data,
         cities=cities,
         cpes=cpes,
+        types=cpe_types,
         dismantles=dismantles,
         selected_cpe_id=selected_cpe_id,
+        selected_cpe_type=selected_cpe_type,
         selected_dismantle_id=selected_dismantle_id,
         selected_city_id=selected_city_id,
         selected_weeks=selected_weeks,

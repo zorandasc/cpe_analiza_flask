@@ -28,7 +28,7 @@
                 </div>
                 <div class="col-md-5">
                     <label class="form-label fw-bold">CPE uređaj</label>
-                    <!--SELECT CPE_ID AND CPE_TYPE ARE mutual exclusiv ON FRONTEND, ROUTE, QUERY -->
+                       <!--document.querySelector('[name=cpe_id]').value='' IS FOR mutual exclusivity WITH cpe_type ON FRONTEND-->
                     <select name="cpe_id" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_type]').value=''; this.form.submit()">
                          <option value="">-- Svi uređaji --</option>
                         {% for cpe in cpes %}
@@ -51,7 +51,7 @@
                 </div>
                  <div class="col-md-5">
                     <label class="form-label fw-bold">Tip CPE uređaja</label>
-                      <!--document.querySelector('[name=cpe_id]').value='' IS FOR mutual exclusivity ON FRONTEND-->
+                      <!--document.querySelector('[name=cpe_id]').value='' IS FOR mutual exclusivity WITH cpe_id ON FRONTEND-->
                     <select name="cpe_type" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_id]').value=''; this.form.submit()">
                          <option value="">-- Svi Tipovi --</option>
                         {% for cpe_type in types %}
