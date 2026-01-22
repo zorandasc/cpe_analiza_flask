@@ -1608,16 +1608,15 @@ is your canonical dismantle model.
 ✔ It normalizes dismantle types
 ✔ It’s presentation-agnos
 
-
 # ADAPTER
 
 Correct architecture (this is the key)
-Keep _group_records() as-is
+Keep \_group_records() as-is
 
 Then create two adapters:
 
-_group_records()
-   ↓
+\_group_records()
+↓
 ┌────────────────────┬────────────────────┐
 │ HTML table adapter │ Excel export adapter│
 └────────────────────┴────────────────────┘
@@ -1627,13 +1626,20 @@ HTML adapter IS TEMPLATE
 # cpe record ukupno predzadnje, rasploziva oprema zadnje:
 
 SQL
- └─ calculates correct numbers
+└─ calculates correct numbers
 
-_group_records()
- └─ shapes data
+\_group_records()
+└─ shapes data
 
-_reorder_cpe_records()
- └─ presentation ordering
+\_reorder_cpe_records()
+└─ presentation ordering
 
 Jinja template
- └─ rendering only
+└─ rendering only
+
+# This is enterprise-grade reporting design
+
+get_cpe_inventory_pivoted() → numbers
+_group_records() → shape
+_reorder_cpe_records() → meaning
+Excel formatting → appearance

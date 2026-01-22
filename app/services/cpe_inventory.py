@@ -37,6 +37,9 @@ def get_cpe_records_view_data():
     # ordering of rows, total penultimate, Rasploziva Oprema last
     records_grouped = _reorder_cpe_records(records_grouped)
 
+    for r in records_grouped:
+        print(r, "\n")
+
     return {
         "today": today.strftime("%d-%m-%Y"),
         "saturday": saturday,
@@ -128,16 +131,20 @@ def get_cpe_records_excel_export():
 
     records = get_cpe_inventory_pivoted(schema_list, current_week_end)
 
+    records_grouped = _group_records(records, schema_list)
+
+    # ordering of rows, total penultimate, Rasploziva Oprema last
+    records_grouped = _reorder_cpe_records(records_grouped)
+
     # ---- HEADERS ----
     headers = ["Skladišta"] + [s["label"] for s in schema_list] + ["Ažurirano"]
 
-    # ---- ROWS ----
-    # OVDIJE NISAM KORISTIO GROUPED RECORDS, MADA SAM MOGAO
+    # ---- ROWS EXCEL ADAPTER----
     rows = []
-    for r in records:
+    for r in records_grouped:
         row = (
             [r["city_name"]]
-            + [r.get(s["name"], 0) for s in schema_list]
+            + [r["cpe"][s["name"]].get("quantity", 0) for s in schema_list]
             + [
                 r["max_updated_at"].strftime("%Y-%m-%d %H:%M")
                 if r["max_updated_at"]
