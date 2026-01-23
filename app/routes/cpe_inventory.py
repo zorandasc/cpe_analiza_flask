@@ -11,7 +11,7 @@ from flask import (
 )
 from flask_login import login_required
 from openpyxl import Workbook
-from openpyxl.styles import Font
+from openpyxl.styles import Font, PatternFill, Alignment
 from io import BytesIO
 from app.services.cpe_inventory import (
     get_cpe_records_view_data,
@@ -82,6 +82,10 @@ def cpe_records_city_history(id):
 @cpe_inventory_bp.route("/export/cpe-records.xlsx")
 @login_required
 def export_cpe_records_excel():
+    warehouse_fill = PatternFill("solid", fgColor="EEEEEE")
+    warehouse_font = Font(color="666666")
+    total_font = Font(bold=True)
+
     headers, rows, current_week_end = get_cpe_records_excel_export()
 
     wb = Workbook()
@@ -92,18 +96,53 @@ def export_cpe_records_excel():
     meta.append(["Kreirano:", datetime.now().strftime("%d-%m-%Y %H:%M")])
     meta.append(["Sedmica Ažuriranja:", current_week_end.strftime("%d-%m-%Y %H:%M")])
 
-    ws.append(headers)
+    # You must insert newline characters (\n) into header text
+    # to wrap text in headaer of excel
+    formatted_headers = [h.replace(" ", "\n/ ") for h in headers]
+    ws.append(formatted_headers)
 
-    for row in rows:
-        ws.append(row)
+    for row_data in rows:
+        ws.append(row_data["values"])
+        # ukupan broj celija u rowu
+        excel_row = ws.max_row
 
-    # auto-width columns (nice UX)
-    for col in ws.columns:
-        max_length = max(len(str(cell.value)) if cell.value else 0 for cell in col)
-        ws.column_dimensions[col[0].column_letter].width = max_length + 2
+        # red UKUPNO bolduj
+        if row_data["city_id"] is None:
+            # za sve celije u rowu
+            for cell in ws[excel_row]:
+                cell.font = total_font
 
+        # red Raspoloziva oprema oboji u sivo
+        elif row_data["city_id"] == 13:
+            # za sve celije u rowu
+            for cell in ws[excel_row]:
+                cell.fill = warehouse_fill
+                cell.font = warehouse_font
+
+    # style header wrap text + bold text
     for cell in ws[1]:
         cell.font = Font(bold=True)
+        cell.alignment = Alignment(
+            wrap_text=True, horizontal="center", vertical="center"
+        )
+
+    # Excel will only wrap text if row height allows it.
+    # set header row height manually:
+    ws.row_dimensions[1].height = 65
+
+    # smart auto-width
+    # When calculating column width:
+    # only consider the longest line, not full string length.
+    for col in ws.columns:
+        max_length = 0
+        col_letter = col[0].column_letter
+
+        for cell in col:
+            if cell.value:
+                lines = str(cell.value).split("\n")
+                max_length = max(max_length, max(len(l) for l in lines))
+
+        ws.column_dimensions[col_letter].width = max_length + 2
 
     ws.freeze_panes = "A2"
 

@@ -37,9 +37,6 @@ def get_cpe_records_view_data():
     # ordering of rows, total penultimate, Rasploziva Oprema last
     records_grouped = _reorder_cpe_records(records_grouped)
 
-    for r in records_grouped:
-        print(r, "\n")
-
     return {
         "today": today.strftime("%d-%m-%Y"),
         "saturday": saturday,
@@ -137,22 +134,26 @@ def get_cpe_records_excel_export():
     records_grouped = _reorder_cpe_records(records_grouped)
 
     # ---- HEADERS ----
-    headers = ["Skladišta"] + [s["label"] for s in schema_list] + ["Ažurirano"]
+    headers = ["Stanje"] + [s["label"] for s in schema_list] + ["Ažurirano"]
 
     # ---- ROWS EXCEL ADAPTER----
     rows = []
     for r in records_grouped:
-        row = (
-            [r["city_name"]]
-            + [r["cpe"][s["name"]].get("quantity", 0) for s in schema_list]
-            + [
-                r["max_updated_at"].strftime("%Y-%m-%d %H:%M")
-                if r["max_updated_at"]
-                else ""
-            ]
+        rows.append(
+            {
+                "city_id": r["city_id"],
+                "city_name": r["city_name"],
+                "values": (
+                    [r["city_name"]]
+                    + [r["cpe"][s["name"]].get("quantity", 0) for s in schema_list]
+                    + [
+                        r["max_updated_at"].strftime("%Y-%m-%d %H:%M")
+                        if r["max_updated_at"]
+                        else ""
+                    ]
+                ),
+            }
         )
-
-        rows.append(row)
 
     return headers, rows, current_week_end
 
