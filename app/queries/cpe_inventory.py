@@ -9,9 +9,6 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
         # Return empty data lists immediately if no active CPE types are found
         return []
 
-    # RASPOLOZIVA OPREMA NIJE UKLJUCENJA U UKUPNO
-    EXCLUDED_CITY_ID = 13
-
     case_columns = []
     sum_columns = []
 
@@ -38,6 +35,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             SELECT
                 c.id   AS city_id,
                 c.name AS city_name,
+                c.include_in_total,
                 ct.name AS cpe_name,
                 ci.quantity AS quantity,
                 ci.updated_at AS updated_at
@@ -54,6 +52,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
                 )
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id
+            WHERE c.is_active = true
         )
         SELECT
             city_id,
@@ -72,15 +71,12 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             NULL
         FROM weekly_data
         --EXCLUDE RASPLOZIVA OPREMA
-        WHERE city_id != :excluded_city_id
+        WHERE include_in_total = true
 
         ORDER BY city_id NULLS LAST;
     """
 
-    params = {
-        "week_end": week_end,
-        "excluded_city_id": EXCLUDED_CITY_ID,
-    }
+    params = {"week_end": week_end}
 
     result = db.session.execute(text(SQL_QUERY), params)
 

@@ -54,6 +54,7 @@ def get_cpe_dismantle_pivoted(
                 LEFT JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
                 LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
                 WHERE C.TYPE = :city_type
+                    AND c.is_active = true
             )
             SELECT
                 CITY_ID,

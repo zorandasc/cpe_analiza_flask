@@ -20,6 +20,28 @@ content %}
 
       
     </div>
+      <div class="mb-3 form-check">
+          <input 
+            type="checkbox" 
+            class="form-check-input" 
+            id="is_active" 
+            name="is_active"
+            {% if city.is_active %}checked{% endif %}>
+          <label class="form-check-label" for="is_active">
+              Aktivno
+          </label>
+      </div>
+      <div class="mb-3 form-check">
+          <input 
+            type="checkbox" 
+            class="form-check-input" 
+            id="include_in_total" 
+            name="include_in_total"
+            {% if city.include_in_total %}checked{% endif %}>
+          <label class="form-check-label" for="include_in_total">
+              Uključeno u ukupno 
+          </label>
+      </div>
     <button type="submit" class="btn btn-primary">Update</button>
     <a href="{{ url_for('admin.cities') }}" class="btn btn-secondary">Cancel</a>
   </form>

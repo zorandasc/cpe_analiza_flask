@@ -1640,6 +1640,12 @@ Jinja template
 # This is enterprise-grade reporting design
 
 get_cpe_inventory_pivoted() → numbers
-_group_records() → shape
-_reorder_cpe_records() → meaning
+\_group_records() → shape
+\_reorder_cpe_records() → meaning
 Excel formatting → appearance
+
+# cities is_active:
+
+Important rule for pivot queries
+
+Always filter rows in the CTE, not after pivoting.

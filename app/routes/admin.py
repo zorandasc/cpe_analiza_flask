@@ -295,6 +295,8 @@ def edit_city(id):
 
         city.name = name
         city.type = selected_type
+        city.is_active = "is_active" in request.form
+        city.include_in_total= "include_in_total" in request.form
 
         try:
             db.session.commit()

@@ -100,7 +100,7 @@ styles %} {{ super() }}
 
   <!--EVERY RECORD SHOULD HAVE SAME last_updated-->
   <span class="info">
-    Posljedne ažurirano: {% if records[0] %}
+    Posljedne ažurirano: {% if records[0]['last_updated'] %}
     {{records[0]['last_updated'].strftime('%d-%m-%Y %H:%M')}} {% endif %}
   </span>
 
