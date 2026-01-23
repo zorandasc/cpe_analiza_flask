@@ -187,6 +187,12 @@
     height: 50px;
   }
 
+  .table tr.ras-row,
+  .table tr.ras-row td {
+    background-color: #ffe8f9 !important;
+    height: 50px;
+  }
+
     .azur-row-red{
     color: rgb(234, 114, 114)!important;
   
@@ -229,7 +235,7 @@
 
           <tbody>
             {% for r in records %}
-            <tr class="{% if not r.city_id %}fw-bold total-row {% elif r.city_id == 13 %}table-secondary text-muted{% endif %}">
+            <tr class="{% if not r.city_id %}fw-bold total-row {% elif r.city_id == 13 %}ras-row fw-bold{% endif %}">
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}
               </td>
