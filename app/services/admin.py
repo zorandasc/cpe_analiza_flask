@@ -4,54 +4,55 @@ from app.extensions import db
 
 # cpe inventory
 def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
-    EXCLUDED_CITY_ID = 13  # RASPOLOZIV OPREMA
     params = {}
     conditions = []
 
-    # IF CITY ID IS NOT SELECTED THAN CALCULATE SUM ON ALL CITIES
-    # BUT EXCLUDE CITY_ID=13, RASPOLOZIVA OPREMA
-    if city_id is None:
-        conditions.append("i.city_id != :excluded_city_id")
-        params["excluded_city_id"] = EXCLUDED_CITY_ID
+    base_join = """
+        FROM cpe_inventory i
+        JOIN cities c ON c.id=i.city_id
+        JOIN cpe_types ct ON ct.id=cpe_type_id
+        WHERE 1=1
+    """
 
-    if city_id is not None:
+    if city_id is None:  # filter by city
+        # IF CITY ID IS NOT SELECTED THAN CALCULATE SUM ON ALL CITIES
+        # BUT EXCLUDE RASPOLOZIVA OPREMA
+        conditions.append("c.include_in_total = true")
+    else:
         conditions.append("city_id = :city_id")
         params["city_id"] = city_id
 
-    if cpe_id is not None:
+    if cpe_id is not None:  # filter by cpe id
         conditions.append("cpe_type_id = :cpe_id")
         params["cpe_id"] = cpe_id
-    elif cpe_type is not None:
+    elif cpe_type is not None:  # filter by cpe type
         # This tells Postgres explicitly This parameter is an enum, not text
         conditions.append("ct.type = CAST(:cpe_type AS cpe_type_enum)")
         params["cpe_type"] = cpe_type
 
-    where_clause = ""
-    if conditions:
-        where_clause = " AND " + " AND ".join(conditions)
-
-    limit_clause = ""
-    if weeks:
-        limit_clause = """
-            AND i.week_end IN (
+    if weeks:  # filter by weeks
+        conditions.append("""
+            i.week_end IN (
                 SELECT DISTINCT week_end
                 FROM cpe_inventory
                 ORDER BY week_end DESC
                 LIMIT :weeks
             )
-        """
+        """)
         params["weeks"] = weeks
+
+    where_clause = ""
+    if conditions:
+        where_clause = " AND " + " AND ".join(conditions)
 
     # 🔁 CASE 1 — one CPE selected → single dataset
     if cpe_id is not None:
         sql = f"""    
             SELECT 
-                i.week_end, 
+                i.week_end,
                 SUM(i.quantity) AS total
-            FROM cpe_inventory i
-            WHERE 1=1
+            {base_join}
             {where_clause}
-            {limit_clause}
             GROUP BY i.week_end
             ORDER BY i.week_end
         """
@@ -61,7 +62,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
             "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
             "datasets": [
                 {
-                    "label": "Total",
+                    "label": "Total ",
                     "data": [r.total for r in rows],
                 }
             ],
@@ -74,11 +75,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
             i.cpe_type_id,
             ct.name AS cpe_name,
             SUM(i.quantity) AS total
-        FROM cpe_inventory i
-        JOIN cpe_types ct ON ct.id = i.cpe_type_id
-        WHERE 1=1
+        {base_join}
         {where_clause}
-        {limit_clause}
         GROUP BY i.week_end, i.cpe_type_id, ct.name
         ORDER BY i.week_end
     """
