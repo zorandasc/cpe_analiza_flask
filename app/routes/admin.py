@@ -79,7 +79,7 @@ def cpe_inventory():
     # cities = db.session.query(CpeInventory.city_id).distinct().all()
 
     # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
-    # cpe_types = CpeTypes.query.filter_by(is_active_total=True).order_by(CpeTypes.id).all()
+    # cpe_types = CpeTypes.query.filter_by(is_visible_in_total=True).order_by(CpeTypes.id).all()
 
     return render_template(
         "admin/cpe_inventory.html",
@@ -296,7 +296,7 @@ def edit_city(id):
         city.name = name
         city.type = selected_type
         city.is_active = "is_active" in request.form
-        city.include_in_total= "include_in_total" in request.form
+        city.include_in_total = "include_in_total" in request.form
 
         try:
             db.session.commit()
@@ -587,8 +587,8 @@ def edit_cpe_type(id):
         cpe.type = type_
         cpe.has_remote = "has_remote" in request.form
         cpe.has_adapter = "has_adapter" in request.form
-        cpe.is_active_total = "is_active_total" in request.form
-        cpe.is_active_dismantle = "is_active_dismantle" in request.form
+        cpe.is_visible_in_total = "is_visible_in_total" in request.form
+        cpe.is_visible_in_dismantle = "is_visible_in_dismantle" in request.form
 
         try:
             db.session.commit()
@@ -941,10 +941,13 @@ def cpe_dismantle_inventory_charts():
 
     # SHOW ONLY CPES THAT ARE ACTIVE IN DISMANTLE
     cpes = get_distinct_joined_values(
-        base_key="cpe_dis", join_key="cpe_type", base_fk="cpe_type_id",extra_joins="""
+        base_key="cpe_dis",
+        join_key="cpe_type",
+        base_fk="cpe_type_id",
+        extra_joins="""
         LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
         """,
-        where_clause="AND j.is_active_dismantle=:is_active",
+        where_clause="AND j.is_visible_in_dismantle=:is_active",
         params={"is_active": True},
     )
 

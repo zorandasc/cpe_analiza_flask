@@ -2,12 +2,11 @@
 block content %}
 <div class="container py-4">
   <h2>Tipovi CPE opreme</h2>
-{% if ( current_user.role== 'admin') %}
+  {% if ( current_user.role== 'admin') %}
   <a href="{{ url_for('admin.add_cpe_type') }}" class="btn btn-primary my-3"
     >Dodaj CPE model</a
   >
-  {%endif%}
-  {% if error %}
+  {%endif%} {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
   <table class="table table-striped table-bordered shadow-lg">
@@ -30,8 +29,8 @@ block content %}
       <td>{{ cpe.type }}</td>
       <td>{{ cpe.has_remote }}</td>
       <td>{{ cpe.has_adapter }}</td>
-      <td>{{ cpe.is_active_total }}</td>
-      <td>{{ cpe.is_active_dismantle }}</td>
+      <td>{{ cpe.is_visible_in_total }}</td>
+      <td>{{ cpe.is_visible_in_dismantle }}</td>
       <td>
         {% if ( current_user.role== 'admin') %}
         <a
@@ -42,7 +41,7 @@ block content %}
         <a
           href="{{ url_for('admin.delete_cpe_type', id=cpe.id) }}"
           class="btn btn-danger btn-sm"
-          onclick="return confirm('Obriši CPE opremu?')"
+          onclick="return confirm('Obriši CPE opremu?');"
           >Delete</a
         >
         {%endif%}

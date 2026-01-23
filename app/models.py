@@ -111,15 +111,20 @@ class CpeTypes(db.Model):
         Enum(CpeTypeEnum, native_enum=True, name="cpe_type_enum")
     )
 
-    is_active_total: Mapped[Optional[bool]] = mapped_column(
+    is_visible_in_total: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )
 
-    is_active_dismantle: Mapped[Optional[bool]] = mapped_column(
+    is_visible_in_dismantle: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )
+
+    #display_order: Mapped[int] = mapped_column(Integer)
+
+    #header_color: Mapped[str] = mapped_column(String(200))
 
     has_remote = mapped_column(Boolean, nullable=False, server_default="false")
+
     has_adapter = mapped_column(Boolean, nullable=False, server_default="true")
 
     cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(

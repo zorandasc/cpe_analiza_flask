@@ -23,8 +23,8 @@ def get_cpe_dismantle_view_data():
     # date of friday in week
     current_week_end = get_current_week_friday()
 
-    # list of all cpe_types object in db but only if is_active_dismantle
-    schema_list = get_cpe_types_column_schema("is_active_dismantle")
+    # list of all cpe_types object in db but only if is_visible_in_dismantle
+    schema_list = get_cpe_types_column_schema("is_visible_in_dismantle")
 
     # 1. Build pivoted records from schema list but only for current week_end
     records = get_cpe_dismantle_pivoted(
@@ -113,8 +113,8 @@ def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
     if category not in ("complete", "damage"):
         return None, None, None, None, "No Category"
 
-    # list of all cpe_types object in db but only if is_active_dismantle
-    schema_list = get_cpe_types_column_schema("is_active_dismantle")
+    # list of all cpe_types object in db but only if is_visible_in_dismantle
+    schema_list = get_cpe_types_column_schema("is_visible_in_dismantle")
 
     # paginated_records is iterable SimplePagination object
     records = get_cpe_dismantle_city_history(
@@ -129,7 +129,7 @@ def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
 def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "missing"
     current_week_end = get_current_week_friday()
 
-    schema_list = get_cpe_types_column_schema("is_active_dismantle")
+    schema_list = get_cpe_types_column_schema("is_visible_in_dismantle")
 
     records = get_cpe_dismantle_pivoted(
         schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
@@ -176,7 +176,7 @@ def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "mi
                 subcols = get_missing_subcolumns(cpe)
                 for code, _ in subcols:
                     row.append(city["cpe"][cpe["name"]]["damages"][code]["quantity"])
-                    
+
         updated_at = (
             city["complete_updated_at"]
             if mode == "complete"
