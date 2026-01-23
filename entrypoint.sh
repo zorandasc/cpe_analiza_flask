@@ -23,4 +23,17 @@ flask create-admin
 echo "Starting Flask server..."
 
 # Use the production-ready server (e.g., gunicorn) instead of 'flask run'
-exec gunicorn -b 0.0.0.0:5000 'run:app'
+#It ensures:
+
+#exec gunicorn
+#Gunicorn becomes PID 1
+#Docker can stop container cleanly
+#no zombie processes
+#proper signal handling
+exec gunicorn \
+  --bind 0.0.0.0:5000 \
+  --workers 3 \
+  --threads 2 \
+  --timeout 120 \
+  --keep-alive 5 \
+  run:app
