@@ -66,9 +66,6 @@ def cpe_dismantle_city_history(id, category):
         id, page, per_page, category
     )
 
-    for r in records.items:
-        print(r, "\n")
-
     if error:
         flash(error, "danger")
         return redirect(url_for("main.home"))
