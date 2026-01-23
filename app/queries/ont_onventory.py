@@ -46,7 +46,7 @@ def get_ont_inventory_pivoted(months: list):
         FROM cities c
         LEFT JOIN ont_inventory i
             ON c.id=i.city_id
-        WHERE C.TYPE = 'IJ'
+        WHERE C.TYPE = 'IJ' and c.is_active = true
         GROUP BY c.id, c.name
         ),
         final_data AS (
