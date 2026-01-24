@@ -567,6 +567,8 @@ def edit_cpe_type(id):
         name = request.form.get("name")
         label = request.form.get("label")
         type_ = request.form.get("type")  # renamed to avoid shadowing built-in 'type'
+        display_order_raw = request.form.get("display_order")
+        header_color = request.form.get("header_color")
 
         # name uniqueness (except current name)
         existing_cpe_type = CpeTypes.query.filter(
@@ -585,6 +587,11 @@ def edit_cpe_type(id):
         cpe.name = name
         cpe.label = label
         cpe.type = type_
+        cpe.display_order = (
+            int(display_order_raw) if display_order_raw not in (None, "") else None
+        )
+        cpe.header_color = header_color or None
+        # HTML checkboxes send value only when checked. Otherwise unchecked = stays old value.
         cpe.has_remote = "has_remote" in request.form
         cpe.has_adapter = "has_adapter" in request.form
         cpe.is_visible_in_total = "is_visible_in_total" in request.form

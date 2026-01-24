@@ -80,19 +80,11 @@
     text-align: center;
     background-color: #d7dce2 !important;
   }
-  .IAD-column {
-    background-color: #f0d6f2 !important;
-  }
-  .STB-column {
-    background-color: #cbd7f1 !important;
-  }
-  .ONT-column {
-    background-color: #d9c3ee !important;
-  }
-  .ANTENA-column, .IOT-column, .STB_DTH-column, .LNB-column {
-    background-color: #fce4d6 !important;
-    min-width: 80px;
-  }
+  /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
+  .table-custom-head th {
+  background-color: var(--header-color, #f2f2f2);
+}
+  
   .azur-column {
    background-color: #d7dce2 !important;
     max-width: 90px;
@@ -116,10 +108,12 @@
     margin-bottom: 1rem;
   }
 
-
-
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
+  }
+  /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY MODAL LABEL*/
+  .custom-modal-label{
+    background-color: var(--header-color, #f2f2f2);
   }
 
   .plus-icon-bg {
@@ -225,11 +219,15 @@
         <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
           <thead class="table-custom-head">
             <tr>
+              <!--CITY COLUMN-->
               <th class="city-column">STANJE</th>
+              <!--CPE MODELS COLUMNS-->
               {% if schema %} {% for item in schema %} 
-              <th class="{{item.cpe_type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
+              <!----header-color CSS VARIABLE DEFINED WITH SCHEMA ATRIBUTE-->
+              <th  style="--header-color: {{ item.header_color }}">{{item.label}}</th>
               {% endfor %} {% endif %}
-              <th class="azur-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
+              <!--UPDATED COLUMN-->
+              <th class="azur-column">AŽURIRANO</th>
             </tr>
           </thead>
 
@@ -245,7 +243,7 @@
               
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
                 {% if r.max_updated_at %}
-                {{ r.max_updated_at.strftime('%Y-%m-%d %H:%M:%S') }} 
+                {{ r.max_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
                 {% endif %}
               </td>
               
@@ -354,7 +352,9 @@
           <div class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"> 
             {% for item in schema %}
             <div
-              class="col-auto me-2 d-flex flex-column justify-content-between {{item.cpe_type.name}}-column"
+            style="--header-color: {{ item.header_color }}"
+              class="col-auto me-2 d-flex flex-column justify-content-between custom-modal-label"
+              
             >
               <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
     

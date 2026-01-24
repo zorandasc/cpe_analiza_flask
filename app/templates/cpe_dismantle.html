@@ -80,41 +80,17 @@
     text-align: center;
     background-color: #d7dce2 !important;
   }
-  .IAD-column {
-    background-color: #f0d6f2 !important;
-     max-width: 130px;
-  }
-  .STB-column {
-    background-color: #cbd7f1 !important;
-     max-width: 120px;
-  }
-  .ONT-column {
-    background-color: #d9c3ee !important;
-     max-width: 80px;
-  }
-  .ANTENA-column, .IOT-column, .STB_DTH-column, .LNB-column {
-    background-color: #fce4d6 !important;
-    min-width: 80px;
-  }
+
+  /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
+  .table-custom-head th {
+  background-color: var(--header-color, #f2f2f2);
+   max-width: 120px;
+}
+  
   .azurira-column {
     background-color: #d7dce2 !important;
     max-width: 120px;
     width: 100px;
-  }
-  .IAD-row{
-    background-color: #f0d6f2 !important;
-   
-  }
-  .STB-row{
-    background-color: #cbd7f1 !important;
-     
-  }
-  .ONT-row {
-    background-color: #d9c3ee !important;
-  
-  }
-  .ANTENA-row, .IOT-row, .STB_DTH-row, .LNB-row {
-    background-color: #fce4d6 !important;
   }
 
 
@@ -193,6 +169,10 @@
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
   }
+/*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY MODAL LABEL*/
+    .custom-modal-label{
+    background-color: var(--header-color, #f2f2f2);
+  }
 
   .plus-icon-bg {
     color: white;
@@ -253,7 +233,7 @@
                 STANJE
               </th>
               {% if schema %} {% for item in schema %} 
-              <th class="{{item.cpe_type.name}}-column">{{item.label}}</th><!--CPE MODELS COLUMNS-->
+              <th style="--header-color: {{ item.header_color }}">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
               <th class="azurira-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
@@ -271,7 +251,7 @@
               {% endfor %}
               {% if r.complete_updated_at %}
               <td class="{% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
-                {{ r.complete_updated_at.strftime('%Y-%m-%d
+                {{ r.complete_updated_at.strftime('%d-%m-%Y
                 %H:%M:%S') }} 
               </td>
               {% endif %}
@@ -351,7 +331,7 @@
               </th>
               {% if schema %} {% for item in schema %} 
               
-              <th {% if item.has_remote %} colspan="3"{% endif %} class="{{item.cpe_type.name}}-column ">{{item.label}}</th><!--CPE MODELS COLUMNS-->
+              <th {% if item.has_remote %} colspan="3"{% endif %} style="--header-color: {{ item.header_color }}">{{item.label}}</th><!--CPE MODELS COLUMNS-->
               {% endfor %} {% endif %}
               <th class="azurira-column">AŽURIRANO</th><!--LAST TIME COLIMN-->
             </tr>
@@ -389,7 +369,7 @@
               {% endfor %}
               {% if r.missing_updated_at %}
               <td class="group-start {% if r.missing_updated_at %}{% if r.missing_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
-                {{ r.missing_updated_at.strftime('%Y-%m-%d
+                {{ r.missing_updated_at.strftime('%d-%m-%Y
                 %H:%M:%S') }} 
               </td>
               {% endif %}
@@ -464,12 +444,10 @@
           </a>
       </div>
   </div>
- 
-
 </div>
+
+
 <!-- MODAL OPENED BY EDIT BUTTON-->
-
-
 <div class="modal fade" id="completeModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -504,7 +482,7 @@
           {% for item in schema %}
           <div class="row mb-2 align-items-center border-bottom  ">
             
-            <div class="col-md-6 {{item.cpe_type.name}}-row">
+            <div style="--header-color: {{ item.header_color }}" class="col-md-6 custom-modal-label">
               <label class=" fw-bold p-2">{{item.label}}</label>
             </div>
 
@@ -612,7 +590,7 @@
           {% for item in schema %}
           <div class="row mb-2 align-items-center border-bottom  ">
             
-            <div class="col-md-6  {{item.cpe_type.name}}-row">
+            <div style="--header-color: {{ item.header_color }}" class="col-md-6  custom-modal-label">
               <label class=" fw-bold p-2">{{item.label}}</label>
             </div>
 

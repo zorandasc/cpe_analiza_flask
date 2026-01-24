@@ -66,6 +66,17 @@ content %}
               Aktivan u demontaža
           </label>
       </div>
+       <div class="mb-3">
+        <label class="form-label">Položaj u tabeli</label>
+        <input type="number" name="display_order" class="form-control" min="1" value="{{ cpe.display_order }}" />
+         <div class="form-text">
+    Manji broj = kolona ide više lijevo
+  </div>
+      </div>
+       <div class="mb-3">
+        <label class="form-label">Boja zaglavlja</label>
+        <input type="color" name="header_color" class="form-control form-control-color" value="{{ cpe.header_color or '#ffffff' }}" />
+      </div>
       <button type="submit" class="btn btn-success">Save</button>
       <a href="{{ url_for('admin.cpe_types') }}" class="btn btn-secondary"
         >Cancel</a

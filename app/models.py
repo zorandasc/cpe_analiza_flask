@@ -119,13 +119,13 @@ class CpeTypes(db.Model):
         Boolean, server_default=text("true")
     )
 
-    #display_order: Mapped[int] = mapped_column(Integer)
-
-    #header_color: Mapped[str] = mapped_column(String(200))
-
     has_remote = mapped_column(Boolean, nullable=False, server_default="false")
 
     has_adapter = mapped_column(Boolean, nullable=False, server_default="true")
+
+    display_order: Mapped[Optional[int]] = mapped_column(Integer)
+
+    header_color: Mapped[Optional[str]] = mapped_column(String(50))
 
     cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
         "CpeDismantle", back_populates="cpe_type"

@@ -17,8 +17,10 @@ block content %}
       <th>Tip</th>
       <th>Ima daljinski</th>
       <th>Ima adapter</th>
-      <th>Vidljiv u CPE ukupno</th>
-      <th>Vidljiv u CPE demontaža</th>
+      <th>Vidljiv u ukupno</th>
+      <th>Vidljiv u demontaža</th>
+      <th>Položaj u tabeli</th>
+      <th>Boja zaglavlja</th>
       <th style="width: 160px">Akcije</th>
     </tr>
     {% for cpe in cpes %}
@@ -31,6 +33,8 @@ block content %}
       <td>{{ cpe.has_adapter }}</td>
       <td>{{ cpe.is_visible_in_total }}</td>
       <td>{{ cpe.is_visible_in_dismantle }}</td>
+      <td>{{ cpe.display_order }}</td>
+      <td>{{ cpe.header_color }}</td>
       <td>
         {% if ( current_user.role== 'admin') %}
         <a
