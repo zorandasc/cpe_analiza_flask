@@ -5,3 +5,4 @@ gunicorn
 sqlacodegen
 flask-login
 openpyxl
+flask-wtf

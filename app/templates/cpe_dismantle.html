@@ -446,6 +446,8 @@
   </div>
 </div>
 
+<!--CSRF token into page-->
+<meta name="csrf-token" content="{{ csrf_token() }}">
 
 <!-- MODAL OPENED BY EDIT BUTTON-->
 <div class="modal fade" id="completeModal" tabindex="-1">
@@ -749,24 +751,20 @@
   "city_id": 3,
   "city":"Banja Luka"
   "updates": [
-    {
-      "cpe_type_id": 1,
+    {"cpe_type_id": 1,
       "dismantle_type_id": 1,
-      "quantity": 120
-    },
-    {
-      "cpe_type_id": 1,
+      "quantity": 120},
+    {"cpe_type_id": 1,
       "dismantle_type_id": 2,
-      "quantity": 15
-    },
-    {
-      "cpe_type_id": 3,
+      "quantity": 15},
+    {"cpe_type_id": 3,
       "dismantle_type_id": 3,
-      "quantity": 8
-    }
-  ]
-}
-  */
+      "quantity": 8}]}*/
+
+  //Read CSRF token in JavaScript
+  function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+  }
 
   async function submitDismantleUpdate(modalId){
     const modal=document.getElementById(modalId)
@@ -789,7 +787,8 @@
      const res=await fetch("/cpe-dismantle-records/update", {
       method:'POST',
       headers:{
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCsrfToken()
       },
       body: JSON.stringify({
         "city_id": cityId,

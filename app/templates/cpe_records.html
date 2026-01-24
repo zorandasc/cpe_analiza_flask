@@ -317,11 +317,12 @@
       </div>
     
   </div>
- 
-  
- 
 
 </div>
+
+<!--CSRF token into page-->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
 <!-- MODAL OPENED BY EDIT BUTTON-->
 <!-- Inputs inside modal have ids like modal-CPE-,-->
 <div class="modal fade" id="editModal" tabindex="-1">
@@ -427,6 +428,9 @@
 
 
 <script>
+
+ 
+
   //######################################
   //    THIS IS FOR SENDING DATA FROM BUTTON TO MODAL, DISPLAY DATA IN FORM
   //######################################
@@ -463,24 +467,22 @@
   "city_id": 3,
   "city":"Banja Luka"
   "updates": [
-    {
-      "cpe_type_id": 1,
-      "quantity": 120
-    },
-    {
-      "cpe_type_id": 1,
-      "quantity": 15
-    },
-    {
-      "cpe_type_id": 3,
-      "quantity": 8
-    }
-  ]
-}
-  */
+    {"cpe_type_id": 1,
+      "quantity": 120},
+    {"cpe_type_id": 1,
+      "quantity": 15},
+    {"cpe_type_id": 3,
+      "quantity": 8}]}*/
+
+
+   //Read CSRF token in JavaScript
+  function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+  }
+
   async function submitDismantleUpdate(modalId){
     const modal=document.getElementById(modalId)
-    //THIS IS FOR name ATTRIBUTTE ON INPUT
+    //THIS IS FOR name ATTRIBUTTE ON MODAL INPUT
     const cityId=modal.querySelector("#modal-city-id").value
     const city=modal.querySelector("#modal-city").value
 
@@ -498,7 +500,8 @@
      const res=await fetch("/cpe-records/update", {
       method:'POST',
       headers:{
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+         "X-CSRFToken": getCsrfToken()
       },
       body: JSON.stringify({
         "city_id": cityId,

@@ -187,6 +187,7 @@ styles %} {{ super() }}
         method="POST"
         action="{{url_for('stb_inventory.update_stb_inventory')}}"
       >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header custom-modal-header">
           <h4 class="modal-title">
             Dodaj novo stanje za: {{ current_week_end }}
@@ -271,6 +272,7 @@ styles %} {{ super() }}
         method="POST"
         action="{{url_for('stb_inventory.update_iptv_users')}}"
       >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="modal-header custom-modal-header">
           <h4 class="modal-title">
             Dodaj novo stanje za: {{ current_week_end }}

@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 from app.config import Config
 from app.extensions import db, login_manager
 from app.models import Users
@@ -14,6 +15,13 @@ def create_app():
         static_folder="../static",
     )
     app.config.from_object(Config)
+
+    # Flask automatically checks CSRF token
+    # Every form that sends POST must include:
+    # Before routes are used
+    # all POST, PUT, PATCH, DELETE requests are protected
+    # If token is missing or invalid → Flask returns 400 Bad Request.
+    csrf = CSRFProtect(app)
 
     # Initialize SQLAlchemy with the app
     db.init_app(app)

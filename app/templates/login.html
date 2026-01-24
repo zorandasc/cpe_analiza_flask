@@ -43,6 +43,7 @@ styles%} {{ super() }}
 
   <form method="POST" action="{{ url_for('auth.login') }}">
     {% if form %} {{ form.hidden_tag() }} {% endif %}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
     <div class="mb-3">
       <label class="form-label">Username</label>

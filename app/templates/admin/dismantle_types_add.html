@@ -4,6 +4,7 @@ block content %}
   <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
     <h2>Dodaj novu demontažu</h2>
     <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="mb-3">
         <label class="form-label">Kodna oznaka</label>
         <input type="text" name="code" class="form-control" required />

@@ -1649,3 +1649,41 @@ Excel formatting → appearance
 Important rule for pivot queries
 
 Always filter rows in the CTE, not after pivoting.
+
+# csrf token
+
+Flask automatically checks CSRF token
+
+INITIALIZE Before routes are used
+
+```python
+     csrf = CSRFProtect(app)
+```
+
+all POST, PUT, PATCH, DELETE requests are protected
+If token is missing or invalid → Flask returns 400 Bad Request.
+Every form that sends POST must include:
+
+```html
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+```
+
+IN API REQUEST:
+
+```html
+<!--CSRF token into page-->
+<meta name="csrf-token" content="{{ csrf_token() }}" />
+```
+
+```JS
+   //Read CSRF token in JavaScript
+  function getCsrfToken() {
+  return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+}
+const res=await fetch("/cpe-records/update", {
+      method:'POST',
+      headers:{
+        "Content-Type": "application/json",
+            "X-CSRFToken": getCsrfToken()
+      },
+```

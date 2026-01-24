@@ -139,6 +139,8 @@ styles %} {{ super() }}
         method="POST"
         action="{{url_for('ont_inventory.update_ont_inventory')}}"
       >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
         <div class="modal-header custom-modal-header">
           <h4 class="modal-title">
             Dodaj novo stanje za: {{ current_week_end }}
