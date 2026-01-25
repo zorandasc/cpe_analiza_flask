@@ -33,10 +33,19 @@ WORKDIR /app
 
 # 1. Install necessary system utilities in the FINAL image (netcat for entrypoint.sh)
 # Since you build locally WITH internet, this works.
+# libpq5 is the PostgreSQL client library needed at runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
-    # libpq5 is the PostgreSQL client library needed at runtime
     libpq5 \
+    \
+    libcairo2 \
+    libpango-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
+    libffi-dev \
+    shared-mime-info \
+    fonts-dejavu \
+    fonts-liberation \
+    \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Add the entrypoint scrip

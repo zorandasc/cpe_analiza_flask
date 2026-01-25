@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='reports/report.css') }}"
+    />
+
+    <!-- FOR WEASYPRINT WeasyPrint does not understand Flask routing: url_for.
+    It only understands file paths. -->
+    <link rel="stylesheet" href="static/reports/report.css" />
+    <style>
+      @page {
+        @top-center {
+          content: "Weekly Equipment Inventory Report — Week {{ week }}";
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <section class="page cover" style="page: cover">
+      <h1>COVER PAGE</h1>
+    </section>
+
+    <div class="page-break"></div>
+
+    <section class="page summary">
+      <h1>SUMMARY PAGE</h1>
+    </section>
+
+    <div class="page-break"></div>
+
+    <section class="page charts">
+      <h1>CHARTS PAGE</h1>
+    </section>
+  </body>
+</html>

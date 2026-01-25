@@ -1675,7 +1675,7 @@ IN API REQUEST:
 <meta name="csrf-token" content="{{ csrf_token() }}" />
 ```
 
-```JS
+```js
    //Read CSRF token in JavaScript
   function getCsrfToken() {
   return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
@@ -1686,4 +1686,146 @@ const res=await fetch("/cpe-records/update", {
         "Content-Type": "application/json",
             "X-CSRFToken": getCsrfToken()
       },
+```
+
+# report in pdf
+
+cron
+↓
+/reports/weekly
+↓
+generate_pdf() → file
+↓
+send_email(file)
+
+# when istalling weasyprint for pdf generating
+
+OSError: cannot load library 'libgobject-2.0-0'
+WeasyPrint requires native libraries:
+
+GTK
+
+Pango
+
+Cairo
+
+GObject
+
+Fontconfig
+
+Linux has these preinstalled.
+Windows does not.
+
+Download GTK for Windows
+👉 GTK 3 Runtime (64-bit)
+https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
+
+AFTER INSTALATION IT WORKS BUT IT GIVES ANYING WARNING IN CONSOLE.
+SO TO SILENCE USE LAZY LOAD OF THIS HEAVY PACKET
+
+```python
+def generate_pdf(html):
+    from weasyprint import HTML
+    return HTML(string=html).write_pdf()
+```
+
+THIS WILL GENERATE WARNINGS ONLY WHEN USED
+
+# ABOUT LAZY LOAD:
+
+Lazy-load only “heavy / native / optional” libraries.
+
+❌ Do NOT lazy-load everything.
+✅ Do lazy-load libraries like WeasyPrint.
+⚠️ Normal Python libraries like openpyxl do NOT need lazy loading.
+
+# Why this matters for Gunicorn
+
+Gunicorn forks workers.
+
+If you import heavy libs at startup:
+
+each worker loads them
+
+RAM explodes
+
+startup slow
+
+worker timeout risk
+
+# Lazy loading means:
+
+workers start fast
+
+heavy libs loaded only when needed
+
+fewer crashes
+
+easier scaling
+
+This is production-level thinking.
+
+# 🧠 Simple rule to remember
+
+If a library touches the OS → lazy load it.
+If it’s pure Python → normal import.
+
+That rule alone will never betray you.
+
+# problem with pip in windows AND HOLOW VENV
+
+Activate: source .venv/Scripts/activate
+
+Install: python -m pip install <package-name>
+
+python -m pip install -r requirements.txt
+
+Update Requirements: It is best practice to immediately update your file so your project stays reproducible:
+
+Bash
+python -m pip freeze > requirements.txt
+
+Why avoid just pip install?
+On Windows, pip is often an independent .exe file. Sometimes, your terminal might activate the virtual environment's Python, but the pip command remains "stuck" pointing to your Global Python.
+
+By using python -m pip, you are explicitly telling the system: "Use the Python interpreter I'm currently using to run its own internal version of pip." This guarantees the package lands in your .venv folder.
+
+# Deactivate first
+
+```bash
+deactivate
+```
+
+# Re-activate using the full path
+
+```bash
+source ./.venv/Scripts/activate
+```
+
+Now, run this specific command to check:
+
+```bash
+python -c "import sys; print(sys.executable)"
+```
+
+If this still shows C:/Users/zoran.dasic/..., then your virtual environment is essentially "hollow."
+
+Delete the broken venv folder (physically delete the .venv folder in your project).
+
+Create a new one using the full path to your global Python:
+
+```bash
+/c/Users/zoran.dasic/AppData/Local/Programs/Python/Python313/python -m venv .venv
+```
+
+Activate it:
+
+```bash
+source .venv/Scripts/activate
+```
+
+Re-install your requirements:
+
+```bash
+python -m pip install -r requirements.txt
 ```

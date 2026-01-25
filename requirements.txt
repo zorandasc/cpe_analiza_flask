@@ -6,3 +6,4 @@ sqlacodegen
 flask-login
 openpyxl
 flask-wtf
+weasyprint
