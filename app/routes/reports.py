@@ -15,6 +15,9 @@ report_bp = Blueprint(
 # 0 7 * * 1 curl http://localhost:5000/reports/weekly
 @report_bp.route("/weekly")
 def generate_weekly_report():
+
+
+    
     pdf_path = generate_pdf()
 
     # generate_excel()

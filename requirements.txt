@@ -7,3 +7,4 @@ flask-login
 openpyxl
 flask-wtf
 weasyprint
+matplotlib

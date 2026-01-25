@@ -1829,3 +1829,37 @@ Re-install your requirements:
 ```bash
 python -m pip install -r requirements.txt
 ```
+
+# WeasyPrint loads static assets from the filesystem, not Flask URLs.
+
+WRONG (for PDF)
+
+<link rel="stylesheet"
+      href="{{ url_for('static', filename='reports/report.css') }}">
+
+CORRECT (for WeasyPrint)
+
+<link rel="stylesheet" href="static/reports/report.css">
+
+# Correct architecture for charts in PDF
+
+Postgres
+↓
+Python prepares chart data
+↓
+Chart rendered to image (PNG)
+↓
+PDF embeds <img src="...">
+
+# Server-side charts (Python) (matplotlib):
+
+# Final recommended flow for weekly report
+
+weekly_report()
+├─ fetch aggregated data
+├─ generate summary numbers
+├─ generate chart images (PNG)
+├─ save images to static/reports/charts/
+├─ render HTML with <img>
+├─ generate PDF
+└─ email PDF

@@ -14,7 +14,7 @@
     <style>
       @page {
         @top-center {
-          content: "Weekly Equipment Inventory Report — Week {{ week }}";
+          content: "Sedmični izvještaj CPE opreme — Sedmica {{ week }}";
         }
       }
     </style>
@@ -22,7 +22,7 @@
 
   <body>
     <section class="page cover" style="page: cover">
-      <h1>COVER PAGE</h1>
+      <h1>SEDMIČNI IZVJEŠTAJ STANJA CPE OPREME</h1>
     </section>
 
     <div class="page-break"></div>
@@ -34,7 +34,15 @@
     <div class="page-break"></div>
 
     <section class="page charts">
-      <h1>CHARTS PAGE</h1>
+      <h1>Trendovi u inventoriju</h1>
+      <img src="{{ cpe_chart_image }}" alt="CPE Trend Chart" />
+      <img
+        src="{{ cpe_dismantle_chart_image }}"
+        alt="CPE Dismantle Trend Chart"
+      />
+      <img src="{{ stb_chart_image }}" alt="STB Trend Chart" />
+      <img src="{{ iptv_chart_image }}" alt="IPTV Trend Chart" />
+      <img src="{{ ont_chart_image }}" alt="ONT Trend Chart" />
     </section>
   </body>
 </html>

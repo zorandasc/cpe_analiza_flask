@@ -7,13 +7,13 @@ html {
     margin: 2.5cm 2cm 2.5cm 2cm;
 
     @top-center {
-        content: "Weekly Equipment Inventory Report — Week 03 / 2026";
+        content: "Sedmični izvještaj CPE opreme — Sedmica 03 / 2026";
         font-size: 10pt;
         color: #555;
     }
 
     @bottom-center {
-        content: "Page " counter(page) " of " counter(pages);
+        content: "Stranica " counter(page) " od " counter(pages);
         font-size: 9pt;
         color: #777;
     }
@@ -36,3 +36,9 @@ body {
     margin-top: 0;
 }
 
+.page img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
