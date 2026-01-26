@@ -42,3 +42,29 @@ body {
     display: block;
     margin: 20px auto;
 }
+
+.summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+}
+
+.summary-table th,
+.summary-table td {
+    border: 1px solid #ccc;
+    padding: 6px;
+}
+
+.summary-table th {
+    background: #f2f2f2;
+}
+
+.pos {
+    color: green;
+    font-weight: bold;
+}
+
+.neg {
+    color: red;
+    font-weight: bold;
+}

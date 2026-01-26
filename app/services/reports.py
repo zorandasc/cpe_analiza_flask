@@ -1,3 +1,4 @@
+from datetime import date
 import os
 from flask import render_template, current_app
 from app.utils.dates import get_current_week_friday
@@ -16,16 +17,101 @@ def generate_pdf():
 
     current_week_end = get_current_week_friday()
 
-    # 1. pull data to render chart and summary tables in dictonary
-    data = {
-        "week": current_week_end.strftime("%d-%m-%Y"),
-    }
+    # data that will be passed to template (pdf)
+    data = {"week": current_week_end.strftime("%d-%m-%Y"), "today": date.today()}
+
     # ----------------------------------------------
-    # COVER SECTION
+    # PULL DATA TO RENDER SUMMARY AND CHARTS
     # -------------------------------------------------
+    cpe_data_total = get_cpe_inventory_chart_data(
+        city_id=None, cpe_id=None, cpe_type=None, weeks=5
+    )
+
+    cpe_data_warehouse = get_cpe_inventory_chart_data(
+        city_id=13, cpe_id=None, cpe_type=None, weeks=5
+    )
+
+    cpe_dismantle_data_total = get_cpe_dismantle_chart_data(
+        city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=5
+    )
+
+    stb_data_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=5)
+
+    iptv_data_total = get_iptv_inventory_chart_data(weeks=5)
+
+    ont_data_total = get_ont_inventory_chart_data(city_id=None, months=5)
+
     # ----------------------------------------------
     # SUMMARY SECTION
     # -------------------------------------------------
+
+    # summary for cpe
+    cpe_current_total = sum(row["data"][-2] for row in cpe_data_total["datasets"])
+
+    cpe_previous_total = sum(row["data"][-1] for row in cpe_data_total["datasets"])
+
+    cpe_current_warehouse = sum(
+        row["data"][-2] for row in cpe_data_warehouse["datasets"]
+    )
+
+    cpe_previous_warehouse = sum(
+        row["data"][-1] for row in cpe_data_warehouse["datasets"]
+    )
+
+    # summary for dismantle
+    dismantle_current_total = sum(
+        row["data"][-1] for row in cpe_dismantle_data_total["datasets"]
+    )
+    dismantle_previous_total = sum(
+        row["data"][-2] for row in cpe_dismantle_data_total["datasets"]
+    )
+
+    # summary for stb
+    stb_current_total = sum(row["data"][-1] for row in stb_data_total["datasets"])
+    stb_previous_total = sum(row["data"][-2] for row in stb_data_total["datasets"])
+
+    # summary for iptv
+    iptv_current_total = sum(row["data"][-1] for row in iptv_data_total["datasets"])
+    iptv_previous_total = sum(row["data"][-2] for row in iptv_data_total["datasets"])
+
+    # summary for ont
+    ont_current_total = sum(row["data"][-1] for row in ont_data_total["datasets"])
+    ont_previous_total = sum(row["data"][-2] for row in ont_data_total["datasets"])
+
+    data["summary"] = {
+        "cpe": {
+            "total": {
+                "current": cpe_current_total,
+                "previous": cpe_previous_total,
+                "delta": cpe_current_total - cpe_previous_total,
+            },
+            "warehouse": {
+                "current": cpe_current_warehouse,
+                "previous": cpe_previous_warehouse,
+                "delta": cpe_current_warehouse - cpe_previous_warehouse,
+            },
+        },
+        "dismantle": {
+            "current": dismantle_current_total,
+            "previous": dismantle_previous_total,
+            "delta": dismantle_current_total - dismantle_previous_total,
+        },
+        "stb": {
+            "current": stb_current_total,
+            "previous": stb_previous_total,
+            "delta": stb_current_total - stb_previous_total,
+        },
+        "iptv": {
+            "current": iptv_current_total,
+            "previous": iptv_previous_total,
+            "delta": iptv_current_total - iptv_previous_total,
+        },
+        "ont": {
+            "current": ont_current_total,
+            "previous": ont_previous_total,
+            "delta": ont_current_total - ont_previous_total,
+        },
+    }
 
     # ----------------------------------------------
     # CHART SECTION
@@ -35,60 +121,41 @@ def generate_pdf():
     # return path to that saved image:
     # "cpe_chart_image": "static/reports/charts/cpe_trend.png",
     data["cpe_chart_image"] = build_report_chart(
-        # get data
-        chart_data_fn=get_cpe_inventory_chart_data,
-        chart_kwargs={
-            "city_id": None,
-            "cpe_id": None,
-            "cpe_type": None,
-            "weeks": 10,
-        },
-        # save matplotlib to as image to path
+        chart_data=cpe_data_total,
         output_filename="cpe_trend.png",
-        title="Trend ukupne CPE opreme u radu po svim IJ I skladištima (Zadnjih 10 sedmica)",
+        title="Trend ukupne CPE opreme u radu po svim IJ I skladištima (Zadnjih 5 sedmica)",
     )
 
+    # "cpe_dismantle_chart_image": "static/reports/charts/cpe_dismantle_trend.png",
     data["cpe_dismantle_chart_image"] = build_report_chart(
-        chart_data_fn=get_cpe_dismantle_chart_data,
-        chart_kwargs={
-            "city_id": None,
-            "cpe_id": None,
-            "cpe_type": None,
-            "dismantle_type_id": None,
-            "weeks": 10,
-        },
+        chart_data=cpe_dismantle_data_total,
         output_filename="cpe_dismantle_trend.png",
-        title="Trend ukupne demontirane CPE opreme po svim IJ (Zadnjih 10 sedmica)",
+        title="Trend ukupne demontirane CPE opreme po svim IJ (Zadnjih 5 sedmica)",
     )
 
+    # "stb_chart_image"": "static/reports/charts/stb_chart_image"",
     data["stb_chart_image"] = build_report_chart(
-        chart_data_fn=get_stb_inventory_chart_data,
-        chart_kwargs={
-            "stb_type_id": None,
-            "weeks": 10,
-        },
+        chart_data=stb_data_total,
         output_filename="stb_trend.png",
-        title="Trend ukupne STB opreme u radu, IPTV platforma (Zadnjih 10 sedmica)",
+        title="Trend ukupne STB opreme u radu, IPTV platforma (Zadnjih 5 sedmica)",
     )
 
+    # "iptv_chart_image": "static/reports/charts/iptv_trend.png",
     data["iptv_chart_image"] = build_report_chart(
-        chart_data_fn=get_iptv_inventory_chart_data,
-        chart_kwargs={
-            "weeks": 10,
-        },
+        chart_data=iptv_data_total,
         output_filename="iptv_trend.png",
-        title="Trend IPTV korisnika, IPTV platforma (Zadnjih 10 sedmica)",
+        title="Trend IPTV korisnika, IPTV platforma (Zadnjih 5 sedmica)",
     )
 
+    # "ont_chart_image": "static/reports/charts/ont_trend.png",
     data["ont_chart_image"] = build_report_chart(
-        chart_data_fn=get_ont_inventory_chart_data,
-        chart_kwargs={
-            "city_id": None,
-            "months": 5,
-        },
+        chart_data=ont_data_total,
         output_filename="ont_trend.png",
         title="Trend ukupne ONT opreme u radu po svim IJ (Zadnjih 5 mijeseci)",
     )
+
+    # for key, value in data.items():
+    #    print(f"{key}: {value}")
 
     # ----4. Generate htm template with embeded data--------
     html = render_template("reports/weekly_report.html", **data)
@@ -137,13 +204,15 @@ def generate_chart_image(title, labels, datasets, output_path):
     plt.close()
 
 
+# build_report_char() will: build chart, save it as png and
+# return path to that saved image:
+# * is optional parametar, ensure clean and unambiguous function calls
 # * means that all parameters after the * must be passed as keyword arguments
 # (with their names explicitly used) when calling the function.
-# ensure clean and unambiguous function calls
-def build_report_chart(*, chart_data_fn, chart_kwargs, output_filename, title):
+def build_report_chart(*, chart_data, output_filename, title):
     # 1. Get chart data. chart_data holds labels and datasets
     # (**) Used to unpack a dictionary into keyword arguments
-    chart_data = chart_data_fn(**(chart_kwargs or {}))
+    # chart_data = chart_data_fn(**(chart_kwargs or {}))
 
     # 2. Define path where chart image will be save
     output_path = os.path.join(
@@ -162,6 +231,22 @@ def build_report_chart(*, chart_data_fn, chart_kwargs, output_filename, title):
 
     # return path of saved chart image
     return f"static/reports/charts/{output_filename}"
+
+
+def get_significant_changes(datasets):
+    significant_changes = []
+    for ds in datasets:
+        diff = ds["data"][-1] - ds["data"][-2]
+
+        if abs(diff) >= 30:  # threshold
+            significant_changes.append(
+                {
+                    "equipment": ds["label"],
+                    "diff": diff,
+                }
+            )
+
+        return significant_changes
 
 
 def send_email():

@@ -129,10 +129,13 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         "datasets": chart_datasets,
     }
 
-    # {"labels": ["01-12-2025", "08-12-2025", "15-12-2025"],
+    # {
+    # "labels": ["01-12-2025", "08-12-2025", "15-12-2025"],
     # "datasets": [
     # {"label": "CPE Router","data": [120, 140, 160] },
-    # {"label": "CPE Modem","data": [80, 90, 110]},...]}
+    # {"label": "CPE Modem","data": [80, 90, 110]},
+    # ...]
+    #}
 
 
 # cpe dismantles

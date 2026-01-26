@@ -28,8 +28,66 @@
     <div class="page-break"></div>
 
     <section class="page summary">
-      <h1>SUMMARY PAGE</h1>
-    </section>
+    <h1>Sažetak sedmice</h1>
+
+    <table class="summary-table">
+        <thead>
+            <tr>
+                <th>Tip</th>
+                <th>Prošla sedmica</th>
+                <th>Ova sedmica</th>
+                <th>Promjena</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CPE ukupno</td>
+                <td>{{ summary.cpe.total.previous }}</td>
+                <td>{{ summary.cpe.total.current }}</td>
+                <td class="{{ 'pos' if summary.cpe.total.delta > 0 else 'neg' }}">
+                    {{ summary.cpe.total.delta }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>CPE Raspoloživa oprema</td>
+                <td>{{ summary.cpe.warehouse.previous }}</td>
+                <td>{{ summary.cpe.warehouse.current }}</td>
+                <td class="{{ 'pos' if summary.cpe.warehouse.delta > 0 else 'neg' }}">
+                    {{ summary.cpe.warehouse.delta }}
+                </td>
+            </tr>
+
+            <tr>
+                <td>Demontirana CPE ukupno</td>
+                <td>{{ summary.dismantle.previous }}</td>
+                <td>{{ summary.dismantle.current }}</td>
+                <td class="{{ 'pos' if summary.dismantle.delta > 0 else 'neg' }}">{{ summary.dismantle.delta }}</td>
+            </tr>
+
+            <tr>
+                <td>STB IPTV ukupno</td>
+                <td>{{ summary.stb.previous }}</td>
+                <td>{{ summary.stb.current }}</td>
+                <td class="{{ 'pos' if summary.stb.delta > 0 else 'neg' }}">{{ summary.stb.delta }}</td>
+            </tr>
+
+            <tr>
+                <td>IPTV korisnici ukupno</td>
+                <td>{{ summary.iptv.previous }}</td>
+                <td>{{ summary.iptv.current }}</td>
+                <td class="{{ 'pos' if summary.iptv.delta > 0 else 'neg' }}">{{ summary.iptv.delta }}</td>
+            </tr>
+
+            <tr>
+                <td>ONT oprema ukupno</td>
+                <td>{{ summary.ont.previous }}</td>
+                <td>{{ summary.ont.current }}</td>
+                <td class="{{ 'pos' if summary.ont.delta > 0 else 'neg' }}">{{ summary.ont.delta }}</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
 
     <div class="page-break"></div>
 
