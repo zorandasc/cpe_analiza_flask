@@ -37,15 +37,18 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     netcat-openbsd \
     libpq5 \
-    \
+    # WeasyPrint core dependencies
     libcairo2 \
     libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libpangocairo-1.0-0 \
     libgdk-pixbuf-2.0-0 \
     libffi-dev \
     shared-mime-info \
+    # Font support
     fonts-dejavu \
     fonts-liberation \
-    \
+    libharfbuzz0b \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Add the entrypoint scrip
