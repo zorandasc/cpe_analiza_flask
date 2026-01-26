@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required
-from app.services.reports import generate_pdf, send_email
+from app.services.reports import generate_pdf
+from app.services.email_service import send_email
 
 
 report_bp = Blueprint(
@@ -16,14 +17,12 @@ report_bp = Blueprint(
 @report_bp.route("/weekly")
 def generate_weekly_report():
 
-
-    
     pdf_path = generate_pdf()
 
     # generate_excel()
 
     # Generate mail using for example flask-mailman
-    # send_email(pdf_path)
+    send_email(pdf_path)
 
     return "Weekly report generated", 200
 

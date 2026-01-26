@@ -197,6 +197,9 @@ def generate_pdf():
     return output_path
 
 
+# ---------------
+# HELPER FUNCTION FOR GENERATING PDF FILE
+# --------------------
 # using matplotlib to generate headless charts and save it as png to path
 def generate_chart_image(title, labels, datasets, output_path):
     # On servers (Linux, Docker, RunPod, etc.) you MUST force a non-GUI backend.
@@ -284,7 +287,3 @@ def group_changes_by_source(changes):
         grouped[change["source"]].append(change)
 
     return dict(grouped)
-
-
-def send_email():
-    pass

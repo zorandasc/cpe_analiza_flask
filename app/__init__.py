@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
+from flask_mailman import Mail
 from app.config import Config
 from app.extensions import db, login_manager
 from app.models import Users
@@ -7,12 +8,14 @@ from app.routes import register_routes
 from app.cli.create_admin_cli import create_initial_admin
 from app.cli.create_db_tables_cli import create_initial_db
 
+mail = Mail()
+
 
 def create_app():
     app = Flask(
         __name__,
         template_folder="templates",
-        #static_folder="../static",
+        # static_folder="../static",
     )
     app.config.from_object(Config)
 
@@ -23,10 +26,13 @@ def create_app():
     # If token is missing or invalid → Flask returns 400 Bad Request.
     csrf = CSRFProtect(app)
 
+    # Initialize  flask-mailman
+    mail.init_app(app)
+
     # Initialize SQLAlchemy with the app
     db.init_app(app)
 
-    # --- Initialize Flask-Login ---
+    # Initialize Flask-Login
     login_manager.init_app(app)
 
     # While you defined the User model, you haven't yet registered the required user_loader
@@ -43,7 +49,7 @@ def create_app():
     app.cli.add_command(create_initial_admin)
     app.cli.add_command(create_initial_db)
 
-    # routes
+    # Register routes
     register_routes(app)
 
     return app
