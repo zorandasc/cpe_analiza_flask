@@ -1,70 +1,159 @@
 html {
-    zoom: 1;
+  zoom: 1;
 }
 
 @page {
-    size: A4;
-    margin: 2.5cm 2cm 2.5cm 2cm;
+  size: A4;
+  margin: 2.5cm 2cm 2.5cm 2cm;
 
-    @top-center {
-        content: "Sedmični izvještaj CPE opreme — Sedmica 03 / 2026";
-        font-size: 10pt;
-        color: #555;
-    }
+  @top-center {
+    content: "Sedmični izvještaj CPE opreme — Sedmica 03 / 2026";
+    font-size: 10pt;
+    color: #555;
+  }
 
-    @bottom-center {
-        content: "Stranica " counter(page) " od " counter(pages);
-        font-size: 9pt;
-        color: #777;
-    }
+  @bottom-center {
+    content: "Stranica " counter(page) " od " counter(pages);
+    font-size: 9pt;
+    color: #777;
+  }
 }
 
 /* Body text */
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 11pt;
-    color: #222;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11pt;
+  color: #222;
 }
 
 /* Page break */
 .page-break {
-    page-break-before: always;
+  page-break-before: always;
 }
 
 /* Page sections */
 .page h1 {
+  margin-top: 0;
+}
+
+.cover {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+}
+
+.cover::after {
+    content: "CONFIDENTIAL";
+    position: absolute;
+    bottom: 120px;
+    width: 100%;
+    text-align: center;
+    font-size: 40pt;
+    color: rgba(0,0,0,0.04);
+}
+
+.cover-header h1 {
+    font-size: 28pt;
+    margin-bottom: 10px;
+}
+
+.cover-header h2 {
+    font-size: 16pt;
+    color: #555;
     margin-top: 0;
 }
 
+.cover-divider {
+    width: 60%;
+    margin: 30px auto;
+    border-bottom: 2px solid #444;
+}
+
+.cover-meta {
+    font-size: 12pt;
+    color: #333;
+    line-height: 1.8;
+}
+
+.cover-footer {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    font-size: 10pt;
+    color: #777;
+}
+
 .page img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 20px auto;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 20px auto;
 }
 
 .summary-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11pt;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11pt;
+  margin-bottom: 1rem;
 }
 
 .summary-table th,
 .summary-table td {
-    border: 1px solid #ccc;
-    padding: 6px;
+  border: 1px solid #ccc;
+  padding: 6px;
 }
 
 .summary-table th {
-    background: #f2f2f2;
+  background: #f2f2f2;
 }
 
 .pos {
-    color: green;
-    font-weight: bold;
+  color: green;
+  font-weight: bold;
 }
 
 .neg {
-    color: red;
-    font-weight: bold;
+  color: red;
+  font-weight: bold;
+}
+
+.change-group {
+  margin-bottom: 18px;
+}
+
+.change-group h3 {
+  margin-bottom: 6px;
+  font-size: 12pt;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 2px;
+}
+
+.changes {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.changes li {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 11pt;
+}
+
+.changes li.up {
+  color: #1a7f37; /* green */
+  font-weight: bold;
+}
+
+.changes li.down {
+  color: #b42318; /* red */
+  font-weight: bold;
+}
+
+.changes .diff {
+  min-width: 60px;
+  text-align: right;
 }

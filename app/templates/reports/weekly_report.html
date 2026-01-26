@@ -21,73 +21,140 @@
   </head>
 
   <body>
-    <section class="page cover" style="page: cover">
-      <h1>SEDMIČNI IZVJEŠTAJ STANJA CPE OPREME</h1>
+    <section class="page cover">
+      <div class="cover-header">
+        <h1>Sedmični Izvještaj CPE Inventorija</h1>
+        <h2>Za sedmicu {{ week }}</h2>
+      </div>
+
+      <div class="cover-divider"></div>
+
+      <div class="cover-meta">
+        <p><strong>Generisano:</strong> {{ today.strftime("%d.%m.%Y") }}</p>
+        <p><strong>Sistem:</strong> Upravljanje i Analiza CPE Inventara</p>
+        <p><strong>Odjeljenje:</strong> Planiranje CPE opreme</p>
+      </div>
+
+      <div class="cover-footer">
+        <p>Samo za internu upotrebu</p>
+      </div>
     </section>
 
     <div class="page-break"></div>
 
     <section class="page summary">
-    <h1>Sažetak sedmice</h1>
+      <h1>Sažetak sedmice</h1>
 
-    <table class="summary-table">
+      <table class="summary-table">
         <thead>
-            <tr>
-                <th>Tip</th>
-                <th>Prošla sedmica</th>
-                <th>Ova sedmica</th>
-                <th>Promjena</th>
-            </tr>
+          <tr>
+            <th>Tip</th>
+            <th>Prošla sedmica</th>
+            <th>Ova sedmica</th>
+            <th>Promjena</th>
+          </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>CPE ukupno</td>
-                <td>{{ summary.cpe.total.previous }}</td>
-                <td>{{ summary.cpe.total.current }}</td>
-                <td class="{{ 'pos' if summary.cpe.total.delta > 0 else 'neg' }}">
-                    {{ summary.cpe.total.delta }}
-                </td>
-            </tr>
+          <tr>
+            <td>CPE oprema u radu</td>
+            <td>{{ summary.cpe.total.previous }}</td>
+            <td>{{ summary.cpe.total.current }}</td>
+            <td class="{{ 'pos' if summary.cpe.total.delta > 0 else 'neg' }}">
+              {{ summary.cpe.total.delta }}
+            </td>
+          </tr>
 
-            <tr>
-                <td>CPE Raspoloživa oprema</td>
-                <td>{{ summary.cpe.warehouse.previous }}</td>
-                <td>{{ summary.cpe.warehouse.current }}</td>
-                <td class="{{ 'pos' if summary.cpe.warehouse.delta > 0 else 'neg' }}">
-                    {{ summary.cpe.warehouse.delta }}
-                </td>
-            </tr>
+          <tr>
+            <td>Raspoloživa CPE oprema</td>
+            <td>{{ summary.cpe.warehouse.previous }}</td>
+            <td>{{ summary.cpe.warehouse.current }}</td>
+            <td
+              class="{{ 'pos' if summary.cpe.warehouse.delta > 0 else 'neg' }}"
+            >
+              {{ summary.cpe.warehouse.delta }}
+            </td>
+          </tr>
 
-            <tr>
-                <td>Demontirana CPE ukupno</td>
-                <td>{{ summary.dismantle.previous }}</td>
-                <td>{{ summary.dismantle.current }}</td>
-                <td class="{{ 'pos' if summary.dismantle.delta > 0 else 'neg' }}">{{ summary.dismantle.delta }}</td>
-            </tr>
-
-            <tr>
-                <td>STB IPTV ukupno</td>
-                <td>{{ summary.stb.previous }}</td>
-                <td>{{ summary.stb.current }}</td>
-                <td class="{{ 'pos' if summary.stb.delta > 0 else 'neg' }}">{{ summary.stb.delta }}</td>
-            </tr>
-
-            <tr>
-                <td>IPTV korisnici ukupno</td>
-                <td>{{ summary.iptv.previous }}</td>
-                <td>{{ summary.iptv.current }}</td>
-                <td class="{{ 'pos' if summary.iptv.delta > 0 else 'neg' }}">{{ summary.iptv.delta }}</td>
-            </tr>
-
-            <tr>
-                <td>ONT oprema ukupno</td>
-                <td>{{ summary.ont.previous }}</td>
-                <td>{{ summary.ont.current }}</td>
-                <td class="{{ 'pos' if summary.ont.delta > 0 else 'neg' }}">{{ summary.ont.delta }}</td>
-            </tr>
+          <tr>
+            <td>Demontirana CPE oprema</td>
+            <td>{{ summary.dismantle.previous }}</td>
+            <td>{{ summary.dismantle.current }}</td>
+            <td class="{{ 'pos' if summary.dismantle.delta > 0 else 'neg' }}">
+              {{ summary.dismantle.delta }}
+            </td>
+          </tr>
         </tbody>
-    </table>
-</section>
+      </table>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Tip</th>
+            <th>Prošla sedmica</th>
+            <th>Ova sedmica</th>
+            <th>Promjena</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>STB IPTV ukupno</td>
+            <td>{{ summary.stb.previous }}</td>
+            <td>{{ summary.stb.current }}</td>
+            <td class="{{ 'pos' if summary.stb.delta > 0 else 'neg' }}">
+              {{ summary.stb.delta }}
+            </td>
+          </tr>
+
+          <tr>
+            <td>IPTV korisnici ukupno</td>
+            <td>{{ summary.iptv.previous }}</td>
+            <td>{{ summary.iptv.current }}</td>
+            <td class="{{ 'pos' if summary.iptv.delta > 0 else 'neg' }}">
+              {{ summary.iptv.delta }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Tip</th>
+            <th>Prošli mijesec</th>
+            <th>Ovaj mijesec</th>
+            <th>Promjena</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ONT oprema ukupno</td>
+            <td>{{ summary.ont.previous }}</td>
+            <td>{{ summary.ont.current }}</td>
+            <td class="{{ 'pos' if summary.ont.delta > 0 else 'neg' }}">
+              {{ summary.ont.delta }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2>Značajne promjene (promjena veća od 1000 jedinica)</h2>
+      {% for source, changes in significant_changes.items() %}
+      <div class="change-group">
+        <h3>{{ source }}</h3>
+
+        <ul class="changes">
+          {% for c in changes %}
+          <li class="{{ 'up' if c.diff > 0 else 'down' }}">
+            {{ c.equipment }}
+            <span class="diff">
+              {% if c.diff > 0 %} +{{ c.diff }} {% else %} {{ c.diff }} {% endif
+              %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </section>
 
     <div class="page-break"></div>
 

@@ -1,4 +1,5 @@
 from datetime import date
+from collections import defaultdict
 import os
 from flask import render_template, current_app
 from app.utils.dates import get_current_week_friday
@@ -113,6 +114,25 @@ def generate_pdf():
         },
     }
 
+    significant_changes = []
+
+    significant_changes += get_significant_changes(
+        datasets=cpe_data_total["datasets"], source="CPE oprema u radu"
+    )
+
+    significant_changes += get_significant_changes(
+        datasets=cpe_data_warehouse["datasets"], source="Raspoloživa CPE Oprema"
+    )
+
+    significant_changes += get_significant_changes(
+        datasets=cpe_dismantle_data_total["datasets"],
+        source="Demontirana CPE oprema",
+    )
+
+    grouped_changes = group_changes_by_source(significant_changes)
+
+    data["significant_changes"] = grouped_changes
+
     # ----------------------------------------------
     # CHART SECTION
     # -------------------------------------------------
@@ -206,10 +226,7 @@ def generate_chart_image(title, labels, datasets, output_path):
 
 # build_report_char() will: build chart, save it as png and
 # return path to that saved image:
-# * is optional parametar, ensure clean and unambiguous function calls
-# * means that all parameters after the * must be passed as keyword arguments
-# (with their names explicitly used) when calling the function.
-def build_report_chart(*, chart_data, output_filename, title):
+def build_report_chart(chart_data, output_filename, title):
     # 1. Get chart data. chart_data holds labels and datasets
     # (**) Used to unpack a dictionary into keyword arguments
     # chart_data = chart_data_fn(**(chart_kwargs or {}))
@@ -233,20 +250,40 @@ def build_report_chart(*, chart_data, output_filename, title):
     return f"static/reports/charts/{output_filename}"
 
 
-def get_significant_changes(datasets):
-    significant_changes = []
+def get_significant_changes(
+    datasets,
+    source,
+    threshold=1000,
+):
+    changes = []
     for ds in datasets:
         diff = ds["data"][-1] - ds["data"][-2]
 
-        if abs(diff) >= 30:  # threshold
-            significant_changes.append(
+        if abs(diff) >= threshold:  # threshold
+            changes.append(
                 {
+                    "source": source,
                     "equipment": ds["label"],
                     "diff": diff,
+                    "direction": "up" if diff > 0 else "down",
+                    "absolute": abs(diff),
                 }
             )
 
-        return significant_changes
+    return changes
+
+
+def group_changes_by_source(changes):
+    # WE WANT TO GROUP BY SOURCE DATA INSIDE data["significant_changes"]
+    # data["significant_changes"] = [
+    # {"source": "CPE ukupno", "equipment": "ONT Huawei", "diff": 84},
+    # {"source": "CPE ukupno", "equipment": "STB DTH", "diff": -41},
+    # {"source": "STB IPTV", "equipment": "VIP5305", "diff": 62},]
+    grouped = defaultdict(list)
+    for change in changes:
+        grouped[change["source"]].append(change)
+
+    return dict(grouped)
 
 
 def send_email():
