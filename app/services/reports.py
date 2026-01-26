@@ -20,8 +20,20 @@ def generate_pdf():
     data = {
         "week": current_week_end.strftime("%d-%m-%Y"),
     }
+    # ----------------------------------------------
+    # COVER SECTION
+    # -------------------------------------------------
+    # ----------------------------------------------
+    # SUMMARY SECTION
+    # -------------------------------------------------
 
-    # "cpe_chart_image" will be referenced in template img
+    # ----------------------------------------------
+    # CHART SECTION
+    # -------------------------------------------------
+    # "cpe_chart_image" will be referenced in html template by img
+    # build_report_char() will: build chart, save it as png and
+    # return path to that saved image:
+    # "cpe_chart_image": "static/reports/charts/cpe_trend.png",
     data["cpe_chart_image"] = build_report_chart(
         # get data
         chart_data_fn=get_cpe_inventory_chart_data,
@@ -94,11 +106,8 @@ def generate_pdf():
     with open(output_path, "wb") as f:
         f.write(pdf)
 
+    # RETRUN PATH TO SAVED PDF
     return output_path
-
-
-def send_email():
-    pass
 
 
 # using matplotlib to generate headless charts and save it as png to path
@@ -153,3 +162,7 @@ def build_report_chart(*, chart_data_fn, chart_kwargs, output_filename, title):
 
     # return path of saved chart image
     return f"static/reports/charts/{output_filename}"
+
+
+def send_email():
+    pass

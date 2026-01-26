@@ -1863,3 +1863,10 @@ weekly_report()
 ├─ render HTML with <img>
 ├─ generate PDF
 └─ email PDF
+
+# Important rule going forward
+
+❌ Never write SQL just to compute something that can be derived from already loaded business data.
+
+SQL is expensive.
+Python logic is cheap and readable.
