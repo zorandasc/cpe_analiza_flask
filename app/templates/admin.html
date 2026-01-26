@@ -44,6 +44,13 @@ block styles %} {{ super() }}
     color: white;
   }
 
+  .sidebar .report {
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+    color: white;
+    margin: 2rem auto;
+    width: 200px;
+  }
+
   .sidebar::-webkit-scrollbar {
     width: 6px;
   }
@@ -188,6 +195,9 @@ block styles %} {{ super() }}
     <div class="text-center mb-4">
       <h4 class="text-white">Admin Panel</h4>
     </div>
+    <a href="{{ url_for('reports.generate_weekly_report') }}"  class="btn report">
+    Sedmični izvještaj
+</a>
     <a href="#top" class="active"
       >Trendovi
       <img

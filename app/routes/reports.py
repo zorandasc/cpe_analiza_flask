@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template
 from flask_login import login_required
 from app.services.reports import generate_pdf
 from app.services.email_service import send_email
-
+from flask import send_file
 
 report_bp = Blueprint(
     "reports",
@@ -15,6 +15,7 @@ report_bp = Blueprint(
 # THIS ROUTE WILL BE HIT BY CRON JOB:
 # 0 7 * * 1 curl http://localhost:5000/reports/weekly
 @report_bp.route("/weekly")
+@login_required
 def generate_weekly_report():
 
     pdf_path = generate_pdf()
@@ -22,12 +23,12 @@ def generate_weekly_report():
     # generate_excel()
 
     # Generate mail using for example flask-mailman
-    send_email(pdf_path)
+    #send_email(pdf_path)
 
-    return "Weekly report generated", 200
+    return send_file(
+        pdf_path,
+        as_attachment=True,
+        download_name="weekly_report.pdf",
+        mimetype='application/pdf'
+    )
 
-
-@report_bp.route("/weekly/preview")
-def preview_weekly_report():
-    html = render_template("reports/weekly_report.html",  week="03 / 2026")
-    return html
