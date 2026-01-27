@@ -19,6 +19,9 @@ flask init-db
 echo "Running create-admin command..."
 flask create-admin
 
+echo "Running create-report command..."
+flask create-report
+
 # --4. START THE APLICATION---
 echo "Starting Flask server..."
 

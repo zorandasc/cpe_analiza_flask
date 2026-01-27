@@ -7,6 +7,7 @@ from app.models import Users
 from app.routes import register_routes
 from app.cli.create_admin_cli import create_initial_admin
 from app.cli.create_db_tables_cli import create_initial_db
+from app.cli.create_report_settings_cli import create_initial_report
 
 mail = Mail()
 
@@ -46,8 +47,11 @@ def create_app():
         return Users.query.get(int(user_id))
 
     # Register the command function with the Flask CLI
-    app.cli.add_command(create_initial_admin)
+    # With this you can run mannualy in bash: flask command
+    # or run it in script (entrypoint.sh)
     app.cli.add_command(create_initial_db)
+    app.cli.add_command(create_initial_admin)
+    app.cli.add_command(create_initial_report)
 
     # Register routes
     register_routes(app)

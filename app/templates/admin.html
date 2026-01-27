@@ -42,6 +42,9 @@ block styles %} {{ super() }}
   .sidebar .active {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
     color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .sidebar .report {
@@ -49,6 +52,9 @@ block styles %} {{ super() }}
     color: white;
     margin: 2rem auto;
     width: 200px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .sidebar::-webkit-scrollbar {
@@ -120,7 +126,9 @@ block styles %} {{ super() }}
   .dashboard-card {
     border: none;
     border-radius: 12px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
     background: white;
     height: 180px;
     overflow: hidden;
@@ -130,7 +138,9 @@ block styles %} {{ super() }}
   .side_dashboard-card {
     border: none;
     border-radius: 12px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
     background: white;
     height: 150px; /* Smaller height for administrative items */
     overflow: hidden;
@@ -150,7 +160,8 @@ block styles %} {{ super() }}
   .dashboard-card:hover,
   .side_dashboard-card:hover {
     transform: translateY(-6px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12),
+    box-shadow:
+      0 10px 25px rgba(0, 0, 0, 0.12),
       0 0 0 1px rgba(123, 198, 204, 0.35);
   }
 
@@ -181,8 +192,8 @@ block styles %} {{ super() }}
   }
 
   .custom-icon-sidebar {
-    height: 25px;
-    width: 25px;
+    height: 30px;
+    width:30px;
     margin-left: 1rem;
     margin-bottom: 0.3rem;
     color: whitesmoke;
@@ -195,9 +206,22 @@ block styles %} {{ super() }}
     <div class="text-center mb-4">
       <h4 class="text-white">Admin Panel</h4>
     </div>
-    <a href="{{ url_for('reports.generate_weekly_report') }}"  class="btn report">
-    Sedmični izvještaj
-</a>
+    <a
+      href="{{ url_for('reports.generate_weekly_report') }}"
+      class="btn report"
+    >
+      Sedmični izvještaj (.pdf)
+    </a>
+    <div>
+      <a href="{{ url_for('admin.report_settings') }}" class="btn report">
+        <span>Upravljanje izvještajem</span>
+        <img
+          src="{{ url_for('static', filename='report.png') }}"
+          alt="Icon"
+          class="card-icon custom-icon-sidebar"
+        />
+      </a>
+    </div>
     <a href="#top" class="active"
       >Trendovi
       <img

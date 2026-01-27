@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, now
 from app import create_app
 from app.extensions import db
 from app.models import ReportSetting, ReportRecipients
@@ -25,9 +25,14 @@ with app.app_context():
     if today != settings.send_day:
         exit(0)
 
+    # prevents duplicates
+    # safe even if cron restarts
+    if settings.last_sent_at:
+        if settings.last_sent_at.date() == now.date():
+            exit(0)
+
     # GET EMAILS OF RECIPIENTS
     recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
-
     if not recipients:
         print("No recipients configured")
         exit(0)
@@ -48,12 +53,17 @@ with app.app_context():
         S poštovanjem,
         Automatizovani sistem izvještavanja
     """
+    # OR BUILD EMAIL  BODY VIA TEMPLATE:
+    # body_html = render_template(
+    # "emails/weekly_report.html",
+    # total=this_week_total,
+    # delta=cpe_total_delta,)
 
     # SEND EMAIL TO RECIPIENTS
     send_email(
         pdf_path=pdf_path,
         recipients=recipients,
-        subject=settings.emil_subject,
+        subject="Sedmični izvještaj o CPE inventaru",
         body_text=body,
     )
 

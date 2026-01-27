@@ -25,6 +25,8 @@ from app.models import (
     StbTypes,
     UserRole,
     Users,
+    ReportSetting,
+    ReportRecipients,
 )
 
 
@@ -985,3 +987,47 @@ def cpe_dismantle_inventory_charts():
         selected_city_id=selected_city_id,
         selected_weeks=selected_weeks,
     )
+
+
+###########################################################
+# ---------------ROUTES FOR REPORT PAGE SETTTINGS-------------------------
+############################################################
+
+
+@admin_bp.route("/reports/settings", methods=["GET", "POST"])
+@login_required
+def report_settings():
+    if not admin_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
+    # ReportSettin should only have one row
+    settings = ReportSetting.query.first()
+
+    if request.method == "POST":
+        settings.enabled = "enabled" in request.form
+        settings.send_day = int(request.form["send_day"])
+        db.session.commit()
+
+        flash("Podešavanja sačuvana.", "success")
+
+    recipients = ReportRecipients.query.order_by(ReportRecipients.email).all()
+    return render_template(
+        "admin/report_settings.html", settings=settings, recipients=recipients
+    )
+
+
+@admin_bp.route("/reports/recipients/add", methods=["POST"])
+@login_required
+def report_add_recipient():
+    email = request.form["email"].lower().strip()
+
+    db.session.add(ReportRecipients(email=email))
+    db.session.commit()
+
+    return redirect(url_for("admin.report_settings"))
+
+
+@admin_bp.route("/reports/recipients/remove", methods=["POST"])
+@login_required
+def report_remove_recipient():
+    pass

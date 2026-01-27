@@ -1,7 +1,7 @@
-from flask import Blueprint
+from flask import Blueprint, send_file, flash, redirect, url_for
 from flask_login import login_required
 from app.services.reports import generate_pdf
-from flask import send_file
+from app.utils.permissions import view_required
 
 report_bp = Blueprint(
     "reports",
@@ -11,11 +11,12 @@ report_bp = Blueprint(
 
 
 # GENERATE WEEKLY REPORT
-# THIS ROUTE WILL BE HIT BY CRON JOB:
-# 0 7 * * 1 curl http://localhost:5000/reports/weekly
 @report_bp.route("/weekly")
 @login_required
 def generate_weekly_report():
+    if not view_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
     pdf_path = generate_pdf()
 
     return send_file(
