@@ -1870,3 +1870,16 @@ weekly_report()
 
 SQL is expensive.
 Python logic is cheap and readable.
+
+# AUTOMATIC EMAIL SEND:
+
+Linux cron (or Windows Task Scheduler)
+↓
+python run_weekly_report.py
+↓
+Flask app context
+↓
+Check database config
+↓
+If enabled → generate & send
+If disabled → exit silently

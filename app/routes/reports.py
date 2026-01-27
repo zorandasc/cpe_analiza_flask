@@ -1,7 +1,6 @@
-from flask import Blueprint, render_template
+from flask import Blueprint
 from flask_login import login_required
 from app.services.reports import generate_pdf
-from app.services.email_service import send_email
 from flask import send_file
 
 report_bp = Blueprint(
@@ -17,18 +16,11 @@ report_bp = Blueprint(
 @report_bp.route("/weekly")
 @login_required
 def generate_weekly_report():
-
     pdf_path = generate_pdf()
-
-    # generate_excel()
-
-    # Generate mail using for example flask-mailman
-    #send_email(pdf_path)
 
     return send_file(
         pdf_path,
         as_attachment=True,
         download_name="weekly_report.pdf",
-        mimetype='application/pdf'
+        mimetype="application/pdf",
     )
-

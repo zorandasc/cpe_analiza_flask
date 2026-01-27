@@ -2,29 +2,24 @@ from flask_mailman import EmailMessage
 from flask import current_app
 
 
-def send_email(pdf_path):
-    subject = "Sedmični izvještaj o inventaru opreme"
+def send_email(pdf_path, recipients, subject, body_text, body_html=None):
+    if not recipients:
+        print("Weekly report: no active recipients")
+        return False
 
-    body = """
-    Dragi Svi,
+    try:
+        message = EmailMessage(
+            subject=subject,
+            body=body_text,
+            html=body_html,
+            to=[email for email in recipients],
+        )
 
-    U prilogu Vam dostavljamo sedmični izvještaj o inventaru CPE opreme.
+        message.attach_file(pdf_path)
+        message.send()
 
-    Sažetak:
-    - Pregled stanja ukupne, raspoložive i demontirane CPE opreme
-    - Značajne sedmične promjene
-    - Analiza trendova
+        return True
 
-    S poštovanjem,
-    Automatizovani sistem izvještavanja
-    """
-
-    message = EmailMessage(
-        subject=subject,
-        body=body,
-        to=["zorand666@gmail.com"],
-    )
-
-    message.attach_file(pdf_path)
-
-    message.send()
+    except Exception as e:
+        print(f"Failed to send weekly report email: {e}")
+        return False

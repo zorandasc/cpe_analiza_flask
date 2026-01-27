@@ -17,6 +17,8 @@ from sqlalchemy import (
     ForeignKey,
     DDL,
     event,
+    Time,
+    func
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
@@ -191,7 +193,7 @@ class CpeDismantle(db.Model):
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, server_default=text("now()")
+       DateTime(timezone=True), server_default=text("now()")
     )
 
     updated_at = mapped_column(DateTime(timezone=True), nullable=True)
@@ -217,10 +219,10 @@ class CpeInventory(db.Model):
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, server_default=text("now()")
+        DateTime(timezone=True), server_default=text("now()")
     )
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime,
+        DateTime(timezone=True),
         server_default=text("now()"),
         # You want updated_at to change automatically whenever quantity changes
         onupdate=text("now()"),
@@ -241,10 +243,10 @@ class OntInventory(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     month_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
     city_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
@@ -265,10 +267,10 @@ class StbInventory(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime, nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=text("now()")
     )
     stb_type_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
@@ -317,15 +319,50 @@ class Users(db.Model, UserMixin):
         ForeignKey("cities.id", name="fk_city")
     )
     created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime(True), server_default=text("CURRENT_TIMESTAMP")
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime(True),
+        DateTime(timezone=True),
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=text("CURRENT_TIMESTAMP"),
     )
 
     city: Mapped[Optional["Cities"]] = relationship("Cities", back_populates="users")
+
+
+class ReportSetting(db.Model):
+    __tablename__ = "report_settings"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # 0=Mon ... 6=Sun
+    send_day: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    send_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
+
+    last_sent_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    updated_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now()
+    )
+
+class ReportRecipients(db.Model):
+    __tablename__ = "report_recipients"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
 
 # DDL (Data Definition Language) listener in SQLAlchemy.
