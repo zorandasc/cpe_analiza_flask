@@ -51,6 +51,10 @@
     padding-bottom: 10px;
     text-align: center;
   }
+
+  .table-responsive {
+    overflow: visible !important;
+}
  
   .my-custom-table {
   border-collapse: separate !important;
@@ -68,6 +72,14 @@
     /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
     background-color: var(--header-color, #f2f2f2);
 
+
+    /* Sticky logic */
+    position: sticky;
+    top: 90px; /* This is your 50px offset from the browser top */
+    z-index: 1020; /* Keeps it above table rows */
+    
+    /* Optional: shadow to make it look "lifted" when scrolling */
+    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
   }
 
   .table-custom-head th:first-child {
@@ -225,6 +237,8 @@
               {% endfor %} {% endif %}
               <!--UPDATED COLUMN-->
               <th class="azur-column">AŽURIRANO</th>
+              <th class="azur-column"></th>
+               <th class="azur-column"></th>
             </tr>
           </thead>
 
