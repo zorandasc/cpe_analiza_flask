@@ -65,10 +65,11 @@
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 14px;
+    /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
+    background-color: var(--header-color, #f2f2f2);
 
   }
 
-  /* Remove border radius from inner th cells to avoid overlapping */
   .table-custom-head th:first-child {
     border-top-left-radius: 8px;
   }
@@ -80,10 +81,6 @@
     text-align: center;
     background-color: #d7dce2 !important;
   }
-  /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
-  .table-custom-head th {
-  background-color: var(--header-color, #f2f2f2);
-}
   
   .azur-column {
    background-color: #d7dce2 !important;
