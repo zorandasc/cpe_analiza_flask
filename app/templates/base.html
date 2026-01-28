@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -17,29 +17,62 @@
     <style>
       html {
         scroll-behavior: smooth;
-      }
-      .navbar-custom {
-        background-color: transparent;
-        padding: 0.75rem 1rem;
+        /* Add this: prevents content from jumping when the navbar shrinks */
+        scroll-padding-top: 80px;
       }
 
+      body {
+        /* This ensures even pages with 1 row of data have enough 
+     "room" to scroll past the 50px trigger point without looping */
+        min-height: 101vh;
+      }
+
+      /* --- Navbar Base --- */
+      .navbar-custom {
+        background-color: rgba(255, 255, 255, 1);
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease-in-out; /* Smooth transition for everything */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+      }
+
+      .navbar-sticky {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        transition:
+          padding 0.3s ease,
+          background-color 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+
+      /* --- Scrolled State (The "Contracted" Navbar) --- */
+      .navbar-sticky.scrolled {
+        padding-top: 0.2rem;
+        padding-bottom: 0.4rem;
+        background-color: rgba(255, 255, 255, 0.95) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+      }
+
+      /* Shrink Logo on scroll */
+      .navbar-sticky.scrolled .logo img {
+        height: 35px;
+      }
+
+      /* --- Links & Branding --- */
       .navbar-custom .navbar-brand,
       .navbar-custom .nav-link {
         color: #212529;
         font-weight: 500;
-        transition: color 0.2s ease, border-color 0.2s ease;
+        transition: all 0.2s ease;
       }
 
-      /* =========================
-   Hover state
-========================= */
       .navbar-custom .nav-link:hover {
         color: #0d6efd;
       }
 
-      /* =========================
-   Active link
-========================= */
       .navbar-custom .nav-link.active {
         color: #212529 !important;
         border-bottom: 3px solid transparent;
@@ -48,17 +81,11 @@
         padding-bottom: 0.4rem;
       }
 
-      /* =========================
-   Logo spacing
-========================= */
       .logo {
         margin-right: 2rem;
         margin-left: 0.75rem;
       }
 
-      /* =========================
-   Username badge
-========================= */
       .navbar-username {
         background: linear-gradient(to right, #be93c5, #7bc6cc);
         color: #121212;
@@ -66,46 +93,14 @@
         border-radius: 999px;
         font-weight: 600;
         font-size: 0.9rem;
-        margin-right: 0.5rem;
-        margin-left: 0.5rem;
-      }
-
-      /* =========================
-   Logout link subtle
-========================= */
-      .navbar-custom .nav-link[href*="logout"] {
-        color: #6c757d;
-      }
-
-      .navbar-custom .nav-link[href*="logout"]:hover {
-        color: #dc3545;
-      }
-
-      .navbar-sticky {
-        position: sticky;
-        top: 0;
-        z-index: 1030; /* above content, below modals */
-        backdrop-filter: blur(3px);
-        -webkit-backdrop-filter: blur(3px);
-        background-color: rgba(255, 255, 255, 0.75);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-      }
-
-      /* Smooth appearance */
-      .navbar-sticky {
-        transition: background-color 0.2s ease, box-shadow 0.2s ease;
-      }
-
-      /* Slight shadow when scrolling (optional) */
-      body:not(:has(.navbar:hover)) .navbar-sticky {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        margin: 0 0.5rem;
       }
     </style>
     {% endblock %}
   </head>
   <body>
     <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-custom navbar-sticky shadow">
+    <nav class="navbar navbar-expand-lg navbar-custom navbar-sticky">
       <div class="container-fluid">
         <a class="navbar-brand logo" href="{{ url_for('main.home') }}">
           <img
@@ -239,10 +234,39 @@
     </div>
 
     <script>
+      const nav = document.querySelector(".navbar-sticky");
+      let lastScrollY = window.scrollY;
+
+      window.addEventListener(
+        "scroll",
+        () => {
+          const currentScrollY = window.scrollY;
+
+          // SCROLL DOWN: Shrink at 50px
+          if (currentScrollY > 50) {
+            if (!nav.classList.contains("scrolled")) {
+              nav.classList.add("scrolled");
+            }
+          }
+          // SCROLL UP: Only expand when very close to the top (e.g., < 10px)
+          // This gap between 10 and 50 prevents the flickering "loop"
+          else if (currentScrollY <= 10) {
+            if (nav.classList.contains("scrolled")) {
+              nav.classList.remove("scrolled");
+            }
+          }
+
+          lastScrollY = currentScrollY;
+        },
+        { passive: true },
+      );
+    </script>
+
+    <script>
       document.addEventListener("DOMContentLoaded", () => {
         // Jinja renders this as a valid JS array — VS Code is happy ✔
         const flashMessages = JSON.parse(
-          `{{ get_flashed_messages(with_categories=True) | tojson | safe }}`
+          `{{ get_flashed_messages(with_categories=True) | tojson | safe }}`,
         );
 
         const container = document.getElementById("toast-container");
