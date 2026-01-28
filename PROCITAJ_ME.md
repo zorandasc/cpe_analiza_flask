@@ -1890,9 +1890,10 @@ Cron is only a trigger, not the scheduler
 Your database (ReportSetting) is the scheduler.
 
 ```bash
-*/10 * * * * curl -s http://localhost:5000/reports/weekly
+*/10 * * * * curl -s -H "X-CRON-KEY: my-secret-key" http://localhost:5000/reports/weekly
 
 ```
+
 # MAIL SERVER Auth done via IP whitelist
 
 MAIL_SERVER = "exchange.company.local"

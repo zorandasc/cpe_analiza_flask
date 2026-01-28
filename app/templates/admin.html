@@ -206,12 +206,7 @@ block styles %} {{ super() }}
     <div class="text-center mb-4">
       <h4 class="text-white">Admin Panel</h4>
     </div>
-    <a
-      href="{{ url_for('reports.download_weekly_report') }}"
-      class="btn report"
-    >
-      Sedmični izvještaj (.pdf)
-    </a>
+    
     <div>
       <a href="{{ url_for('admin.report_settings') }}" class="btn report">
         <span>Upravljanje izvještajem</span>
