@@ -264,7 +264,7 @@ def generate_pdf():
     #    print(f"{key}: {value}")
 
     # ----4. Generate htm template with embeded data--------
-    html = render_template("reports/weekly_report.html", **data)
+    html = render_template("reports/pdf_report.html", **data)
 
     # ----5. Generate pdf file using weasyprint-----------------
     # base_url=current_app.root_path resolve path to css and images
