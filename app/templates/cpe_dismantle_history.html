@@ -57,6 +57,11 @@ styles %} {{ super() }}
     text-align: center;
   }
 
+     /* Sticky logic */
+  .table-responsive {
+    overflow: visible !important;
+}
+
   .my-custom-table {
     border-collapse: separate !important;
     border-spacing: 1px 1px !important;
@@ -70,6 +75,11 @@ styles %} {{ super() }}
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 14px;
+
+    position: sticky;
+    top: 88px; 
+    z-index: 1020; 
+    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
   }
 
   /* Remove border radius from inner th cells to avoid overlapping */

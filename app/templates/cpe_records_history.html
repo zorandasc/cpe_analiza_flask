@@ -1,6 +1,10 @@
 {% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
 styles %} {{ super() }}
 <style>
+    /* Sticky logic */
+  .table-responsive {
+    overflow: visible !important;
+}
   /* Modern table header */
   .table-custom-head th {
     /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
@@ -11,6 +15,10 @@ styles %} {{ super() }}
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 14px;
+    position: sticky;
+    top: 88px; 
+    z-index: 1020; 
+    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
   }
 
   /* Remove border radius from inner th cells to avoid overlapping */
