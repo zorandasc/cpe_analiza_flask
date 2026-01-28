@@ -24,7 +24,8 @@ def run_weekly_report_job():
 
     now = datetime.now()
 
-    if now.weekday() != settings.send_day:
+    # now.weekday() ide od 0
+    if now.weekday() + 1 != settings.send_day:
         return "Wrong day"
 
     if now.time() < settings.send_time:
@@ -43,7 +44,7 @@ def run_weekly_report_job():
 
     pdf_path = generate_pdf()
 
-    body = """
+    body_text = """
         Dragi Svi,
 
         U prilogu Vam dostavljamo sedmični izvještaj o inventaru CPE opreme.
@@ -56,6 +57,26 @@ def run_weekly_report_job():
         S poštovanjem,
         Automatizovani sistem izvještavanja
     """
+
+    body_html = """
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <p>Dragi Svi,</p>
+                    
+                    <p>U prilogu Vam dostavljamo sedmični izvještaj o inventaru <strong>CPE opreme</strong>.</p>
+                    
+                    <p><strong>Sažetak:</strong></p>
+                    <ul style="list-style-type: disc; margin-left: 20px;">
+                        <li>Pregled stanja ukupne, raspoložive i demontirane CPE opreme</li>
+                        <li>Značajne sedmične promjene</li>
+                        <li>Analiza trendova</li>
+                    </ul>
+                    
+                    <p>S poštovanjem,<br>
+                    <em>Automatizovani sistem izvještavanja</em></p>
+                </body>
+            </html>
+    """
     # OR BUILD EMAIL  BODY VIA TEMPLATE:
     # body_html = render_template(
     # "emails/weekly_report.html",
@@ -67,7 +88,8 @@ def run_weekly_report_job():
         pdf_path=pdf_path,
         recipients=recipients,
         subject="Sedmični izvještaj o CPE inventaru",
-        body_text=body,
+        body_text=body_text,
+        body_html=body_html,
     )
 
     settings.last_sent_at = datetime.now()
