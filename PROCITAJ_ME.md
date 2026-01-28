@@ -1883,3 +1883,22 @@ Check database config
 ↓
 If enabled → generate & send
 If disabled → exit silently
+
+# cron job every 10min
+
+Cron is only a trigger, not the scheduler
+Your database (ReportSetting) is the scheduler.
+
+```bash
+*/10 * * * * curl -s http://localhost:5000/reports/weekly
+
+```
+# MAIL SERVER Auth done via IP whitelist
+
+MAIL_SERVER = "exchange.company.local"
+MAIL_PORT = 25
+MAIL_USE_TLS = False
+MAIL_USE_SSL = False
+MAIL_USERNAME = None
+MAIL_PASSWORD = None
+DEFAULT_FROM_EMAIL = "noreply@company.ba"

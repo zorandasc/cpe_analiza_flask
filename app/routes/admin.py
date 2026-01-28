@@ -1006,6 +1006,9 @@ def report_settings():
     if request.method == "POST":
         settings.enabled = "enabled" in request.form
         settings.send_day = int(request.form["send_day"])
+        settings.send_time = datetime.strptime(
+            request.form["send_time"], "%H:%M"
+        ).time()
         db.session.commit()
 
         flash("Podešavanja sačuvana.", "success")
@@ -1027,7 +1030,12 @@ def report_add_recipient():
     return redirect(url_for("admin.report_settings"))
 
 
-@admin_bp.route("/reports/recipients/remove", methods=["POST"])
+@admin_bp.route("/reports/recipients/remove/<int:id>")
 @login_required
-def report_remove_recipient():
-    pass
+def report_remove_recipient(id):
+    email = ReportRecipients.query.get_or_404(id)
+
+    flash("Email obrisan!", "success")
+    db.session.delete(email)
+    db.session.commit()
+    return redirect(url_for("admin.report_settings"))

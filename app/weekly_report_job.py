@@ -24,6 +24,11 @@ with app.app_context():
     # BUT WE WILL SEND EMAIL ONLY AT DAY WE CHOOSE
     if today != settings.send_day:
         exit(0)
+    
+    now = datetime.now()
+
+    if now.time() < settings.send_time:
+        exit(0)
 
     # prevents duplicates
     # safe even if cron restarts
