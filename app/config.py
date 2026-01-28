@@ -1,5 +1,6 @@
 import os
 
+
 # KADA NAPRAVIMO python app.py UNUTAR VS CODA, ODNOSNO IZ VANA
 # DOCKER MREZE, GADJAMO DOKERIZOVANI POSTGRES 5431
 # MEDJUTIM KADA DOKERIZUJEMO FLASK APP MI SMO U INTERNOM DOCKER
@@ -24,6 +25,7 @@ class Config:
     SECRET_KEY = os.environ.get(
         "SECRET_KEY", "a_very_long_and_random_string_for_security"
     )
+    CRON_SECRET = "12345678"
 
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587

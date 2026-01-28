@@ -1,8 +1,11 @@
-from datetime import date
-from collections import defaultdict
 import os
+from datetime import date, datetime
+from collections import defaultdict
 from flask import render_template, current_app
+from app.extensions import db
 from app.utils.dates import get_current_week_friday
+from app.models import ReportSetting, ReportRecipients
+from app.services.email_service import send_email
 from app.services.admin import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
@@ -10,6 +13,67 @@ from app.services.admin import (
     get_iptv_inventory_chart_data,
     get_ont_inventory_chart_data,
 )
+
+
+def run_weekly_report_job():
+    # Get settins for sending weekly report
+    settings = ReportSetting.query.first()
+
+    if not settings or not settings.enabled:
+        return "Disabled"
+
+    now = datetime.now()
+
+    if now.weekday() != settings.send_day:
+        return "Wrong day"
+
+    if now.time() < settings.send_time:
+        return "Too early"
+
+    # prevents duplicates
+    # safe even if cron restarts
+    if settings.last_sent_at and settings.last_sent_at.date() == now.date():
+        return "Already sent"
+
+    # FORGE EMAIL TO SEND
+    recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
+
+    if not recipients:
+        return "No recipients"
+
+    pdf_path = generate_pdf()
+
+    body = """
+        Dragi Svi,
+
+        U prilogu Vam dostavljamo sedmični izvještaj o inventaru CPE opreme.
+
+        Sažetak:
+        - Pregled stanja ukupne, raspoložive i demontirane CPE opreme
+        - Značajne sedmične promjene
+        - Analiza trendova
+
+        S poštovanjem,
+        Automatizovani sistem izvještavanja
+    """
+    # OR BUILD EMAIL  BODY VIA TEMPLATE:
+    # body_html = render_template(
+    # "emails/weekly_report.html",
+    # total=this_week_total,
+    # delta=cpe_total_delta,)
+
+    # SEND EMAIL TO RECIPIENTS
+    send_email(
+        pdf_path=pdf_path,
+        recipients=recipients,
+        subject="Sedmični izvještaj o CPE inventaru",
+        body_text=body,
+    )
+
+    settings.last_sent_at = datetime.now()
+    db.session.commit()
+
+    return "Sent"
 
 
 def generate_pdf():
