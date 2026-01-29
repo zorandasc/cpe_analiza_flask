@@ -62,19 +62,10 @@
             </div>
         </div>
     </div>
-    <button class="btn btn-sm btn-outline-secondary mb-4 mt-4" id="exportChart">
+    <button class="btn btn-sm btn-outline-secondary mb-4 mt-4" id="exportChart" data-filename="stanje_ont_opreme.png">
     Export chart (PNG)
     </button>
 </div>
-
-<script>
-  document.getElementById("exportChart").addEventListener("click", () => {
-    const link = document.createElement("a");
-    link.href = chart.toBase64Image();
-    link.download = "stanje_ont_opreme.png";
-    link.click();
-  });
-</script>
 
 {% block scripts %}
     {% include "charts/_chart_logic.html" %}

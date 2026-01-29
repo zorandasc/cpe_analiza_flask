@@ -68,6 +68,7 @@
     // initial render
     createChart(chartType);
 
+    // chart type line or bar
     if (selectorElement) {
       // listen for type change
       selectorElement.addEventListener("change", (e) => {
@@ -76,6 +77,24 @@
         createChart(chartType);
       });
     }
+
+     const exportBtn = document.getElementById("exportChart");
+
+  if (exportBtn) {
+    exportBtn.addEventListener("click", () => {
+      // 1. Make sure the chart exists
+      if (!chart) return;
+
+      // 2. Get the filename from the data attribute (or use a default)
+      const fileName = exportBtn.getAttribute("data-filename") || "chart.png";
+
+      // 3. Trigger download
+      const link = document.createElement("a");
+      link.href = chart.toBase64Image();
+      link.download = fileName;
+      link.click();
+    });
+  }
   })();
 </script>
 {% endif %}
