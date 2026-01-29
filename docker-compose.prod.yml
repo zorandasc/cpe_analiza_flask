@@ -26,6 +26,9 @@ services:
       DB_USER: postgres
       DB_PASS: mypassword
       DB_NAME: mydb
+      SECRET_KEY: a_very_long_and_random_string_for_security
+      CRON_JOB_SECRET: xxmtel123
+      MAIL_PASSWORD: "jcld ilxd erre pzvr"
     depends_on:
       db:
         condition: service_healthy

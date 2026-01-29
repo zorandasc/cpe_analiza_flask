@@ -26,13 +26,13 @@ class Config:
     SECRET_KEY = os.environ.get(
         "SECRET_KEY", "a_very_long_and_random_string_for_security"
     )
-    CRON_JOB_SECRET = "12345678"
+    CRON_JOB_SECRET = os.environ.get("CRON_JOB_SECRET", "xxmtel123")
 
-    PERMANENT_SESSION_LIFETIME=timedelta(minutes=60)
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
 
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = "zorand666@gmail.com"
-    MAIL_PASSWORD = "jcld ilxd erre pzvr"
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "jcld ilxd erre pzvr")
     MAIL_DEFAULT_SENDER = "zorand666@gmail.com"
