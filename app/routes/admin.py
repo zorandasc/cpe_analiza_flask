@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
+from sqlalchemy import text
 from werkzeug.security import generate_password_hash
 from app.extensions import db
 from app.utils.permissions import view_required, admin_required
@@ -11,6 +12,7 @@ from app.services.admin import (
     get_ont_inventory_chart_data,
     get_iptv_inventory_chart_data,
     get_distinct_joined_values,
+    
 )
 from app.models import (
     Cities,
@@ -576,6 +578,7 @@ def edit_cpe_type(id):
         existing_cpe_type = CpeTypes.query.filter(
             CpeTypes.name == name, CpeTypes.id != id
         ).first()
+
         if existing_cpe_type:
             flash("Tip CPE opreme već postoji!", "danger")
             return redirect(url_for("admin.edit_cpe_type", id=id))
@@ -589,15 +592,69 @@ def edit_cpe_type(id):
         cpe.name = name
         cpe.label = label
         cpe.type = type_
-        cpe.display_order = (
-            int(display_order_raw) if display_order_raw not in (None, "") else None
-        )
         cpe.header_color = header_color or None
-        # HTML checkboxes send value only when checked. Otherwise unchecked = stays old value.
+        # HTML checkboxes send value only when checked.
+        # Otherwise unchecked = stays old value.
         cpe.has_remote = "has_remote" in request.form
         cpe.has_adapter = "has_adapter" in request.form
         cpe.is_visible_in_total = "is_visible_in_total" in request.form
         cpe.is_visible_in_dismantle = "is_visible_in_dismantle" in request.form
+
+        # ---------------------------
+        # AUTOMATIC ORDERING SYSTEM
+        # -----------------------------
+        # ORDER FORM USER CHOOSING
+        new_order = (
+            int(display_order_raw) if display_order_raw not in (None, "") else None
+        )
+
+        # ORDER FROM DB
+        old_order = cpe.display_order
+
+        # IF ORDER CHANGED THAN SHIFT ACORDINGLY ALL OTHER ELEMENTS
+        if old_order is None and new_order is None:
+            pass
+        elif old_order is None:
+            db.session.execute(
+                text("""
+                        UPDATE cpe_types
+                        SET display_order=display_order + 1
+                        WHERE display_order >= :new
+                    """),
+                {"new": new_order},
+            )
+
+        elif new_order != old_order:
+            if new_order < old_order:
+                # UPDATE NEIGHBORS BUT NO CHOOSEN ORDER
+                # npr. from 8 to 5: 8->5: 5=8,5=5+1,6=6+1,7=7+1
+                db.session.execute(
+                    text("""
+                        UPDATE cpe_types
+                        SET display_order=display_order + 1
+                        WHERE display_order >=:new
+                            AND display_order < :old
+                            AND id !=:id
+                    """),
+                    {"new": new_order, "old": old_order, "id": cpe.id},
+                )
+            else:
+                # UPDATE NEIGHBORS BUT NO CHOOSEN ORDER
+                # npr. from 5 to 9: 5->9: NOVI 9=5,
+                # STARE VRIJEDNOSTI SE SHIFTUJU 9=9-1,8=8-1,7=7-1,6=6-1
+                db.session.execute(
+                    text("""
+                        UPDATE cpe_types
+                        SET display_order=display_order-1
+                        WHERE display_order >:old
+                            AND display_order <=:new
+                            AND id!=:id        
+                    """),
+                    {"new": new_order, "old": old_order, "id": cpe.id},
+                )
+            # UPDATE  CHOOSEN ORDER
+
+        cpe.display_order = new_order
 
         try:
             db.session.commit()
