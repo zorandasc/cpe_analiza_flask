@@ -1,3 +1,4 @@
+from datetime import timedelta
 import os
 
 
@@ -25,7 +26,9 @@ class Config:
     SECRET_KEY = os.environ.get(
         "SECRET_KEY", "a_very_long_and_random_string_for_security"
     )
-    CRON_SECRET = "12345678"
+    CRON_JOB_SECRET = "12345678"
+
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=60)
 
     MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587

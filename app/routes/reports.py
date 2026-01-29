@@ -24,7 +24,7 @@ report_bp = Blueprint(
 # */10 * * * * curl -s -H "X-CRON-KEY: my-secret-key" http://localhost:5000/reports/weekly
 @report_bp.route("/weekly", methods=["POST", "GET"])
 def send_weekly_report():
-    if request.headers.get("X-CRON-KEY") != current_app.config["CRON_SECRET"]:
+    if request.headers.get("X-CRON-KEY") != current_app.config["CRON__JOB_SECRET"]:
         abort(403)
     # run_weekly_report_job() IS A SERVICE SCHEDULER
     result = run_weekly_report_job()

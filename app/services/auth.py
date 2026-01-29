@@ -1,3 +1,4 @@
+from flask import session
 from werkzeug.security import check_password_hash
 from flask_login import (
     login_user,
@@ -18,6 +19,10 @@ def login_to_app(form_data):
     if user and check_password_hash(user.password_hash, password):
         # Flask will store user session in browser
         login_user(user)  # from flask-login packet
+
+        #Flask only respects expiration if the session is permanent.
+        session.permanent=True
+
         return True, f"Dobrodošli, {username}"
 
     return False, "Invalid credentials"
