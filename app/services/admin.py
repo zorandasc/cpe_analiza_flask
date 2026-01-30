@@ -63,6 +63,12 @@ def handle_display_order(column_name, cpe_id, old_order, new_order):
         raise ValueError("display_order must be >= 1")
 
     # ----------------------------------
+    # No change
+    # ----------------------------------
+    if new_order == old_order:
+        return
+
+    # ----------------------------------
     # First placement (None -> number)
     # ----------------------------------
     if old_order is None:
@@ -74,13 +80,7 @@ def handle_display_order(column_name, cpe_id, old_order, new_order):
             """),
             {"new": new_order},
         )
-
-    # ----------------------------------
-    # No change
-    # ----------------------------------
-    if new_order == old_order:
         return
-
     # ----------------------------------
     # Reordering
     # ----------------------------------
