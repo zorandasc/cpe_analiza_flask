@@ -1,9 +1,9 @@
 {% extends "base.html" %} {% block title %}Izmjeni CPE tip{% endblock %} {%
 block content %}
-<div class="container py-4">
-  <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
+<div class="container py-4 ">
+  <div class="mx-auto shadow-lg p-3 bg-light" style="max-width: 800px">
     <h2>Izmjeni CPE model</h2>
-    <form method="POST">
+    <form method="POST" >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="mb-3">
         <label class="form-label">Ime</label>
@@ -69,23 +69,12 @@ block content %}
           {%if cpe.visible_in_total%}checked{%endif%}
         />
         <label class="form-check-label" for="visible_in_total">
-          Aktivan u ukupno
+          Vidljiv u tabeli CPE oprema
         </label>
       </div>
-      <div class="mb-3 form-check">
-        <input
-          type="checkbox"
-          class="form-check-input"
-          id="visible_in_dismantle"
-          name="visible_in_dismantle"
-          {%if cpe.visible_in_dismantle%}checked{%endif%}
-        />
-        <label class="form-check-label" for="visible_in_dismantle">
-          Aktivan u demontaža
-        </label>
-      </div>
+     
       <div class="mb-3">
-        <label class="form-label">Položaj u tabeli ukupno</label>
+        <label class="form-label">Položaj u tabeli CPE oprema</label>
         <input
           type="number"
           name="order_in_total"
@@ -96,8 +85,20 @@ block content %}
         />
         <div class="form-text">Manji broj = kolona ide više lijevo</div>
       </div>
+       <div class="mb-3 form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="visible_in_dismantle"
+          name="visible_in_dismantle"
+          {%if cpe.visible_in_dismantle%}checked{%endif%}
+        />
+        <label class="form-check-label" for="visible_in_dismantle">
+          Vidljiv u tabeli demontirana CPE oprema
+        </label>
+      </div>
       <div class="mb-3">
-        <label class="form-label">Položaj u tabeli demontaža</label>
+        <label class="form-label">Položaj u tabeli demontirana CPE oprema</label>
         <input
           type="number"
           name="order_in_dismantle"

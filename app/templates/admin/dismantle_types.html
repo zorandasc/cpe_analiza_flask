@@ -1,6 +1,11 @@
 {% extends "base.html" %} {% block title %}Tipovi Demontaža{% endblock %} {%
 block content %}
 <div class="container py-4">
+  <a href="{{ url_for('admin.dashboard') }}"
+            class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
+            <span class="me-2">⬅</span> Nazad
+  </a>
+  <div class="d-flex justify-content-between align-items-center mb-2">
   <h2>Tipovi demontaža CPE opreme</h2>
   <!--
   <a
@@ -9,6 +14,7 @@ block content %}
     >Dodaj demontažu</a
   >
   -->
+  </div>
   {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}

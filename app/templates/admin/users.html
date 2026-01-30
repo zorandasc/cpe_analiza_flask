@@ -1,12 +1,21 @@
 {% extends "base.html" %} {% block title %}Users{% endblock %} {% block content
 %}
 <div class="container py-4">
+  
+  <a href="{{ url_for('admin.dashboard') }}"
+            class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
+            <span class="me-2">⬅</span> Nazad
+  </a>
+  <div class="d-flex justify-content-between align-items-center mb-2">
   <h2>Korisnici</h2>
+ 
   {% if ( current_user.role== 'admin') %}
   <a href="{{ url_for('admin.add_user') }}" class="btn btn-primary my-3"
     >Dodaj korisnika</a
   >
-  {%endif%} {% if error %}
+  {%endif%} 
+   </div>
+  {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
   <table class="table table-striped table-bordered shadow-lg">
