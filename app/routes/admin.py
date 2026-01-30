@@ -12,7 +12,7 @@ from app.services.admin import (
     get_ont_inventory_chart_data,
     get_iptv_inventory_chart_data,
     get_distinct_joined_values,
-    
+    update_cpe_type,
 )
 from app.models import (
     Cities,
@@ -83,7 +83,7 @@ def cpe_inventory():
     # cities = db.session.query(CpeInventory.city_id).distinct().all()
 
     # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
-    # cpe_types = CpeTypes.query.filter_by(is_visible_in_total=True).order_by(CpeTypes.id).all()
+    # cpe_types = CpeTypes.query.filter_by(visible_in_total=True).order_by(CpeTypes.id).all()
 
     return render_template(
         "admin/cpe_inventory.html",
@@ -568,102 +568,26 @@ def edit_cpe_type(id):
     types = [member.value for member in CpeTypeEnum]
 
     if request.method == "POST":
-        name = request.form.get("name")
-        label = request.form.get("label")
-        type_ = request.form.get("type")  # renamed to avoid shadowing built-in 'type'
-        display_order_raw = request.form.get("display_order")
-        header_color = request.form.get("header_color")
+        form_data = {
+            "name": request.form.get("name"),
+            "label": request.form.get("label"),
+            "type": request.form.get("type"),
+            "order_total": request.form.get("order_in_total"),
+            "order_dismantle": request.form.get("order_in_dismantle"),
+            "header_color": request.form.get("header_color"),
+            "has_remote": "has_remote" in request.form,
+            "has_adapter": "has_adapter" in request.form,
+            "visible_in_total": "visible_in_total" in request.form,
+            "visible_in_dismantle": "visible_in_dismantle" in request.form,
+        }
 
-        # name uniqueness (except current name)
-        existing_cpe_type = CpeTypes.query.filter(
-            CpeTypes.name == name, CpeTypes.id != id
-        ).first()
+        success, message = update_cpe_type(id, form_data)
 
-        if existing_cpe_type:
-            flash("Tip CPE opreme već postoji!", "danger")
-            return redirect(url_for("admin.edit_cpe_type", id=id))
+        flash(message, "success" if success else "danger")
 
-        # Validation: type must be valid
-        if type_ not in types:
-            flash("Invalid tip", "danger")
-            return redirect(url_for("admin.edit_cpe_type", id=id))
-
-        cpe.id = id
-        cpe.name = name
-        cpe.label = label
-        cpe.type = type_
-        cpe.header_color = header_color or None
-        # HTML checkboxes send value only when checked.
-        # Otherwise unchecked = stays old value.
-        cpe.has_remote = "has_remote" in request.form
-        cpe.has_adapter = "has_adapter" in request.form
-        cpe.is_visible_in_total = "is_visible_in_total" in request.form
-        cpe.is_visible_in_dismantle = "is_visible_in_dismantle" in request.form
-
-        # ---------------------------
-        # AUTOMATIC ORDERING SYSTEM
-        # -----------------------------
-        # ORDER FORM USER CHOOSING
-        new_order = (
-            int(display_order_raw) if display_order_raw not in (None, "") else None
-        )
-
-        # ORDER FROM DB
-        old_order = cpe.display_order
-
-        # IF ORDER CHANGED THAN SHIFT ACORDINGLY ALL OTHER ELEMENTS
-        if old_order is None and new_order is None:
-            pass
-        elif old_order is None:
-            db.session.execute(
-                text("""
-                        UPDATE cpe_types
-                        SET display_order=display_order + 1
-                        WHERE display_order >= :new
-                    """),
-                {"new": new_order},
-            )
-
-        elif new_order != old_order:
-            if new_order < old_order:
-                # UPDATE NEIGHBORS BUT NO CHOOSEN ORDER
-                # npr. from 8 to 5: 8->5: 5=8,5=5+1,6=6+1,7=7+1
-                db.session.execute(
-                    text("""
-                        UPDATE cpe_types
-                        SET display_order=display_order + 1
-                        WHERE display_order >=:new
-                            AND display_order < :old
-                            AND id !=:id
-                    """),
-                    {"new": new_order, "old": old_order, "id": cpe.id},
-                )
-            else:
-                # UPDATE NEIGHBORS BUT NO CHOOSEN ORDER
-                # npr. from 5 to 9: 5->9: NOVI 9=5,
-                # STARE VRIJEDNOSTI SE SHIFTUJU 9=9-1,8=8-1,7=7-1,6=6-1
-                db.session.execute(
-                    text("""
-                        UPDATE cpe_types
-                        SET display_order=display_order-1
-                        WHERE display_order >:old
-                            AND display_order <=:new
-                            AND id!=:id        
-                    """),
-                    {"new": new_order, "old": old_order, "id": cpe.id},
-                )
-            # UPDATE  CHOOSEN ORDER
-
-        cpe.display_order = new_order
-
-        try:
-            db.session.commit()
-            flash("Cpe tip uspješno izmijenjen!", "success")
+        if success:
             return redirect(url_for("admin.cpe_types"))
-        except Exception as e:
-            db.session.rollback()
-            flash(f"Greška prilikom izmjene CPE tipa: {e}", "danger")
-            return redirect(url_for("admin.edit_cpe_type", id=id))
+        return redirect(url_for("admin.edit_cpe_type", id=id))
 
     return render_template(
         "admin/cpe_types_edit.html",
@@ -1013,7 +937,7 @@ def cpe_dismantle_inventory_charts():
         extra_joins="""
         LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
         """,
-        where_clause="AND j.is_visible_in_dismantle=:is_active",
+        where_clause="AND j.visible_in_dismantle=:is_active",
         params={"is_active": True},
     )
 

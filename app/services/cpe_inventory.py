@@ -24,7 +24,7 @@ def get_cpe_records_view_data():
     current_week_end = get_current_week_friday()
 
     # list of all cpe_types object in db THAT ARE ACTIVE
-    schema_list = get_cpe_types_column_schema("is_visible_in_total")
+    schema_list = get_cpe_types_column_schema("visible_in_total")
 
     # Build pivoted cpe_inventory records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
@@ -111,7 +111,7 @@ def get_cpe_records_history(
         return None, None, None, "Niste autorizovani."
 
     # list of all cpe_types object in db THAT ARE ACTIVE
-    schema_list = get_cpe_types_column_schema("is_visible_in_total")
+    schema_list = get_cpe_types_column_schema("visible_in_total")
 
     # paginated_records is iterable SimplePagination object
     records = get_cpe_inventory_city_history(
@@ -124,7 +124,7 @@ def get_cpe_records_history(
 def get_cpe_records_excel_export():
     current_week_end = get_current_week_friday()
 
-    schema_list = get_cpe_types_column_schema("is_visible_in_total")
+    schema_list = get_cpe_types_column_schema("visible_in_total")
 
     records = get_cpe_inventory_pivoted(schema_list, current_week_end)
 

@@ -18,7 +18,7 @@ from sqlalchemy import (
     DDL,
     event,
     Time,
-    func
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
@@ -113,11 +113,11 @@ class CpeTypes(db.Model):
         Enum(CpeTypeEnum, native_enum=True, name="cpe_type_enum")
     )
 
-    is_visible_in_total: Mapped[Optional[bool]] = mapped_column(
+    visible_in_total: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )
 
-    is_visible_in_dismantle: Mapped[Optional[bool]] = mapped_column(
+    visible_in_dismantle: Mapped[Optional[bool]] = mapped_column(
         Boolean, server_default=text("true")
     )
 
@@ -125,7 +125,9 @@ class CpeTypes(db.Model):
 
     has_adapter = mapped_column(Boolean, nullable=False, server_default="true")
 
-    display_order: Mapped[Optional[int]] = mapped_column(Integer)
+    order_in_total: Mapped[Optional[int]] = mapped_column(Integer)
+
+    order_in_dismantle: Mapped[Optional[int]] = mapped_column(Integer)
 
     header_color: Mapped[Optional[str]] = mapped_column(String(50))
 
@@ -193,7 +195,7 @@ class CpeDismantle(db.Model):
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
-       DateTime(timezone=True), server_default=text("now()")
+        DateTime(timezone=True), server_default=text("now()")
     )
 
     updated_at = mapped_column(DateTime(timezone=True), nullable=True)
@@ -351,6 +353,7 @@ class ReportSetting(db.Model):
     updated_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now()
     )
+
 
 class ReportRecipients(db.Model):
     __tablename__ = "report_recipients"

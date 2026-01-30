@@ -19,7 +19,8 @@ block content %}
       <th>Ima adapter</th>
       <th>Vidljiv u ukupno</th>
       <th>Vidljiv u demontaža</th>
-      <th>Položaj u tabeli</th>
+      <th>Položaj u ukupno</th>
+      <th>Položaj u demontaža</th>
       <th>Boja zaglavlja</th>
       <th style="width: 160px">Akcije</th>
     </tr>
@@ -31,9 +32,10 @@ block content %}
       <td>{{ cpe.type }}</td>
       <td>{{ cpe.has_remote }}</td>
       <td>{{ cpe.has_adapter }}</td>
-      <td>{{ cpe.is_visible_in_total }}</td>
-      <td>{{ cpe.is_visible_in_dismantle }}</td>
-      <td>{{ cpe.display_order }}</td>
+      <td>{{ cpe.visible_in_total }}</td>
+      <td>{{ cpe.visible_in_dismantle }}</td>
+      <td>{{ cpe.order_in_total }}</td>
+      <td>{{ cpe.order_in_dismantle }}</td>
       <td>{{ cpe.header_color }}</td>
       <td>
         {% if ( current_user.role== 'admin') %}

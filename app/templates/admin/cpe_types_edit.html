@@ -1,82 +1,121 @@
-{% extends "base.html" %} {% block title %}Izmjeni CPE tip{% endblock %} {% block
-content %}
+{% extends "base.html" %} {% block title %}Izmjeni CPE tip{% endblock %} {%
+block content %}
 <div class="container py-4">
   <div class="mx-auto shadow-lg p-3" style="max-width: 800px">
     <h2>Izmjeni CPE model</h2>
     <form method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="mb-3">
         <label class="form-label">Ime</label>
-        <input type="text" name="name" class="form-control" value="{{ cpe.name }}" required />
+        <input
+          type="text"
+          name="name"
+          class="form-control"
+          value="{{ cpe.name }}"
+          required
+        />
       </div>
       <div class="mb-3">
         <label class="form-label">Labela</label>
-        <input type="text" name="label" class="form-control" value="{{ cpe.label }}" required />
+        <input
+          type="text"
+          name="label"
+          class="form-control"
+          value="{{ cpe.label }}"
+          required
+        />
       </div>
       <div class="mb-3">
         <label class="form-label">Tip</label>
         <select name="type" class="form-control" required>
           <option value="">--Izaberite tip--</option>
           {% for t in types %}
-          <option value="{{ t }}" {% if t == cpe.type.value %}selected{% endif %}>{{ t|capitalize }}</option>
+          <option
+            value="{{ t }}"
+            {% if t==cpe.type.value %}selected{%endif%}
+          >
+            {{ t|capitalize }}
+          </option>
 
           {% endfor %}
         </select>
       </div>
-       <div class="mb-3 form-check">
-          <input 
-            type="checkbox" 
-            class="form-check-input" 
-            id="has_remote" 
-            name="has_remote"
-            {% if cpe.has_remote %}checked{% endif %}>
-          <label class="form-check-label" for="has_remote">
-              Ima Daljinski
-          </label>
-      </div>
-       <div class="mb-3 form-check">
-          <input 
-            type="checkbox" 
-            class="form-check-input" 
-            id="has_adapter" 
-            name="has_adapter"
-            {% if cpe.has_adapter %}checked{% endif %}>
-          <label class="form-check-label" for="has_adapter">
-              Ima Adapter
-          </label>
+      <div class="mb-3 form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="has_remote"
+          name="has_remote"
+          {%if cpe.has_remote%}checked{%endif%}
+        />
+        <label class="form-check-label" for="has_remote"> Ima Daljinski </label>
       </div>
       <div class="mb-3 form-check">
-        <input 
-          type="checkbox" 
-          class="form-check-input" 
-          id="is_visible_in_total" 
-          name="is_visible_in_total"
-          {% if cpe.is_visible_in_total %}checked{% endif %}>
-        <label class="form-check-label" for="is_visible_in_total">
-            Aktivan u ukupno
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="has_adapter"
+          name="has_adapter"
+          {% if cpe.has_adapter%}checked{%endif%}
+        />
+        <label class="form-check-label" for="has_adapter"> Ima Adapter </label>
+      </div>
+      <div class="mb-3 form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="visible_in_total"
+          name="visible_in_total"
+          {%if cpe.visible_in_total%}checked{%endif%}
+        />
+        <label class="form-check-label" for="visible_in_total">
+          Aktivan u ukupno
         </label>
       </div>
       <div class="mb-3 form-check">
-          <input 
-            type="checkbox" 
-            class="form-check-input" 
-            id="is_visible_in_dismantle" 
-            name="is_visible_in_dismantle"
-            {% if cpe.is_visible_in_dismantle %}checked{% endif %}>
-          <label class="form-check-label" for="is_visible_in_dismantle">
-              Aktivan u demontaža
-          </label>
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="visible_in_dismantle"
+          name="visible_in_dismantle"
+          {%if cpe.visible_in_dismantle%}checked{%endif%}
+        />
+        <label class="form-check-label" for="visible_in_dismantle">
+          Aktivan u demontaža
+        </label>
       </div>
-       <div class="mb-3">
-        <label class="form-label">Položaj u tabeli</label>
-        <input type="number" name="display_order" class="form-control" min="2" value="{{ cpe.display_order }}"   required/>
-         <div class="form-text">
-    Manji broj = kolona ide više lijevo
-  </div>
+      <div class="mb-3">
+        <label class="form-label">Položaj u tabeli ukupno</label>
+        <input
+          type="number"
+          name="order_in_total"
+          class="form-control"
+          min="2"
+          value="{{ cpe.order_in_total }}"
+          required
+        />
+        <div class="form-text">Manji broj = kolona ide više lijevo</div>
       </div>
-       <div class="mb-3">
+      <div class="mb-3">
+        <label class="form-label">Položaj u tabeli demontaža</label>
+        <input
+          type="number"
+          name="order_in_dismantle"
+          class="form-control"
+          min="2"
+          value="{{ cpe.order_in_dismantle }}"
+          required
+        />
+        <div class="form-text">Manji broj = kolona ide više lijevo</div>
+      </div>
+      <div class="mb-3">
         <label class="form-label">Boja zaglavlja</label>
-        <input type="color" name="header_color" class="form-control form-control-color" value="{{ cpe.header_color or '#ffffff' }}" />
+        <input
+          type="color"
+          name="header_color"
+          class="form-control form-control-color"
+          value="{{ cpe.header_color or '#ffffff' }}"
+        />
       </div>
       <button type="submit" class="btn btn-success">Save</button>
       <a href="{{ url_for('admin.cpe_types') }}" class="btn btn-secondary"
