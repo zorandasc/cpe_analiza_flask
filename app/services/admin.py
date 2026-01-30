@@ -202,7 +202,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
 
         # get device list under that type
         devices_sql = """
-            SELECT DISTINCT ct.name
+            SELECT DISTINCT ct.name, ct.label
             FROM cpe_types ct
             WHERE ct.type = CAST(:cpe_type AS cpe_type_enum)
             AND ct.visible_in_total = true
@@ -212,7 +212,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
             text(devices_sql), {"cpe_type": cpe_type}
         ).fetchall()
 
-        devices = [cpe.name for cpe in devices]
+        devices = [cpe.label for cpe in devices]
 
         return {
             "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
