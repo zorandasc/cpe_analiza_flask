@@ -123,6 +123,9 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         WHERE 1=1
     """
 
+    # ----------------------------
+    # City logic
+    # ----------------------------
     if city_id is None:  # filter by city
         # IF CITY ID IS NOT SELECTED THAN CALCULATE SUM ON ALL CITIES
         # BUT EXCLUDE RASPOLOZIVA OPREMA
@@ -131,14 +134,9 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         conditions.append("city_id = :city_id")
         params["city_id"] = city_id
 
-    if cpe_id is not None:  # filter by cpe id
-        conditions.append("cpe_type_id = :cpe_id")
-        params["cpe_id"] = cpe_id
-    elif cpe_type is not None:  # filter by cpe type
-        # This tells Postgres explicitly This parameter is an enum, not text
-        conditions.append("ct.type = CAST(:cpe_type AS cpe_type_enum)")
-        params["cpe_type"] = cpe_type
-
+    # ----------------------------
+    # Weeks
+    # ----------------------------
     if weeks:  # filter by weeks
         conditions.append("""
             i.week_end IN (
@@ -154,6 +152,10 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     if conditions:
         where_clause = " AND " + " AND ".join(conditions)
 
+    # ======================================================
+    # 🔵 MODE C — specific CPE selected
+    # ======================================================
+
     # 🔁 CASE 1 — one CPE selected → single dataset
     if cpe_id is not None:
         sql = f"""    
@@ -162,43 +164,86 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
                 SUM(i.quantity) AS total
             {base_join}
             {where_clause}
+            AND i.cpe_type_id = :cpe_id
             GROUP BY i.week_end
             ORDER BY i.week_end
         """
+        params["cpe_id"] = cpe_id
         rows = db.session.execute(text(sql), params).fetchall()
 
         return {
             "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
             "datasets": [
                 {
-                    "label": "Total ",
+                    "label": "Total",
                     "data": [r.total for r in rows],
                 }
             ],
         }
 
-    # 🔁 CASE 2 — no CPE selected → multiple datasets
+    # ======================================================
+    # 🟡 MODE B — CPE TYPE selected
+    # ======================================================
+
+    if cpe_type is not None:
+        # 🔁 CASE 2 — no CPE selected → multiple datasets
+        sql = f"""
+        SELECT
+                i.week_end,
+                SUM(i.quantity) AS total
+            {base_join}
+            {where_clause}
+            AND ct.type = CAST(:cpe_type AS cpe_type_enum)
+            GROUP BY i.week_end
+            ORDER BY i.week_end
+        """
+        params["cpe_type"] = cpe_type
+        rows = db.session.execute(text(sql), params).fetchall()
+
+        # get device list under that type
+        devices_sql = """
+            SELECT DISTINCT ct.name
+            FROM cpe_types ct
+            WHERE ct.type = CAST(:cpe_type AS cpe_type_enum)
+            AND ct.visible_in_total = true
+            ORDER BY ct.name
+        """
+        devices = db.session.execute(
+            text(devices_sql), {"cpe_type": cpe_type}
+        ).fetchall()
+
+        devices = [cpe.name for cpe in devices]
+
+        return {
+            "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
+            "datasets": [
+                {"label": f"Ukupno ({cpe_type})", "data": [r.total for r in rows]}
+            ],
+            "devices": devices,
+            "mode": "type-total",
+        }
+
+    # ======================================================
+    # 🟢 MODE A — nothing selected → GROUP BY TYPE
+    # ======================================================
     sql = f"""
-       SELECT
+        SELECT
             i.week_end,
-            i.cpe_type_id,
-            ct.name AS cpe_name,
+            ct.type,
             SUM(i.quantity) AS total
         {base_join}
         {where_clause}
-        GROUP BY i.week_end, i.cpe_type_id, ct.name
+        GROUP BY i.week_end, ct.type
         ORDER BY i.week_end
     """
 
     rows = db.session.execute(text(sql), params).fetchall()
 
-    # ONE r IN rows look like:
-    # (datetime.date(2026, 1, 23), 6, 'Skyworth STBHD/4K HP44H', 375)
+    labels = sorted({r.week_end for r in rows})
 
     # ------------------------
     # Pivot for Chart.js
     # ------------------------
-
     # This line is a very efficient "Pythonic" way to perform three tasks at once:
     # extracting, de-duplicating, and ordering your data.
     # The Set Comprehension: {r.week_end for r in rows}
@@ -206,20 +251,19 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # The sorted() function takes the unique dates puts them in ascendin
     # By the end of the line, labels is a List (because sorted() always returns a list) that
     # contains every unique date found in your data, perfectly ordered from earliest to latest.
-    labels = sorted({r.week_end for r in rows})
 
-    # This initializes an empty dictionary to hold your data
-    # {"CPE_NAME", [DATE1:0, DATE2:0,...]}
     datasets_dict = {}
     for r in rows:
         # setdefault checks if r.cpe_name exists. If it doesn't, it creates it
         # If it does exist, it does nothing and moves on.
-        datasets_dict.setdefault(r.cpe_name, {lab: 0 for lab in labels})
+        # This initializes an empty dictionary to hold your data
+        # {"CPE_NAME", [DATE1:0, DATE2:0,...]}
+        datasets_dict.setdefault(r.type, {lab: 0 for lab in labels})
         # Now that we are sure the dictionary for that specific cpe_name exists,
         # update its value from 0 to the actual total
-        datasets_dict[r.cpe_name][r.week_end] = r.total
+        datasets_dict[r.type][r.week_end] = r.total
 
-    # datasets dictonary looks like:
+    # data_map dictonary looks like:
     # {
     #'Router_A': {'Jan 1': 10, 'Jan 8': 0, 'Jan 15': 5},
     #'Switch_B': {'Jan 1': 0, 'Jan 8': 20, 'Jan 15': 12}
@@ -227,17 +271,23 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # }
 
     chart_datasets = []
-    for cpe_name, values in datasets_dict.items():
+    for cpe_type, values in datasets_dict.items():
         chart_datasets.append(
             # values[lab]  take only numbers
-            {"label": cpe_name, "data": [values[lab] for lab in labels]}
+            {"label": cpe_type, "data": [values[lab] for lab in labels]}
         )
+    # char_datasets look like:
+    # "datasets": [
+    # {"label": "CPE Router","data": [120, 140, 160] },
+    # {"label": "CPE Modem","data": [80, 90, 110]},
+    # ...]
+    # }
 
     return {
-        "labels": [lab.strftime("%d-%m-%Y") for lab in labels],
+        "labels": [l.strftime("%d-%m-%Y") for l in labels],
         "datasets": chart_datasets,
     }
-
+    # RETRUN LOOK LIKE:
     # {
     # "labels": ["01-12-2025", "08-12-2025", "15-12-2025"],
     # "datasets": [

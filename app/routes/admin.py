@@ -865,6 +865,13 @@ def cpe_inventory_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
+    chart_data = get_cpe_inventory_chart_data(
+        city_id=selected_city_id,
+        cpe_id=selected_cpe_id,
+        cpe_type=selected_cpe_type,
+        weeks=selected_weeks,
+    )
+
     cities = get_distinct_joined_values(
         base_key="cpe", join_key="city", base_fk="city_id"
     )
@@ -874,13 +881,6 @@ def cpe_inventory_charts():
     )
 
     cpe_types = [member.value for member in CpeTypeEnum]
-
-    chart_data = get_cpe_inventory_chart_data(
-        city_id=selected_city_id,
-        cpe_id=selected_cpe_id,
-        cpe_type=selected_cpe_type,
-        weeks=selected_weeks,
-    )
 
     return render_template(
         "charts/cpe_dashboard.html",
