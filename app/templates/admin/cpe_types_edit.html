@@ -40,6 +40,7 @@ block content %}
           {% endfor %}
         </select>
       </div>
+       <hr/>
       <div class="mb-3 form-check">
         <input
           type="checkbox"
@@ -60,6 +61,7 @@ block content %}
         />
         <label class="form-check-label" for="has_adapter"> Ima Adapter </label>
       </div>
+       <hr/>
       <div class="mb-3 form-check">
         <input
           type="checkbox"
@@ -68,6 +70,7 @@ block content %}
           name="visible_in_total"
           {%if cpe.visible_in_total%}checked{%endif%}
         />
+       
         <label class="form-check-label" for="visible_in_total">
           Vidljiv u tabeli CPE oprema
         </label>
@@ -85,6 +88,7 @@ block content %}
         />
         <div class="form-text">Manji broj = kolona ide više lijevo</div>
       </div>
+       <hr/>
        <div class="mb-3 form-check">
         <input
           type="checkbox"
@@ -109,13 +113,14 @@ block content %}
         />
         <div class="form-text">Manji broj = kolona ide više lijevo</div>
       </div>
+       <hr/>
       <div class="mb-3">
         <label class="form-label">Boja zaglavlja</label>
         <input
           type="color"
           name="header_color"
           class="form-control form-control-color"
-          value="{{ cpe.header_color or '#ffffff' }}"
+          value="{{ cpe.header_color or '#f2f2f2' }}"
         />
       </div>
       <button type="submit" class="btn btn-success">Save</button>

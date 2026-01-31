@@ -19,6 +19,9 @@ styles %} {{ super() }}
     top: 60px; 
     z-index: 1020; 
     box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
+
+     /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
+    background-color: var(--header-color, #f2f2f2);
   }
 
   /* Remove border radius from inner th cells to avoid overlapping */
@@ -33,22 +36,7 @@ styles %} {{ super() }}
     text-align: center;
     background-color: #d7dce2 !important;
   }
-  .IAD-column {
-    background-color: #f0d6f2 !important;
-  }
-  .STB-column {
-    background-color: #cbd7f1 !important;
-  }
-  .ONT-column {
-    background-color: #d9c3ee !important;
-  }
-  .ANTENA-column,
-  .IOT-column,
-  .STB_DTH-column,
-  .LNB-column {
-    background-color: #fce4d6 !important;
-    min-width: 80px;
-  }
+  
   .azur-column {
     background-color: #d4e2db !important;
   }
@@ -191,12 +179,13 @@ styles %} {{ super() }}
         {% endif %}
       </ul>
     </nav>
-    <table class="table table-hover align-middle table-sm table-emph-h-border">
+    <table class="table table-hover table-striped shadow align-middle table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
           <th class="azur-column">SEDMICA</th>
           {% if schema %} {% for item in schema %}
-          <th class="{{item.cpe_type.name}}-column">{{item.label}}</th>
+          <!----header-color CSS VARIABLE DEFINED WITH SCHEMA ATRIBUTE-->
+            <th  style="--header-color: {{ item.header_color }}">{{item.label}}</th>
           <!--CPE MODELS COLUMNS-->
           {% endfor %} {% endif %}
         </tr>
