@@ -32,11 +32,11 @@ block styles %} {{ super() }}
         <th>Ima daljinski</th>
         <th>Ima adapter</th>
         <th>Vidljiv u ukupno</th>
-        <th>Vidljiv u demontaža</th>
         <th>Položaj u ukupno</th>
+        <th>Vidljiv u demontaža</th>
         <th>Položaj u demontaža</th>
         <th>Boja zaglavlja</th>
-        <th style="width: 160px">Akcije</th>
+        <th style="width: 130px">Akcije</th>
       </tr>
     </thead>
     <tbody>
@@ -49,8 +49,8 @@ block styles %} {{ super() }}
         <td>{{ cpe.has_remote }}</td>
         <td>{{ cpe.has_adapter }}</td>
         <td>{{ cpe.visible_in_total }}</td>
-        <td>{{ cpe.visible_in_dismantle }}</td>
         <td>{{ cpe.order_in_total }}</td>
+        <td>{{ cpe.visible_in_dismantle }}</td>
         <td>{{ cpe.order_in_dismantle }}</td>
         <td>{{ cpe.header_color }}</td>
         <td>
