@@ -19,6 +19,7 @@
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
   <table class="table table-striped table-bordered shadow-lg">
+    <thead class="table-secondary">
     <tr>
       <th>ID</th>
       <th>Korisničko Ime</th>
@@ -26,6 +27,8 @@
       <th>Organizacija</th>
       <th style="width: 160px">Akcije</th>
     </tr>
+    </thead>
+    <tbody>
     {% for user in users %}
     <tr>
       <td>{{ user.id }}</td>
@@ -49,6 +52,7 @@
       {%endif%}
     </tr>
     {% endfor %}
+    </tbody>
   </table>
 </div>
 {% endblock %}

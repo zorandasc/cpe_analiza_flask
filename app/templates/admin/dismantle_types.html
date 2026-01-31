@@ -19,6 +19,7 @@ block content %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
   <table class="table table-striped table-bordered shadow-lg mt-4">
+     <thead class="table-secondary">
     <tr>
       <th>Id</th>
       <th>Kodna oznaka</th>
@@ -26,6 +27,8 @@ block content %}
       <th>Grupa</th>
       <th style="width: 160px">Akcije</th>
     </tr>
+    </thead>
+    <tbody>
     {% for s in status %}
     <tr>
       <td>{{ s.id }}</td>
@@ -51,6 +54,7 @@ block content %}
       </td>
     </tr>
     {% endfor %}
+    </tbody>
   </table>
 </div>
 {% endblock %}

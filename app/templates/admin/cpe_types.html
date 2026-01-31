@@ -1,66 +1,76 @@
 {% extends "base.html" %} {% block title %}Tipovi CPE opreme{% endblock %} {%
-block content %}
+block styles %} {{ super() }}
+<style>
+
+</style>
+{% endblock %} {%block content %}
 <div class="container py-4">
-  <a href="{{ url_for('admin.dashboard') }}"
-            class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
-            <span class="me-2">⬅</span> Nazad
+  <a
+    href="{{ url_for('admin.dashboard') }}"
+    class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
+  >
+    <span class="me-2">⬅</span> Nazad
   </a>
   <div class="d-flex justify-content-between align-items-center mb-2">
-  <h2>Tipovi CPE opreme</h2>
-  {% if ( current_user.role== 'admin') %}
-  <a href="{{ url_for('admin.add_cpe_type') }}" class="btn btn-primary my-3"
-    >Dodaj CPE model</a
-  >
-  {%endif%} 
+    <h2>Tipovi CPE opreme</h2>
+    {% if ( current_user.role== 'admin') %}
+    <a href="{{ url_for('admin.add_cpe_type') }}" class="btn btn-primary my-3"
+      >Dodaj CPE model</a
+    >
+    {%endif%}
   </div>
   {% if error %}
   <div class="alert alert-danger">{{ error }}</div>
   {% endif %}
-  <table class="table table-striped table-bordered shadow-lg">
-    <tr>
-      <th>Id</th>
-      <th>Ime</th>
-      <th>Labela</th>
-      <th>Tip</th>
-      <th>Ima daljinski</th>
-      <th>Ima adapter</th>
-      <th>Vidljiv u ukupno</th>
-      <th>Vidljiv u demontaža</th>
-      <th>Položaj u ukupno</th>
-      <th>Položaj u demontaža</th>
-      <th>Boja zaglavlja</th>
-      <th style="width: 160px">Akcije</th>
-    </tr>
-    {% for cpe in cpes %}
-    <tr>
-      <td>{{ cpe.id }}</td>
-      <td>{{ cpe.name }}</td>
-      <td>{{ cpe.label }}</td>
-      <td>{{ cpe.type }}</td>
-      <td>{{ cpe.has_remote }}</td>
-      <td>{{ cpe.has_adapter }}</td>
-      <td>{{ cpe.visible_in_total }}</td>
-      <td>{{ cpe.visible_in_dismantle }}</td>
-      <td>{{ cpe.order_in_total }}</td>
-      <td>{{ cpe.order_in_dismantle }}</td>
-      <td>{{ cpe.header_color }}</td>
-      <td>
-        {% if ( current_user.role== 'admin') %}
-        <a
-          href="{{ url_for('admin.edit_cpe_type', id=cpe.id) }}"
-          class="btn btn-warning btn-sm"
-          >Edit</a
-        >
-        <a
-          href="{{ url_for('admin.delete_cpe_type', id=cpe.id) }}"
-          class="btn btn-danger btn-sm"
-          onclick="return confirm('Obriši CPE opremu?');"
-          >Delete</a
-        >
-        {%endif%}
-      </td>
-    </tr>
-    {% endfor %}
+  <table class="table table-striped table-bordered shadow-lg table">
+    <thead class="table-secondary">
+      <tr>
+        <th>Id</th>
+        <th>Ime</th>
+        <th>Labela</th>
+        <th>Tip</th>
+        <th>Ima daljinski</th>
+        <th>Ima adapter</th>
+        <th>Vidljiv u ukupno</th>
+        <th>Vidljiv u demontaža</th>
+        <th>Položaj u ukupno</th>
+        <th>Položaj u demontaža</th>
+        <th>Boja zaglavlja</th>
+        <th style="width: 160px">Akcije</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cpe in cpes %}
+      <tr>
+        <td>{{ cpe.id }}</td>
+        <td>{{ cpe.name }}</td>
+        <td>{{ cpe.label }}</td>
+        <td>{{ cpe.type }}</td>
+        <td>{{ cpe.has_remote }}</td>
+        <td>{{ cpe.has_adapter }}</td>
+        <td>{{ cpe.visible_in_total }}</td>
+        <td>{{ cpe.visible_in_dismantle }}</td>
+        <td>{{ cpe.order_in_total }}</td>
+        <td>{{ cpe.order_in_dismantle }}</td>
+        <td>{{ cpe.header_color }}</td>
+        <td>
+          {% if ( current_user.role== 'admin') %}
+          <a
+            href="{{ url_for('admin.edit_cpe_type', id=cpe.id) }}"
+            class="btn btn-warning btn-sm"
+            >Edit</a
+          >
+          <a
+            href="{{ url_for('admin.delete_cpe_type', id=cpe.id) }}"
+            class="btn btn-danger btn-sm"
+            onclick="return confirm('Obriši CPE opremu?');"
+            >Delete</a
+          >
+          {%endif%}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
 {% endblock %}
