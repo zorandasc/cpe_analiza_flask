@@ -153,10 +153,10 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         where_clause = " AND " + " AND ".join(conditions)
 
     # ======================================================
-    # 🔵 MODE C — specific CPE selected
+    # 🔵  specific CPE selected
     # ======================================================
 
-    # 🔁 CASE 1 — one CPE selected → single dataset
+    # one CPE selected → single dataset
     if cpe_id is not None:
         sql = f"""    
             SELECT 
@@ -182,7 +182,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         }
 
     # ======================================================
-    # 🟡 MODE B — CPE TYPE selected
+    # 🟡 specific CPE TYPE selected
     # ======================================================
 
     if cpe_type is not None:
@@ -224,7 +224,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         }
 
     # ======================================================
-    # 🟢 MODE A — nothing selected → GROUP BY TYPE
+    # 🟢 nothing selected → GROUP BY ALL TYPE
     # ======================================================
     sql = f"""
         SELECT
