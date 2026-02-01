@@ -122,6 +122,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         JOIN cpe_types ct ON ct.id=cpe_type_id
         WHERE 1=1
     """
+ 
+    conditions.append("ct.visible_in_total = true")
 
     # ----------------------------
     # City logic
@@ -186,9 +188,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # ======================================================
 
     if cpe_type is not None:
-        # 🔁 CASE 2 — no CPE selected → multiple datasets
         sql = f"""
-        SELECT
+            SELECT
                 i.week_end,
                 SUM(i.quantity) AS total
             {base_join}
@@ -200,7 +201,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         params["cpe_type"] = cpe_type
         rows = db.session.execute(text(sql), params).fetchall()
 
-        # get device list under that type
+        # get also device list under that type to show in template
+        # from cpe_types table but only if activ in total
         devices_sql = """
             SELECT DISTINCT ct.name, ct.label
             FROM cpe_types ct
@@ -239,11 +241,10 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
 
     rows = db.session.execute(text(sql), params).fetchall()
 
-    labels = sorted({r.week_end for r in rows})
-
     # ------------------------
     # Pivot for Chart.js
     # ------------------------
+    # when we have mutiple datatsets we need this:
     # This line is a very efficient "Pythonic" way to perform three tasks at once:
     # extracting, de-duplicating, and ordering your data.
     # The Set Comprehension: {r.week_end for r in rows}
@@ -251,6 +252,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # The sorted() function takes the unique dates puts them in ascendin
     # By the end of the line, labels is a List (because sorted() always returns a list) that
     # contains every unique date found in your data, perfectly ordered from earliest to latest.
+    labels = sorted({r.week_end for r in rows})
 
     datasets_dict = {}
     for r in rows:
@@ -284,7 +286,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # }
 
     return {
-        "labels": [l.strftime("%d-%m-%Y") for l in labels],
+        "labels": [lab.strftime("%d-%m-%Y") for lab in labels],
         "datasets": chart_datasets,
     }
     # RETRUN LOOK LIKE:
@@ -304,110 +306,153 @@ def get_cpe_dismantle_chart_data(
     params = {}
     conditions = []
 
-    if city_id is not None:
+    base_join = """
+        FROM cpe_dismantle i
+        JOIN cities c ON c.id=i.city_id
+        JOIN cpe_types ct ON ct.id=i.cpe_type_id
+        JOIN dismantle_types dt ON dt.id=i.dismantle_type_id
+        WHERE 1=1
+    """
+
+    
+    conditions.append("ct.visible_in_dismantle= true")
+
+    # ----------------------------
+    # City logic
+    # ----------------------------
+    # filter by city
+    if city_id is None:
+        # IF CITY ID IS NOT SELECTED THAN CALCULATE SUM ON ALL CITIES
+        # BUT EXCLUDE RASPOLOZIVA OPREMA
+        conditions.append("c.include_in_total = true")
+    else:
         conditions.append("city_id = :city_id")
         params["city_id"] = city_id
-
-    if cpe_id is not None:
-        conditions.append("cpe_type_id = :cpe_id")
-        params["cpe_id"] = cpe_id
-    elif cpe_type is not None:
-        # This tells Postgres explicitly This parameter is an enum, not text
-        conditions.append("ct.type = CAST(:cpe_type AS cpe_type_enum)")
-        params["cpe_type"] = cpe_type
 
     if dismantle_type_id is not None:
         conditions.append("dismantle_type_id = :dismantle_type_id")
         params["dismantle_type_id"] = dismantle_type_id
 
-    where_clause = ""
-    if conditions:
-        where_clause = " AND " + " AND ".join(conditions)
-
-    limit_clause = ""
-    if weeks:
-        limit_clause = """
-            AND i.week_end IN (
+    # ----------------------------
+    # Weeks
+    # ----------------------------
+    if weeks:  # filter by weeks
+        conditions.append("""
+            i.week_end IN (
                 SELECT DISTINCT week_end
                 FROM cpe_dismantle
                 ORDER BY week_end DESC
                 LIMIT :weeks
             )
-        """
+        """)
         params["weeks"] = weeks
 
-    # 🔁 CASE 1 — one CPE selected → single dataset
+    where_clause = ""
+    if conditions:
+        where_clause = " AND " + " AND ".join(conditions)
+
+    # ======================================================
+    # 🔵  specific CPE selected
+    # ======================================================
+
+    # one CPE selected → single dataset
     if cpe_id is not None:
         sql = f"""
-            SELECT 
-                i.week_end, 
+            SELECT
+                i.week_end,
                 SUM(i.quantity) AS total
-            FROM cpe_dismantle i
-            WHERE 1=1
+            {base_join}
             {where_clause}
-            {limit_clause}
+            AND i.cpe_type_id=:cpe_id
             GROUP BY i.week_end
             ORDER BY i.week_end
         """
-
+        params["cpe_id"] = cpe_id
         rows = db.session.execute(text(sql), params).fetchall()
 
         return {
             "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-            "datasets": [
-                {
-                    "label": "Total",
-                    "data": [r.total for r in rows],
-                }
-            ],
+            "datasets": [{"label": "Total", "data": [r.total for r in rows]}],
         }
 
-    # 🔁 CASE 2 — no CPE selected → multiple datasets
+    # ======================================================
+    # 🟡 specific CPE TYPE selected
+    # ======================================================
+    if cpe_type is not None:
+        sql = f"""
+            SELECT
+                i.week_end,
+                SUM(i.quantity) AS total
+            {base_join}
+            {where_clause}
+            AND ct.type=CAST(:cpe_type AS cpe_type_enum)
+            GROUP BY i.week_end
+            ORDER BY i.week_end
+        """
+        params["cpe_type"] = cpe_type
+        rows = db.session.execute(text(sql), params).fetchall()
+
+        # get also device list under that type to show in template
+        # from cpe_types table but only if active under dismantle
+        devices_sql = """
+            SELECT DISTINCT ct.name, ct.label
+            FROM cpe_types ct
+            WHERE ct.type=CAST(:cpe_type AS cpe_type_enum)
+            AND ct.visible_in_dismantle = true
+            ORDER BY ct.name
+        """
+        devices = db.session.execute(
+            text(devices_sql), {"cpe_type": cpe_type}
+        ).fetchall()
+
+        devices = [cpe.label for cpe in devices]
+
+        return {
+            "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
+            "datasets": [
+                {"label": f"Ukupno ({cpe_type})", "data": [r.total for r in rows]}
+            ],
+            "devices": devices,
+            "mode": "type-total",
+        }
+    # ======================================================
+    # 🟢 nothing selected → GROUP BY ALL TYPE
+    # ======================================================
     sql = f"""
-    SELECT 
-        i.week_end,
-        i.cpe_type_id,
-        ct.name AS cpe_name,
-        SUM(i.quantity) AS total
-    FROM cpe_dismantle i
-    JOIN cpe_types ct ON ct.id = i.cpe_type_id
-    WHERE 1=1
-    {where_clause}
-    {limit_clause}
-    GROUP BY i.week_end, i.cpe_type_id, ct.name
-    ORDER BY i.week_end
-
+        SELECT 
+            i.week_end,
+            ct.type,
+            SUM(i.quantity) AS total
+        {base_join}
+        {where_clause}
+        GROUP BY i.week_end, ct.type
+        ORDER BY i.week_end
     """
-
     rows = db.session.execute(text(sql), params).fetchall()
-    # [ (datetime.date(2026, 1, 23), 6, 'Skyworth STBHD/4K HP44H', 375),...]
 
     # ------------------------
     # Pivot for Chart.js
     # ------------------------
-
+    # when we have mutiple datatsets we need this:
     # This line is a very efficient "Pythonic" way to perform three tasks at once:
     # extracting, de-duplicating, and ordering your data.
     labels = sorted({r.week_end for r in rows})
 
-    # This initializes an empty dictionary
-    dataset_dict = {}
+    datasets_dict = {}
     for r in rows:
-        # setdefault checks if r.cpe_name exists.
-        # it creates it empty totals
-        dataset_dict.setdefault(r.cpe_name, {lab: 0 for lab in labels})
-        # # update its value from 0 to the actual total
-        dataset_dict[r.cpe_name][r.week_end] = r.total
-
-    # dataset_dict={('Router_A': {'Jan 1': 10, 'Jan 8': 0, 'Jan 15': 5})..,
+        # setdefault checks if r.cpe_name exists. If it doesn't, it creates
+        datasets_dict.setdefault(r.type, {lab: 0 for lab in labels})
+        ## {"CPE_NAME", [DATE1:0, DATE2:0,...]}
+        ## update its value from 0 to the actual total
+        datasets_dict[r.type][r.week_end] = r.total
+    #'Router_A': {'Jan 1': 10, 'Jan 8': 0, 'Jan 15': 5},
 
     chart_datasets = []
-    for cpe_name, values in dataset_dict.items():
+    for cpe_type, values in datasets_dict.items():
         chart_datasets.append(
-            # take only numbers
-            {"label": cpe_name, "data": [values[lab] for lab in labels]}
+            {"label": cpe_type, "data": [values[lab] for lab in labels]}
         )
-    # chart_datasets=[{"label":'Router_A', "data":[10, 0, 5]}..,]
+    # {"label": "CPE Router","data": [120, 140, 160] },
 
     return {
         "labels": [lab.strftime("%d-%m-%Y") for lab in labels],
@@ -546,25 +591,25 @@ JOIN_TABLES = {
     "city": {
         "table": "cities",
         "pk": "id",
-        "cols": "j.id, j.name",
+        "cols": "j.id, j.name",  # what is returnet
         "order_by": "j.name",
     },
     "cpe_type": {
         "table": "cpe_types",
         "pk": "id",
-        "cols": "j.id, j.label",
+        "cols": "j.id, j.label",  # what is returnet
         "order_by": "j.label",
     },
     "stb_type": {
         "table": "stb_types",
         "pk": "id",
-        "cols": "j.id, j.label",
+        "cols": "j.id, j.label",  # what is returnet
         "order_by": "j.label",
     },
     "dis_type": {
         "table": "dismantle_types",
         "pk": "id",
-        "cols": "j.id, j.label",
+        "cols": "j.id, j.label",  # what is returnet
         "order_by": "j.label",
     },
 }
@@ -617,3 +662,25 @@ FROM cpe_dismantle i
 JOIN dismantle_types t ON t.id = i.dismantle_type_id
 ORDER BY t.id
 """
+
+
+def get_visible_cpe_types(
+    *,
+    visible_in_total: bool = False,
+    visible_in_dismantle: bool = False,
+):
+    if visible_in_total:
+        where_clause = "WHERE visible_in_total = true"
+    elif visible_in_dismantle:
+        where_clause = "WHERE visible_in_dismantle = true"
+    else:
+        where_clause = ""
+
+    sql = f"""
+        SELECT DISTINCT type
+        FROM cpe_types
+        {where_clause}
+        ORDER BY type
+    """
+
+    return [r.type for r in db.session.execute(text(sql))]
