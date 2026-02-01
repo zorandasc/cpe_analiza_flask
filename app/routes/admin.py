@@ -5,6 +5,7 @@ from sqlalchemy import text
 from werkzeug.security import generate_password_hash
 from app.extensions import db
 from app.utils.permissions import view_required, admin_required
+from app.utils.schemas import get_cpe_types_column_schema
 from app.services.admin import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
@@ -13,7 +14,6 @@ from app.services.admin import (
     get_iptv_inventory_chart_data,
     get_distinct_joined_values,
     update_cpe_type,
-    get_visible_cpe_types,
 )
 from app.models import (
     Cities,
@@ -881,21 +881,10 @@ def cpe_inventory_charts():
         base_key="cpe", join_key="city", base_fk="city_id"
     )
 
-    # lists of cpe_types in cpe_inventory but only visibles
-    cpes = get_distinct_joined_values(
-        base_key="cpe",
-        join_key="cpe_type",
-        base_fk="cpe_type_id",
-        extra_joins="""
-        LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
-        """,
-        where_clause="AND j.visible_in_total=:is_active",
-        params={"is_active": True},
-    )
+    # SHOW ONLY CPES THAT ARE ACTIVE IN TOTAL
+    cpes = get_cpe_types_column_schema("visible_in_total", "order_in_total")
 
-    # cpe_types = [member.value for member in CpeTypeEnum]
-    # retieve cpe types from cpe_types table
-    cpe_types = get_visible_cpe_types(visible_in_total=True)
+    cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
 
     return render_template(
         "charts/cpe_dashboard.html",
@@ -955,25 +944,14 @@ def cpe_dismantle_inventory_charts():
         params={"city_type": CityTypeEnum.IJ.value},
     )
 
-    # SHOW ONLY CPES THAT ARE ACTIVE IN DISMANTLE
-    cpes = get_distinct_joined_values(
-        base_key="cpe_dis",
-        join_key="cpe_type",
-        base_fk="cpe_type_id",
-        extra_joins="""
-        LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
-        """,
-        where_clause="AND j.visible_in_dismantle=:is_active",
-        params={"is_active": True},
-    )
-
     dismantles = get_distinct_joined_values(
         base_key="cpe_dis", join_key="dis_type", base_fk="dismantle_type_id"
     )
 
-    # cpe_types = [member.value for member in CpeTypeEnum]
-    # retieve cpe types from cpe_types table
-    cpe_types = get_visible_cpe_types(visible_in_dismantle=True)
+    # SHOW ONLY CPES THAT ARE ACTIVE IN DISMANTLE
+    cpes = get_cpe_types_column_schema("visible_in_dismantle", "order_in_dismantle")
+
+    cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
 
     return render_template(
         "charts/cpe_dismantle_dashboard.html",

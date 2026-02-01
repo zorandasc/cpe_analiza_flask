@@ -122,7 +122,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         JOIN cpe_types ct ON ct.id=cpe_type_id
         WHERE 1=1
     """
- 
+
     conditions.append("ct.visible_in_total = true")
 
     # ----------------------------
@@ -314,7 +314,6 @@ def get_cpe_dismantle_chart_data(
         WHERE 1=1
     """
 
-    
     conditions.append("ct.visible_in_dismantle= true")
 
     # ----------------------------
@@ -662,25 +661,3 @@ FROM cpe_dismantle i
 JOIN dismantle_types t ON t.id = i.dismantle_type_id
 ORDER BY t.id
 """
-
-
-def get_visible_cpe_types(
-    *,
-    visible_in_total: bool = False,
-    visible_in_dismantle: bool = False,
-):
-    if visible_in_total:
-        where_clause = "WHERE visible_in_total = true"
-    elif visible_in_dismantle:
-        where_clause = "WHERE visible_in_dismantle = true"
-    else:
-        where_clause = ""
-
-    sql = f"""
-        SELECT DISTINCT type
-        FROM cpe_types
-        {where_clause}
-        ORDER BY type
-    """
-
-    return [r.type for r in db.session.execute(text(sql))]
