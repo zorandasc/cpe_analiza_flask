@@ -46,7 +46,7 @@ styles %} {{ super() }}
     border-radius: 12px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     background: white;
-    height: 180px;
+    height:200px;
     overflow: hidden;
   }
 
@@ -93,6 +93,15 @@ styles %} {{ super() }}
     height: 50px;
     margin-bottom: 0.5rem;
   }
+
+  .dashboard-analytics {
+  border: 1px dashed rgba(123, 198, 204, 0.6);
+  background: linear-gradient(
+    to bottom,
+    rgba(123, 198, 204, 0.05),
+    white
+  );
+}
 </style>
 {% endblock %} {% block content%}
 <div class=" py-5">
@@ -166,6 +175,23 @@ styles %} {{ super() }}
         </div>
       </a>
     </div>
+     <div class="col-12 d-flex justify-content-center mt-4">
+  <div class="col-md-4 col-lg-3">
+    <a href="{{ url_for('admin.dashboard') }}" class="dashboard-link">
+     <div class="card dashboard-card dashboard-analytics shadow p-3 text-center">
+        <div class="card-body">
+          <img
+            src="{{ url_for('static', filename='analysis.png') }}"
+            alt="Analytics"
+            class="custom-icon mb-2"
+          />
+          <h4 class="card-title">Analitika i trendovi</h4>
+          <p>Pregled kretanja opreme po sedmicama i gradovima</p>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
   </div>
 </div>
 
