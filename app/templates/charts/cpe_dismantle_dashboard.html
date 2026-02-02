@@ -123,6 +123,17 @@
 </div>
 
 {% block scripts %}
+<script>
+   window.chartContext = {
+        mainTitle:"Ukupno stanje demontirane CPE opreme po tipu",
+        cpeId: {{ selected_cpe_id or "null" }},
+        cpeType: {{ selected_cpe_type|tojson }},
+        dismantle: {{ selected_dismantle|tojson }},
+        cpeName: {{ selected_cpe_name|tojson }},
+        cityName: {{ selected_city_name|tojson }},
+        weeks: {{ selected_weeks or "null" }},
+    };
+    </script>
     {% include "charts/_chart_logic.html" %}
 {% endblock %}
 

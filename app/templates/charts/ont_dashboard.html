@@ -68,6 +68,13 @@
 </div>
 
 {% block scripts %}
+    <script>
+   window.chartContext = {
+        mainTitle:"Ukupno stanje ONT uređaja",
+        cityName: {{ selected_city_name|tojson }},
+        months: {{ selected_months or "null" }},
+    };
+    </script>
     {% include "charts/_chart_logic.html" %}
 {% endblock %}
 

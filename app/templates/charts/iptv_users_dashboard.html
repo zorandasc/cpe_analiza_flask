@@ -58,6 +58,12 @@
 </div>
 
 {% block scripts %}
+ <script>
+   window.chartContext = {
+        mainTitle:"Ukupno stanje IPTV korisnika",
+        weeks: {{ selected_weeks or "null" }},
+    };
+    </script>
     {% include "charts/_chart_logic.html" %}
 {% endblock %}
 

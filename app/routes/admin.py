@@ -786,19 +786,27 @@ def stb_inventory_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
+    chart_data = get_stb_inventory_chart_data(
+        stb_type_id=selected_id, weeks=selected_weeks
+    )
+
     stbs = get_distinct_joined_values(
         base_key="stb", join_key="stb_type", base_fk="stb_type_id"
     )
 
-    chart_data = get_stb_inventory_chart_data(
-        stb_type_id=selected_id, weeks=selected_weeks
-    )
+    # FOR BUILDING DYNAMIC TITLE IN CHART.JS
+    selected_stb_name = None
+    if selected_id:
+        selected_stb_name = next(
+            (c.label for c in stbs if c.id == selected_id), None
+        )
 
     return render_template(
         "charts/stb_dashboard.html",
         chart_data=chart_data,
         stbs=stbs,
         selected_id=selected_id,
+        selected_stb_name=selected_stb_name,
         selected_weeks=selected_weeks,
     )
 
@@ -837,11 +845,16 @@ def ont_inventory_charts():
         city_id=selected_id, months=selected_months
     )
 
+    selected_city_name = None
+    if selected_id:
+        selected_city_name = next((c.name for c in cities if c.id == selected_id), None)
+
     return render_template(
         "charts/ont_dashboard.html",
         chart_data=chart_data,
         cities=cities,
         selected_id=selected_id,
+        selected_city_name=selected_city_name,
         selected_months=selected_months,
     )
 
@@ -884,8 +897,10 @@ def cpe_inventory_charts():
     # SHOW ONLY CPES THAT ARE ACTIVE IN TOTAL
     cpes = get_cpe_types_column_schema("visible_in_total", "order_in_total")
 
+    # LIST OF CPE TYPES STRING NOT ENUMS
     cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
 
+    # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     selected_cpe_name = None
     selected_city_name = None
 
@@ -966,7 +981,28 @@ def cpe_dismantle_inventory_charts():
     # SHOW ONLY CPES THAT ARE ACTIVE IN DISMANTLE
     cpes = get_cpe_types_column_schema("visible_in_dismantle", "order_in_dismantle")
 
+    # LIST OF CPE TYPES STRING NOT ENUMS
     cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
+
+    # FOR BUILDING DYNAMIC TITLE IN CHART.JS
+    selected_cpe_name = None
+    selected_city_name = None
+    selected_dismantle = None
+
+    if selected_cpe_id:
+        selected_cpe_name = next(
+            (c["label"] for c in cpes if c["id"] == selected_cpe_id), None
+        )
+
+    if selected_dismantle_id:
+        selected_dismantle = next(
+            (d.label for d in dismantles if d.id == selected_dismantle_id), None
+        )
+
+    if selected_city_id:
+        selected_city_name = next(
+            (c.name for c in cities if c.id == selected_city_id), None
+        )
 
     return render_template(
         "charts/cpe_dismantle_dashboard.html",
@@ -976,9 +1012,12 @@ def cpe_dismantle_inventory_charts():
         types=cpe_types,
         dismantles=dismantles,
         selected_cpe_id=selected_cpe_id,
+        selected_cpe_name=selected_cpe_name,
         selected_cpe_type=selected_cpe_type,
         selected_dismantle_id=selected_dismantle_id,
+        selected_dismantle=selected_dismantle,
         selected_city_id=selected_city_id,
+        selected_city_name=selected_city_name,
         selected_weeks=selected_weeks,
     )
 

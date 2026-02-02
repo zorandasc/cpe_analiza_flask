@@ -12,8 +12,16 @@
       title = `Trend za uređaj: ${ctx.cpeName}`;
     } else if (ctx?.cpeType) {
       title = `Trend za tip CPE opreme: ${ctx.cpeType}`;
+    } else if (ctx?.stbId) {
+      title += `Trend za uređaj: ${ctx.stbName}`;
     } else {
-      title = "Ukupno stanje po tipu CPE uređaja";
+      title = ctx.mainTitle;
+    }
+
+    
+
+    if (ctx?.dismantle) {
+      title += ` | demontaža: ${ctx.dismantle}`;
     }
 
     if (ctx?.cityName) {
@@ -24,6 +32,9 @@
       title += ` | poslednjih: ${ctx.weeks} nedelja`;
     }
 
+    if (ctx?.months) {
+      title += ` | poslednjih: ${ctx.months} mijeseci`;
+    }
     return title;
   }
 </script>
