@@ -33,8 +33,8 @@ def run_weekly_report_job():
 
     # prevents duplicates
     # safe even if cron restarts
-    if settings.last_sent_at and settings.last_sent_at.date() == now.date():
-        return "Already sent"
+    # if settings.last_sent_at and settings.last_sent_at.date() == now.date():
+    #    return "Already sent"
 
     # FORGE EMAIL TO SEND
     recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]

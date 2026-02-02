@@ -1903,3 +1903,22 @@ MAIL_USE_SSL = False
 MAIL_USERNAME = None
 MAIL_PASSWORD = None
 DEFAULT_FROM_EMAIL = "noreply@company.ba"
+
+
+# CONFIG FOR MAIL FOR GMAIL
+
+	MAIL_SERVER = "smtp.gmail.com"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = "zorand666@gmail.com"
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "jcld ilxd erre pzvr")
+    MAIL_DEFAULT_SENDER = "zorand666@gmail.com"
+
+# CONFIG MAIL FOR WEBMAIL
+
+	MAIL_SERVER = "smtp.teol.net"
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = r"IN\Zoran.Dasic@mtel.ba"
+    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+    MAIL_DEFAULT_SENDER = r"IN\Zoran.Dasic@mtel.ba"
