@@ -5,6 +5,30 @@
 </script>
 
 <script>
+  function buildChartTitle(ctx) {
+    let title = "";
+
+    if (ctx?.cpeId) {
+      title = `Trend za uređaj: ${ctx.cpeName}`;
+    } else if (ctx?.cpeType) {
+      title = `Trend za tip CPE opreme: ${ctx.cpeType}`;
+    } else {
+      title = "Ukupno stanje po tipu CPE uređaja";
+    }
+
+    if (ctx?.cityName) {
+      title += ` | skladište: ${ctx.cityName}`;
+    }
+
+    if (ctx?.weeks) {
+      title += ` | poslednjih: ${ctx.weeks} nedelja`;
+    }
+
+    return title;
+  }
+</script>
+
+<script>
   //Encapsulation: By wrapping the script in an IIFE
   //(the (function() { ... })(); part), you prevent your chart variables
   //from leaking into the global scope and clashing with other scripts
@@ -31,6 +55,9 @@
 
     if (selectorElement) selectorElement.value = chartType;
 
+    //chartContext IS PASSED INSIDE EACH CHART TEMPLATE
+    const chartTitle = buildChartTitle(window.chartContext);
+
     let chart;
 
     function createChart(type) {
@@ -56,6 +83,18 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { display: true },
+            title: {
+              display: true,
+              text: chartTitle,
+              font: {
+                size: 18,
+                weight: "bold",
+              },
+              padding: {
+                top: 10,
+                bottom: 20,
+              },
+            },
           },
           scales: {
             y: { beginAtZero: true, grid: { color: "#f0f0f0" } },
@@ -78,23 +117,23 @@
       });
     }
 
-     const exportBtn = document.getElementById("exportChart");
+    const exportBtn = document.getElementById("exportChart");
 
-  if (exportBtn) {
-    exportBtn.addEventListener("click", () => {
-      // 1. Make sure the chart exists
-      if (!chart) return;
+    if (exportBtn) {
+      exportBtn.addEventListener("click", () => {
+        // 1. Make sure the chart exists
+        if (!chart) return;
 
-      // 2. Get the filename from the data attribute (or use a default)
-      const fileName = exportBtn.getAttribute("data-filename") || "chart.png";
+        // 2. Get the filename from the data attribute (or use a default)
+        const fileName = exportBtn.getAttribute("data-filename") || "chart.png";
 
-      // 3. Trigger download
-      const link = document.createElement("a");
-      link.href = chart.toBase64Image();
-      link.download = fileName;
-      link.click();
-    });
-  }
+        // 3. Trigger download
+        const link = document.createElement("a");
+        link.href = chart.toBase64Image();
+        link.download = fileName;
+        link.click();
+      });
+    }
   })();
 </script>
 {% endif %}

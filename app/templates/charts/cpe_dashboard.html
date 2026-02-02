@@ -32,7 +32,7 @@
                     <select name="cpe_id" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_type]').value=''; this.form.submit()">
                          <option value="">-- Svi uređaji --</option>
                         {% for cpe in cpes %}
-                        <option value="{{ cpe.id }}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
+                        <option value="{{ cpe.id}}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
                             {{ cpe.label|capitalize }}
                         </option>
                         {% endfor %}
@@ -112,6 +112,15 @@
 </div>
 
 {% block scripts %}
+<script>
+    window.chartContext = {
+        cpeId: {{ (selected_cpe_id if selected_cpe_id else None)|tojson }},
+        cpeType: {{ selected_cpe_type|tojson }},
+        cpeName: {{ selected_cpe_name|tojson }},
+        cityName: {{ selected_city_name|tojson }},
+        weeks: {{ (selected_weeks if selected_weeks else None)|tojson }},
+    };
+    </script>
     {% include "charts/_chart_logic.html" %}
 {% endblock %}
 

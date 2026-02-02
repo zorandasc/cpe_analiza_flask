@@ -886,6 +886,19 @@ def cpe_inventory_charts():
 
     cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
 
+    selected_cpe_name = None
+    selected_city_name = None
+
+    if selected_cpe_id:
+        selected_cpe_name = next(
+            (c["label"] for c in cpes if c["id"] == selected_cpe_id), None
+        )
+
+    if selected_city_id:
+        selected_city_name = next(
+            (c.name for c in cities if c.id == selected_city_id), None
+        )
+
     return render_template(
         "charts/cpe_dashboard.html",
         chart_data=chart_data,
@@ -893,8 +906,10 @@ def cpe_inventory_charts():
         cpes=cpes,
         types=cpe_types,
         selected_cpe_id=selected_cpe_id,
+        selected_cpe_name=selected_cpe_name,
         selected_cpe_type=selected_cpe_type,
         selected_city_id=selected_city_id,
+        selected_city_name=selected_city_name,
         selected_weeks=selected_weeks,
     )
 
