@@ -5,6 +5,7 @@
 </script>
 
 <script>
+  //CONTEXT WILL BE DEFINED IN EACH CHART TEMPLATE SCRIPT
   function buildChartTitle(ctx) {
     let title = "";
 
@@ -17,8 +18,6 @@
     } else {
       title = ctx.mainTitle;
     }
-
-    
 
     if (ctx?.dismantle) {
       title += ` | demontaža: ${ctx.dismantle}`;
@@ -66,7 +65,7 @@
 
     if (selectorElement) selectorElement.value = chartType;
 
-    //chartContext IS PASSED INSIDE EACH CHART TEMPLATE
+    //window.chartContext IS PASSED INSIDE EACH CHART TEMPLATE
     const chartTitle = buildChartTitle(window.chartContext);
 
     let chart;

@@ -786,20 +786,26 @@ def stb_inventory_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
     chart_data = get_stb_inventory_chart_data(
         stb_type_id=selected_id, weeks=selected_weeks
     )
 
+    # ---------------------------------------
+    # FOR LISTING IN HTML SELECT ELEMENTS
+    # ---------------------------------------
     stbs = get_distinct_joined_values(
         base_key="stb", join_key="stb_type", base_fk="stb_type_id"
     )
 
+    # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
+    # ---------------------------------------
     selected_stb_name = None
     if selected_id:
-        selected_stb_name = next(
-            (c.label for c in stbs if c.id == selected_id), None
-        )
+        selected_stb_name = next((c.label for c in stbs if c.id == selected_id), None)
 
     return render_template(
         "charts/stb_dashboard.html",
@@ -819,6 +825,9 @@ def iptv_inventory_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
     chart_data = get_iptv_inventory_chart_data(weeks=selected_weeks)
 
     return render_template(
@@ -837,14 +846,23 @@ def ont_inventory_charts():
 
     selected_months = request.args.get("months", type=int)
 
-    cities = get_distinct_joined_values(
-        base_key="ont", join_key="city", base_fk="city_id"
-    )
-
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
     chart_data = get_ont_inventory_chart_data(
         city_id=selected_id, months=selected_months
     )
 
+    # ---------------------------------------
+    # FOR LISTING IN HTML SELECT ELEMENTS
+    # ---------------------------------------
+    cities = get_distinct_joined_values(
+        base_key="ont", join_key="city", base_fk="city_id"
+    )
+
+    # -----------------------------------
+    # FOR BUILDING DYNAMIC TITLE IN CHART.JS
+    # ---------------------------------------
     selected_city_name = None
     if selected_id:
         selected_city_name = next((c.name for c in cities if c.id == selected_id), None)
@@ -882,6 +900,9 @@ def cpe_inventory_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
     chart_data = get_cpe_inventory_chart_data(
         city_id=selected_city_id,
         cpe_id=selected_cpe_id,
@@ -889,6 +910,9 @@ def cpe_inventory_charts():
         weeks=selected_weeks,
     )
 
+    # ---------------------------------------
+    # FOR LISTING IN HTML SELECT ELEMENTS
+    # ---------------------------------------
     # lists of cities in cpe_inventory
     cities = get_distinct_joined_values(
         base_key="cpe", join_key="city", base_fk="city_id"
@@ -900,7 +924,9 @@ def cpe_inventory_charts():
     # LIST OF CPE TYPES STRING NOT ENUMS
     cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
 
+    # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
+    # ---------------------------------------
     selected_cpe_name = None
     selected_city_name = None
 
@@ -954,6 +980,9 @@ def cpe_dismantle_inventory_charts():
 
     selected_weeks = request.args.get("weeks", type=int)
 
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
     chart_data = get_cpe_dismantle_chart_data(
         city_id=selected_city_id,
         cpe_id=selected_cpe_id,
@@ -962,6 +991,9 @@ def cpe_dismantle_inventory_charts():
         weeks=selected_weeks,
     )
 
+    # ---------------------------------------
+    # FOR LISTING IN HTML SELECT ELEMENTS
+    # ---------------------------------------
     # FOR DISMANTLE TABLE WE NEED TO QUERY ONLY IJ CITIES
     cities = get_distinct_joined_values(
         base_key="cpe_dis",
@@ -984,7 +1016,9 @@ def cpe_dismantle_inventory_charts():
     # LIST OF CPE TYPES STRING NOT ENUMS
     cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
 
+    # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
+    # ---------------------------------------
     selected_cpe_name = None
     selected_city_name = None
     selected_dismantle = None
