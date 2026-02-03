@@ -95,6 +95,7 @@ styles %} {{ super() }}
     data-bs-toggle="modal"
     data-bs-target="#ontEditModal"
     class="btn btn-custom-stb-add"
+     id="target-section"
   >
     + Dodaj / Izmjeni Mjesečni Unos
   </button>
@@ -219,4 +220,20 @@ styles %} {{ super() }}
   </div>
 </div>
 
+
+<script>
+//AUTOMATIC SCROLL TO HTML TABLE
+    window.onload = function() {
+        // Delay execution by 500 milliseconds
+        setTimeout(function() {
+            const element = document.getElementById("target-section");
+            if (element) {
+                element.scrollIntoView({ 
+                    behavior: "smooth", 
+                    block: "start" 
+                });
+            }
+        }, 400); 
+    };
+</script>
 {% endblock %}

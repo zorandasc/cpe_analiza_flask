@@ -225,7 +225,7 @@
     <h2 class="text-center title">Stanje demontirane ispravne i kompletne TO za dan: {{ today }}</h2>
       <span class="info">Sedmica ažuriranja {{current_week_end}} (Petak)</span>
       <div class="table-responsive mb-4">
-        <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table">
+        <table class="table table-hover align-middle table-sm table-emph-h-border my-custom-table" id="target-section">
           <thead class="table-custom-head">
             <tr>
               <th class="city-column">
@@ -804,5 +804,20 @@
 
 </script>
 
+<script>
+//AUTOMATIC SCROLL TO HTML TABLE
+    window.onload = function() {
+        // Delay execution by 500 milliseconds
+        setTimeout(function() {
+            const element = document.getElementById("target-section");
+            if (element) {
+                element.scrollIntoView({ 
+                    behavior: "smooth", 
+                    block: "start" 
+                });
+            }
+        }, 400); 
+    };
+</script>
 {% endblock %}
 
