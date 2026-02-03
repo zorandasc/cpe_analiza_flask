@@ -29,7 +29,7 @@ styles %} {{ super() }}
     display: block;
     content: "";
     position: relative;
-    margin-top: 25px;
+    margin-top: 15px;
     left: 50%;
     margin-left: -200px;
     background: linear-gradient(to right, #be93c5, #7bc6cc);
@@ -42,7 +42,6 @@ styles %} {{ super() }}
     line-height: 3em;
     padding-left: 0.25em;
     color: rgba(0, 0, 0, 0.4);
-    padding-bottom: 10px;
   }
 
   .btn-custom-save {
@@ -102,8 +101,9 @@ styles %} {{ super() }}
   }
 </style>
 {% endblock %} {% block content%}
-<div class="py-5">
+<div class="py-2">
   <h2 class="mb-4 text-center title">Stanje STB uređaja i IPTV korisnika</h2>
+  <div class="d-flex justify-content-between">
   <button
     type="button"
     title="Ažuritajte posljednje stanje STB opreme"
@@ -118,7 +118,7 @@ styles %} {{ super() }}
     Posljedne ažurirano:{% if records[0] %} {{
     records[0]['last_updated'].strftime('%d-%m-%Y%H:%M') }} {% endif %}
   </span>
-
+</div>
   <div class="table-responsive">
     <table class="table table-bordered table-striped shadow mb-4">
       <thead class="table-primary">
@@ -141,6 +141,7 @@ styles %} {{ super() }}
       </tbody>
     </table>
   </div>
+  <div class="d-flex justify-content-between align-items-end">
   <button
     type="button"
     title="Ažuritajte posljednje stanje STB opreme"
@@ -154,6 +155,7 @@ styles %} {{ super() }}
     Posljednje ažurirano: {% if iptv_users[-1] %} {{
     iptv_users[-1]['updated_at'].strftime('%d-%m-%Y %H:%M') }} {% endif %}
   </span>
+  </div>
   <table class="table table-bordered table-striped shadow">
     <thead class="table-primary">
       <tr>
