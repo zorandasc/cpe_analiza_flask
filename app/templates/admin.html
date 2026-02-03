@@ -50,9 +50,13 @@ block styles %} {{ super() }}
   .sidebar .active {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
     color: white;
+    margin: 2rem auto;
+    width: 200px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
   }
 
   .sidebar .report {
@@ -230,7 +234,8 @@ block styles %} {{ super() }}
         />
       </a>
     </div>
-    <a href="#top" class="active"
+    <div>
+    <a href="{{ url_for('charts.chart_home') }}" class="btn btn-light active"
       >Trendovi
       <img
         src="{{ url_for('static', filename='diagram.png') }}"
@@ -238,135 +243,29 @@ block styles %} {{ super() }}
         class="card-icon custom-icon-sidebar"
       />
     </a>
-    <hr class="text-white" />
-    <a href="{{ url_for('charts.cpe_inventory_charts') }}">CPE oprema </a>
-    <a href="{{ url_for('charts.cpe_dismantle_inventory_charts') }}"
-      >CPE Demontirana oprema</a
-    >
-    <a href="{{ url_for('charts.stb_inventory_charts') }}">STB oprema</a>
-    <a href="{{ url_for('charts.ont_inventory_charts') }}">ONT oprema</a>
-    <hr class="text-white" />
-    <a href="#meadle" class="active"
+   </div>
+    <a href="#meadle" class="btn btn-light active"
       >Glavne Liste
       <img
         src="{{ url_for('static', filename='database.png') }}"
         alt="Icon"
         class="card-icon custom-icon-sidebar"
     /></a>
-    <hr class="text-white" />
-    <a href="{{ url_for('admin.cpe_inventory') }}">CPE Inventori</a>
-    <a href="{{ url_for('admin.cpe_dismantle') }}">CPE Demontirana Inventori</a>
-    <a href="{{ url_for('admin.stb_inventory') }}">STB Inventori</a>
-    <a href="{{ url_for('admin.ont_inventory') }}">ONT Inventori</a>
-    <hr class="text-white" />
-    <a href="#bottom" class="active"
+   
+    <a href="#bottom" class="btn btn-light active"
       >Pomoćne Liste
       <img
         src="{{ url_for('static', filename='rescue.png') }}"
         alt="Icon"
         class="card-icon custom-icon-sidebar"
     /></a>
-    <hr class="text-white" />
-    <a href="{{ url_for('admin.users') }}">Korisnici Aplikacije</a>
-    <a href="{{ url_for('admin.cities') }}">Skladišta</a>
-    <a href="{{ url_for('admin.cpe_types') }}">Modeli CPE opreme</a>
-    <a href="{{ url_for('admin.dismantle_status') }}">Tipovi demontaža</a>
-    <a href="{{ url_for('admin.stb_types') }}">Modeli STB opreme</a>
+    
   </nav>
   <div class="main-content">
     <div class="container-fluid admin-wrapper">
       <h1 class="text-center mb-5 title">Admin Dashboard</h1>
 
-      <h2 id="top" class="h5 admin-title mb-4">Trendovi</h2>
-      <div class="row g-4 mb-5">
-        <div class="col-md-6">
-          <a
-            href="{{ url_for('charts.cpe_inventory_charts') }}"
-            class="dashboard-link"
-          >
-            <div class="card dashboard-card shadow p-3">
-              <div class="card-body text-center">
-                <h4 class="card-title">Trend CPE opreme</h4>
-                <img
-                  src="{{ url_for('static', filename='charts.png') }}"
-                  alt="Icon"
-                  class="card-icon custom-icon"
-                />
-              </div>
-            </div>
-          </a>
-        </div>
-
-        <div class="col-md-6">
-          <a
-            href="{{ url_for('charts.cpe_dismantle_inventory_charts') }}"
-            class="dashboard-link"
-          >
-            <div class="card dashboard-card shadow p-3">
-              <div class="card-body text-center">
-                <h4 class="card-title">Trend Demontirane CPE opreme</h4>
-                <img
-                  src="{{ url_for('static', filename='charts.png') }}"
-                  alt="Icon"
-                  class="card-icon custom-icon"
-                />
-              </div>
-            </div>
-          </a>
-        </div>
-
-        <div class="col-md-6">
-          <a
-            href="{{ url_for('charts.stb_inventory_charts') }}"
-            class="dashboard-link"
-          >
-            <div class="card dashboard-card shadow p-3">
-              <div class="card-body text-center">
-                <h4 class="card-title">Trend STB opreme</h4>
-                <img
-                  src="{{ url_for('static', filename='charts.png') }}"
-                  alt="Icon"
-                  class="card-icon custom-icon"
-                />
-              </div>
-            </div>
-          </a>
-        </div>
-        <div class="col-md-6">
-          <a
-            href="{{ url_for('charts.iptv_inventory_charts') }}"
-            class="dashboard-link"
-          >
-            <div class="card dashboard-card shadow p-3">
-              <div class="card-body text-center">
-                <h4 class="card-title">Trend IPTV korisnika</h4>
-                <img
-                  src="{{ url_for('static', filename='charts.png') }}"
-                  alt="Icon"
-                  class="card-icon custom-icon"
-                />
-              </div>
-            </div>
-          </a>
-        </div>
-        <div class="col-md-6">
-          <a
-            href="{{ url_for('charts.ont_inventory_charts') }}"
-            class="dashboard-link"
-          >
-            <div class="card dashboard-card shadow p-3">
-              <div class="card-body text-center">
-                <h4 class="card-title">Trend ONT opreme</h4>
-                <img
-                  src="{{ url_for('static', filename='charts.png') }}"
-                  alt="Icon"
-                  class="card-icon custom-icon"
-                />
-              </div>
-            </div>
-          </a>
-        </div>
-      </div>
+     
 
       <h2 id="meadle" class="h5 admin-title mb-4">
         Administracija i Upravljanje Glavnim Listama
