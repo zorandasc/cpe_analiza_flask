@@ -239,12 +239,12 @@ block styles %} {{ super() }}
       />
     </a>
     <hr class="text-white" />
-    <a href="{{ url_for('admin.cpe_inventory_charts') }}">CPE oprema </a>
-    <a href="{{ url_for('admin.cpe_dismantle_inventory_charts') }}"
+    <a href="{{ url_for('charts.cpe_inventory_charts') }}">CPE oprema </a>
+    <a href="{{ url_for('charts.cpe_dismantle_inventory_charts') }}"
       >CPE Demontirana oprema</a
     >
-    <a href="{{ url_for('admin.stb_inventory_charts') }}">STB oprema</a>
-    <a href="{{ url_for('admin.ont_inventory_charts') }}">ONT oprema</a>
+    <a href="{{ url_for('charts.stb_inventory_charts') }}">STB oprema</a>
+    <a href="{{ url_for('charts.ont_inventory_charts') }}">ONT oprema</a>
     <hr class="text-white" />
     <a href="#meadle" class="active"
       >Glavne Liste
@@ -281,7 +281,7 @@ block styles %} {{ super() }}
       <div class="row g-4 mb-5">
         <div class="col-md-6">
           <a
-            href="{{ url_for('admin.cpe_inventory_charts') }}"
+            href="{{ url_for('charts.cpe_inventory_charts') }}"
             class="dashboard-link"
           >
             <div class="card dashboard-card shadow p-3">
@@ -299,7 +299,7 @@ block styles %} {{ super() }}
 
         <div class="col-md-6">
           <a
-            href="{{ url_for('admin.cpe_dismantle_inventory_charts') }}"
+            href="{{ url_for('charts.cpe_dismantle_inventory_charts') }}"
             class="dashboard-link"
           >
             <div class="card dashboard-card shadow p-3">
@@ -317,7 +317,7 @@ block styles %} {{ super() }}
 
         <div class="col-md-6">
           <a
-            href="{{ url_for('admin.stb_inventory_charts') }}"
+            href="{{ url_for('charts.stb_inventory_charts') }}"
             class="dashboard-link"
           >
             <div class="card dashboard-card shadow p-3">
@@ -334,7 +334,7 @@ block styles %} {{ super() }}
         </div>
         <div class="col-md-6">
           <a
-            href="{{ url_for('admin.iptv_inventory_charts') }}"
+            href="{{ url_for('charts.iptv_inventory_charts') }}"
             class="dashboard-link"
           >
             <div class="card dashboard-card shadow p-3">
@@ -351,7 +351,7 @@ block styles %} {{ super() }}
         </div>
         <div class="col-md-6">
           <a
-            href="{{ url_for('admin.ont_inventory_charts') }}"
+            href="{{ url_for('charts.ont_inventory_charts') }}"
             class="dashboard-link"
           >
             <div class="card dashboard-card shadow p-3">

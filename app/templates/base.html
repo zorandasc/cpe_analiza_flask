@@ -185,7 +185,15 @@
                 ONT oprema
               </a>
             </li>
-
+              <li class="nav-item">
+              <a
+                class="nav-link {% if request.path == url_for('charts.chart_home') %}active{% endif %}"
+                href="{{ url_for('charts.chart_home') }}"
+                aria-current="page"
+              >
+                Analitika i Trendovi
+              </a>
+            </li>
             {% endif %}
           </ul>
 

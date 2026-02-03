@@ -6,7 +6,7 @@ from app.extensions import db
 from app.utils.dates import get_current_week_friday
 from app.models import ReportSetting, ReportRecipients
 from app.services.email_service import send_email
-from app.services.admin import (
+from app.services.charts import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
     get_stb_inventory_chart_data,

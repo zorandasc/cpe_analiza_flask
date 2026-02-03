@@ -1,0 +1,203 @@
+{% extends "base.html" %} {% block title %}CPE-ANALITIKA{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  .admin-wrapper {
+    margin-top: 4rem;
+  }
+
+  /* Title */
+  .title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    padding-bottom: 5px;
+  }
+
+  .title:before {
+  width: 28px;
+  height: 6px;
+  display: block;
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  margin-left: -14px;
+  background: linear-gradient(to right, #be93c5, #7bc6cc);;
+}
+
+.title:after {
+  width: 400px;
+  height: 2px;
+  display: block;
+  content: "";
+  position: relative;
+  margin-top: 25px;
+  left: 50%;
+  margin-left: -200px;
+  background: linear-gradient(to right, #be93c5, #7bc6cc);;
+}
+
+  /* Dashboard cards (for the top row - larger focus items) */
+  .dashboard-card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: white;
+    height:200px;
+    overflow: hidden;
+  }
+
+  .dashboard-card::before,
+  .side_dashboard-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 10px;
+    width: 100%;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
+  .dashboard-card:hover,
+  .side_dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12),
+      0 0 0 1px rgba(123, 198, 204, 0.35);
+  }
+
+  .dashboard-card .card-title,
+  .side_dashboard-card .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #234a6f;
+  }
+
+  .side_dashboard-card .card-title {
+    font-size: 1.25rem; /* Slightly smaller title for smaller cards */
+  }
+
+  .dashboard-card p,
+  .side_dashboard-card p {
+    color: #6c7a89;
+  }
+
+  /* Link cleanup */
+  .dashboard-link {
+    text-decoration: none;
+  }
+
+  .custom-icon {
+    height: 50px;
+    margin-bottom: 0.5rem;
+  }
+
+  .dashboard-analytics {
+  border: 1px dashed rgba(123, 198, 204, 0.6);
+  background: linear-gradient(
+    to bottom,
+    rgba(123, 198, 204, 0.05),
+    white
+  );
+}
+</style>
+{% endblock %} {% block content%}
+<div class=" py-5">
+  <h1 class="text-center mb-5 title">
+    Analitika i trendovi
+  </h1>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+          <a
+            href="{{ url_for('charts.cpe_inventory_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Trend CPE opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('charts.cpe_dismantle_inventory_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Trend Demontirane CPE opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('charts.stb_inventory_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Trend STB opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('charts.iptv_inventory_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Trend IPTV korisnika</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
+        </div>
+        <div class="col-md-6">
+          <a
+            href="{{ url_for('charts.ont_inventory_charts') }}"
+            class="dashboard-link"
+          >
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Trend ONT opreme</h4>
+                <img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                />
+              </div>
+            </div>
+          </a>
+        </div>
+  </div>
+</div>
+
+{% endblock %}
