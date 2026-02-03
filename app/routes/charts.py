@@ -21,7 +21,7 @@ chart_bp = Blueprint(
 @chart_bp.route("/")
 @login_required
 def chart_home():
-    return render_template("charts/chart_home.html")
+    return render_template("chart_home.html")
 
 ###########################################################
 # ---------------ROUTES FOR GRAPHICAL-------------------------
