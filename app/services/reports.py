@@ -16,7 +16,7 @@ from app.services.charts import (
 
 
 def run_weekly_report_job():
-    # Get settins for sending weekly report
+    # Get settins from db for sending weekly report
     settings = ReportSetting.query.first()
 
     if not settings or not settings.enabled:
@@ -33,8 +33,8 @@ def run_weekly_report_job():
 
     # prevents duplicates
     # safe even if cron restarts
-    # if settings.last_sent_at and settings.last_sent_at.date() == now.date():
-    #    return "Already sent"
+    if settings.last_sent_at and settings.last_sent_at.date() == now.date():
+       return "Already sent"
 
     # FORGE EMAIL TO SEND
     recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
