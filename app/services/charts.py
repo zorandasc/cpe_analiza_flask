@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import timedelta
 from sqlalchemy import func, text
 from app.extensions import db
-from app.models import CpeInventory, CpeTypes, Cities
+from app.models import CpeInventory, CpeDismantle, DismantleTypes, CpeTypes, Cities
 
 
 def build_timeline(start_week, max_week):
@@ -19,30 +19,8 @@ def build_timeline(start_week, max_week):
     return timeline
 
 
-def carry_forward(series):
-    """
-    Fills missing values by carrying last known value forward.
-    """
-    last_value = 0
-    out = []
-
-    for value in series:
-        if value is None:
-            # if value None use last value
-            out.append(last_value)
-        else:
-            # if not continue iteration
-            last_value = value
-            out.append(value)
-    return out
-
-
 # cpe inventory
 def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
-    print("begining")
-    print("city_id", city_id)
-    print("cpe_id", cpe_id)
-    print("cpe_type", cpe_type)
     """
     # 1. Build weekly timeline (Fridays), we want 5 last weeks
     # 2. Fetch sparse snapshot data from DB, data form db can be missing week
@@ -60,7 +38,6 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     ).one()
 
     if not max_week:
-        print("retunr now max_week_end")
         return {"labels": [], "datasets": []}
 
     if weeks:
@@ -193,6 +170,12 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         a conveyor belt; it doesn't show you everything at once, but it’s ready to 
         give you the "next" item when you ask for it.
         The next() function grabs the very first item from that "conveyor belt."
+        1.totals_by_type.values()->dict_values([[180, 180, 200, 200]])
+        2. iter(...) Turns it into an iterator.
+        3. next(...) Returns the first element from it.
+        4. The first element is: [180, 180, 200, 200]
+        # ALERNATIVE: list(totals_by_type.values())[0]
+        # WITH ITER IT IS SAFER VERSION
         """
         values = next(iter(totals_by_type.values()), [])
         return {
@@ -231,163 +214,135 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     }
 
 
-# cpe dismantles
 def get_cpe_dismantle_chart_data(
     city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=None
 ):
-    params = {}
-    conditions = []
+    # ---------------------------------------
+    # 1. Find min, max available week in DB
+    # ---------------------------------------
+    min_week, max_week = db.session.query(
+        func.min(CpeInventory.week_end), func.max(CpeInventory.week_end)
+    ).one()
 
-    base_join = """
-        FROM cpe_dismantle i
-        JOIN cities c ON c.id=i.city_id
-        JOIN cpe_types ct ON ct.id=i.cpe_type_id
-        JOIN dismantle_types dt ON dt.id=i.dismantle_type_id
-        WHERE 1=1
-    """
+    if not max_week:
+        return {"labels": [], "datasets": []}
 
-    conditions.append("ct.visible_in_dismantle= true")
-
-    # ----------------------------
-    # City logic
-    # ----------------------------
-    # filter by city
-    if city_id is None:
-        # IF CITY ID IS NOT SELECTED THAN CALCULATE SUM ON ALL CITIES
-        # BUT EXCLUDE RASPOLOZIVA OPREMA
-        conditions.append("c.include_in_total = true")
+    if weeks:
+        # if week 5 , we need to substract 5*7 days
+        start_week = max_week - timedelta(days=7 * (weeks - 1))
     else:
-        conditions.append("city_id = :city_id")
-        params["city_id"] = city_id
+        start_week = min_week
 
-    if dismantle_type_id is not None:
-        conditions.append("dismantle_type_id = :dismantle_type_id")
-        params["dismantle_type_id"] = dismantle_type_id
+    # continue timeline (fridays) from last week and bellow
+    timeline = build_timeline(start_week, max_week)
 
-    # ----------------------------
-    # Weeks
-    # ----------------------------
-    if weeks:  # filter by weeks
-        conditions.append("""
-            i.week_end IN (
-                SELECT DISTINCT week_end
-                FROM cpe_dismantle
-                ORDER BY week_end DESC
-                LIMIT :weeks
-            )
-        """)
-        params["weeks"] = weeks
+    # ---------------------------------------
+    # 2. Base query (sparse snapshots) on some week_end ther is no data
+    # ---------------------------------------
+    q = (
+        db.session.query(
+            CpeDismantle.city_id,
+            CpeDismantle.week_end,
+            CpeDismantle.cpe_type_id,
+            CpeTypes.type,
+            CpeDismantle.quantity,
+        )
+        .join(CpeTypes, CpeTypes.id == CpeDismantle.cpe_type_id)
+        .join(Cities, Cities.id == CpeDismantle.city_id)
+        .join(DismantleTypes, DismantleTypes.id == CpeDismantle.dismantle_type_id)
+        .filter(CpeDismantle.week_end >= start_week, CpeDismantle.week_end <= max_week)
+        .filter(CpeTypes.visible_in_dismantle)
+    )
 
-    where_clause = ""
-    if conditions:
-        where_clause = " AND " + " AND ".join(conditions)
+    if city_id:
+        q = q.filter(Cities.id == city_id)
+    else:
+        # Totat sum by all cities but Without Raspoloziva oprema
+        q = q.filter(Cities.include_in_total)
 
-    # ======================================================
-    # 🔵  specific CPE selected
-    # ======================================================
+    if cpe_id:
+        q = q.filter(CpeDismantle.cpe_type_id == cpe_id)
 
-    # one CPE selected → single dataset
-    if cpe_id is not None:
-        sql = f"""
-            SELECT
-                i.week_end,
-                SUM(i.quantity) AS total
-            {base_join}
-            {where_clause}
-            AND i.cpe_type_id=:cpe_id
-            GROUP BY i.week_end
-            ORDER BY i.week_end
-        """
-        params["cpe_id"] = cpe_id
-        rows = db.session.execute(text(sql), params).fetchall()
+    if cpe_type:
+        q = q.filter(CpeTypes.type == cpe_type)
 
+    if dismantle_type_id:
+        q = q.filter(DismantleTypes.id == dismantle_type_id)
+
+    rows = q.all()
+
+    if not rows:
+        return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
+
+    # ---------------------------------------
+    # 3. Rebuild weekly state per city/type, group data
+    # --------------------------------------
+    # create empty state
+    state = defaultdict(lambda: defaultdict(dict))
+
+    # fill the state
+    for city_id_, week_end, cpe_type_id_, type_key, qty in rows:
+        state[city_id_][type_key][week_end] = qty
+
+    # ---------------------------------------
+    # 4. Aggregate into chart datasets
+    # ---------------------------------------
+    # koliko ima timedelti toliko napravi praznih slotova
+    totals_by_type = defaultdict(lambda: [0] * len(timeline))
+
+    # fill totals_by_type using carry forward
+    for city_data in state.values():
+        for type_key, week_map in city_data.items():
+            last = 0
+
+            # for every date (w) in timeline
+            for i, w in enumerate(timeline):
+                # check if that date exisist in week_map
+                if w in week_map:
+                    # if yes take his quantity, continue
+                    last = week_map[w]
+                # if no quantity for this timeslot is last value
+                totals_by_type[type_key][i] += last
+
+    # ---------------------------------------
+    # 5. Format output per mode
+    # ---------------------------------------
+    # MODE 1 — single device
+    if cpe_id:
+        values = next(iter(totals_by_type.values()), [])
         return {
-            "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-            "datasets": [{"label": "Total", "data": [r.total for r in rows]}],
+            "labels": [w.strftime("%d-%m-%Y") for w in timeline],
+            "datasets": [{"label": "Total", "data": values}],
         }
 
-    # ======================================================
-    # 🟡 specific CPE TYPE selected
-    # ======================================================
-    if cpe_type is not None:
-        sql = f"""
-            SELECT
-                i.week_end,
-                SUM(i.quantity) AS total
-            {base_join}
-            {where_clause}
-            AND ct.type=CAST(:cpe_type AS cpe_type_enum)
-            GROUP BY i.week_end
-            ORDER BY i.week_end
-        """
-        params["cpe_type"] = cpe_type
-        rows = db.session.execute(text(sql), params).fetchall()
+    # MODE 2 — single type
+    if cpe_type:
+        values = totals_by_type.get(cpe_type, [])
 
-        # get also device list under that type to show in template
-        # from cpe_types table but only if active under dismantle
-        devices_sql = """
-            SELECT DISTINCT ct.name, ct.label
-            FROM cpe_types ct
-            WHERE ct.type=CAST(:cpe_type AS cpe_type_enum)
-            AND ct.visible_in_dismantle = true
-            ORDER BY ct.name
-        """
-        devices = db.session.execute(
-            text(devices_sql), {"cpe_type": cpe_type}
-        ).fetchall()
+        devices = (
+            db.session.query(CpeTypes.name, CpeTypes.label)
+            .filter(CpeTypes.type == cpe_type, CpeTypes.visible_in_dismantle)
+            .distinct()
+            .order_by(CpeTypes.name)
+            .all()
+        )
 
+        # Flatten the list of Row objects into a list of strings
         devices = [cpe.label for cpe in devices]
 
         return {
-            "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-            "datasets": [
-                {"label": f"Ukupno ({cpe_type})", "data": [r.total for r in rows]}
-            ],
+            "labels": [w.strftime("%d-%m-%Y") for w in timeline],
+            "datasets": [{"label": f"Ukupno ({cpe_type})", "data": values}],
             "devices": devices,
             "mode": "type-total",
         }
-    # ======================================================
-    # 🟢 nothing selected → GROUP BY ALL TYPE
-    # ======================================================
-    sql = f"""
-        SELECT 
-            i.week_end,
-            ct.type,
-            SUM(i.quantity) AS total
-        {base_join}
-        {where_clause}
-        GROUP BY i.week_end, ct.type
-        ORDER BY i.week_end
-    """
-    rows = db.session.execute(text(sql), params).fetchall()
 
-    # ------------------------
-    # Pivot for Chart.js
-    # ------------------------
-    # when we have mutiple datatsets we need this:
-    # This line is a very efficient "Pythonic" way to perform three tasks at once:
-    # extracting, de-duplicating, and ordering your data.
-    labels = sorted({r.week_end for r in rows})
-
-    datasets_dict = {}
-    for r in rows:
-        # setdefault checks if r.cpe_name exists. If it doesn't, it creates
-        datasets_dict.setdefault(r.type, {lab: 0 for lab in labels})
-        ## {"CPE_NAME", [DATE1:0, DATE2:0,...]}
-        ## update its value from 0 to the actual total
-        datasets_dict[r.type][r.week_end] = r.total
-    #'Router_A': {'Jan 1': 10, 'Jan 8': 0, 'Jan 15': 5},
-
-    chart_datasets = []
-    for cpe_type, values in datasets_dict.items():
-        chart_datasets.append(
-            {"label": cpe_type, "data": [values[lab] for lab in labels]}
-        )
-    # {"label": "CPE Router","data": [120, 140, 160] },
+    # MODE 3 — all types
+    datasets = [{"label": k, "data": v} for k, v in totals_by_type.items()]
 
     return {
-        "labels": [lab.strftime("%d-%m-%Y") for lab in labels],
-        "datasets": chart_datasets,
+        "labels": [w.strftime("%d-%m-%Y") for w in timeline],
+        "datasets": datasets,
     }
 
 

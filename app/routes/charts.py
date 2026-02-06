@@ -139,7 +139,7 @@ def cpe_inventory_charts():
     if raw_cpe_type:
         try:
             selected_cpe_type = CpeTypeEnum(raw_cpe_type)
-          
+
         except ValueError:
             selected_cpe_type = None
     else:
@@ -223,7 +223,16 @@ def cpe_dismantle_inventory_charts():
 
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
-    selected_cpe_type = request.args.get("cpe_type", type=str)
+    raw_cpe_type = request.args.get("cpe_type", type=str)
+
+    if raw_cpe_type:
+        try:
+            selected_cpe_type = CpeTypeEnum(raw_cpe_type)
+
+        except ValueError:
+            selected_cpe_type = None
+    else:
+        selected_cpe_type = None
 
     # convert empty string ""  →  None
     if not selected_cpe_type:
