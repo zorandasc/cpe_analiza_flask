@@ -1904,10 +1904,9 @@ MAIL_USERNAME = None
 MAIL_PASSWORD = None
 DEFAULT_FROM_EMAIL = "noreply@company.ba"
 
-
 # CONFIG FOR MAIL FOR GMAIL
 
-	MAIL_SERVER = "smtp.gmail.com"
+    MAIL_SERVER = "smtp.gmail.com"
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = "zorand666@gmail.com"
@@ -1916,9 +1915,35 @@ DEFAULT_FROM_EMAIL = "noreply@company.ba"
 
 # CONFIG MAIL FOR WEBMAIL
 
-	MAIL_SERVER = "smtp.teol.net"
+    MAIL_SERVER = "smtp.teol.net"
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = r"IN\Zoran.Dasic@mtel.ba"
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
     MAIL_DEFAULT_SENDER = r"IN\Zoran.Dasic@mtel.ba"
+
+# when we have mutiple datatsets we need this:
+
+    # This line is a very efficient "Pythonic" way to perform three tasks at once:
+    # extracting, de-duplicating, and ordering your data.
+    # The Set Comprehension: {r.week_end for r in rows}
+    # a set automatically enforces uniqueness.
+    # The sorted() function takes the unique dates puts them in ascendin
+    # By the end of the line, labels is a List (because sorted() always returns a list) that
+    # contains every unique date found in your data, perfectly ordered from earliest to latest.
+
+```python
+	labels = sorted({r.week_end for r in rows})
+```
+
+# Think in layers:
+
+Browser / HTML → Route (sanitize/convert) → Service (business logic) → DB
+
+# 🧠 Mental model you can keep forever
+
+Inventory table = event log
+Python = snapshot builder
+Charts = aggregation of snapshots
+
+Once you think this way — everything is easy.

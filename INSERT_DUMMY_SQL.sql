@@ -249,7 +249,7 @@ FROM
                 DATE_TRUNC('week', NOW()) + INTERVAL '4 days' - (W || ' weeks')::INTERVAL
             )::DATE AS FRIDAY_DATE
         FROM
-            GENERATE_SERIES(0, 79) AS W
+            GENERATE_SERIES(1, 79) AS W
     ) AS F;
 
 

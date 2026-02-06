@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required
 from app.utils.schemas import get_cpe_types_column_schema
-from app.models import CityTypeEnum
+from app.models import CityTypeEnum, CpeTypeEnum
 from app.services.charts import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
@@ -15,13 +15,15 @@ from app.services.charts import (
 chart_bp = Blueprint(
     "charts",
     __name__,
-     url_prefix="/charts",
+    url_prefix="/charts",
 )
+
 
 @chart_bp.route("/")
 @login_required
 def chart_home():
     return render_template("chart_home.html")
+
 
 ###########################################################
 # ---------------ROUTES FOR GRAPHICAL-------------------------
@@ -132,7 +134,16 @@ def ont_inventory_charts():
 def cpe_inventory_charts():
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
-    selected_cpe_type = request.args.get("cpe_type", type=str)
+    raw_cpe_type = request.args.get("cpe_type", type=str)
+
+    if raw_cpe_type:
+        try:
+            selected_cpe_type = CpeTypeEnum(raw_cpe_type)
+          
+        except ValueError:
+            selected_cpe_type = None
+    else:
+        selected_cpe_type = None
 
     # convert empty string ""  →  None
     if not selected_cpe_type:
