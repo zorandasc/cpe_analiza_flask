@@ -217,19 +217,16 @@ def generate_pdf():
     )
 
     significant_changes += get_significant_changes(
-        datasets=cpe_data_warehouse["datasets"], source="Raspoloživa CPE Oprema"
+        datasets=cpe_data_warehouse["datasets"], source="CPE Oprema raspoloživa"
     )
 
     significant_changes += get_significant_changes(
         datasets=cpe_dismantle_data_total["datasets"],
-        source="Demontirana CPE oprema",
+        source="CPE oprema demontirana",
     )
-
 
     grouped_changes = group_changes_by_source(significant_changes)
 
-
-    # ADD TO DATA LIST TO ADD TO PDF
     data["significant_changes"] = grouped_changes
 
     # ----------------------------------------------
