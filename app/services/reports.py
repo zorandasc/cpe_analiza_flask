@@ -34,7 +34,7 @@ def run_weekly_report_job():
     # prevents duplicates
     # safe even if cron restarts
     if settings.last_sent_at and settings.last_sent_at.date() == now.date():
-       return "Already sent"
+        return "Already sent"
 
     # FORGE EMAIL TO SEND
     recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
@@ -129,42 +129,48 @@ def generate_pdf():
     ont_data_total = get_ont_inventory_chart_data(city_id=None, months=5)
 
     # ----------------------------------------------
-    # SUMMARY SECTION
+    # SUMMARY SECTION IN PDF REPORT
     # -------------------------------------------------
 
-    # summary for cpe
+    # total fo current week in cpe
     cpe_current_total = sum(row["data"][-2] for row in cpe_data_total["datasets"])
 
+    # total for previus week in cpe
     cpe_previous_total = sum(row["data"][-1] for row in cpe_data_total["datasets"])
 
+    # raspoloziva oprema for current week in cpe
     cpe_current_warehouse = sum(
         row["data"][-2] for row in cpe_data_warehouse["datasets"]
     )
 
+    # raspoloziva oprema for previus week in cpe
     cpe_previous_warehouse = sum(
         row["data"][-1] for row in cpe_data_warehouse["datasets"]
     )
 
-    # summary for dismantle
+    # total for current week in cpe dismantle
     dismantle_current_total = sum(
         row["data"][-1] for row in cpe_dismantle_data_total["datasets"]
     )
+
+    # total for previus week in cpe dismantle
     dismantle_previous_total = sum(
         row["data"][-2] for row in cpe_dismantle_data_total["datasets"]
     )
 
-    # summary for stb
+    # total for current and previus week for stb inventory
     stb_current_total = sum(row["data"][-1] for row in stb_data_total["datasets"])
     stb_previous_total = sum(row["data"][-2] for row in stb_data_total["datasets"])
 
-    # summary for iptv
+    # total for current and previus week for iptv users inventory
     iptv_current_total = sum(row["data"][-1] for row in iptv_data_total["datasets"])
     iptv_previous_total = sum(row["data"][-2] for row in iptv_data_total["datasets"])
 
-    # summary for ont
+    # total for current and previus week for ont inventory
     ont_current_total = sum(row["data"][-1] for row in ont_data_total["datasets"])
     ont_previous_total = sum(row["data"][-2] for row in ont_data_total["datasets"])
 
+    # ADD TO DATA LIST TO ADD TO PDF
     data["summary"] = {
         "cpe": {
             "total": {
@@ -200,6 +206,10 @@ def generate_pdf():
         },
     }
 
+    # ----------------------------------------------
+    # SIGNIFICANT CHANGES SECTION IN PDF REPORT
+    # -------------------------------------------------
+
     significant_changes = []
 
     significant_changes += get_significant_changes(
@@ -215,17 +225,24 @@ def generate_pdf():
         source="Demontirana CPE oprema",
     )
 
+
     grouped_changes = group_changes_by_source(significant_changes)
 
+
+    # ADD TO DATA LIST TO ADD TO PDF
     data["significant_changes"] = grouped_changes
 
     # ----------------------------------------------
-    # CHART SECTION
+    # CHART SECTION IN PDF REPORT
     # -------------------------------------------------
-    # "cpe_chart_image" will be referenced in html template by img
-    # build_report_char() will: build chart, save it as png and
-    # return path to that saved image:
+
+    # build_report_char() will:
+    # 1. build chart,
+    # 2. save it as png and
+    # 3. return path to that saved image:
     # "cpe_chart_image": "static/reports/charts/cpe_trend.png",
+
+    # "cpe_chart_image" will be referenced in html template by img HTML TAG
     data["cpe_chart_image"] = build_report_chart(
         chart_data=cpe_data_total,
         output_filename="cpe_trend.png",
@@ -260,6 +277,9 @@ def generate_pdf():
         title="Trend ukupne ONT opreme u radu po svim IJ (Zadnjih 5 mijeseci)",
     )
 
+    # ----------------------------------------------
+    # BUILD PDF FILE REPORT AND RETURN PATH TO CALLER
+    # -------------------------------------------------
     # for key, value in data.items():
     #    print(f"{key}: {value}")
 
@@ -279,19 +299,38 @@ def generate_pdf():
     with open(output_path, "wb") as f:
         f.write(pdf)
 
-    # RETRUN PATH TO SAVED PDF
+    # RETRUN PATH OF SAVED PDF
     return output_path
 
 
 # ---------------
 # HELPER FUNCTION FOR GENERATING PDF FILE
 # --------------------
-# using matplotlib to generate headless charts and save it as png to path
-def generate_chart_image(title, labels, datasets, output_path):
-    # On servers (Linux, Docker, RunPod, etc.) you MUST force a non-GUI backend.
-    # Otherwise your app will crash in headless environments.
+
+
+def build_report_chart(chart_data, output_filename, title):
+    """
+    # build_report_char() will:
+    1. build chart,
+    2. save it as png
+    3. and return path of saved plot image:
+    """
+
+    title = title
+    labels = chart_data["labels"]
+    datasets = chart_data["datasets"]
+    # 2. Define path where chart image will be save
+    output_path = os.path.join(
+        current_app.root_path,
+        "static/reports/charts",
+        output_filename,
+    )
+
+    # Lazy Load this heavy library matplotlib
     import matplotlib
 
+    # On servers (Linux, Docker, RunPod, etc.) you MUST force a non-GUI backend.
+    # Otherwise your app will crash in headless environments.
     matplotlib.use("Agg")
 
     # Lazy Load this heavy library matplotlib
@@ -312,29 +351,6 @@ def generate_chart_image(title, labels, datasets, output_path):
     plt.savefig(output_path, dpi=150)
     plt.close()
 
-
-# build_report_char() will: build chart, save it as png and
-# return path to that saved image:
-def build_report_chart(chart_data, output_filename, title):
-    # 1. Get chart data. chart_data holds labels and datasets
-    # (**) Used to unpack a dictionary into keyword arguments
-    # chart_data = chart_data_fn(**(chart_kwargs or {}))
-
-    # 2. Define path where chart image will be save
-    output_path = os.path.join(
-        current_app.root_path,
-        "static/reports/charts",
-        output_filename,
-    )
-
-    # 3. Rendered chart_data as chart using matplotlib and than save the chart as png to path
-    generate_chart_image(
-        title=title,
-        labels=chart_data["labels"],
-        datasets=chart_data["datasets"],
-        output_path=output_path,
-    )
-
     # return path of saved chart image
     return f"static/reports/charts/{output_filename}"
 
@@ -342,7 +358,7 @@ def build_report_chart(chart_data, output_filename, title):
 def get_significant_changes(
     datasets,
     source,
-    threshold=1000,
+    threshold=100,
 ):
     changes = []
     for ds in datasets:
