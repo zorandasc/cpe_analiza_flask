@@ -232,6 +232,7 @@ block styles %} {{ super() }}
         />
       </a>
     </div>
+    <!--
     <div>
     <a href="{{ url_for('charts.chart_home') }}" class="btn btn-light active"
       >Trendovi
@@ -242,6 +243,7 @@ block styles %} {{ super() }}
       />
     </a>
    </div>
+   -->
     <a href="#meadle" class="btn btn-light active"
       >Glavne Liste
       <img
@@ -352,7 +354,7 @@ block styles %} {{ super() }}
           </a>
         </div>
 
-        <div class="col-md-3 col-sm-6">
+        <div class="col-md-4 col-sm-6">
           <a
             href="{{ url_for('admin.dismantle_status') }}"
             class="dashboard-link"
