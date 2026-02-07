@@ -1947,3 +1947,11 @@ Python = snapshot builder
 Charts = aggregation of snapshots
 
 Once you think this way — everything is easy.
+
+# carry forward
+
+You only need carry-forward when your table stores sparse changes instead of full state.
+
+Your cpe_inventory table is an event log → needed reconstruction.
+
+Your stb_inventory table (as you described) is a weekly snapshot → no reconstruction needed.

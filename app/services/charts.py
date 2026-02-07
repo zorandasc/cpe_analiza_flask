@@ -392,7 +392,7 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
     }
 
 
-# iptv users charts
+# iptv users charts (Snapshot tables)
 def get_iptv_inventory_chart_data(weeks=None):
     params = {}
     if weeks:
