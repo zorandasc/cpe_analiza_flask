@@ -110,6 +110,7 @@ def generate_pdf():
     # ----------------------------------------------
     # PULL DATA TO RENDER SUMMARY AND CHARTS
     # -------------------------------------------------
+    # TO DO 
     cpe_data_total = get_cpe_inventory_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, weeks=5
     )
@@ -183,11 +184,11 @@ def generate_pdf():
                 "previous": cpe_previous_warehouse,
                 "delta": cpe_current_warehouse - cpe_previous_warehouse,
             },
-        },
-        "dismantle": {
-            "current": dismantle_current_total,
-            "previous": dismantle_previous_total,
-            "delta": dismantle_current_total - dismantle_previous_total,
+            "dismantle": {
+                "current": dismantle_current_total,
+                "previous": dismantle_previous_total,
+                "delta": dismantle_current_total - dismantle_previous_total,
+            },
         },
         "stb": {
             "current": stb_current_total,
@@ -243,21 +244,21 @@ def generate_pdf():
     data["cpe_chart_image"] = build_report_chart(
         chart_data=cpe_data_total,
         output_filename="cpe_trend.png",
-        title="Trend ukupne CPE opreme u radu po svim IJ I skladištima (Zadnjih 5 sedmica)",
+        title="Trend ukupne CPE opreme po tipu (Zadnjih 5 sedmica)",
     )
 
     # "cpe_dismantle_chart_image": "static/reports/charts/cpe_dismantle_trend.png",
     data["cpe_dismantle_chart_image"] = build_report_chart(
         chart_data=cpe_dismantle_data_total,
         output_filename="cpe_dismantle_trend.png",
-        title="Trend ukupne demontirane CPE opreme po svim IJ (Zadnjih 5 sedmica)",
+        title="Trend ukupne demontirane CPE opreme po tipu (Zadnjih 5 sedmica)",
     )
 
     # "stb_chart_image"": "static/reports/charts/stb_chart_image"",
     data["stb_chart_image"] = build_report_chart(
         chart_data=stb_data_total,
         output_filename="stb_trend.png",
-        title="Trend ukupne STB opreme u radu, IPTV platforma (Zadnjih 5 sedmica)",
+        title="Trend ukupne STB opreme, IPTV platforma (Zadnjih 5 sedmica)",
     )
 
     # "iptv_chart_image": "static/reports/charts/iptv_trend.png",
@@ -271,7 +272,7 @@ def generate_pdf():
     data["ont_chart_image"] = build_report_chart(
         chart_data=ont_data_total,
         output_filename="ont_trend.png",
-        title="Trend ukupne ONT opreme u radu po svim IJ (Zadnjih 5 mijeseci)",
+        title="Trend ukupne ONT opreme, pristupn GPON mreža (Zadnjih 5 mijeseci)",
     )
 
     # ----------------------------------------------

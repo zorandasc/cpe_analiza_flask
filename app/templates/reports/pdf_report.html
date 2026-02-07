@@ -77,10 +77,10 @@
 
           <tr>
             <td>CPE oprema demontirana</td>
-            <td>{{ summary.dismantle.previous }}</td>
-            <td>{{ summary.dismantle.current }}</td>
-            <td class="{{ 'pos' if summary.dismantle.delta > 0 else 'neg' }}">
-              {{ summary.dismantle.delta }}
+            <td>{{ summary.cpe.dismantle.previous }}</td>
+            <td>{{ summary.cpe.dismantle.current }}</td>
+            <td class="{{ 'pos' if summary.cpe.dismantle.delta > 0 else 'neg' }}">
+              {{ summary.cpe.dismantle.delta }}
             </td>
           </tr>
         </tbody>
