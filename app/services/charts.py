@@ -19,7 +19,8 @@ def build_timeline(start_week, max_week):
     return timeline
 
 
-# cpe inventory
+# cpe inventory (Event/state-change tables)
+# You only need carry-forward when your table stores sparse changes instead of full state.
 def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
     """
     # 1. Build weekly timeline (Fridays), we want 5 last weeks
@@ -214,6 +215,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     }
 
 
+# cpe dismantle (Event/state-change tables)
+# You only need carry-forward when your table stores sparse changes instead of full state.
 def get_cpe_dismantle_chart_data(
     city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=None
 ):
@@ -346,7 +349,7 @@ def get_cpe_dismantle_chart_data(
     }
 
 
-# stb inventory
+# stb inventory (Snapshot tables)
 def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
     params = {}
 
@@ -423,7 +426,7 @@ def get_iptv_inventory_chart_data(weeks=None):
     }
 
 
-# ont inventory
+# ont inventory (Snapshot tables)
 def get_ont_inventory_chart_data(city_id=None, months=None):
     params = {}
 
