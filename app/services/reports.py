@@ -333,7 +333,7 @@ def build_report_chart(chart_data, output_filename, title):
 
     plt.figure(figsize=(10, 6))
     plt.title(title)
-    plt.xlabel("Sedmica")
+    plt.xlabel("")
     plt.ylabel("Količina")
 
     for dataset in datasets:
