@@ -48,56 +48,85 @@
       <table class="summary-table">
         <thead>
           <tr>
-            <th>Tip</th>
+            <th>CPE oprema skladišta i IJ</th>
             <th>Prošla sedmica</th>
             <th>Ova sedmica</th>
             <th>Promjena</th>
           </tr>
         </thead>
         <tbody>
+        {% for label, vals in summary.cpetotal.items() %}
           <tr>
-            <td>CPE oprema u radu</td>
-            <td>{{ summary.cpe.total.previous }}</td>
-            <td>{{ summary.cpe.total.current }}</td>
-            <td class="{{ 'pos' if summary.cpe.total.delta > 0 else 'neg' }}">
-              {{ summary.cpe.total.delta }}
+            <td>{{label}}</td>
+            <td>{{ vals.previous }}</td>
+            <td>{{ vals.current }}</td>
+            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+              {{ vals.difference }}
             </td>
           </tr>
-
-          <tr>
-            <td>CPE oprema raspoloživa</td>
-            <td>{{ summary.cpe.warehouse.previous }}</td>
-            <td>{{ summary.cpe.warehouse.current }}</td>
-            <td
-              class="{{ 'pos' if summary.cpe.warehouse.delta > 0 else 'neg' }}"
-            >
-              {{ summary.cpe.warehouse.delta }}
-            </td>
-          </tr>
-
-          <tr>
-            <td>CPE oprema demontirana</td>
-            <td>{{ summary.cpe.dismantle.previous }}</td>
-            <td>{{ summary.cpe.dismantle.current }}</td>
-            <td class="{{ 'pos' if summary.cpe.dismantle.delta > 0 else 'neg' }}">
-              {{ summary.cpe.dismantle.delta }}
-            </td>
-          </tr>
+          {% endfor %}
         </tbody>
       </table>
 
       <table class="summary-table">
         <thead>
           <tr>
-            <th>Tip</th>
+            <th>CPE raspoloživa oprema</th>
             <th>Prošla sedmica</th>
             <th>Ova sedmica</th>
             <th>Promjena</th>
           </tr>
         </thead>
         <tbody>
+        {% for label, vals in summary.cpedismantle.items() %}
           <tr>
-            <td>STB IPTV ukupno</td>
+            <td>{{label}}</td>
+            <td>{{ vals.previous }}</td>
+            <td>{{ vals.current }}</td>
+            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+              {{ vals.difference }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>CPE demontirana oprema IJ</th>
+            <th>Prošla sedmica</th>
+            <th>Ova sedmica</th>
+            <th>Promjena</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for label, vals in summary.cpetotal.items() %}
+          <tr>
+            <td>{{label}}</td>
+            <td>{{ vals.previous }}</td>
+            <td>{{ vals.current }}</td>
+            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+              {{ vals.difference }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>IPTV platforma</th>
+            <th>Prošla sedmica</th>
+            <th>Ova sedmica</th>
+            <th>Promjena</th>
+          </tr>
+        </thead>
+        <tbody>
+        
+          <tr>
+            <td>STB</td>
             <td>{{ summary.stb.previous }}</td>
             <td>{{ summary.stb.current }}</td>
             <td class="{{ 'pos' if summary.stb.delta > 0 else 'neg' }}">
@@ -106,7 +135,7 @@
           </tr>
 
           <tr>
-            <td>IPTV korisnici ukupno</td>
+            <td>IPTV korisnici</td>
             <td>{{ summary.iptv.previous }}</td>
             <td>{{ summary.iptv.current }}</td>
             <td class="{{ 'pos' if summary.iptv.delta > 0 else 'neg' }}">
@@ -119,7 +148,7 @@
       <table class="summary-table">
         <thead>
           <tr>
-            <th>Tip</th>
+            <th>GPON pristupna mreža</th>
             <th>Prošli mijesec</th>
             <th>Ovaj mijesec</th>
             <th>Promjena</th>

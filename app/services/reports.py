@@ -110,7 +110,7 @@ def generate_pdf():
     # ----------------------------------------------
     # PULL DATA TO RENDER SUMMARY AND CHARTS
     # -------------------------------------------------
- 
+
     cpe_total = get_cpe_inventory_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, weeks=5
     )
@@ -132,32 +132,21 @@ def generate_pdf():
     # ----------------------------------------------
     # SUMMARY SECTION IN PDF REPORT
     # ------------------------------------------------
+    target_labels = ["IAD", "STB", "ONT"]
 
-    # total for current week in cpe
-    cpe_current = sum(row["data"][-2] for row in cpe_total["datasets"])
-
-    # total for previus week in cpe
-    cpe_previous = sum(row["data"][-1] for row in cpe_total["datasets"])
-
-    # raspoloziva oprema for current week in cpe
-    cpe_warehouse_current = sum(
-        row["data"][-2] for row in cpe_warehouse_total["datasets"]
+    cpe_total_summary = extract_current_previous_diff(
+        cpe_total["datasets"], target_labels
     )
 
-    # raspoloziva oprema for previus week in cpe
-    cpe_warehouse_previous = sum(
-        row["data"][-1] for row in cpe_warehouse_total["datasets"]
+    cpe_warehouse_summary = extract_current_previous_diff(
+        cpe_warehouse_total["datasets"], target_labels
     )
 
-    # total for current week in cpe dismantle
-    cpe_dismantle_current = sum(
-        row["data"][-1] for row in cpe_dismantle_total["datasets"]
+    cpe_dismantle_summary = extract_current_previous_diff(
+        cpe_dismantle_total["datasets"], target_labels
     )
 
-    # total for previus week in cpe dismantle
-    cpe_dismantle_previous = sum(
-        row["data"][-2] for row in cpe_dismantle_total["datasets"]
-    )
+    #stb_summary=extract_current_previous_diff(stb_total["datasets"],["STB Uređaji"])
 
     # total for current and previus week for stb inventory
     stb_current = sum(row["data"][-1] for row in stb_total["datasets"])
@@ -173,23 +162,9 @@ def generate_pdf():
 
     # ADD TO DATA LIST TO ADD TO PDF
     data["summary"] = {
-        "cpe": {
-            "total": {
-                "current": cpe_current,
-                "previous": cpe_previous,
-                "delta": cpe_current - cpe_previous,
-            },
-            "warehouse": {
-                "current": cpe_warehouse_current,
-                "previous": cpe_warehouse_previous,
-                "delta": cpe_warehouse_current - cpe_warehouse_previous,
-            },
-            "dismantle": {
-                "current": cpe_dismantle_current,
-                "previous": cpe_dismantle_previous,
-                "delta": cpe_dismantle_current - cpe_dismantle_previous,
-            },
-        },
+        "cpetotal": cpe_total_summary,
+        "cpewarehouse": cpe_warehouse_summary,
+        "cpedismantle": cpe_dismantle_summary,
         "stb": {
             "current": stb_current,
             "previous": stb_previous,
@@ -304,10 +279,12 @@ def generate_pdf():
 # ---------------
 # HELPER FUNCTION FOR GENERATING PDF FILE
 # --------------------
-def extract_data_for_cpe_types(datasets: list, target_labels: list):
+def extract_current_previous_diff(datasets: list, target_labels: list):
     """
-    Extract current, previous and difference for CPE types
+    Extract current, previous and difference for CPE types from datatsets
+
     datasets: [{'label': <CpeTypeEnum.IAD: 'IAD'>, 'data': [2709, 3184, 3215, 2995, 2995]}...]
+
     target_labels:
     """
     extracted_stats = {}
