@@ -124,24 +124,26 @@
           </tr>
         </thead>
         <tbody>
-        
+         {% for label, vals in summary.stb.items() %}
           <tr>
-            <td>STB</td>
-            <td>{{ summary.stb.previous }}</td>
-            <td>{{ summary.stb.current }}</td>
-            <td class="{{ 'pos' if summary.stb.delta > 0 else 'neg' }}">
-              {{ summary.stb.delta }}
+            <td>{{label}}</td>
+            <td>{{ vals.previous }}</td>
+            <td>{{ vals.current }}</td>
+            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+              {{ vals.difference }}
             </td>
           </tr>
-
-          <tr>
-            <td>IPTV korisnici</td>
-            <td>{{ summary.iptv.previous }}</td>
-            <td>{{ summary.iptv.current }}</td>
-            <td class="{{ 'pos' if summary.iptv.delta > 0 else 'neg' }}">
-              {{ summary.iptv.delta }}
-            </td>
-          </tr>
+           {% endfor %}
+           {% for label, vals in summary.iptv.items() %}
+            <tr>
+                <td>{{label}}</td>
+                <td>{{ vals.previous }}</td>
+                <td>{{ vals.current }}</td>
+                <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+                  {{ vals.difference }}
+                </td>
+              </tr>
+           {% endfor %}
         </tbody>
       </table>
 
@@ -155,14 +157,16 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>ONT oprema ukupno</td>
-            <td>{{ summary.ont.previous }}</td>
-            <td>{{ summary.ont.current }}</td>
-            <td class="{{ 'pos' if summary.ont.delta > 0 else 'neg' }}">
-              {{ summary.ont.delta }}
-            </td>
-          </tr>
+        {% for label, vals in summary.ont.items() %}
+             <tr>
+                <td>{{label}}</td>
+                <td>{{ vals.previous }}</td>
+                <td>{{ vals.current }}</td>
+                <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+                  {{ vals.difference }}
+                </td>
+              </tr>
+           {% endfor %}
         </tbody>
       </table>
       <h2>Značajne promjene (promjena veća od 1000 jedinica)</h2>

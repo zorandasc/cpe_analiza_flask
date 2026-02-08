@@ -4,7 +4,7 @@ from collections import defaultdict
 from flask import render_template, current_app
 from app.extensions import db
 from app.utils.dates import get_current_week_friday
-from app.models import ReportSetting, ReportRecipients
+from app.models import ReportSetting, ReportRecipients, CpeTypeEnum
 from app.services.email_service import send_email
 from app.services.charts import (
     get_cpe_inventory_chart_data,
@@ -111,28 +111,34 @@ def generate_pdf():
     # PULL DATA TO RENDER SUMMARY AND CHARTS
     # -------------------------------------------------
 
+    # ALL CPE TYPES FOR 5 WEEKS
     cpe_total = get_cpe_inventory_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, weeks=5
     )
 
+    # ALL CPE TYPES FOR 5 WEEKS
     cpe_warehouse_total = get_cpe_inventory_chart_data(
         city_id=13, cpe_id=None, cpe_type=None, weeks=5
     )
 
+    # ALL CPE TYPES FOR 5 WEEKS
     cpe_dismantle_total = get_cpe_dismantle_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=5
     )
 
+    # ALL STB TYPES FOR 5 WEEKS
     stb_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=5)
 
+    # ALL DATA FOR 5 WEEKS
     iptv_total = get_iptv_inventory_chart_data(weeks=5)
 
+    # ALL DATA FOR 5 WEEKS
     ont_total = get_ont_inventory_chart_data(city_id=None, months=5)
 
     # ----------------------------------------------
-    # SUMMARY SECTION IN PDF REPORT
+    # SUMMARY SECTION (LAST 2 WEEKS) IN PDF REPORT
     # ------------------------------------------------
-    target_labels = ["IAD", "STB", "ONT"]
+    target_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
 
     cpe_total_summary = extract_current_previous_diff(
         cpe_total["datasets"], target_labels
@@ -146,40 +152,22 @@ def generate_pdf():
         cpe_dismantle_total["datasets"], target_labels
     )
 
-    #stb_summary=extract_current_previous_diff(stb_total["datasets"],["STB Uređaji"])
+    stb_summary = extract_current_previous_diff(stb_total["datasets"], ["STB Uređaji"])
 
-    # total for current and previus week for stb inventory
-    stb_current = sum(row["data"][-1] for row in stb_total["datasets"])
-    stb_previous = sum(row["data"][-2] for row in stb_total["datasets"])
+    iptv_summary = extract_current_previous_diff(
+        iptv_total["datasets"], ["IPTV korisnici"]
+    )
 
-    # total for current and previus week for iptv users inventory
-    iptv_current = sum(row["data"][-1] for row in iptv_total["datasets"])
-    iptv_previous = sum(row["data"][-2] for row in iptv_total["datasets"])
-
-    # total for current and previus week for ont inventory
-    ont_current = sum(row["data"][-1] for row in ont_total["datasets"])
-    ont_previous = sum(row["data"][-2] for row in ont_total["datasets"])
+    ont_summary = extract_current_previous_diff(ont_total["datasets"], ["ONT uređaji"])
 
     # ADD TO DATA LIST TO ADD TO PDF
     data["summary"] = {
         "cpetotal": cpe_total_summary,
         "cpewarehouse": cpe_warehouse_summary,
         "cpedismantle": cpe_dismantle_summary,
-        "stb": {
-            "current": stb_current,
-            "previous": stb_previous,
-            "delta": stb_current - stb_previous,
-        },
-        "iptv": {
-            "current": iptv_current,
-            "previous": iptv_previous,
-            "delta": iptv_current - iptv_previous,
-        },
-        "ont": {
-            "current": ont_current,
-            "previous": ont_previous,
-            "delta": ont_current - ont_previous,
-        },
+        "stb": stb_summary,
+        "iptv": iptv_summary,
+        "ont": ont_summary,
     }
 
     # ----------------------------------------------
@@ -210,9 +198,10 @@ def generate_pdf():
     # -------------------------------------------------
 
     # build_report_char() will:
-    # 1. build chart,
-    # 2. save it as png and
-    # 3. return path to that saved image:
+    # 1. build chart USING MATPLOTLIB,
+    # 2. save it as .png FILE
+    # 3. return path OF that saved image:
+    # FOR EXAMPLE:
     # "cpe_chart_image": "static/reports/charts/cpe_trend.png",
 
     # "cpe_chart_image" will be referenced in html template by img HTML TAG
@@ -256,10 +245,10 @@ def generate_pdf():
     # for key, value in data.items():
     #    print(f"{key}: {value}")
 
-    # ----4. Generate htm template with embeded data--------
+    # ----4. Generate htmL template AND embed data OBJECT TO IT--------
     html = render_template("reports/pdf_report.html", **data)
 
-    # ----5. Generate pdf file using weasyprint-----------------
+    # ----5. Generate pdf file FROM HTML using weasyprint-----------------
     # base_url=current_app.root_path resolve path to css and images
     pdf = HTML(string=html, base_url=current_app.root_path).write_pdf()
 
@@ -281,17 +270,20 @@ def generate_pdf():
 # --------------------
 def extract_current_previous_diff(datasets: list, target_labels: list):
     """
-    Extract current, previous and difference for CPE types from datatsets
+    Extract: current (last week), previous (penultimate week) and difference from datatsets
 
+    But only for specific label
+
+    For example, dataset for Cpe total looks like:
     datasets: [{'label': <CpeTypeEnum.IAD: 'IAD'>, 'data': [2709, 3184, 3215, 2995, 2995]}...]
 
-    target_labels:
+    target_labels:[CpeTypeEnum('IAD'),...]
+
     """
     extracted_stats = {}
 
     for item in datasets:
-        # item['label'] is an Enum, so we check item['label'].name
-        label_name = item["label"].name
+        label_name = item["label"]
 
         if label_name in target_labels:
             data = item["data"]
@@ -313,9 +305,10 @@ def extract_current_previous_diff(datasets: list, target_labels: list):
 def build_report_chart(chart_data, output_filename, title):
     """
     # build_report_char() will:
-    1. build chart,
-    2. save it as png
+    1. build chart USING MATPLOTLIB,
+    2. save it as .png
     3. and return path of saved plot image:
+
     """
 
     title = title
