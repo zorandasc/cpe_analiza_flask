@@ -1,0 +1,198 @@
+{% extends "base.html" %} {% block title %}CPE-ANALIZA{% endblock %} {% block
+styles %} {{ super() }}
+<style>
+  .admin-wrapper {
+    margin-top: 4rem;
+  }
+
+  /* Title */
+  .title {
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    padding-bottom: 5px;
+  }
+
+  .title:before {
+  width: 28px;
+  height: 6px;
+  display: block;
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  margin-left: -14px;
+  background: linear-gradient(to right, #be93c5, #7bc6cc);;
+}
+
+.title:after {
+  width: 400px;
+  height: 2px;
+  display: block;
+  content: "";
+  position: relative;
+  margin-top: 15px;
+  left: 50%;
+  margin-left: -200px;
+  background: linear-gradient(to right, #be93c5, #7bc6cc);;
+}
+
+  /* Dashboard cards (for the top row - larger focus items) */
+  .dashboard-card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: white;
+    height:200px;
+    overflow: hidden;
+  }
+
+  .dashboard-card::before,
+  .side_dashboard-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 10px;
+    width: 100%;
+    background: linear-gradient(to right, #be93c5, #7bc6cc);
+  }
+
+  .dashboard-card:hover,
+  .side_dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12),
+      0 0 0 1px rgba(123, 198, 204, 0.35);
+  }
+
+  .dashboard-card .card-title,
+  .side_dashboard-card .card-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #234a6f;
+  }
+
+  .side_dashboard-card .card-title {
+    font-size: 1.25rem; /* Slightly smaller title for smaller cards */
+  }
+
+  .dashboard-card p,
+  .side_dashboard-card p {
+    color: #6c7a89;
+  }
+
+  /* Link cleanup */
+  .dashboard-link {
+    text-decoration: none;
+  }
+
+  .custom-icon {
+    height: 50px;
+    margin-bottom: 0.5rem;
+  }
+
+  .dashboard-analytics {
+  border: 1px dashed rgba(123, 198, 204, 0.6);
+  background: linear-gradient(
+    to bottom,
+    rgba(123, 198, 204, 0.05),
+    white
+  );
+}
+</style>
+{% endblock %} {% block content%}
+<div class=" py-2">
+  <h2 class="text-center mb-4 title">
+    Aplikacija stanja korisničke opreme
+  </h2>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-6">
+      <a href="{{ url_for('cpe_inventory.cpe_records') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <img
+              src="{{ url_for('static', filename='cpe.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
+            <h4 class="card-title">Stanje raspoložive CPE opreme</h4>
+            <p>Pregled i upravljanje ukupnim stanjem CPE opreme po skladištima i IJ</p>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="col-md-6">
+       <div class="card dashboard-card shadow p-3">
+        
+      <a href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_records') }}" class="dashboard-link">
+       
+          <div class="card-body text-center">
+             
+            <img
+              src="{{ url_for('static', filename='cpe-dismantle.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
+       
+            <h4 class="card-title">Stanje demontirane CPE opreme</h4>
+            <p>Pregled i upravljanje ukupnim stanjem demontirane CPE opreme po IJ</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6">
+      <a href="{{ url_for('stb_inventory.stb_records')  }}" class="dashboard-link">
+        <div class="card dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <img
+              src="{{ url_for('static', filename='smart-tv.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
+            <h4 class="card-title">Stanje STB uređaja - IPTV platforma</h4>
+            <p>Pregled i upravljanje ukupnim stanjem STB opreme i broja IPTV korisnika</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-6">
+      <a href="{{ url_for('ont_inventory.ont_records') }}" class="dashboard-link">
+        <div class="card dashboard-card shadow p-3">
+          <div class="card-body text-center">
+            <img
+              src="{{ url_for('static', filename='ont.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            />
+            <h4 class="card-title">Stanje ONT uređaja - GPON mreža</h4>
+            <p>Pregled u upravljanje ukupnim stanjem ONT uređaja u radu - Mijesečno stanje</p>
+          </div>
+        </div>
+      </a>
+    </div>
+     <div class="col-12 d-flex justify-content-center mt-4">
+  <div class="col-md-4">
+    <a href="{{ url_for('charts.chart_home') }}" class="dashboard-link">
+     <div class="card dashboard-card dashboard-analytics shadow p-3 text-center">
+        <div class="card-body">
+          <img
+            src="{{ url_for('static', filename='analysis.png') }}"
+            alt="Analytics"
+            class="custom-icon mb-2"
+          />
+          <h4 class="card-title">Analitika i trendovi</h4>
+          <p>Pregled kretanja stanja ukupne i pojedinačne opreme po sedmicama i po skladištima</p>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+  </div>
+</div>
+
+{% endblock %}
