@@ -153,7 +153,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
                 # totals_by_type[cpe_type] is is a list: at start [0,0,0,0] so we use i for every time slot
                 totals_by_type[type_key][i] += last
 
-    # summary per cities for all cpe_types:
+    # totals_by_type give us summary per cities for all cpe_types:
     # router → [180, 180, 200, 200, ...]
     # modem  → [50, 50, 50, 50, ...]
 
@@ -172,8 +172,6 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         give you the "next" item when you ask for it.
         The next() function grabs the very first item from that "conveyor belt."
         1.totals_by_type.values()->dict_values([[180, 180, 200, 200]])
-        2. iter(...) Turns it into an iterator.
-        3. next(...) Returns the first element from it.
         4. The first element is: [180, 180, 200, 200]
         # ALERNATIVE: list(totals_by_type.values())[0]
         # WITH ITER IT IS SAFER VERSION

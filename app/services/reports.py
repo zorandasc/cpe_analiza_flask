@@ -110,100 +110,100 @@ def generate_pdf():
     # ----------------------------------------------
     # PULL DATA TO RENDER SUMMARY AND CHARTS
     # -------------------------------------------------
-    # TO DO 
-    cpe_data_total = get_cpe_inventory_chart_data(
+ 
+    cpe_total = get_cpe_inventory_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, weeks=5
     )
 
-    cpe_data_warehouse = get_cpe_inventory_chart_data(
+    cpe_warehouse_total = get_cpe_inventory_chart_data(
         city_id=13, cpe_id=None, cpe_type=None, weeks=5
     )
 
-    cpe_dismantle_data_total = get_cpe_dismantle_chart_data(
+    cpe_dismantle_total = get_cpe_dismantle_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=5
     )
 
-    stb_data_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=5)
+    stb_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=5)
 
-    iptv_data_total = get_iptv_inventory_chart_data(weeks=5)
+    iptv_total = get_iptv_inventory_chart_data(weeks=5)
 
-    ont_data_total = get_ont_inventory_chart_data(city_id=None, months=5)
+    ont_total = get_ont_inventory_chart_data(city_id=None, months=5)
 
     # ----------------------------------------------
     # SUMMARY SECTION IN PDF REPORT
-    # -------------------------------------------------
+    # ------------------------------------------------
 
-    # total fo current week in cpe
-    cpe_current_total = sum(row["data"][-2] for row in cpe_data_total["datasets"])
+    # total for current week in cpe
+    cpe_current = sum(row["data"][-2] for row in cpe_total["datasets"])
 
     # total for previus week in cpe
-    cpe_previous_total = sum(row["data"][-1] for row in cpe_data_total["datasets"])
+    cpe_previous = sum(row["data"][-1] for row in cpe_total["datasets"])
 
     # raspoloziva oprema for current week in cpe
-    cpe_current_warehouse = sum(
-        row["data"][-2] for row in cpe_data_warehouse["datasets"]
+    cpe_warehouse_current = sum(
+        row["data"][-2] for row in cpe_warehouse_total["datasets"]
     )
 
     # raspoloziva oprema for previus week in cpe
-    cpe_previous_warehouse = sum(
-        row["data"][-1] for row in cpe_data_warehouse["datasets"]
+    cpe_warehouse_previous = sum(
+        row["data"][-1] for row in cpe_warehouse_total["datasets"]
     )
 
     # total for current week in cpe dismantle
-    dismantle_current_total = sum(
-        row["data"][-1] for row in cpe_dismantle_data_total["datasets"]
+    cpe_dismantle_current = sum(
+        row["data"][-1] for row in cpe_dismantle_total["datasets"]
     )
 
     # total for previus week in cpe dismantle
-    dismantle_previous_total = sum(
-        row["data"][-2] for row in cpe_dismantle_data_total["datasets"]
+    cpe_dismantle_previous = sum(
+        row["data"][-2] for row in cpe_dismantle_total["datasets"]
     )
 
     # total for current and previus week for stb inventory
-    stb_current_total = sum(row["data"][-1] for row in stb_data_total["datasets"])
-    stb_previous_total = sum(row["data"][-2] for row in stb_data_total["datasets"])
+    stb_current = sum(row["data"][-1] for row in stb_total["datasets"])
+    stb_previous = sum(row["data"][-2] for row in stb_total["datasets"])
 
     # total for current and previus week for iptv users inventory
-    iptv_current_total = sum(row["data"][-1] for row in iptv_data_total["datasets"])
-    iptv_previous_total = sum(row["data"][-2] for row in iptv_data_total["datasets"])
+    iptv_current = sum(row["data"][-1] for row in iptv_total["datasets"])
+    iptv_previous = sum(row["data"][-2] for row in iptv_total["datasets"])
 
     # total for current and previus week for ont inventory
-    ont_current_total = sum(row["data"][-1] for row in ont_data_total["datasets"])
-    ont_previous_total = sum(row["data"][-2] for row in ont_data_total["datasets"])
+    ont_current = sum(row["data"][-1] for row in ont_total["datasets"])
+    ont_previous = sum(row["data"][-2] for row in ont_total["datasets"])
 
     # ADD TO DATA LIST TO ADD TO PDF
     data["summary"] = {
         "cpe": {
             "total": {
-                "current": cpe_current_total,
-                "previous": cpe_previous_total,
-                "delta": cpe_current_total - cpe_previous_total,
+                "current": cpe_current,
+                "previous": cpe_previous,
+                "delta": cpe_current - cpe_previous,
             },
             "warehouse": {
-                "current": cpe_current_warehouse,
-                "previous": cpe_previous_warehouse,
-                "delta": cpe_current_warehouse - cpe_previous_warehouse,
+                "current": cpe_warehouse_current,
+                "previous": cpe_warehouse_previous,
+                "delta": cpe_warehouse_current - cpe_warehouse_previous,
             },
             "dismantle": {
-                "current": dismantle_current_total,
-                "previous": dismantle_previous_total,
-                "delta": dismantle_current_total - dismantle_previous_total,
+                "current": cpe_dismantle_current,
+                "previous": cpe_dismantle_previous,
+                "delta": cpe_dismantle_current - cpe_dismantle_previous,
             },
         },
         "stb": {
-            "current": stb_current_total,
-            "previous": stb_previous_total,
-            "delta": stb_current_total - stb_previous_total,
+            "current": stb_current,
+            "previous": stb_previous,
+            "delta": stb_current - stb_previous,
         },
         "iptv": {
-            "current": iptv_current_total,
-            "previous": iptv_previous_total,
-            "delta": iptv_current_total - iptv_previous_total,
+            "current": iptv_current,
+            "previous": iptv_previous,
+            "delta": iptv_current - iptv_previous,
         },
         "ont": {
-            "current": ont_current_total,
-            "previous": ont_previous_total,
-            "delta": ont_current_total - ont_previous_total,
+            "current": ont_current,
+            "previous": ont_previous,
+            "delta": ont_current - ont_previous,
         },
     }
 
@@ -214,15 +214,15 @@ def generate_pdf():
     significant_changes = []
 
     significant_changes += get_significant_changes(
-        datasets=cpe_data_total["datasets"], source="CPE oprema u radu"
+        datasets=cpe_total["datasets"], source="CPE oprema u radu"
     )
 
     significant_changes += get_significant_changes(
-        datasets=cpe_data_warehouse["datasets"], source="CPE Oprema raspoloživa"
+        datasets=cpe_warehouse_total["datasets"], source="CPE Oprema raspoloživa"
     )
 
     significant_changes += get_significant_changes(
-        datasets=cpe_dismantle_data_total["datasets"],
+        datasets=cpe_dismantle_total["datasets"],
         source="CPE oprema demontirana",
     )
 
@@ -242,35 +242,35 @@ def generate_pdf():
 
     # "cpe_chart_image" will be referenced in html template by img HTML TAG
     data["cpe_chart_image"] = build_report_chart(
-        chart_data=cpe_data_total,
+        chart_data=cpe_total,
         output_filename="cpe_trend.png",
         title="Trend ukupne CPE opreme po tipu (Zadnjih 5 sedmica)",
     )
 
     # "cpe_dismantle_chart_image": "static/reports/charts/cpe_dismantle_trend.png",
     data["cpe_dismantle_chart_image"] = build_report_chart(
-        chart_data=cpe_dismantle_data_total,
+        chart_data=cpe_dismantle_total,
         output_filename="cpe_dismantle_trend.png",
         title="Trend ukupne demontirane CPE opreme po tipu (Zadnjih 5 sedmica)",
     )
 
     # "stb_chart_image"": "static/reports/charts/stb_chart_image"",
     data["stb_chart_image"] = build_report_chart(
-        chart_data=stb_data_total,
+        chart_data=stb_total,
         output_filename="stb_trend.png",
         title="Trend ukupne STB opreme, IPTV platforma (Zadnjih 5 sedmica)",
     )
 
     # "iptv_chart_image": "static/reports/charts/iptv_trend.png",
     data["iptv_chart_image"] = build_report_chart(
-        chart_data=iptv_data_total,
+        chart_data=iptv_total,
         output_filename="iptv_trend.png",
         title="Trend IPTV korisnika, IPTV platforma (Zadnjih 5 sedmica)",
     )
 
     # "ont_chart_image": "static/reports/charts/ont_trend.png",
     data["ont_chart_image"] = build_report_chart(
-        chart_data=ont_data_total,
+        chart_data=ont_total,
         output_filename="ont_trend.png",
         title="Trend ukupne ONT opreme, pristupn GPON mreža (Zadnjih 5 mijeseci)",
     )
@@ -304,6 +304,33 @@ def generate_pdf():
 # ---------------
 # HELPER FUNCTION FOR GENERATING PDF FILE
 # --------------------
+def extract_data_for_cpe_types(datasets: list, target_labels: list):
+    """
+    Extract current, previous and difference for CPE types
+    datasets: [{'label': <CpeTypeEnum.IAD: 'IAD'>, 'data': [2709, 3184, 3215, 2995, 2995]}...]
+    target_labels:
+    """
+    extracted_stats = {}
+
+    for item in datasets:
+        # item['label'] is an Enum, so we check item['label'].name
+        label_name = item["label"].name
+
+        if label_name in target_labels:
+            data = item["data"]
+            # Ensure we have at least 2 elements to avoid errors
+            if len(data) > 2:
+                current = data[-1]  # Last element
+                previous = data[-2]  # Penultimate element
+                diff = current - previous
+
+                extracted_stats[label_name] = {
+                    "current": current,
+                    "previous": previous,
+                    "difference": diff,
+                }
+
+    return extracted_stats
 
 
 def build_report_chart(chart_data, output_filename, title):
