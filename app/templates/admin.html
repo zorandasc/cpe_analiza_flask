@@ -93,8 +93,15 @@ block styles %} {{ super() }}
     padding: 20px;
     width: calc(100% - 250px);
   }
-  /* Main container */
- 
+  /* Styles for Laptop-S and larger screens */
+   @media (min-width: 1280px) {
+  .main-content {
+    margin-left: 150px; }
+ }
+ @media (min-width: 1580px) {
+  .main-content {
+    margin-left: 50px; }
+ }
 
   /* Title */
   .admin-title {
@@ -145,7 +152,7 @@ block styles %} {{ super() }}
       transform 0.2s ease,
       box-shadow 0.2s ease;
     background: white;
-    height: 180px;
+    height: 130px;
     overflow: hidden;
   }
 
@@ -157,7 +164,7 @@ block styles %} {{ super() }}
       transform 0.2s ease,
       box-shadow 0.2s ease;
     background: white;
-    height: 150px; /* Smaller height for administrative items */
+    height: 130px; /* Smaller height for administrative items */
     overflow: hidden;
   }
 
