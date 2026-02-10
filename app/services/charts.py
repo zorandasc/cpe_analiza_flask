@@ -84,9 +84,6 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
 
     rows = q.all()
 
-    for row in rows:
-        print(row, "\n")
-
     if not rows:
         return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
 
