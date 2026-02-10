@@ -84,6 +84,9 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
 
     rows = q.all()
 
+    for row in rows:
+        print(row, "\n")
+
     if not rows:
         return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
 
@@ -91,7 +94,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # 3. Rebuild weekly state per city/type
     # ---------------------------------------
     # create empty state
-    state = defaultdict(lambda: defaultdict(dict))
+    state = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     """
     city
     └── cpe_type
@@ -99,12 +102,17 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     """
 
     # than fill it
+    # for city_id=13, week=5, cpe_type='ONt':
+    # print(row, "\n"): 10 rows, 5 for ont nokia 5 for huawei
+    # (3, datetime.date(2026, 1, 9), 7, <CpeTypeEnum.ONT: 'ONT'>, 7)
+    # (3, datetime.date(2026, 1, 9), 8, <CpeTypeEnum.ONT: 'ONT'>, 444)
     for city_id_, week_end, cpe_type_id_, type_key, qty in rows:
-        state[city_id_][type_key][week_end] = qty
+        state[city_id_][type_key][week_end] += qty
     """
     #state look like:
+    #for city_id=1
     {
-    1: {#city_id=1
+    1: {
        "router": {
            2026-01-23: 100,
            2026-02-06: 120
@@ -113,7 +121,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
            2026-01-23: 50
        }
      },
-
+    #for city_id=2
     2: {
        "router": {
            2026-01-23: 80
