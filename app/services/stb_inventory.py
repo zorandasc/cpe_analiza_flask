@@ -11,7 +11,7 @@ from app.queries.stb_inventory import (
 TOTAL_KEY = "__TOTAL__"
 
 
-def get_stb_records_view_data():
+def get_stb_iptv_records_view_data():
     # calculate current week week_end date
     current_week_end = get_current_week_friday()
 
