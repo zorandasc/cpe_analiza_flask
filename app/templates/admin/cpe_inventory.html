@@ -1,3 +1,4 @@
+
 {% extends "base.html" %} {% block title %}CPE inventar{% endblock %} {% block
 styles %} {{ super() }}
 <style>
@@ -74,50 +75,59 @@ styles %} {{ super() }}
 </style>
 {% endblock %} {% block content%}
 <div class=" py-4">
+
+
   <h2>Unosi CPE Stanja</h2>
+ 
+
   <div class="table-responsive">
-    <!--
-    <button
-      type="button"
-      title="Dodaj novi CPE model u inventori"
-      class="btn btn-custom-save"
-      data-bs-toggle="modal"
-      data-bs-target="#addRecordModal"
-    >
-      + Dodaj Novi Unos
-    </button>
--->
+   <div class="d-flex justify-content-between align-items-center mb-3">
     <nav>
-      <ul class="pagination">
-        {% if pagination.has_prev %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('admin.cpe_inventory', page=pagination.prev_num, sort=sort_by, direction=direction) }}"
-            >Previus</a
-          >
-        </li>
-        {% endif %} {% for p in pagination.iter_pages() %} {% if p %}
-        <li class="page-item {% if p == pagination.page %}active{% endif %}">
-          <a
-            class="page-link"
-            href="{{ url_for('admin.cpe_inventory', page=p, sort=sort_by, direction=direction) }}"
-            >{{ p }}</a
-          >
-        </li>
-        {% else%}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif%} {% endfor %} {% if pagination.has_next %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('admin.cpe_inventory', page=pagination.next_num, sort=sort_by, direction=direction) }}"
-            >Next</a
-          >
-        </li>
-        {% endif %}
-      </ul>
+        <ul class="pagination mb-0">
+            {% if pagination.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=cit_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}">Previous</a>
+            </li>
+            {% endif %}
+
+            {% for p in pagination.iter_pages() %}
+                {% if p %}
+                    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=cit_id, page=p, sort=sort_by, direction=direction) }}">{{ p }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if pagination.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=cit_id, page=pagination.next_num, sort=sort_by, direction=direction) }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
     </nav>
+
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-auto">
+            <label class="form-label mb-1">Sedmica</label>
+            <input type="date" name="week_end" class="form-control" value="{{week_end}}">
+        </div>
+        <div class="col-auto">
+            <label class="form-label mb-1">Skladište</label>
+            <select name="city_id" class="form-select">
+                <option>Sve</option>
+                {% for city in cities %}
+                <option value="{{city.id}}" {% if city_id == city.id %}selected{% endif %}>{{city.name}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+</div>
+    
     <table
       class="table table-bordered table-striped table-hover align-middle shadow-lg table-sm"
     >
@@ -125,28 +135,28 @@ styles %} {{ super() }}
         <tr>
           <td>
             <a
-              href="{{ url_for('admin.cpe_inventory', sort='id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory', week_end=week_end, city_id=cit_id,sort='id', direction='asc' if direction=='desc' else 'desc') }}"
               >Id</a
             >
           </td>
           <th>
             <a
-              href="{{ url_for('admin.cpe_inventory', sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
               >Skladišta</a
             >
           </th>
           <th>Ime CPE opreme</th>
           <th>Količina</th>
-          <th>Sedmica</th>
+          <th><a href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='week_end', direction='asc' if direction=='desc' else 'desc') }}">Sedmica</a></th>
           <th>
             <a
-              href="{{ url_for('admin.cpe_inventory', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Kreirano</a
             >
           </th>
           <th>
             <a
-              href="{{ url_for('admin.cpe_inventory', sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Ažurirano</a
             >
           </th>
@@ -158,11 +168,17 @@ styles %} {{ super() }}
         <tr>
           <td>{{ r.id }}</td>
           <td>{{ r.city.name }}</td>
-          <td>{{ r.cpe_type.name }}</td>
-          <td>{{ r.quantity }}</td>
-          <td>{{ r.week_end }}</td>
-          <td>{{ r.created_at }}</td>
-          <td>{{ r.updated_at }}</td>
+          <td>{{ r.cpe_type.label }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.update_cpe_inventory', id=r.id) }}" class="d-flex justify-content-between align-items-center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="number" name="quantity" value="{{r.quantity}}" min=0 class="form-control form-control-sm" style="width: 80px;">
+              <button class="btn btn-sm btn-success mt-1">Save</button>
+            </form>
+          </td>
+          <td>{{ r.week_end.strftime('%d-%m-%Y') }}</td>
+          <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+          <td>{{ r.updated_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
         </tr>
         {% endfor %}
       </tbody>

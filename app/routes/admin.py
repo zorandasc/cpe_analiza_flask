@@ -47,6 +47,11 @@ def cpe_inventory():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
+    # here are filter arguments and allother arguments
+    # which will we past to template
+    # because of sort and filter will cancel each out
+    current_args = request.args.to_dict()
+
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
     page = request.args.get("page", 1, type=int)
@@ -57,34 +62,78 @@ def cpe_inventory():
     sort_by = request.args.get("sort", "updated_at")
     direction = request.args.get("direction", "desc")
 
+    # filters
+    week_end = request.args.get("week_end", type=str)
+    city_id = request.args.get("city_id", type=int)
+
     # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
+    allowed_sorts = ["id", "city_id", "week_end", "updated_at", "created_at"]
     if sort_by not in allowed_sorts:
         sort_by = "id"
+
+    query = CpeInventory.query
+
+    # 🔍 FILTERS
+    if week_end:
+        query = query.filter(CpeInventory.week_end == week_end)
+
+    if city_id:
+        query = query.filter(CpeInventory.city_id == city_id)
 
     order_column = getattr(CpeInventory, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
 
-    pagination = CpeInventory.query.order_by(order_column).paginate(
+    pagination = query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
 
-    # THIS IS DATA FOR NEW CPE MODAL
-    # cities = Cities.query.order_by(Cities.id).all()
-    # cities = db.session.query(CpeInventory.city_id).distinct().all()
-
-    # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
-    # cpe_types = CpeTypes.query.filter_by(visible_in_total=True).order_by(CpeTypes.id).all()
+    cities = Cities.query.order_by(Cities.id).all()
 
     return render_template(
         "admin/cpe_inventory.html",
         records=pagination.items,
         pagination=pagination,
+        # pass argument because of refresh, it must be preserved
         sort_by=sort_by,
         direction=direction,
-        # cities=cities,
-        # cpe_types=cpe_types,
+        cities=cities,
+        week_end=week_end,
+        city_id=city_id,
+    )
+
+
+@admin_bp.route("/cpe_inventory/update/<int:id>", methods=["POST"])
+@login_required
+def update_cpe_inventory(id):
+    if not admin_required():
+        return redirect(url_for("admin.cpe_inventory"))
+
+    table_item = CpeInventory.query.get_or_404(id)
+
+    quantity = request.form.get("quantity", type=int)
+
+    if quantity is None:
+        flash("Neispravna količina.", "danger")
+        return redirect(url_for("admin.cpe_inventory"))
+
+    table_item.quantity = quantity
+
+    try:
+        db.session.commit()
+        flash("CPE stanje uspješno izmijenjeno!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Greška prilikom izmjene: {e}", "danger")
+        return redirect(url_for("admin.cpe_inventory"))
+
+    return redirect(
+        url_for(
+            "admin.cpe_inventory",
+            week_end=request.args.get("week_end"),
+            city_id=request.args.get("city_id"),
+        )
     )
 
 
@@ -763,7 +812,6 @@ def edit_dismantle_status(id):
             return redirect(url_for("admin.edit_dismantle_status", id=id))
 
     return render_template("admin/dismantle_types_edit.html", dismantle=dismantle)
-
 
 
 ###########################################################
