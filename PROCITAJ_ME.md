@@ -1979,3 +1979,19 @@ updated_at = heavily used in admin
 ✔ Use reported_at to decide if week is “fresh”
 ✔ Never change reported_at after first snapshot
 ✔ Let updated_at change freely
+
+
+# Final recommended mental model
+
+Think of your system as:
+
+📦 Weekly Inventory Snapshot
+
+Each snapshot has:
+
+• city
+• week_end
+• reported_at (timestamp of submission)
+• many CPE rows
+
+Even though stored flat in SQL.
