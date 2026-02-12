@@ -4,7 +4,8 @@
 # records are now SimplePagination objects-->
 # SimplePagination class returns the actual list inside:self.items, records.items
 
-
+# THIS CLASS IS TO TRANSFORM DATA, GATHERED FROM RAW SQL QUERY, TO ITERABLE AND PAGINABLE OBJECTS
+# FOR SQLALCHEMY YOU GET THAT BY DEFAOULT
 class SimplePagination:
     def __init__(self, page, per_page, total, items):
         self.page = page
