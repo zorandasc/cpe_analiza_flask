@@ -1955,3 +1955,27 @@ You only need carry-forward when your table stores sparse changes instead of ful
 Your cpe_inventory table is an event log → needed reconstruction.
 
 Your stb_inventory table (as you described) is a weekly snapshot → no reconstruction needed.
+
+# reported_at 
+
+Why you shouldn’t use created_at for freshness
+
+Because:
+
+• resubmits would change meaning
+• migrations could alter it
+• imports would distort it
+
+reported_at is explicit intent.
+
+✅ In many systems:
+
+created_at = rarely used after debugging
+reported_at = heavily used in reports
+updated_at = heavily used in admin
+
+🎯 Final clear rule for your app
+
+✔ Use reported_at to decide if week is “fresh”
+✔ Never change reported_at after first snapshot
+✔ Let updated_at change freely

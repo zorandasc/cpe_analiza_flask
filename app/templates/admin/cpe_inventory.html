@@ -86,14 +86,14 @@ styles %} {{ super() }}
         <ul class="pagination mb-0">
             {% if pagination.has_prev %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=cit_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}">Previous</a>
+                <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}">Previous</a>
             </li>
             {% endif %}
 
             {% for p in pagination.iter_pages() %}
                 {% if p %}
                     <li class="page-item {% if p == pagination.page %}active{% endif %}">
-                        <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=cit_id, page=p, sort=sort_by, direction=direction) }}">{{ p }}</a>
+                        <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, page=p, sort=sort_by, direction=direction) }}">{{ p }}</a>
                     </li>
                 {% else %}
                     <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -102,7 +102,7 @@ styles %} {{ super() }}
 
             {% if pagination.has_next %}
             <li class="page-item">
-                <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=cit_id, page=pagination.next_num, sort=sort_by, direction=direction) }}">Next</a>
+                <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, page=pagination.next_num, sort=sort_by, direction=direction) }}">Next</a>
             </li>
             {% endif %}
         </ul>
@@ -135,28 +135,30 @@ styles %} {{ super() }}
         <tr>
           <td>
             <a
-              href="{{ url_for('admin.cpe_inventory', week_end=week_end, city_id=cit_id,sort='id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory', week_end=week_end, city_id=city_id,sort='id', direction='asc' if direction=='desc' else 'desc') }}"
               >Id</a
             >
           </td>
           <th>
             <a
-              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
               >Skladišta</a
             >
           </th>
-          <th>Ime CPE opreme</th>
+          <th><a
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='cpe_type_id', direction='asc' if direction=='desc' else 'desc') }}"
+              >Ime CPE opreme</a></th>
           <th>Količina</th>
-          <th><a href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='week_end', direction='asc' if direction=='desc' else 'desc') }}">Sedmica</a></th>
-          <th>
+          <th><a href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='week_end', direction='asc' if direction=='desc' else 'desc') }}">Sedmica</a></th>
+           <th>
             <a
-              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='reported_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Kreirano</a
             >
           </th>
           <th>
             <a
-              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=cit_id, sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Ažurirano</a
             >
           </th>
@@ -170,14 +172,14 @@ styles %} {{ super() }}
           <td>{{ r.city.name }}</td>
           <td>{{ r.cpe_type.label }}</td>
           <td>
-            <form method="post" action="{{ url_for('admin.update_cpe_inventory', id=r.id) }}" class="d-flex justify-content-between align-items-center">
+            <form method="post" action="{{ url_for('admin.update_cpe_inventory',week_end=week_end, city_id=city_id, id=r.id) }}" class="d-flex justify-content-between align-items-center">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="number" name="quantity" value="{{r.quantity}}" min=0 class="form-control form-control-sm" style="width: 80px;">
               <button class="btn btn-sm btn-success mt-1">Save</button>
             </form>
           </td>
           <td>{{ r.week_end.strftime('%d-%m-%Y') }}</td>
-          <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+          <td>{{ r.reported_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
           <td>{{ r.updated_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
         </tr>
         {% endfor %}

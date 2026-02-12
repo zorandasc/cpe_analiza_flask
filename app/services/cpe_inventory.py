@@ -69,11 +69,15 @@ def update_cpe_records(data):
                         city_id,
                         cpe_type_id,
                         week_end,
-                        quantity)
+                        quantity,
+                        reported_at
+                    )
                     VALUES (:city_id,
                             :cpe_type_id,
                             :week_end,
-                            :quantity)
+                            :quantity,
+                            NOW()
+                            )
                     ON CONFLICT (city_id, cpe_type_id, week_end)
                     DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
                     """)
@@ -147,8 +151,8 @@ def get_cpe_records_excel_export():
                     [r["city_name"]]
                     + [r["cpe"][s["name"]].get("quantity", 0) for s in schema_list]
                     + [
-                        r["max_updated_at"].strftime("%Y-%m-%d %H:%M")
-                        if r["max_updated_at"]
+                        r["max_reported_at"].strftime("%Y-%m-%d %H:%M")
+                        if r["max_reported_at"]
                         else ""
                     ]
                 ),
@@ -174,7 +178,7 @@ def _group_records(records, schema_list):
             grouped[cid] = {
                 "city_id": row["city_id"],
                 "city_name": row["city_name"],
-                "max_updated_at": row["max_updated_at"],
+                "max_reported_at": row["max_reported_at"],
                 "cpe": {
                     cpe["name"]: {
                         "cpe_type_id": cpe["id"],

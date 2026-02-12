@@ -47,11 +47,6 @@ def cpe_inventory():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
-    # here are filter arguments and allother arguments
-    # which will we past to template
-    # because of sort and filter will cancel each out
-    current_args = request.args.to_dict()
-
     # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
     # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
     page = request.args.get("page", 1, type=int)
@@ -67,7 +62,14 @@ def cpe_inventory():
     city_id = request.args.get("city_id", type=int)
 
     # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "city_id", "week_end", "updated_at", "created_at"]
+    allowed_sorts = [
+        "id",
+        "city_id",
+        "cpe_type_id",
+        "week_end",
+        "updated_at",
+        "reported_at",
+    ]
     if sort_by not in allowed_sorts:
         sort_by = "id"
 
