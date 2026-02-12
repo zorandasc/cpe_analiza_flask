@@ -17,6 +17,7 @@ from app.services.stb_inventory import (
     update_recent_stb_inventory,
     update_iptv_users_count,
     get_stb_records_excel_export,
+    get_stb_records_history,
 )
 
 stb_inventory_bp = Blueprint(
@@ -124,4 +125,27 @@ def export_stb_records_excel():
         as_attachment=True,
         download_name="stanje_stb_opreme_iptv_korisnika.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+
+@stb_inventory_bp.route("/history/stb")
+@login_required
+def stb_records_history():
+    page = request.args.get("page", 1, int)
+
+    per_page = 20
+
+    records, schema_list, error = get_stb_records_history(page, per_page)
+
+    for r in records.items:
+        print(r,"\n")
+
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("main.home"))
+
+    return render_template(
+        "stb_records_history.html",
+        records=records,
+        schema=schema_list,
     )

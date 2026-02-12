@@ -298,7 +298,7 @@
               <td>
                 {% if r.city_id and ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))%}
             <a
-              href="{{ url_for('cpe_inventory.cpe_records_city_history', id=r.city_id) }}"
+              href="{{ url_for('stb_inventory.stb_records_history') }}"
               class="btn btn-sm btn-custom-history"
               title="Istorija promjena"
               >

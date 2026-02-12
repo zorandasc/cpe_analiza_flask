@@ -6,6 +6,8 @@ from app.queries.stb_inventory import (
     get_last_4_weeks,
     get_stb_inventory_pivoted,
     get_iptv_users,
+    get_stb_inventory_history,
+    get_stb_types,
 )
 
 TOTAL_KEY = "__TOTAL__"
@@ -157,6 +159,22 @@ def get_stb_records_excel_export():
     rows_iptv = [row_iptv]
 
     return headers_stb, rows_stb, headers_iptv, rows_iptv, current_week_end
+
+
+def get_stb_records_history(page: int, per_page: int):
+
+    # list of all cpe_types object in db THAT ARE ACTIVE
+    schema_list = get_stb_types()
+
+    for s in schema_list:
+        print(s, "/n")
+
+    # paginated_records is iterable SimplePagination object
+    records = get_stb_inventory_history(
+        schema_list=schema_list, page=page, per_page=per_page
+    )
+
+    return records, schema_list, None
 
 
 # -------------------------
