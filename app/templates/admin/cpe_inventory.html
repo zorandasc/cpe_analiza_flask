@@ -75,9 +75,17 @@ styles %} {{ super() }}
 </style>
 {% endblock %} {% block content%}
 <div class=" py-4">
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary d-inline-flex align-items-center">
+    <span class="me-2">⬅</span> Nazad
+  </a>
 
+  <h2 class="mb-0">Unosi CPE Stanja</h2>
 
-  <h2>Unosi CPE Stanja</h2>
+  <div style="width: 95px;" class="d-none d-md-block"></div>
+</div>
+
+ 
  
 
   <div class="table-responsive">
