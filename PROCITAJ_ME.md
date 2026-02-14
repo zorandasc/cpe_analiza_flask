@@ -1995,3 +1995,49 @@ Each snapshot has:
 • many CPE rows
 
 Even though stored flat in SQL.
+
+# But than in query i need to retrieve four values: missing_reported_at, missing_updated_at, complete_reported_at, complete_updated_at
+
+Yes — and that’s exactly what a well-designed temporal system does 👍
+It may feel like “too many timestamps”, but in analytics systems this is normal and even expected.
+
+You’re not complicating things — you’re making time explicit instead of ambiguous.
+
+Let’s lock it cleanly.
+
+🧠 Why four timestamps is correct (not overkill)
+
+You have two dimensions:
+
+📅 Snapshot existence (reported_at)
+✏ User activity (updated_at)
+
+And two business flows:
+
+• complete dismantle
+• missing dismantle
+
+So naturally:
+
+Flow	snapshot time	activity time
+complete	complete_reported_at	complete_updated_at
+missing	missing_reported_at	missing_updated_at
+
+That’s exactly right.
+
+# reported_at
+
+Used for:
+
+• history views
+• “week initialized”
+• audits
+• exports
+
+# ✔ updated_at
+
+Used for:
+
+• green/red operational status
+• detecting untouched flows
+• productivity tracking

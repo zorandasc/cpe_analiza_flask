@@ -65,24 +65,30 @@ def update_cpe_dismantle(data):
 
     week_end = get_current_week_friday()
 
+    # -----------------------------------------
     # Temporal Snapshot with Partial Mutation
+    # ------------------------------------------
+
+    # 1. this function will always ensure existance of city_id/week_end
     ensure_snapshot(city_id, week_end)
 
-    # 3: Apply updates
+    # 2: Apply updates
+    # so ON CONFLICT in UPSERT will always happend
     for u in updates:
         if u["quantity"] is None:
             continue
-        stmt = text("""
-            INSERT INTO cpe_dismantle (
-                  city_id, cpe_type_id, dismantle_type_id, week_end, quantity 
-                ) 
-            VALUES (:city_id, :cpe_type_id, :dismantle_type_id, :week_end, :quantity)
-            ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
-            DO UPDATE SET 
-                quantity = EXCLUDED.quantity,
-                updated_at = now()
 
-        """)
+        stmt = text("""
+                    INSERT INTO cpe_dismantle (
+                        city_id, cpe_type_id, dismantle_type_id, week_end, quantity 
+                        ) 
+                    VALUES (:city_id, :cpe_type_id, :dismantle_type_id, :week_end, :quantity)
+                    ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
+                    DO UPDATE SET 
+                        quantity = EXCLUDED.quantity,
+                        updated_at = now()
+                """)
+
         db.session.execute(
             stmt,
             {
@@ -263,20 +269,21 @@ def _group_records(records, schema_list):
 
 
 # Temporal Snapshot with Partial Mutation
-# WHY ensure_snapshot()? BECAUSE WE HAVE PARTIAL UPDATE POSSIBILITY
-# AND WE IN CPE_DISMANTLE ROUTE HOME DEMAND TO RETURN
-# FOR ONE WEEK ALL DISMANTLE_TYPES
-# IF WE MAKE PARTIAL UPDATED FOR NEW WEEK, WE WILL GET NULL FOR OTHER
-# SO FOR NEW WEEK WE COPY OLD UNUPDATE DATA AND AFTER THAT UPSERT NEW UPDATED DATA
 def ensure_snapshot(city_id, week_end):
+    """
+    # WHY ensure_snapshot()? BECAUSE WE HAVE PARTIAL UPDATE POSSIBILITY
+    # AND WE IN CPE_DISMANTLE ROUTE HOME DEMAND TO RETURN FOR ONE WEEK ALL DISMANTLE_TYPES
+    # IF WE MAKE PARTIAL UPDATED FOR NEW WEEK, WE WILL GET NULL FOR OTHER
+    # SO FOR NEW WEEK_END/city_id WE COPY OLD UNUPDATE DATA
+    """
     # 1. CHECK IF CITY_ID/WEEK_END COMBINATION ALREADY EXISTS
     # Detect first update of week
     exists = db.session.execute(
         text("""
-      SELECT 1 FROM cpe_dismantle
-      WHERE city_id = :city_id AND week_end = :week_end
-      LIMIT 1
-    """),
+                SELECT 1 FROM cpe_dismantle
+                WHERE city_id = :city_id AND week_end = :week_end
+                LIMIT 1
+            """),
         {"city_id": city_id, "week_end": week_end},
     ).scalar()
 
@@ -288,20 +295,20 @@ def ensure_snapshot(city_id, week_end):
     # clone previous week row: week_end < :week_end
     db.session.execute(
         text("""
-      INSERT INTO cpe_dismantle (
-        city_id, cpe_type_id, dismantle_type_id, week_end, quantity, updated_at
-      )
-      SELECT
-        city_id, cpe_type_id, dismantle_type_id, :week_end, quantity, updated_at
-      FROM cpe_dismantle
-      WHERE city_id = :city_id
-        AND week_end = (
-          SELECT MAX(week_end)
-          FROM cpe_dismantle
-          WHERE city_id = :city_id
-            AND week_end < :week_end
-        )
-    """),
+            INSERT INTO cpe_dismantle (
+                city_id, cpe_type_id, dismantle_type_id, week_end, quantity, updated_at
+            )
+            SELECT
+                city_id, cpe_type_id, dismantle_type_id, :week_end, quantity, updated_at
+            FROM cpe_dismantle
+            WHERE city_id = :city_id
+                AND week_end = (
+                SELECT MAX(week_end)
+                FROM cpe_dismantle
+                WHERE city_id = :city_id
+                    AND week_end < :week_end
+                )
+            """),
         {"city_id": city_id, "week_end": week_end},
     )
 

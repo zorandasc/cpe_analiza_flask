@@ -38,7 +38,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
                 c.include_in_total,
                 ct.name AS cpe_name,
                 ci.quantity AS quantity,
-                ci.reported_at AS reported_at
+                ci.updated_at AS updated_at
             FROM cities c
             LEFT JOIN cpe_inventory ci
                 ON c.id = ci.city_id
@@ -58,7 +58,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             city_id,
             city_name,
             {", ".join(case_columns)},
-            MAX(reported_at) AS max_reported_at
+            MAX(updated_at) AS max_updated_at
         FROM weekly_data
         GROUP BY city_id, city_name
 

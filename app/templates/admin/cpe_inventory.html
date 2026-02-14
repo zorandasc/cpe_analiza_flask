@@ -160,7 +160,7 @@ styles %} {{ super() }}
           <th><a href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='week_end', direction='asc' if direction=='desc' else 'desc') }}">Sedmica</a></th>
            <th>
             <a
-              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='reported_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Kreirano</a
             >
           </th>
@@ -187,7 +187,7 @@ styles %} {{ super() }}
             </form>
           </td>
           <td>{{ r.week_end.strftime('%d-%m-%Y') }}</td>
-          <td>{{ r.reported_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+          <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
           <td>{{ r.updated_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
         </tr>
         {% endfor %}
