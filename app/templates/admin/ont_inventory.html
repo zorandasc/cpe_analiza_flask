@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Cities{% endblock %} {% block styles
+{% extends "base.html" %} {% block title %}Inventar ONT opreme{% endblock %} {% block styles
 %} {{ super() }}
 <style>
   /* Modern table header */
@@ -13,10 +13,14 @@
   }
 
   .btn-custom-save {
-    background: linear-gradient(to right, #be93c5, #7bc6cc);
-    color: whitesmoke;
-    box-shadow: 1px 1px 2px rgb(0, 0, 0);
-    margin-bottom: 1rem;
+   background: linear-gradient(to bottom, #14d120 0%, #1f5222 100%);
+    color: white;
+  }
+  .btn-custom-filter{
+    background: #4568dc; /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #4568dc, #b06ab3); /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #4568dc, #b06ab3);
+    color: white;
   }
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
@@ -74,49 +78,68 @@
 </style>
 {% endblock %} {% block content%}
 <div class="py-4">
-  <h2>Unosi ONT Stanja</h2>
-  <div class="table-responsive">
-    <button
-      type="button"
-      title="Dodaj novi ONT model u inventori"
-      style="display: none"
-      class="btn btn-custom-save"
-      data-bs-toggle="modal"
-      data-bs-target="#addRecordModal"
-    >
-      + Dodaj Novi Unos
-    </button>
-    <nav>
-      <ul class="pagination">
-        {% if pagination.has_prev %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('admin.ont_inventory', page=pagination.prev_num, sort=sort_by, direction=direction) }}"
-            >Previus</a
-          >
-        </li>
-        {% endif %} {% for p in pagination.iter_pages() %} {% if p %}
-        <li class="page-item {% if p == pagination.page %}active{% endif %}">
-          <a
-            class="page-link"
-            href="{{ url_for('admin.ont_inventory', page=p, sort=sort_by, direction=direction) }}"
-            >{{ p }}</a
-          >
-        </li>
-        {% else%}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif%} {% endfor %} {% if pagination.has_next %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('admin.ont_inventory', page=pagination.next_num, sort=sort_by, direction=direction) }}"
-            >Next</a
-          >
-        </li>
-        {% endif %}
-      </ul>
-    </nav>
+  <div class="d-flex align-items-center justify-content-between mb-4">
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary d-inline-flex align-items-center">
+    <span class="me-2">⬅</span> Nazad
+  </a>
+
+  <h2 class="mb-0">Unosi ONT Stanja</h2>
+
+  <div style="width: 95px;" class="d-none d-md-block"></div>
+</div>
+
+  <div class="table-responsive mb-0">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <nav>
+        <ul class="pagination">
+          {% if pagination.has_prev %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('admin.ont_inventory', month_end=month_end, city_id=city_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}"
+              >Previus</a
+            >
+          </li>
+          {% endif %} {% for p in pagination.iter_pages() %} {% if p %}
+          <li class="page-item {% if p == pagination.page %}active{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, page=p, sort=sort_by, direction=direction) }}"
+              >{{ p }}</a
+            >
+          </li>
+          {% else%}
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+          {% endif%} {% endfor %} {% if pagination.has_next %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, page=pagination.next_num, sort=sort_by, direction=direction) }}"
+              >Next</a
+            >
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      <form method="get" class="row g-3 align-items-end">
+          <div class="col-auto">
+              <label class="form-label mb-1">Mijesec</label>
+              <input type="date" name="month_end" class="form-control" value="{{month_end}}">
+          </div>
+          <div class="col-auto">
+              <label class="form-label mb-1">Skladište</label>
+              <select name="city_id" class="form-select">
+                  <option>Sve</option>
+                  {% for city in cities %}
+                  <option value="{{city.id}}" {% if city_id == city.id %}selected{% endif %}>{{city.name}}</option>
+                  {% endfor %}
+              </select>
+          </div>
+          <div class="col-auto">
+              <button type="submit" class="btn btn-primary btn-custom-filter">Filter</button>
+          </div>
+      </form>
+    </div>
     <table
       class="table table-bordered table-striped table-hover align-middle shadow-lg table-sm"
     >
@@ -124,32 +147,32 @@
         <tr>
           <td>
             <a
-              href="{{ url_for('admin.ont_inventory', sort='id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='id', direction='asc' if direction=='desc' else 'desc') }}"
               >Id</a
             >
           </td>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory', sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
               >Skladišta</a
             >
           </th>
           <th>Količina</th>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory', sort='month_end', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='month_end', direction='asc' if direction=='desc' else 'desc') }}"
               >Mjesec</a
             >
           </th>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory', sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Kreirano</a
             >
           </th>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory', sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Ažurirano</a
             >
           </th>
@@ -161,7 +184,13 @@
         <tr>
           <td>{{ r.id }}</td>
           <td>{{ r.city.name }}</td>
-          <td>{{ r.quantity }}</td>
+          <td>
+            <form method="post" action="{{ url_for('admin.update_ont_inventory',month_end=month_end, city_id=city_id, id=r.id) }}" class="d-flex justify-content-between align-items-center">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="number" name="quantity" value="{{r.quantity}}" min=0 class="form-control form-control-sm" style="width: 80px;">
+              <button class="btn btn-sm btn-success btn-custom-save">Save</button>
+            </form>
+          </td>
           <td>{{ r.month_end }}</td>
           <td>{{ r.created_at }}</td>
           <td>{{ r.updated_at }}</td>
@@ -172,92 +201,5 @@
   </div>
 </div>
 
-<div class="modal fade" id="addRecordModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-xxl">
-    <div class="modal-content">
-      <form method="POST" action="">
-        <div class="modal-header custom-modal-header">
-          <h5 class="modal-title">Dodaj novi ONT model u inventori</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-          ></button>
-        </div>
 
-        <div class="modal-body">
-          <div
-            class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"
-          >
-            {% for city in cities %}
-            <div
-              class="col-auto me-2 d-flex flex-column justify-content-between"
-            >
-              <label class="mb-1 cpe-label-wrap">{{city.name}}</label>
-
-              <input
-                class="form-control input-cpe-count"
-                id="{{ city.id }}"
-                name="city-{{ city.id }}"
-                value="0"
-                type="number"
-                min="0"
-              />
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-custom-save">
-            <span class="text-white fw-bold fs-4">
-              <svg
-                fill="#ffffff"
-                height="20px"
-                width="20px"
-                version="1.1"
-                id="Layer_1"
-                xmlns="http://www.w3.org/2000/svg"
-                xmlns:xlink="http://www.w3.org/1999/xlink"
-                viewBox="0 0 512 512"
-                xml:space="preserve"
-              >
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></g>
-                <g id="SVGRepo_iconCarrier">
-                  <g>
-                    <g>
-                      <g>
-                        <path
-                          d="M128,170.667h256c4.719,0,8.533-3.823,8.533-8.533V42.667c0-4.71-3.814-8.533-8.533-8.533 c-4.719,0-8.533,3.823-8.533,8.533V153.6H136.533V17.067h110.933c4.719,0,8.533-3.823,8.533-8.533S252.186,0,247.467,0H128 c-4.719,0-8.533,3.823-8.533,8.533v153.6C119.467,166.844,123.281,170.667,128,170.667z"
-                        ></path>
-                        <path
-                          d="M384,494.933H42.667c-14.114,0-25.6-11.486-25.6-25.6V42.667c0-14.114,11.486-25.6,25.6-25.6h51.2 c4.719,0,8.533-3.823,8.533-8.533S98.586,0,93.867,0h-51.2C19.14,0,0,19.14,0,42.667v426.667C0,492.86,19.14,512,42.667,512H384 c4.719,0,8.533-3.823,8.533-8.533S388.719,494.933,384,494.933z"
-                        ></path>
-                        <path
-                          d="M509.5,87.834L424.166,2.5c-1.596-1.604-3.763-2.5-6.033-2.5h-68.975c-4.719,0-8.533,3.823-8.533,8.533 c0,1.203,0.256,2.338,0.708,3.379v107.554h-51.2v-102.4h25.6c4.719,0,8.533-3.823,8.533-8.533S320.452,0,315.733,0H281.6 c-4.719,0-8.533,3.823-8.533,8.533V128c0,4.71,3.814,8.533,8.533,8.533h68.267c4.719,0,8.533-3.823,8.533-8.533V17.067h56.201 l80.333,80.333v371.934c0,14.114-11.486,25.6-25.6,25.6h-42.667V281.6c0-4.71-3.814-8.533-8.533-8.533H93.867 c-4.719,0-8.533,3.823-8.533,8.533v187.733c0,4.71,3.814,8.533,8.533,8.533c4.719,0,8.533-3.823,8.533-8.533v-179.2h307.2 v213.333c0,4.71,3.814,8.533,8.533,8.533h51.2C492.86,512,512,492.86,512,469.333V93.867C512,91.605,511.104,89.429,509.5,87.834 z"
-                        ></path>
-                        <path
-                          d="M179.2,426.667h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,426.667,179.2,426.667z"
-                        ></path>
-                        <path
-                          d="M179.2,375.467h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,375.467,179.2,375.467z"
-                        ></path>
-                      </g>
-                    </g>
-                  </g>
-                </g>
-              </svg>
-            </span>
-            Sačuvaj
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 {% endblock %}

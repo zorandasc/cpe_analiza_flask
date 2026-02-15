@@ -184,7 +184,12 @@ def cpe_dismantle():
         page=page, per_page=per_page, error_out=False
     )
 
-    cities = Cities.query.order_by(Cities.id).all()
+    # THIS IS DATA FOR SELECTION IN CITY FILTER
+    cities = (
+        Cities.query.filter(Cities.type == CityTypeEnum.IJ.value)
+        .order_by(Cities.id)
+        .all()
+    )
 
     return render_template(
         "admin/cpe_dismantle.html",
@@ -249,7 +254,7 @@ def stb_inventory():
     sort_by = request.args.get("sort", "updated_at")
     direction = request.args.get("direction", "desc")
 
-     # filters
+    # filters
     week_end = request.args.get("week_end", type=str)
     stb_type_id = request.args.get("stb_type_id", type=int)
 
@@ -264,8 +269,8 @@ def stb_inventory():
     if week_end:
         query = query.filter(StbInventory.week_end == week_end)
 
-    if stb_type_id :
-        query = query.filter(StbInventory.stb_type_id == stb_type_id )
+    if stb_type_id:
+        query = query.filter(StbInventory.stb_type_id == stb_type_id)
 
     order_column = getattr(StbInventory, sort_by)
     if direction == "desc":
@@ -289,6 +294,7 @@ def stb_inventory():
         week_end=week_end,
         stb_type_id=stb_type_id,
     )
+
 
 @admin_bp.route("/stb_inventory/update/<int:id>", methods=["POST"])
 @login_required
@@ -341,22 +347,38 @@ def ont_inventory():
     sort_by = request.args.get("sort", "updated_at")
     direction = request.args.get("direction", "desc")
 
+    # filters
+    month_end = request.args.get("month_end", type=str)
+    city_id = request.args.get("city_id", type=int)
+
     # Whitelist allowed sort columns (prevents SQL injection)
     allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
     if sort_by not in allowed_sorts:
         sort_by = "id"
 
+    query = OntInventory.query
+
+    # 🔍 FILTERS
+    if month_end:
+        query = query.filter(OntInventory.month_end == month_end)
+
+    if city_id:
+        query = query.filter(OntInventory.city_id == city_id)
+
     order_column = getattr(OntInventory, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
 
-    pagination = OntInventory.query.order_by(order_column).paginate(
+    pagination = query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
 
-    # THIS IS DATA FOR NEW CPE MODAL
-    cities = Cities.query.order_by(Cities.id).all()
-    # cities = db.session.query(CpeInventory.city_id).distinct().all()
+    # THIS IS DATA FOR SELECTION IN CITY FILTER
+    cities = (
+        Cities.query.filter(Cities.type == CityTypeEnum.IJ.value)
+        .order_by(Cities.id)
+        .all()
+    )
 
     return render_template(
         "admin/ont_inventory.html",
@@ -365,8 +387,43 @@ def ont_inventory():
         sort_by=sort_by,
         direction=direction,
         cities=cities,
+        month_end=month_end,
+        city_id=city_id,
     )
 
+
+@admin_bp.route("/ont_inventory/update/<int:id>", methods=["POST"])
+@login_required
+def update_ont_inventory(id):
+    if not admin_required():
+        return redirect(url_for("admin.ont_inventory"))
+    
+    table_row = OntInventory.query.get_or_404(id)
+
+    quantity = request.form.get("quantity", type=int)
+
+    if quantity is None:
+        flash("Neispravna količina.", "danger")
+        return redirect(url_for("admin.ont_inventory"))
+
+    table_row.quantity = quantity
+
+    try:
+        db.session.commit()
+        flash("ONT stanje uspješno izmijenjeno!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Greška prilikom izmjene: {e}", "danger")
+        return redirect(url_for("admin.ont_inventory"))
+
+    return redirect(
+        url_for(
+            "admin.ont_inventory",
+            month_end=request.args.get("month_end"),
+            city_id=request.args.get("city_id"),
+        )
+    )
 
 ###########################################################
 # ---------------ROUTES FOR CITIES CRUD--------------------------

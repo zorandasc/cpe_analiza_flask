@@ -12,11 +12,16 @@
     font-size: 16px;
   }
 
-  .btn-custom-save {
-    background: linear-gradient(to right, #be93c5, #7bc6cc);
-    color: whitesmoke;
-    box-shadow: 1px 1px 2px rgb(0, 0, 0);
-    margin-bottom: 1rem;
+   .btn-custom-filter{
+    background: #4568dc; /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #4568dc, #b06ab3); /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #4568dc, #b06ab3);
+    color: white;
+  }
+
+    .btn-custom-save {
+   background: linear-gradient(to bottom, #14d120 0%, #1f5222 100%);
+    color: white;
   }
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
@@ -131,7 +136,7 @@
               </select>
           </div>
           <div class="col-auto">
-              <button type="submit" class="btn btn-primary">Filter</button>
+              <button type="submit" class="btn btn-primary btn-custom-filter">Filter</button>
           </div>
       </form>
     </div>
@@ -183,7 +188,7 @@
             <form method="post" action="{{ url_for('admin.update_stb_inventory',week_end=week_end, stb_type_id =stb_type_id , id=r.id) }}" class="d-flex justify-content-between align-items-center">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="number" name="quantity" value="{{r.quantity}}" min=0 class="form-control form-control-sm" style="width: 80px;">
-              <button class="btn btn-sm btn-success">Save</button>
+              <button class="btn btn-sm btn-success btn-custom-save">Save</button>
             </form>
           </td>
           <td>{{ r.week_end }}</td>
