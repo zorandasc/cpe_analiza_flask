@@ -223,12 +223,9 @@ class CpeInventory(db.Model):
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-   
+
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=text("now()"),
-        # You want updated_at to change automatically whenever quantity changes
-        onupdate=func.now(),
+        DateTime(timezone=True), server_default=text("now()")
     )
 
     city = relationship("Cities", back_populates="cpe_inventory")
