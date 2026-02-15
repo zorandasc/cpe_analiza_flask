@@ -162,7 +162,14 @@ def cpe_dismantle():
     city_id = request.args.get("city_id", type=int)
 
     # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
+    allowed_sorts = [
+        "id",
+        "city_id",
+        "cpe_type_id",
+        "week_end",
+        "updated_at",
+        "created_at",
+    ]
 
     if sort_by not in allowed_sorts:
         sort_by = "id"
@@ -352,7 +359,7 @@ def ont_inventory():
     city_id = request.args.get("city_id", type=int)
 
     # Whitelist allowed sort columns (prevents SQL injection)
-    allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
+    allowed_sorts = ["id", "city_id", "month_end", "updated_at", "created_at"]
     if sort_by not in allowed_sorts:
         sort_by = "id"
 
@@ -397,7 +404,7 @@ def ont_inventory():
 def update_ont_inventory(id):
     if not admin_required():
         return redirect(url_for("admin.ont_inventory"))
-    
+
     table_row = OntInventory.query.get_or_404(id)
 
     quantity = request.form.get("quantity", type=int)
@@ -424,6 +431,7 @@ def update_ont_inventory(id):
             city_id=request.args.get("city_id"),
         )
     )
+
 
 ###########################################################
 # ---------------ROUTES FOR CITIES CRUD--------------------------

@@ -191,9 +191,9 @@
               <button class="btn btn-sm btn-success btn-custom-save">Save</button>
             </form>
           </td>
-          <td>{{ r.month_end }}</td>
-          <td>{{ r.created_at }}</td>
-          <td>{{ r.updated_at }}</td>
+          <td>{{ r.month_end.strftime('%d-%m-%Y') }}</td>
+          <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+          <td>{{ r.updated_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
         </tr>
         {% endfor %}
       </tbody>
