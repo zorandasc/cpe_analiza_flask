@@ -249,22 +249,35 @@ def stb_inventory():
     sort_by = request.args.get("sort", "updated_at")
     direction = request.args.get("direction", "desc")
 
+     # filters
+    week_end = request.args.get("week_end", type=str)
+    stb_type_id = request.args.get("stb_type_id", type=int)
+
     # Whitelist allowed sort columns (prevents SQL injection)
     allowed_sorts = ["id", "stb_type_id", "week_end", "updated_at", "created_at"]
     if sort_by not in allowed_sorts:
         sort_by = "id"
 
+    query = StbInventory.query
+
+    # 🔍 FILTERS
+    if week_end:
+        query = query.filter(StbInventory.week_end == week_end)
+
+    if stb_type_id :
+        query = query.filter(StbInventory.stb_type_id == stb_type_id )
+
     order_column = getattr(StbInventory, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
 
-    pagination = StbInventory.query.order_by(order_column).paginate(
+    pagination = query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
 
     # THIS IS DATA FOR NEW CPE MODAL
     # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
-    stb_types = StbTypes.query.filter_by(is_active=True).order_by(StbTypes.id).all()
+    stbs = StbTypes.query.filter_by(is_active=True).order_by(StbTypes.id).all()
 
     return render_template(
         "admin/stb_inventory.html",
@@ -272,7 +285,42 @@ def stb_inventory():
         pagination=pagination,
         sort_by=sort_by,
         direction=direction,
-        stb_types=stb_types,
+        stbs=stbs,
+        week_end=week_end,
+        stb_type_id=stb_type_id,
+    )
+
+@admin_bp.route("/stb_inventory/update/<int:id>", methods=["POST"])
+@login_required
+def update_stb_inventory(id):
+    if not admin_required():
+        return redirect(url_for("admin.stb_inventory"))
+
+    table_row = StbInventory.query.get_or_404(id)
+
+    quantity = request.form.get("quantity", type=int)
+
+    if quantity is None:
+        flash("Neispravna količina.", "danger")
+        return redirect(url_for("admin.stb_inventory"))
+
+    table_row.quantity = quantity
+
+    try:
+        db.session.commit()
+        flash("STB stanje uspješno izmijenjeno!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Greška prilikom izmjene: {e}", "danger")
+        return redirect(url_for("admin.stb_inventory"))
+
+    return redirect(
+        url_for(
+            "admin.stb_inventory",
+            week_end=request.args.get("week_end"),
+            stb_type_id=request.args.get("stb_type_id"),
+        )
     )
 
 
