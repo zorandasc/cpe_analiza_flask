@@ -121,6 +121,7 @@ def update_cpe_inventory(id):
         return redirect(url_for("admin.cpe_inventory"))
 
     table_row.quantity = quantity
+    table_row.updated_at=datetime.now()
 
     try:
         db.session.commit()
@@ -225,6 +226,7 @@ def update_cpe_dismantle_inventory(id):
         return redirect(url_for("admin.cpe_dismantle"))
 
     table_row.quantity = quantity
+    table_row.updated_at=datetime.now()
 
     try:
         db.session.commit()
@@ -318,6 +320,7 @@ def update_stb_inventory(id):
         return redirect(url_for("admin.stb_inventory"))
 
     table_row.quantity = quantity
+    table_row.updated_at=datetime.now()
 
     try:
         db.session.commit()
@@ -414,6 +417,7 @@ def update_ont_inventory(id):
         return redirect(url_for("admin.ont_inventory"))
 
     table_row.quantity = quantity
+    table_row.updated_at=datetime.now()
 
     try:
         db.session.commit()
