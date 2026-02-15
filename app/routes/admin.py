@@ -83,6 +83,7 @@ def cpe_inventory():
         query = query.filter(CpeInventory.city_id == city_id)
 
     order_column = getattr(CpeInventory, sort_by)
+
     if direction == "desc":
         order_column = order_column.desc()
 
@@ -111,7 +112,7 @@ def update_cpe_inventory(id):
     if not admin_required():
         return redirect(url_for("admin.cpe_inventory"))
 
-    table_item = CpeInventory.query.get_or_404(id)
+    table_row = CpeInventory.query.get_or_404(id)
 
     quantity = request.form.get("quantity", type=int)
 
@@ -119,7 +120,7 @@ def update_cpe_inventory(id):
         flash("Neispravna količina.", "danger")
         return redirect(url_for("admin.cpe_inventory"))
 
-    table_item.quantity = quantity
+    table_row.quantity = quantity
 
     try:
         db.session.commit()
@@ -156,24 +157,78 @@ def cpe_dismantle():
     sort_by = request.args.get("sort", "updated_at")
     direction = request.args.get("direction", "desc")
 
+    # filters
+    week_end = request.args.get("week_end", type=str)
+    city_id = request.args.get("city_id", type=int)
+
     # Whitelist allowed sort columns (prevents SQL injection)
     allowed_sorts = ["id", "city_id", "updated_at", "created_at"]
+
     if sort_by not in allowed_sorts:
         sort_by = "id"
+
+    query = CpeDismantle.query
+
+    # 🔍 FILTERS
+    if week_end:
+        query = query.filter(CpeDismantle.week_end == week_end)
+
+    if city_id:
+        query = query.filter(CpeDismantle.city_id == city_id)
 
     order_column = getattr(CpeDismantle, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
 
-    pagination = CpeDismantle.query.order_by(order_column).paginate(
+    pagination = query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
+
+    cities = Cities.query.order_by(Cities.id).all()
+
     return render_template(
         "admin/cpe_dismantle.html",
         records=pagination.items,
         pagination=pagination,
         sort_by=sort_by,
         direction=direction,
+        cities=cities,
+        week_end=week_end,
+        city_id=city_id,
+    )
+
+
+@admin_bp.route("/cpe_dismantle_inventory/update/<int:id>", methods=["POST"])
+@login_required
+def update_cpe_dismantle_inventory(id):
+    if not admin_required():
+        return redirect(url_for("admin.cpe_dismantle"))
+
+    table_row = CpeDismantle.query.get_or_404(id)
+
+    quantity = request.form.get("quantity", type=int)
+
+    if quantity is None:
+        flash("Neispravna količina.", "danger")
+        return redirect(url_for("admin.cpe_dismantle"))
+
+    table_row.quantity = quantity
+
+    try:
+        db.session.commit()
+        flash("Stanje CPE demontaža uspješno izmijenjeno!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Greška prilikom izmjene: {e}", "danger")
+        return redirect(url_for("admin.cpe_dismantle"))
+
+    return redirect(
+        url_for(
+            "admin.cpe_dismantle",
+            week_end=request.args.get("week_end"),
+            city_id=request.args.get("city_id"),
+        )
     )
 
 
