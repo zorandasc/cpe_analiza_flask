@@ -17,6 +17,7 @@ from app.models import (
     OntInventory,
     StbInventory,
     StbTypes,
+    IptvUsers,
     UserRole,
     Users,
     ReportSetting,
@@ -121,7 +122,7 @@ def update_cpe_inventory(id):
         return redirect(url_for("admin.cpe_inventory"))
 
     table_row.quantity = quantity
-    table_row.updated_at=datetime.now()
+    table_row.updated_at = datetime.now()
 
     try:
         db.session.commit()
@@ -226,7 +227,7 @@ def update_cpe_dismantle_inventory(id):
         return redirect(url_for("admin.cpe_dismantle"))
 
     table_row.quantity = quantity
-    table_row.updated_at=datetime.now()
+    table_row.updated_at = datetime.now()
 
     try:
         db.session.commit()
@@ -320,7 +321,7 @@ def update_stb_inventory(id):
         return redirect(url_for("admin.stb_inventory"))
 
     table_row.quantity = quantity
-    table_row.updated_at=datetime.now()
+    table_row.updated_at = datetime.now()
 
     try:
         db.session.commit()
@@ -417,7 +418,7 @@ def update_ont_inventory(id):
         return redirect(url_for("admin.ont_inventory"))
 
     table_row.quantity = quantity
-    table_row.updated_at=datetime.now()
+    table_row.updated_at = datetime.now()
 
     try:
         db.session.commit()
@@ -434,6 +435,86 @@ def update_ont_inventory(id):
             month_end=request.args.get("month_end"),
             city_id=request.args.get("city_id"),
         )
+    )
+
+
+@admin_bp.route("/iptv_users_inventory")
+@login_required
+def iptv_users_inventory():
+    if not view_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    # WHEN INCICIALY LANDING ON PAGE
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "updated_at")
+    direction = request.args.get("direction", "desc")
+
+    # filters
+    week_end = request.args.get("week_end", type=str)
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = ["id", "week_end", "updated_at", "created_at"]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    query = IptvUsers.query
+
+    # 🔍 FILTERS
+    if week_end:
+        query = query.filter(IptvUsers.week_end == week_end)
+
+    order_column = getattr(IptvUsers, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    return render_template(
+        "admin/iptv_users_inventory.html",
+        records=pagination.items,
+        pagination=pagination,
+        sort_by=sort_by,
+        direction=direction,
+        week_end=week_end,
+    )
+
+
+@admin_bp.route("/iptv_users_inventory/update/<int:id>", methods=["POST"])
+@login_required
+def update_iptv_users_inventory(id):
+    if not admin_required():
+        return redirect(url_for("admin.iptv_users_inventory"))
+
+    table_row = IptvUsers.query.get_or_404(id)
+
+    total_users = request.form.get("total_users", type=int)
+
+    if total_users is None:
+        flash("Neispravna količina.", "danger")
+        return redirect(url_for("admin.iptv_users_inventory"))
+
+    table_row.total_users = total_users
+    table_row.updated_at = datetime.now()
+
+    try:
+        db.session.commit()
+        flash("Stanje broja IPTV korisnika uspješno izmijenjeno!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Greška prilikom izmjene: {e}", "danger")
+        return redirect(url_for("admin.iptv_users_inventory"))
+
+    return redirect(
+        url_for("admin.iptv_users_inventory", week_end=request.args.get("week_end"))
     )
 
 

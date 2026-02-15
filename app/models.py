@@ -195,7 +195,7 @@ class CpeDismantle(db.Model):
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()")
+        DateTime(timezone=True), server_default=func.now()
     )
 
     updated_at = mapped_column(DateTime(timezone=True), nullable=True)
@@ -225,7 +225,7 @@ class CpeInventory(db.Model):
     )
 
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("now()")
+        DateTime(timezone=True), server_default=func.now()
     )
 
     city = relationship("Cities", back_populates="cpe_inventory")
@@ -242,14 +242,16 @@ class OntInventory(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     month_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
-    )
+    
     city_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
+
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
 
     city: Mapped[Optional["Cities"]] = relationship(
         "Cities", back_populates="ont_inventory"
@@ -266,14 +268,17 @@ class StbInventory(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+
+    stb_type_id: Mapped[Optional[int]] = mapped_column(Integer)
+
+    quantity: Mapped[Optional[int]] = mapped_column(Integer)
+
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
     updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=text("now()")
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    stb_type_id: Mapped[Optional[int]] = mapped_column(Integer)
-    quantity: Mapped[Optional[int]] = mapped_column(Integer)
 
     stb_type: Mapped[Optional["StbTypes"]] = relationship(
         "StbTypes", back_populates="stb_inventory"
@@ -287,10 +292,15 @@ class IptvUsers(db.Model):
     # Adding 'unique=True' prevents duplicate entries for the same week
     # A column should be UNIQUE only if it fully identifies the row by itself.
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False, unique=True)
+
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
     updated_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),  # Recommended for Postgres
-        server_default=text("now()"),
-        onupdate=text("now()"),
+        server_default=func.now(),
+        onupdate=func.now(),
     )
 
 
@@ -361,7 +371,7 @@ class ReportRecipients(db.Model):
 
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
 
-    created_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 

@@ -283,7 +283,7 @@ block styles %} {{ super() }}
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
                 <h4 class="card-title">Stanje raspoložive CPE opreme</h4>
-                <p>Pregled ukupnog stanja CPE opreme</p>
+                <p>Pregled ukupnog stanja CPE opreme - Skladišta i IJ</p>
               </div>
             </div>
           </a>
@@ -294,7 +294,7 @@ block styles %} {{ super() }}
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
                 <h4 class="card-title">Stanje demontirane CPE opreme</h4>
-                <p>Pregled ukupnog stanja demontirane CPE opreme</p>
+                <p>Pregled ukupnog stanja demontirane CPE opreme -IJ</p>
               </div>
             </div>
           </a>
@@ -305,7 +305,7 @@ block styles %} {{ super() }}
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
                 <h4 class="card-title">Stanje raspoložive STB opreme</h4>
-                <p>Pregled ukupnog stanja STB opreme</p>
+                <p>Pregled ukupnog stanja STB opreme - IPTV platforma</p>
               </div>
             </div>
           </a>
@@ -316,7 +316,18 @@ block styles %} {{ super() }}
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">
                 <h4 class="card-title">Stanje raspoložive ONT opreme</h4>
-                <p>Pregled ukupnog stanja ONT opreme</p>
+                <p>Pregled ukupnog stanja ONT opreme -GPON mreža</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+         <div class="col-md-6">
+          <a href="{{ url_for('admin.iptv_users_inventory') }}" class="dashboard-link">
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Stanje IPTV korisnika</h4>
+                <p>Pregled promjene broja IPTV korisnika -IPTV platforma</p>
               </div>
             </div>
           </a>
