@@ -113,24 +113,24 @@ def generate_pdf():
 
     # ALL CPE TYPES FOR 5 WEEKS
     cpe_total = get_cpe_inventory_chart_data(
-        city_id=None, cpe_id=None, cpe_type=None, weeks=5
+        city_id=None, cpe_id=None, cpe_type=None, weeks=10
     )
 
     # ALL CPE TYPES FOR 5 WEEKS
     cpe_warehouse_total = get_cpe_inventory_chart_data(
-        city_id=13, cpe_id=None, cpe_type=None, weeks=5
+        city_id=13, cpe_id=None, cpe_type=None, weeks=10
     )
 
     # ALL CPE TYPES FOR 5 WEEKS
     cpe_dismantle_total = get_cpe_dismantle_chart_data(
-        city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=5
+        city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=10
     )
 
     # ALL STB TYPES FOR 5 WEEKS
-    stb_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=5)
+    stb_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=10)
 
     # ALL DATA FOR 5 WEEKS
-    iptv_total = get_iptv_inventory_chart_data(weeks=5)
+    iptv_total = get_iptv_inventory_chart_data(weeks=10)
 
     # ALL DATA FOR 5 WEEKS
     ont_total = get_ont_inventory_chart_data(city_id=None, months=5)
@@ -173,9 +173,10 @@ def generate_pdf():
     # ----------------------------------------------
     # SIGNIFICANT CHANGES SECTION IN PDF REPORT
     # -------------------------------------------------
-
+    
     significant_changes = []
 
+    """
     significant_changes += get_significant_changes(
         datasets=cpe_total["datasets"], source="CPE oprema u radu"
     )
@@ -188,11 +189,11 @@ def generate_pdf():
         datasets=cpe_dismantle_total["datasets"],
         source="CPE oprema demontirana",
     )
-
+    """
     grouped_changes = group_changes_by_source(significant_changes)
 
     data["significant_changes"] = grouped_changes
-
+       
     # ----------------------------------------------
     # CHART SECTION IN PDF REPORT
     # -------------------------------------------------
@@ -208,28 +209,28 @@ def generate_pdf():
     data["cpe_chart_image"] = build_report_chart(
         chart_data=cpe_total,
         output_filename="cpe_trend.png",
-        title="Trend ukupne CPE opreme po tipu (Zadnjih 5 sedmica)",
+        title="Trend ukupne CPE opreme po tipu (Zadnjih 10 sedmica)",
     )
 
     # "cpe_dismantle_chart_image": "static/reports/charts/cpe_dismantle_trend.png",
     data["cpe_dismantle_chart_image"] = build_report_chart(
         chart_data=cpe_dismantle_total,
         output_filename="cpe_dismantle_trend.png",
-        title="Trend ukupne demontirane CPE opreme po tipu (Zadnjih 5 sedmica)",
+        title="Trend ukupne demontirane CPE opreme po tipu (Zadnjih 10 sedmica)",
     )
 
     # "stb_chart_image"": "static/reports/charts/stb_chart_image"",
     data["stb_chart_image"] = build_report_chart(
         chart_data=stb_total,
         output_filename="stb_trend.png",
-        title="Trend ukupne STB opreme, IPTV platforma (Zadnjih 5 sedmica)",
+        title="Trend ukupne STB opreme, IPTV platforma (Zadnjih 10 sedmica)",
     )
 
     # "iptv_chart_image": "static/reports/charts/iptv_trend.png",
     data["iptv_chart_image"] = build_report_chart(
         chart_data=iptv_total,
         output_filename="iptv_trend.png",
-        title="Trend IPTV korisnika, IPTV platforma (Zadnjih 5 sedmica)",
+        title="Trend IPTV korisnika, IPTV platforma (Zadnjih 10 sedmica)",
     )
 
     # "ont_chart_image": "static/reports/charts/ont_trend.png",
