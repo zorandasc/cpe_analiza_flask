@@ -136,7 +136,7 @@ styles %} {{ super() }}
     >
       Export Excel
     </a>
-  <form id="importForm" method="POST"  action="{{ url_for('ont_inventory.import_ont_records') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
+  <form id="importForm" method="POST"  action="{{ url_for('ont_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
      <div class="col-auto">
         <input type="file" name="file" class="form-control" accept=".xlsx" required />    
@@ -284,14 +284,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // This line PREVENTS the redirect to /upload
             e.preventDefault(); 
             
+            //1. GET THE FORM
             const formData = new FormData(this);
             const modalElement = document.getElementById('importResultModal');
             const modal = new bootstrap.Modal(modalElement);
             const tableBody = document.getElementById('resultTableBody');
             const alertBox = document.getElementById('validationAlert');
 
-            //this.action, is from form action
-            //action="{{ url_for('ont_inventory.import_ont_records') }}"
+            //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
+            //this.action, is from form:
+            //action="{{ url_for('ont_inventory.import_ont_records_excel') }}"
             try {
                 const response = await fetch(this.action, {
                     method: 'POST',
@@ -302,22 +304,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (!response.ok) throw new Error('Server error');
 
+                //3. AWAIT THE RESPONSE
                 const data = await response.json();
 
-                // 1. Clear previous table rows
+                // 4.1. Clear previous table rows
                 tableBody.innerHTML = '';
                 
-                // 2. Map segments to rows
+                // 4.2. Map segments to rows
                 data.segments.forEach((val, index) => {
                     const row = `<tr><td>Skladište/Segment ${index + 1}</td><td class="text-end">${val}</td></tr>`;
                     tableBody.insertAdjacentHTML('beforeend', row);
                 });
 
-                // 3. Update totals
+                // 4.3. Update totals
                 document.getElementById('calcTotal').innerText = data.calculated_total;
                 document.getElementById('excelTotal').innerText = data.excel_grand_total;
 
-                // 4. Update Alert Box color and message
+                // 4.4. Update Alert Box color and message
                 alertBox.classList.remove('d-none', 'alert-success', 'alert-danger');
                 if (data.match) {
                     alertBox.classList.add('alert-success');

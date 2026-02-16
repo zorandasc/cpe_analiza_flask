@@ -131,11 +131,12 @@ def parce_excel_segments(file_storage):
         return f"Error loading workbook: {e}"
 
     sheet = wb.active  # Or wb['Sheet1']
+    # list of all segments
     summaries = []
     current_subtotal = 0
     # Assuming header is row 1, data starts at row 2
     starting_row = 2
-    # Column O is the 15th column
+    # Column O in excel is the 15th column
     column_index = 15
 
     for row in sheet.iter_rows(
@@ -151,13 +152,13 @@ def parce_excel_segments(file_storage):
             print(f"--- VALIDATION: Grand Total Found: {grand_total_from_file} ---")
             break
 
-        # 2. TRIGGER: New Group Starts (Top Style)
+        # 2. TRIGGER TOP BORDER: New Group Starts (Top Style)
         if border.top.style == "medium":
             if current_subtotal > 0:
                 summaries.append(current_subtotal)
             current_subtotal = val
 
-        # 3. TRIGGER: Current Group Ends (Bottom Style)
+        # 3. TRIGGER BOTTOM BORDER: Current Group Ends (Bottom Style)
         elif border.bottom.style == "medium":
             current_subtotal += val
             if current_subtotal > 0:

@@ -83,7 +83,7 @@ def export_ont_records_excel():
 
 # called from js inside ont_records.html
 @ont_inventory_bp.route("/upload", methods=["POST"])
-def import_ont_records():
+def import_ont_records_excel():
     if "file" not in request.files:
         return "No file part", 400
 
