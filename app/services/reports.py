@@ -173,7 +173,7 @@ def generate_pdf():
     # ----------------------------------------------
     # SIGNIFICANT CHANGES SECTION IN PDF REPORT
     # -------------------------------------------------
-    
+
     significant_changes = []
 
     """
@@ -193,7 +193,7 @@ def generate_pdf():
     grouped_changes = group_changes_by_source(significant_changes)
 
     data["significant_changes"] = grouped_changes
-       
+
     # ----------------------------------------------
     # CHART SECTION IN PDF REPORT
     # -------------------------------------------------
@@ -210,6 +210,12 @@ def generate_pdf():
         chart_data=cpe_total,
         output_filename="cpe_trend.png",
         title="Trend ukupne CPE opreme po tipu (Zadnjih 10 sedmica)",
+    )
+
+    data["cpe_warehouse_chart_image"] = build_report_chart(
+        chart_data=cpe_warehouse_total,
+        output_filename="cpe_trend_raspoloziva.png",
+        title="Trend CPE opreme u raspoloživa oprema po tipu (Zadnjih 10 sedmica)",
     )
 
     # "cpe_dismantle_chart_image": "static/reports/charts/cpe_dismantle_trend.png",
@@ -312,16 +318,6 @@ def build_report_chart(chart_data, output_filename, title):
 
     """
 
-    title = title
-    labels = chart_data["labels"]
-    datasets = chart_data["datasets"]
-    # 2. Define path where chart image will be save
-    output_path = os.path.join(
-        current_app.root_path,
-        "static/reports/charts",
-        output_filename,
-    )
-
     # Lazy Load this heavy library matplotlib
     import matplotlib
 
@@ -331,20 +327,72 @@ def build_report_chart(chart_data, output_filename, title):
 
     # Lazy Load this heavy library matplotlib
     import matplotlib.pyplot as plt
+    import matplotlib.ticker as ticker
 
-    plt.figure(figsize=(10, 6))
-    plt.title(title)
-    plt.xlabel("")
-    plt.ylabel("Količina")
+    labels = chart_data["labels"]
+    datasets = chart_data["datasets"]
 
-    for dataset in datasets:
-        plt.plot(labels, dataset["data"], label=dataset.get("label", ""))
+    # 1. SET THE STYLE (Modern & Minimal)
+    plt.style.use("ggplot")  # Or 'seaborn-v0_8-muted' if available
 
-    plt.legend()
-    plt.grid(True)
-    plt.xticks(rotation=45)
+    # Customize the figure colors
+    fig, ax = plt.subplots(figsize=(12, 8), facecolor="#ffffff")
+    ax.set_facecolor("#f8f9fa")  # Light grey background inside chart
+
+    # 2. DEFINE A MODERN COLOR PALETTE
+    colors = ["#3498db", "#e74c3c", "#2ecc71",  "#9b59b6","#f1c40f", "#FF69B4"]
+
+    # 3. PLOT WITH CUSTOM STYLING
+    for i, dataset in enumerate(datasets):
+        color = colors[i % len(colors)]
+        plt.plot(
+            labels,
+            dataset["data"],
+            label=dataset.get("label", ""),
+            color=color,
+            linewidth=2.5,
+            marker="o",  # Adds dots to data points
+            markersize=6,
+            markerfacecolor="white",
+            markeredgewidth=2,
+            antialiased=True,
+        )
+
+    # 4. TYPOGRAPHY & LABELS
+    plt.title(title, fontsize=16, fontweight="bold", pad=20, color="#2c3e50")
+    plt.ylabel("Količina", fontsize=12, fontweight="semibold", color="#7f8c8d")
+
+    # Clean up the Grid
+    ax.grid(True, linestyle="--", alpha=0.6, color="#dcdde1")
+
+    # Remove unnecessary spines (borders)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_color("#bdc3c7")
+    ax.spines["bottom"].set_color("#bdc3c7")
+
+    # 5. LEGEND STYLING
+    plt.legend(
+        frameon=True,
+        facecolor="white",
+        edgecolor="#dcdde1",
+        loc="upper left",
+        fontsize=10,
+        shadow=True,
+    )
+
+    # 6. TICK CUSTOMIZATION
+    plt.xticks(rotation=30, ha="right", color="#7f8c8d")
+    plt.yticks(color="#7f8c8d")
+
     plt.tight_layout()
-    plt.savefig(output_path, dpi=150)
+
+    # SAVE
+    # 2. Define path where chart image will be save
+    output_path = os.path.join(
+        current_app.root_path, "static/reports/charts", output_filename
+    )
+    plt.savefig(output_path, dpi=200, bbox_inches="tight")  # Higher DPI for crispness
     plt.close()
 
     # return path of saved chart image
