@@ -7,6 +7,7 @@ from flask import (
     url_for,
     flash,
     send_file,
+    jsonify,
 )
 from flask_login import login_required
 from openpyxl import Workbook
@@ -17,6 +18,7 @@ from app.services.ont_inventory import (
     update_recent_ont_inventory,
     get_ont_records_excel_export,
     parce_excel_segments,
+    save_imported_segments_to_db
 )
 
 ont_inventory_bp = Blueprint(
@@ -82,7 +84,8 @@ def export_ont_records_excel():
 
 
 # called from js inside ont_records.html
-@ont_inventory_bp.route("/upload", methods=["POST"])
+@ont_inventory_bp.route("/upload-excel", methods=["POST"])
+@login_required
 def import_ont_records_excel():
     if "file" not in request.files:
         return "No file part", 400
@@ -93,3 +96,30 @@ def import_ont_records_excel():
     results = parce_excel_segments(file)
 
     return results  # Flask converts dict to JSON automatically
+
+
+@ont_inventory_bp.route("/save-segments", methods=["POST"])
+@login_required
+def save_imported_segments():
+    data = request.get_json()
+
+    segments = data.get("segments", [])
+
+    if not segments:
+        return jsonify(
+            {
+                "success": False,
+                "message": "error: Nema podataka",
+            }
+        ), 400
+
+    success, message = save_imported_segments_to_db(segments)
+
+    flash(message, "success" if success else "danger")
+
+    return jsonify(
+        {
+            "success": success,
+            "message": message,
+        }
+    ), 200 if success else 403

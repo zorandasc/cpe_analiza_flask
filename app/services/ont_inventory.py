@@ -3,6 +3,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.utils.dates import get_current_month_end
 from openpyxl import load_workbook
+from app.models import Cities
 from app.queries.ont_onventory import (
     get_last_4_months,
     get_ont_inventory_pivoted,
@@ -122,6 +123,12 @@ def get_ont_records_excel_export():
 
 
 def parce_excel_segments(file_storage):
+    """
+    Parse ecxel row segment by segment. The border of segmennts are 'medium' style.
+    Distinguish between top and bottom border style.
+    End of loop is both top and bottom border style'medium' on last row in excel
+
+    """
     file_storage.stream.seek(0)
 
     # Load the workbook directly from the file stream
@@ -183,6 +190,60 @@ def parce_excel_segments(file_storage):
         "excel_grand_total": grand_total_from_file,
         "match": is_valid,
     }
+
+
+def save_imported_segments_to_db(segments):
+    """
+    Map the Excel segment index (0, 1, 2...) to your DB city_id
+    """
+    current_month_end = get_current_month_end()
+
+    # SEG 1 BANJA LUKA -> (city_id=3)
+    # SEG 2 BIJELJINA-> (city_id=6)
+    # SEG 3 BRCKO-> (city_id=7)
+    # SEG 4 DOBOJ-> (city_id=5)
+    # SEG 5 SARAJEVO-> (city_id=9)
+    # SEG 6 PRIJEDOR-> (city_id=4)
+    # SEG 7 TREBINJE-> (city_id=11)
+    # SEG 8 FOCA-> (city_id=10)
+    # SEG 9 ZVORNIK-> (city_id=8)
+    # Map the Excel segment index (0, 1, 2...) to your DB city_id
+    # Ensure this order matches your Excel segments exactly!
+    city_mapping = [3, 6, 7, 5, 9, 4, 11, 10, 8]
+
+    try:
+        for index, value in enumerate(segments):
+            # Guard against Excel providing more segments than we have city mappings
+            if index >= len(city_mapping):
+                break
+
+            city_id = city_mapping[index]
+            quantity = int(value or 0)
+
+            db.session.execute(
+                text("""
+                    INSERT INTO ont_inventory (city_id, month_end, quantity)
+                    VALUES (:city_id, :month_end, :quantity)
+                    ON CONFLICT (city_id, month_end)
+                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
+                """),
+                {
+                    "city_id": city_id,
+                    "month_end": current_month_end,
+                    "quantity": quantity,
+                },
+            )
+
+        db.session.commit()
+        return (
+            True,
+            f"Uspješno ažurirano {len(segments)} skladišta za {current_month_end}.",
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        return False, "Greška prilikom čuvanja podataka."
 
 
 # -------------------------

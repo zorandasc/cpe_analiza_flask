@@ -255,7 +255,14 @@ styles %} {{ super() }}
             <strong>Totalna suma iz Excela:</strong> <span id="excelTotal"></span>
         </div>
       </div>
+      <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+    <button type="button" id="confirmInsert" class="btn btn-success">
+        <i class="bi bi-database-fill-add"></i> Potvrdi i Snimi u Bazu
+    </button>
+</div>
     </div>
+
   </div>
 </div>
 
@@ -276,6 +283,9 @@ styles %} {{ super() }}
 </script>
 
 <script>
+let currentSegments = []; // Global variable to store parsed data
+
+//SENDING EXEL FILE FROM FILE PICKER TO BACKEND PARSING AND SHOWING RESULT
 document.addEventListener('DOMContentLoaded', function() {
     const importForm = document.getElementById('importForm');
     
@@ -333,6 +343,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 5. Finally, show the modal
                 modal.show();
 
+                // 6. STORE SEGMENT FOR POSSIBLE SENDING INTO ISERT TO DB ROUTE
+                currentSegments = data.segments;
+
             } catch (error) {
                 console.error('Error:', error);
                 alert("Došlo je do greške prilikom slanja fajla.");
@@ -340,5 +353,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+//SENDING PARSED SEGMENT EXSTRACTED FROM EXCEL TO ROUTE FOR INSERTION TO DB
+document.getElementById('confirmInsert').addEventListener('click',async function(){
+  if (currentSegments.length === 0) return
+
+  try{
+    const response=await fetch("{{url_for('ont_inventory.save_imported_segments')}}",{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-CSRFToken': "{{csrf_token()}}"
+      },
+      body: JSON.stringify({segments: currentSegments})
+    })
+
+    if(response.ok){
+      //alert("Podaci su uspješno sačuvani!");
+      location.reload();// Refresh to see updated table
+    }else{
+      throw new Error('Snimanje nije uspjelo.')
+    }
+  }
+  catch(error){
+    alert("Greška: " + error.message);
+  }
+})
 </script>
 {% endblock %}
