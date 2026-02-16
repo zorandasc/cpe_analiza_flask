@@ -3,7 +3,6 @@ from sqlalchemy import text
 from app.extensions import db
 from app.utils.dates import get_current_month_end
 from openpyxl import load_workbook
-from app.models import Cities
 from app.queries.ont_onventory import (
     get_last_4_months,
     get_ont_inventory_pivoted,
