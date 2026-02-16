@@ -48,7 +48,7 @@
       <table class="summary-table">
         <thead>
           <tr>
-            <th>CPE oprema skladišta i IJ</th>
+            <th>CPE oprema ukupna skladišta i IJ</th>
             <th>Prošla sedmica</th>
             <th>Ova sedmica</th>
             <th>Promjena</th>
@@ -71,14 +71,14 @@
       <table class="summary-table">
         <thead>
           <tr>
-            <th>CPE raspoloživa oprema</th>
+            <th>CPE u raspoloživa oprema</th>
             <th>Prošla sedmica</th>
             <th>Ova sedmica</th>
             <th>Promjena</th>
           </tr>
         </thead>
         <tbody>
-        {% for label, vals in summary.cpedismantle.items() %}
+        {% for label, vals in summary.cpewarehouse.items() %}
           <tr>
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
@@ -101,7 +101,7 @@
           </tr>
         </thead>
         <tbody>
-        {% for label, vals in summary.cpetotal.items() %}
+        {% for label, vals in summary.cpedismantle.items() %}
           <tr>
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
