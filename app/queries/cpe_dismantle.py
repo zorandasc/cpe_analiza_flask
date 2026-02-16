@@ -94,7 +94,7 @@ def get_cpe_dismantle_pivoted(
 
 
 def get_cpe_dismantle_city_history(
-    city_id: int, schema_list: list, page: int, per_page: int
+    city_id: int, schema_list: list, list_of_dismantles: list, page: int, per_page: int
 ):
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
@@ -106,10 +106,17 @@ def get_cpe_dismantle_city_history(
                 COUNT(DISTINCT WEEK_END) 
             FROM CPE_DISMANTLE
             WHERE CITY_ID=:city_id
+            AND dismantle_type_id IN :d_list
         """
     )
 
-    total_count = db.session.execute(count_query, {"city_id": city_id}).scalar()
+    total_count = db.session.execute(
+        count_query,
+        {
+            "city_id": city_id,
+            "d_list": tuple(list_of_dismantles),
+        },
+    ).scalar()
 
     # Calculate offset
     offset = (page - 1) * per_page
@@ -127,15 +134,16 @@ def get_cpe_dismantle_city_history(
         )
 
     SQL_QUERY = f"""
-    SELECT
+        SELECT
             WEEK_END,
-            DT.CODE AS DISMANTLE_CODE,
+           
             {", ".join(case_columns)}
         FROM cpe_dismantle cd
         JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
         LEFT JOIN cpe_types ct ON ct.id=cd.cpe_type_id
         WHERE cd.city_id = :city_id
-        GROUP BY cd.WEEK_END, DISMANTLE_CODE
+        AND dismantle_type_id IN :d_list
+        GROUP BY cd.WEEK_END
         ORDER BY cd.week_end DESC
         LIMIT :limit
         OFFSET :offset
@@ -145,6 +153,7 @@ def get_cpe_dismantle_city_history(
         "city_id": city_id,
         "limit": per_page,
         "offset": offset,
+        "d_list": tuple(list_of_dismantles),
     }
 
     result = db.session.execute(text(SQL_QUERY), params)

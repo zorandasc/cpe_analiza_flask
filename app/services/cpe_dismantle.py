@@ -118,8 +118,15 @@ def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
     if not can_access_city(city.id):
         return None, None, None, None, "Niste autorizovani."
 
-    if category not in ("complete", "damage"):
-        return None, None, None, None, "No Category"
+    print(category)
+
+    match category:
+        case "complete":
+            list_of_dismantles = [1]
+        case "damage":
+            list_of_dismantles = [2, 3, 4]
+        case _:
+            return None, None, None, None, "No Category"
 
     # list of all cpe_types object in db but only if visible_in_dismantle
     schema_list = get_cpe_types_column_schema(
@@ -128,7 +135,11 @@ def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
 
     # paginated_records is iterable SimplePagination object
     records = get_cpe_dismantle_city_history(
-        city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
+        city_id=city.id,
+        schema_list=schema_list,
+        list_of_dismantles=list_of_dismantles,
+        page=page,
+        per_page=per_page,
     )
 
     records.items = _group_history_records(records.items, schema_list)
