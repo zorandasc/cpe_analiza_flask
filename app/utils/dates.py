@@ -12,8 +12,6 @@ def get_current_week_friday(today=None):
     return today + timedelta(days=(4 - today.weekday()) % 7)
 
 
-# MAYBE YOU DON NEED THIS SATURDAY
-# CAN BE CALCULATED FORM FRIDAY, current_week_frida
 def get_passed_saturday(today=None):
     today = today or date.today()
     # Friday = 4
@@ -27,6 +25,7 @@ def get_current_month_end(today=None):
 
     # Move to first day of next month
     if today.month == 12:
+        # today year+1, firt month, first day
         first_next_month = date(today.year + 1, 1, 1)
     else:
         # Jump to the first day of the next month
@@ -34,3 +33,13 @@ def get_current_month_end(today=None):
 
     # Subtract one day Step back one day → last day of current month
     return first_next_month - timedelta(days=1)
+
+
+def get_previous_month_end(today=None):
+    today = today or date.today()
+
+    # Find the first day of the CURRENT month
+    first_day_current_month = date(today.year, today.month, 1)
+
+    # Step back one day -> results in the last day of the PREVIOUS month
+    return first_day_current_month - timedelta(days=1)

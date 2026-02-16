@@ -203,7 +203,7 @@ FROM (
         -- Generates a series of dates from 5 years ago to today, stepping by 1 month
         SELECT generate_series(
             date_trunc('month', NOW() - interval '5 years'), 
-            date_trunc('month', NOW()), 
+            '2025-12-01'::date,
             '1 month'::interval
         ) AS month_date
     ) d

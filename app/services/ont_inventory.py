@@ -1,7 +1,7 @@
 # Business logic + write operations
 from sqlalchemy import text
 from app.extensions import db
-from app.utils.dates import get_current_month_end
+from app.utils.dates import get_previous_month_end
 from openpyxl import load_workbook
 from app.queries.ont_onventory import (
     get_last_4_months,
@@ -13,11 +13,9 @@ TOTAL_KEY = "__TOTAL__"
 
 
 def get_ont_records_view_data():
-    # calculate current week week_end date
-    current_month_end = get_current_month_end()
+    # calculate current month date
+    previous_month_end = get_previous_month_end()
 
-    # month is used in SQL + and for structure of html table
-    # covert datetime.date to date string
     # label → presentation used only in the table header
     # key → internal identifier (used in SQL + structure of html table)
     # w.isoformat()='YYYY-MM-DD'
@@ -34,14 +32,14 @@ def get_ont_records_view_data():
     records_grouped = _group_records(records, month_keys)
 
     return {
-        "current_month_end": current_month_end.strftime("%d-%m-%Y"),
+        "previous_month_end": previous_month_end.strftime("%d-%m-%Y"),
         "months": months,
         "records": records_grouped,
     }
 
 
 def update_recent_ont_inventory(form_data):
-    current_month_end = get_current_month_end()
+    previous_month_end = get_previous_month_end()
 
     try:
         for key, value in form_data.items():
@@ -69,7 +67,7 @@ def update_recent_ont_inventory(form_data):
                 """),
                 {
                     "city_id": city_id,
-                    "month_end": current_month_end,
+                    "month_end": previous_month_end,
                     "quantity": quantity,
                 },
             )
@@ -81,7 +79,7 @@ def update_recent_ont_inventory(form_data):
         # Wrap them in a transaction
         # `Make them permanent in the DB
         db.session.commit()
-        return True, f"Novo stanje za {current_month_end} uspješno sačuvano!"
+        return True, f"Novo stanje za {previous_month_end} uspješno sačuvano!"
 
     except Exception as e:
         db.session.rollback()
@@ -90,7 +88,7 @@ def update_recent_ont_inventory(form_data):
 
 
 def get_ont_records_excel_export():
-    current_month_end = get_current_month_end()
+    previous_month_end = get_previous_month_end()
 
     # month is used in SQL + and for structure of html table
     # covert datetime.date to date string
@@ -118,7 +116,7 @@ def get_ont_records_excel_export():
         row = [ont["name"]] + [ont["dates"][m]["quantity"] for m in month_keys]
         rows.append(row)
 
-    return headers, rows, current_month_end
+    return headers, rows, previous_month_end
 
 
 def parce_excel_segments(file_storage):
@@ -193,9 +191,9 @@ def parce_excel_segments(file_storage):
 
 def save_imported_segments_to_db(segments):
     """
-    Map the Excel segment index (0, 1, 2...) to your DB city_id
+    Map the Excel segment indexses (0, 1, 2...) to your DB city_id
     """
-    current_month_end = get_current_month_end()
+    previous_month_end = get_previous_month_end()
 
     # SEG 1 BANJA LUKA -> (city_id=3)
     # SEG 2 BIJELJINA-> (city_id=6)
@@ -219,6 +217,7 @@ def save_imported_segments_to_db(segments):
             city_id = city_mapping[index]
             quantity = int(value or 0)
 
+            # UPSERT
             db.session.execute(
                 text("""
                     INSERT INTO ont_inventory (city_id, month_end, quantity)
@@ -228,7 +227,7 @@ def save_imported_segments_to_db(segments):
                 """),
                 {
                     "city_id": city_id,
-                    "month_end": current_month_end,
+                    "month_end": previous_month_end,
                     "quantity": quantity,
                 },
             )
@@ -236,7 +235,7 @@ def save_imported_segments_to_db(segments):
         db.session.commit()
         return (
             True,
-            f"Uspješno ažurirano {len(segments)} skladišta za {current_month_end}.",
+            f"Uspješno ažurirano {len(segments)} skladišta za {previous_month_end}.",
         )
 
     except Exception as e:
