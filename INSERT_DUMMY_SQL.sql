@@ -286,7 +286,45 @@ FROM
 			GENERATE_SERIES(1, 60) AS W
 	) AS F;
 
-
+--ALL ZERO------
+INSERT INTO cpe_dismantle (
+    city_id, 
+    cpe_type_id, 
+    dismantle_type_id, 
+    quantity, 
+    week_end, 
+    created_at, 
+    updated_at
+)
+SELECT
+    C.id AS city_id,
+    T.id AS cpe_type_id,
+    D.id AS dismantle_type_id,
+    0 AS quantity,
+    F.friday_date AS week_end,
+    NOW() AS created_at,
+    NOW() AS updated_at
+FROM
+    cities C
+    CROSS JOIN (
+        -- Generates IDs 1, 2, 3, 4, 5, 6, 7, 8
+        SELECT generate_series(1, 8) AS id
+    ) T
+    CROSS JOIN dismantle_types D
+    CROSS JOIN (
+        SELECT 
+            (d)::DATE AS friday_date
+        FROM 
+            -- Starts Friday Jan 3, 2025
+            -- Ends Friday of the previous week
+            GENERATE_SERIES(
+                '2025-01-03'::TIMESTAMP, 
+                DATE_TRUNC('week', NOW()) - INTERVAL '3 days', 
+                '1 week'
+            ) AS d
+    ) AS F
+ON CONFLICT ON CONSTRAINT uq_city_cpe_dismantle_week 
+DO NOTHING;
 
 INSERT INTO
 	IPTV_USERS (TOTAL_USERS, WEEK_END, CREATED_AT,UPDATED_AT)

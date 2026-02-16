@@ -196,7 +196,7 @@ styles %} {{ super() }}
         {% for r in records.items %}
         <tr>
           <td class="weekend-column">
-            {% if r.week_end %} {{ r.week_end.strftime('%Y-%m-%d') }} {% else %}
+            {% if r.week_end %} {{ r.week_end.strftime('%d-%m-%Y') }} {% else %}
             N/A {% endif %}
           </td>
           {% for item in schema %}

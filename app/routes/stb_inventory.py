@@ -39,7 +39,7 @@ def stb_iptv_records():
 def update_stb_inventory():
     success, message = update_recent_stb_inventory(request.form)
     flash(message, "success" if success else "danger")
-    return redirect(url_for("stb_inventory.stb_iptv_ecords"))
+    return redirect(url_for("stb_inventory.stb_iptv_records"))
 
 
 @stb_inventory_bp.route("/update_iptv_users", methods=["POST"])
