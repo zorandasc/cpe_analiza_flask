@@ -805,18 +805,31 @@
 </script>
 
 <script>
-//AUTOMATIC SCROLL TO HTML TABLE
+   //1. When a user clicks a link in your Flask navbar to go to a new route, 
+   //the navType is 'navigate'. The scroll will trigger. 
+   //2. when a user submits a form on that same page navType becomes 'reload', 
+   //and the scroll will not trigge
     window.onload = function() {
-        // Delay execution by 500 milliseconds
-        setTimeout(function() {
-            const element = document.getElementById("target-section");
-            if (element) {
-                element.scrollIntoView({ 
-                    behavior: "smooth", 
-                    block: "start" 
-                });
+        // Get the navigation type (navigate, reload, back_forward, or prerender)
+        const navEntries = performance.getEntriesByType('navigation');
+        
+        if (navEntries.length > 0) {
+            const navType = navEntries[0].type;
+
+            // Only trigger the scroll if it's a fresh 'navigate' (from a link or URL change)
+            // This ignores 'reload' (which happens after many POST updates)
+            if (navType === 'navigate') {
+                setTimeout(function() {
+                    const element = document.getElementById("target-section");
+                    if (element) {
+                        element.scrollIntoView({ 
+                            behavior: "smooth", 
+                            block: "start" 
+                        });
+                    }
+                }, 800);
             }
-        }, 800); 
+        }
     };
 </script>
 {% endblock %}
