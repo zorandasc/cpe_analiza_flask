@@ -58,6 +58,9 @@ styles %} {{ super() }}
     margin-bottom: 1rem;
     font-weight: 600;
   }
+  .btn-custom-excel{
+    background-image: linear-gradient(to right, #b8cbb8 0%, #b8cbb8 0%, #b465da 0%, #cf6cc9 33%, #ee609c 66%, #ee609c 100%);
+  }
 
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
@@ -126,12 +129,24 @@ styles %} {{ super() }}
       {% endfor %}
     </tbody>
   </table>
+  <div class="d-flex justify-content-between align-items-center">
   <a
       class="btn btn-sm btn-outline-secondary mb-2"
       href="{{ url_for('ont_inventory.export_ont_records_excel')}}"
     >
       Export Excel
     </a>
+  <form id="importForm" method="POST"  action="{{ url_for('ont_inventory.import_ont_records') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+     <div class="col-auto">
+        <input type="file" name="file" class="form-control" accept=".xlsx" required />    
+    </div>
+    <div class="col-auto">
+    <button type="submit" class="btn btn-danger btn-custom-excel">Import Excel</button>
+    </div>
+    
+</form>
+</div>
 </div>
 
 <div class="modal fade" id="ontEditModal" tabindex="-1">
@@ -145,7 +160,7 @@ styles %} {{ super() }}
 
         <div class="modal-header custom-modal-header">
           <h4 class="modal-title">
-            Dodaj novo stanje za: {{ current_week_end }}
+            Dodaj novo stanje za: {{ current_month_end }}
           </h4>
           <button
             type="button"
@@ -220,6 +235,29 @@ styles %} {{ super() }}
   </div>
 </div>
 
+<div class="modal fade" id="importResultModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rezultat Importa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="validationAlert" class="alert d-none"></div>
+        <table class="table table-sm">
+          <thead>
+            <tr><th>Segment</th><th>Vrijednost</th></tr>
+          </thead>
+          <tbody id="resultTableBody"></tbody>
+        </table>
+        <div class="mt-3">
+            <strong>Zbir svih segmenata:</strong> <span id="calcTotal"></span><br>
+            <strong>Totalna suma iz Excela:</strong> <span id="excelTotal"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 //AUTOMATIC SCROLL TO HTML TABLE
@@ -235,5 +273,69 @@ styles %} {{ super() }}
             }
         }, 800); 
     };
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importForm = document.getElementById('importForm');
+    
+    if (importForm) {
+        importForm.addEventListener('submit', async function(e) {
+            // This line PREVENTS the redirect to /upload
+            e.preventDefault(); 
+            
+            const formData = new FormData(this);
+            const modalElement = document.getElementById('importResultModal');
+            const modal = new bootstrap.Modal(modalElement);
+            const tableBody = document.getElementById('resultTableBody');
+            const alertBox = document.getElementById('validationAlert');
+
+            //this.action, is from form action
+            //action="{{ url_for('ont_inventory.import_ont_records') }}"
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    // Note: No 'Content-Type' header here, 
+                    // browser sets it automatically for FormData
+                });
+
+                if (!response.ok) throw new Error('Server error');
+
+                const data = await response.json();
+
+                // 1. Clear previous table rows
+                tableBody.innerHTML = '';
+                
+                // 2. Map segments to rows
+                data.segments.forEach((val, index) => {
+                    const row = `<tr><td>Skladište/Segment ${index + 1}</td><td class="text-end">${val}</td></tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // 3. Update totals
+                document.getElementById('calcTotal').innerText = data.calculated_total;
+                document.getElementById('excelTotal').innerText = data.excel_grand_total;
+
+                // 4. Update Alert Box color and message
+                alertBox.classList.remove('d-none', 'alert-success', 'alert-danger');
+                if (data.match) {
+                    alertBox.classList.add('alert-success');
+                    alertBox.innerText = "Sve vrijednosti se podudaraju sa Totalnom sumom iz excela!";
+                } else {
+                    alertBox.classList.add('alert-danger');
+                    alertBox.innerText = "Pažnja: Izračunati zbir se ne slaže sa Grand Totalom iz fajla!";
+                }
+
+                // 5. Finally, show the modal
+                modal.show();
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Došlo je do greške prilikom slanja fajla.");
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

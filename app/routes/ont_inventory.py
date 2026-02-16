@@ -16,6 +16,7 @@ from app.services.ont_inventory import (
     get_ont_records_view_data,
     update_recent_ont_inventory,
     get_ont_records_excel_export,
+    parce_excel_segments,
 )
 
 ont_inventory_bp = Blueprint(
@@ -78,3 +79,17 @@ def export_ont_records_excel():
         download_name="stanje_ont_opreme.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
+
+# called from js inside ont_records.html
+@ont_inventory_bp.route("/upload", methods=["POST"])
+def import_ont_records():
+    if "file" not in request.files:
+        return "No file part", 400
+
+    file = request.files["file"]
+
+    # The dictionary returned here contains 'segments', 'match', etc.
+    results = parce_excel_segments(file)
+
+    return results  # Flask converts dict to JSON automatically

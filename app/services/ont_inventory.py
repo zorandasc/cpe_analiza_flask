@@ -2,6 +2,7 @@
 from sqlalchemy import text
 from app.extensions import db
 from app.utils.dates import get_current_month_end
+from openpyxl import load_workbook
 from app.queries.ont_onventory import (
     get_last_4_months,
     get_ont_inventory_pivoted,
@@ -118,6 +119,69 @@ def get_ont_records_excel_export():
         rows.append(row)
 
     return headers, rows, current_month_end
+
+
+def parce_excel_segments(file_storage):
+    file_storage.stream.seek(0)
+
+    # Load the workbook directly from the file stream
+    try:
+        wb = load_workbook(file_storage.stream, data_only=True)
+    except Exception as e:
+        return f"Error loading workbook: {e}"
+
+    sheet = wb.active  # Or wb['Sheet1']
+    summaries = []
+    current_subtotal = 0
+    # Assuming header is row 1, data starts at row 2
+    starting_row = 2
+    # Column O is the 15th column
+    column_index = 15
+
+    for row in sheet.iter_rows(
+        min_row=starting_row, max_col=column_index, min_col=column_index
+    ):
+        cell = row[0]
+        border = cell.border
+        val = cell.value if isinstance(cell.value, (int, float)) else 0
+
+        # 1. STOP & CAPTURE: Grand Total Detection
+        if border.top.style == "medium" and border.bottom.style == "medium":
+            grand_total_from_file = val
+            print(f"--- VALIDATION: Grand Total Found: {grand_total_from_file} ---")
+            break
+
+        # 2. TRIGGER: New Group Starts (Top Style)
+        if border.top.style == "medium":
+            if current_subtotal > 0:
+                summaries.append(current_subtotal)
+            current_subtotal = val
+
+        # 3. TRIGGER: Current Group Ends (Bottom Style)
+        elif border.bottom.style == "medium":
+            current_subtotal += val
+            if current_subtotal > 0:
+                summaries.append(current_subtotal)
+            current_subtotal = 0
+
+        # 4. NORMAL: Regular accumulation
+        else:
+            current_subtotal += val
+
+    # Final cleanup if data remains (in case Grand Total row was missing)
+    if current_subtotal > 0:
+        summaries.append(current_subtotal)
+
+    # --- Verification Logic ---
+    calculated_total = sum(summaries)
+    is_valid = calculated_total == grand_total_from_file
+
+    return {
+        "segments": summaries,
+        "calculated_total": calculated_total,
+        "excel_grand_total": grand_total_from_file,
+        "match": is_valid,
+    }
 
 
 # -------------------------
