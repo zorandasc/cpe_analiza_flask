@@ -5,20 +5,6 @@ from app.extensions import db
 from app.models import CpeInventory, CpeDismantle, DismantleTypes, CpeTypes, Cities
 
 
-def build_timeline(start_week, max_week):
-    """
-    Build contunios set of fridays from start_week to max_week
-    """
-    timeline = []
-    current_week = start_week
-
-    while current_week <= max_week:
-        timeline.append(current_week)
-        current_week += timedelta(days=7)
-
-    return timeline
-
-
 # cpe inventory (Event/state-change tables)
 # You only need carry-forward when your table stores sparse changes instead of full state.
 def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
@@ -168,6 +154,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # ---------------------------------------
     all_values = []
     for values in totals_by_type.values():
+        # extend() takes those individual lists and merges them into one big flat list:
         all_values.extend(values)
 
     if all_values:
@@ -320,12 +307,12 @@ def get_cpe_dismantle_chart_data(
         state[city_id_][type_key][week_end] = qty
 
     # ---------------------------------------
-    # 4. Aggregate into chart datasets
+    # 4. Aggregate into chart datasets USING CARRY FORWARD
     # ---------------------------------------
-    # koliko ima timedelti toliko napravi praznih slotova
+    # koliko ima timeline toliko napravi praznih slotova
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
-    # fill totals_by_type using carry forward
+    # FILL totals_by_type USING CARRY FORWARD
     for city_data in state.values():
         for type_key, week_map in city_data.items():
             # valuble only if first is missing
@@ -334,12 +321,34 @@ def get_cpe_dismantle_chart_data(
 
             # for every date (w) in timeline
             for i, w in enumerate(timeline):
-                # check if that date exisist in week_map
+                # check if date exisist in real data week_map
                 if w in week_map:
                     # if yes take his quantity, continue
                     last_quantity = week_map[w]
                 # if no quantity for this timeslot is last value
                 totals_by_type[type_key][i] += last_quantity
+
+    # ---------------------------------------
+    # 4.5 Dynamic Y-axis scaling (ALL datasets)
+    # ---------------------------------------
+    all_values = []
+    for values in totals_by_type.values():
+        # extend() takes those individual lists and merges them into one big flat list:
+        all_values.extend(values)
+
+    if all_values:
+        y_min = min(all_values)
+        y_max = max(all_values)
+
+        padding = (y_max - y_min) * 0.1
+
+        if padding == 0:
+            padding = 1
+
+        y_min -= padding
+        y_max += padding
+    else:
+        y_min, y_max = 0, 1
 
     # ---------------------------------------
     # 5. Format output per mode
@@ -350,6 +359,8 @@ def get_cpe_dismantle_chart_data(
         return {
             "labels": [w.strftime("%d-%m-%Y") for w in timeline],
             "datasets": [{"label": "Total", "data": values}],
+            "y_min": y_min,
+            "y_max": y_max,
         }
 
     # MODE 2 — single type
@@ -371,7 +382,8 @@ def get_cpe_dismantle_chart_data(
             "labels": [w.strftime("%d-%m-%Y") for w in timeline],
             "datasets": [{"label": f"Ukupno ({cpe_type})", "data": values}],
             "devices": devices,
-            "mode": "type-total",
+            "y_min": y_min,
+            "y_max": y_max,
         }
 
     # MODE 3 — all types
@@ -380,6 +392,8 @@ def get_cpe_dismantle_chart_data(
     return {
         "labels": [w.strftime("%d-%m-%Y") for w in timeline],
         "datasets": datasets,
+        "y_min": y_min,
+        "y_max": y_max,
     }
 
 
@@ -420,9 +434,32 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
 
     rows = db.session.execute(text(sql), params).fetchall()
 
+    labels = [r.week_end.strftime("%d-%m-%Y") for r in rows]
+    data = [r.total for r in rows]
+
+    # ---------------------------------------
+    # 4.5 Dynamic Y-axis scaling (ALL datasets)
+    # ---------------------------------------
+
+    if data:
+        y_min = min(data)
+        y_max = max(data)
+
+        padding = (y_max - y_min) * 0.1
+
+        if padding == 0:
+            padding = 1
+
+        y_min -= padding
+        y_max += padding
+    else:
+        y_min, y_max = 0, 1
+
     return {
-        "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-        "datasets": [{"label": "STB Uređaji", "data": [r.total for r in rows]}],
+        "labels": labels,
+        "datasets": [{"label": "STB Uređaji", "data": data}],
+        "y_min": y_min,
+        "y_max": y_max,
     }
 
 
@@ -454,9 +491,32 @@ def get_iptv_inventory_chart_data(weeks=None):
 
     rows = db.session.execute(text(sql), params).fetchall()
 
+    labels = [r.week_end.strftime("%d-%m-%Y") for r in rows]
+    data = [r.total for r in rows]
+
+    # ---------------------------------------
+    # 4.5 Dynamic Y-axis scaling (ALL datasets)
+    # ---------------------------------------
+
+    if data:
+        y_min = min(data)
+        y_max = max(data)
+
+        padding = (y_max - y_min) * 0.1
+
+        if padding == 0:
+            padding = 1
+
+        y_min -= padding
+        y_max += padding
+    else:
+        y_min, y_max = 0, 1
+
     return {
-        "labels": [r.week_end.strftime("%d-%m-%Y") for r in rows],
-        "datasets": [{"label": "IPTV korisnici", "data": [r.total for r in rows]}],
+        "labels": labels,
+        "datasets": [{"label": "IPTV korisnici", "data": data}],
+        "y_min": y_min,
+        "y_max": y_max,
     }
 
 
@@ -497,15 +557,53 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
 
     rows = db.session.execute(text(sql), params).fetchall()
 
+    labels = [r.month_end.strftime("%d-%m-%Y") for r in rows]
+    data = [r.total for r in rows]
+
+    # ---------------------------------------
+    # 4.5 Dynamic Y-axis scaling (ALL datasets)
+    # ---------------------------------------
+
+    if data:
+        y_min = min(data)
+        y_max = max(data)
+
+        padding = (y_max - y_min) * 0.1
+
+        if padding == 0:
+            padding = 1
+
+        y_min -= padding
+        y_max += padding
+    else:
+        y_min, y_max = 0, 1
+
     return {
-        "labels": [r.month_end.strftime("%d-%m-%Y") for r in rows],
-        "datasets": [{"label": "ONT uređaji", "data": [r.total for r in rows]}],
+        "labels": labels,
+        "datasets": [{"label": "ONT uređaji", "data": data}],
+        "y_min": y_min,
+        "y_max": y_max,
     }
 
 
 # -----------------
 # HELPERS FUNCTIONS
 # -----------------
+
+
+def build_timeline(start_week, max_week):
+    """
+    Build contunios set of fridays from start_week to max_week
+    """
+    timeline = []
+    current_week = start_week
+
+    while current_week <= max_week:
+        timeline.append(current_week)
+        current_week += timedelta(days=7)
+
+    return timeline
+
 
 BASE_TABLES = {
     "cpe": "cpe_inventory",
