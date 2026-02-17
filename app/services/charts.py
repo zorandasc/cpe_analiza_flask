@@ -48,11 +48,11 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     else:
         start_week = min_week
 
-    # continue timeline (fridays) from last week and bellow
+    # CONTINUOE TIMELINE OF FRIDAYS
     timeline = build_timeline(start_week, max_week)
 
     # ---------------------------------------
-    # 2. Base query (sparse snapshots) on some week_end ther is no data
+    # 2. Base query (sparse snapshots) on some week_end there is no data
     # ---------------------------------------
     q = (
         db.session.query(
@@ -65,7 +65,6 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         .join(CpeTypes, CpeTypes.id == CpeInventory.cpe_type_id)
         .join(Cities, Cities.id == CpeInventory.city_id)
         .filter(
-            CpeInventory.week_end >= start_week,
             CpeInventory.week_end <= max_week,
         )
         .filter(CpeTypes.visible_in_total)  # only cpe types that are visisble
@@ -85,13 +84,18 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
 
     rows = q.all()
 
+    # ROW IN ROWS- THERE MAY BE MISSING WEEK_ENDS:
+    # (3, datetime.date(2026, 1, 9), 7, <CpeTypeEnum.ONT: 'ONT'>, 7)
+    # (3, datetime.date(2026, 1, 9), 8, <CpeTypeEnum.ONT: 'ONT'>, 444)
+    # for city_id=13, week=5, cpe_type='ONt':
+    # print(row, "\n"): 10 rows, 5 for ont nokia 5 for huawei
     if not rows:
         return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
 
     # ---------------------------------------
-    # 3. Rebuild weekly state per city/type
+    # 3. Rebuild weekly state per city/type -DATA GROUPING
     # ---------------------------------------
-    # create empty state
+    # 3.1 create empty state
     state = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
     """
     city
@@ -99,18 +103,13 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
       └── week → quantity
     """
 
-    # than fill it
-    # for city_id=13, week=5, cpe_type='ONt':
-    # print(row, "\n"): 10 rows, 5 for ont nokia 5 for huawei
-    # (3, datetime.date(2026, 1, 9), 7, <CpeTypeEnum.ONT: 'ONT'>, 7)
-    # (3, datetime.date(2026, 1, 9), 8, <CpeTypeEnum.ONT: 'ONT'>, 444)
+    # 3.2 FILL THE STATE WITH VALUES
     for city_id_, week_end, cpe_type_id_, type_key, qty in rows:
         state[city_id_][type_key][week_end] += qty
     """
     #state look like:
     #for city_id=1
-    {
-    1: {
+    {1: {
        "router": {
            2026-01-23: 100,
            2026-02-06: 120
@@ -139,29 +138,31 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # Using lambda: is a shorthand way of saying: "Every time you see a new key,
     # run this little function to generate the starting value.
     """
-    # define totals_by_type
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
-    # fill totals_by_type using "Carry Forward" Logic
+    # FILL totals_by_type USING THE Logic THE CARRY FORWARD LOGIC
     for city_data in state.values():
         # now we are inside one city
-        # week_map is list of (weeks, quantities) from db for that cpe_type and city_id
+        # week_map is actuall list of data from db (weeks, quantities) for that cpe_type and city_id
         # week_map = {2026-01-23: 100,2026-02-06: 120}
         for type_key, week_map in city_data.items():
-            # now we are inside one cpe_type
-            # The "Carry Forward" Logic
-            last = 0
+            # 1. FIND ALL WEEKS THAT ARE BEFORE start_week
+            previous_weeks = [w for w in week_map if w < start_week]
+            # 2. AND THAN USE QUANTITY FROM LAST WEEK BEFORE start_week
+            last_quantity = week_map[max(previous_weeks)] if previous_weeks else 0
+            # 3. WHAY? BECAUSE IF THERE IS REAL WEEK in week_map
+            # FOR FIRST ITERATION THAN WE HAVE VALUE TO POPULATE
+
             # FOR FILTER WEEKS=5, i WILL GO FROM 1..5
             for i, w in enumerate(timeline):
                 if w in week_map:
-                    last = week_map[w]
-                # it adds that value to the running total for that specific data type across all cities.
-                # totals_by_type[cpe_type] is is a list: at start [0,0,0,0] so we use i for every time slot
-                totals_by_type[type_key][i] += last
+                    last_quantity = week_map[w]  # week_map[w] is quantity, w is date
+                totals_by_type[type_key][i] += last_quantity
 
     # totals_by_type give us summary per cities for all cpe_types:
     # router → [180, 180, 200, 200, ...]
     # modem  → [50, 50, 50, 50, ...]
+
     # ---------------------------------------
     # 4.5 Dynamic Y-axis scaling (ALL datasets)
     # ---------------------------------------
@@ -182,9 +183,11 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         y_max += padding
     else:
         y_min, y_max = 0, 1
+
     # ---------------------------------------
     # 5. Format output per mode
     # ---------------------------------------
+
     # MODE 1 — single device
     if cpe_id:
         # only one dataset exists
@@ -282,7 +285,7 @@ def get_cpe_dismantle_chart_data(
         .join(CpeTypes, CpeTypes.id == CpeDismantle.cpe_type_id)
         .join(Cities, Cities.id == CpeDismantle.city_id)
         .join(DismantleTypes, DismantleTypes.id == CpeDismantle.dismantle_type_id)
-        .filter(CpeDismantle.week_end >= start_week, CpeDismantle.week_end <= max_week)
+        .filter(CpeDismantle.week_end <= max_week)
         .filter(CpeTypes.visible_in_dismantle)
     )
 
@@ -325,16 +328,18 @@ def get_cpe_dismantle_chart_data(
     # fill totals_by_type using carry forward
     for city_data in state.values():
         for type_key, week_map in city_data.items():
-            last = 0
+            # valuble only if first is missing
+            previous_weeks = [w for w in week_map if w < start_week]
+            last_quantity = week_map[max(previous_weeks)] if previous_weeks else 0
 
             # for every date (w) in timeline
             for i, w in enumerate(timeline):
                 # check if that date exisist in week_map
                 if w in week_map:
                     # if yes take his quantity, continue
-                    last = week_map[w]
+                    last_quantity = week_map[w]
                 # if no quantity for this timeslot is last value
-                totals_by_type[type_key][i] += last
+                totals_by_type[type_key][i] += last_quantity
 
     # ---------------------------------------
     # 5. Format output per mode

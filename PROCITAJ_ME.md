@@ -2087,3 +2087,14 @@ get_cpe_types_column_schema(...)
 means:
 ✅ adding new CPE type requires ZERO SQL change
 (this is pro-level design)
+
+
+# The correct mental model for snapshot data
+
+Inventory is a state, not an event.
+
+So for any period:
+
+If there’s no snapshot at the start → use the last known value before it.
+
+This is how financial balances, stock levels, monitoring metrics, etc. are always plotted.
