@@ -5,8 +5,9 @@ from app.extensions import db
 from app.models import CpeInventory, CpeDismantle, DismantleTypes, CpeTypes, Cities
 
 
-# cpe inventory (Event/state-change tables)
-# You only need carry-forward when your table stores sparse changes instead of full state.
+# cpe inventory IS EVENT/STATE-CHANGE TABLE
+# You only need carry-forward when your table
+# stores sparse changes instead of full state.
 def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
     """
     # 1. Build weekly timeline (Fridays), we want 5 last weeks
@@ -234,8 +235,9 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     }
 
 
-# cpe dismantle (Event/state-change tables)
-# You only need carry-forward when your table stores sparse changes instead of full state.
+# cpe dismantle IS EVENT/STATE-CHANGE TABLE
+# You only need carry-forward when your table
+# stores sparse changes instead of full state.
 def get_cpe_dismantle_chart_data(
     city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=None
 ):
@@ -397,8 +399,11 @@ def get_cpe_dismantle_chart_data(
     }
 
 
-# stb inventory (Snapshot tables)
+# IN HERE I DONT USE CARRY FORWARD LOGIC IN PYTHON.
+# WHY? BECAUSE IF THERE IS NO WEEK SQL WILL JUST CONNECT ACROS EXSISTING WEEKS
+# stb inventory IS SNAPSHOT TABLE, UPDATE IS HAPPENING ACROSS ALL STBS
 def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
+
     params = {}
 
     where = ""
@@ -521,7 +526,11 @@ def get_iptv_inventory_chart_data(weeks=None):
 
 
 # ont inventory (Snapshot tables)
+# IN HERE I DONT USE CARRY FORWARD LOGIC IN PYTHON.
+# WHY? BECAUSE IF THERE IS NO WEEK SQL WILL JUST CONNECT ACROS EXSISTING WEEKS
+# stb inventory IS SNAPSHOT TABLE, UPDATE IS HAPPENING ACROSS ALL CITIES
 def get_ont_inventory_chart_data(city_id=None, months=None):
+
     params = {}
 
     where = ""
@@ -593,7 +602,7 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
 
 def build_timeline(start_week, max_week):
     """
-    Build contunios set of fridays from start_week to max_week
+    Build continuous set of fridays from start_week to max_week
     """
     timeline = []
     current_week = start_week
@@ -655,6 +664,7 @@ ORDER BY t.id
 """
 
 
+# FOR FILTERS IN CHARTS
 def get_distinct_joined_values(
     base_key: str,
     join_key: str,
