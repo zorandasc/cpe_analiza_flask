@@ -32,8 +32,9 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # So this code convert:sparse events ➝ full weekly snapshots ➝ totals
     """
     # ---------------------------------------
-    # 1. Find min, max available week in DB
+    # 1. Find min, max available week in all DB
     # ---------------------------------------
+ 
     min_week, max_week = db.session.query(
         func.min(CpeInventory.week_end), func.max(CpeInventory.week_end)
     ).one()
@@ -42,7 +43,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         return {"labels": [], "datasets": []}
 
     if weeks:
-        # if week 5 , we need to substract 5*7 days
+        # for example: if week 5 , we need to substract 5*7 days
         start_week = max_week - timedelta(days=7 * (weeks - 1))
     else:
         start_week = min_week
@@ -191,6 +192,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     if cpe_type:
         values = totals_by_type.get(cpe_type, [])
 
+        # all devices under that type
         devices = (
             db.session.query(CpeTypes.name, CpeTypes.label)
             .filter(CpeTypes.type == cpe_type, CpeTypes.visible_in_total)

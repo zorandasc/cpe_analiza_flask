@@ -336,7 +336,7 @@ def build_report_chart(chart_data, output_filename, title):
     plt.style.use("ggplot")  # Or 'seaborn-v0_8-muted' if available
 
     # Customize the figure colors
-    fig, ax = plt.subplots(figsize=(12, 8), facecolor="#ffffff")
+    fig, ax = plt.subplots(figsize=(10, 6), facecolor="#ffffff")
     ax.set_facecolor("#f8f9fa")  # Light grey background inside chart
 
     # 2. DEFINE A MODERN COLOR PALETTE
