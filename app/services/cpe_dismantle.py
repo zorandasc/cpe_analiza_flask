@@ -325,6 +325,14 @@ def ensure_snapshot(city_id, week_end):
 
 
 def _group_history_records(records, schema_list):
+    """
+    FOR EASY VIEW REPRESENTATION:
+
+    {week: week_end1, cpe:[{cpe_type_id:1, "damages":{"comp":100,"nd":200, "na":300,"ndia":400}}, {cpe_type_id:2, "damages":{...}]},
+
+    {week: week_end2, cpe:[{cpe_type_id:1, "damages":{"comp":100,"nd":200, "na":300,"ndia":400}}, {cpe_type_id:2, "damages":{...}]},
+
+    """
     grouped = {}
 
     for row in records:
@@ -353,11 +361,13 @@ def _group_history_records(records, schema_list):
             for cpe in schema_list:
                 qty = row.get(cpe["name"], 0)
 
-                damage_key = row["dismantle_code"].lower()
+                damage_key = row["dismantle_code"]
 
-                grouped[week]["cpe"][cpe["name"]]["damages"][damage_key]["quantity"] = (
-                    qty
-                )
+                if damage_key is not None:
+                    damage_key = damage_key.lower()
+                    grouped[week]["cpe"][cpe["name"]]["damages"][damage_key][
+                        "quantity"
+                    ] = qty
 
     return list(grouped.values())
 
@@ -365,6 +375,8 @@ def _group_history_records(records, schema_list):
 # FOR BUILDING DINAMIC SUBHEADERS IN EXCEL
 def get_missing_subcolumns(cpe):
     """
+    FOR BUILDING DINAMIC SUBHEADERS IN EXCEL
+
     Returns dismantle subcolumns based on CPE capabilities.
     """
     sub = []
