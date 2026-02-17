@@ -169,8 +169,10 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
 
         y_min -= padding
         y_max += padding
+
+        y_min = max(0, y_min)  # Don't go below zero
     else:
-        y_min, y_max = 0, 1
+        y_min, y_max = 0, 1  # Default range if no data exists
 
     # ---------------------------------------
     # 5. Format output per mode
@@ -349,8 +351,10 @@ def get_cpe_dismantle_chart_data(
 
         y_min -= padding
         y_max += padding
+
+        y_min = max(0, y_min)  # Don't go below zero
     else:
-        y_min, y_max = 0, 1
+        y_min, y_max = 0, 1  # Default range if no data exists
 
     # ---------------------------------------
     # 5. Format output per mode
@@ -457,8 +461,10 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
 
         y_min -= padding
         y_max += padding
+
+        y_min = max(0, y_min)  # Don't go below zero
     else:
-        y_min, y_max = 0, 1
+        y_min, y_max = 0, 1  # Default range if no data exists
 
     return {
         "labels": labels,
@@ -514,8 +520,10 @@ def get_iptv_inventory_chart_data(weeks=None):
 
         y_min -= padding
         y_max += padding
+
+        y_min = max(0, y_min)  # Don't go below zero
     else:
-        y_min, y_max = 0, 1
+        y_min, y_max = 0, 1  # Default range if no data exists
 
     return {
         "labels": labels,
