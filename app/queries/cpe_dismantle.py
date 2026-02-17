@@ -102,11 +102,14 @@ def get_cpe_dismantle_city_history(
 
     # We need a separate query to get the total count for pagination
     count_query = text(
-        """SELECT 
-                COUNT(DISTINCT WEEK_END) 
-            FROM CPE_DISMANTLE
-            WHERE CITY_ID=:city_id
-            AND dismantle_type_id IN :d_list
+        """SELECT COUNT(*) FROM (
+            SELECT cd.week_end, dt.code
+            FROM cpe_dismantle cd
+            JOIN dismantle_types dt ON dt.id = cd.dismantle_type_id
+            WHERE cd.city_id = :city_id
+            AND cd.dismantle_type_id IN :d_list
+            GROUP BY cd.week_end, dt.code
+        ) t
         """
     )
 
@@ -121,33 +124,9 @@ def get_cpe_dismantle_city_history(
     # Calculate offset
     offset = (page - 1) * per_page
 
+    # case_columns is actualy at building list of sql statements:
+    # [SUM(CASE WHEN ct.id = :{place_holder} THEN cd.quantity END), ....]
     case_columns = []
-
-    for model in schema_list:
-        case_columns.append(
-            f"""
-            COALESCE(
-                SUM(CASE WHEN ct.name = '{model["name"]}' THEN cd.quantity END),
-                0
-            ) AS "{model["name"]}"
-            """
-        )
-
-    SQL_QUERY = f"""
-        SELECT
-            WEEK_END,
-           
-            {", ".join(case_columns)}
-        FROM cpe_dismantle cd
-        JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
-        LEFT JOIN cpe_types ct ON ct.id=cd.cpe_type_id
-        WHERE cd.city_id = :city_id
-        AND dismantle_type_id IN :d_list
-        GROUP BY cd.WEEK_END
-        ORDER BY cd.week_end DESC
-        LIMIT :limit
-        OFFSET :offset
-    """
 
     params = {
         "city_id": city_id,
@@ -156,6 +135,39 @@ def get_cpe_dismantle_city_history(
         "d_list": tuple(list_of_dismantles),
     }
 
+    for i, model in enumerate(schema_list):
+        place_holder = f"cpe_{i}"
+        # build list of sql statement with parameterized values
+        # this statement with injected values will be exsecutet at the end
+        # with result = db.session.execute(text(SQL_QUERY), params)
+        case_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN ct.id = :{place_holder} THEN cd.quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+        # this will fill params object with: cpe_1= model[1], cpe_2=model[2],..
+        params[place_holder] = model["id"]
+
+    SQL_QUERY = f"""
+        SELECT
+            WEEK_END,
+            DT.CODE AS DISMANTLE_CODE,
+            {", ".join(case_columns)}
+        FROM cpe_dismantle cd
+        JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
+        LEFT JOIN cpe_types ct ON ct.id=cd.cpe_type_id
+        WHERE cd.city_id = :city_id
+        AND dismantle_type_id IN :d_list
+        GROUP BY cd.WEEK_END,DT.CODE
+        ORDER BY cd.week_end DESC
+        LIMIT :limit
+        OFFSET :offset
+    """
+
+    # this when all the params will be injected
     result = db.session.execute(text(SQL_QUERY), params)
 
     # pivoted_data is now list

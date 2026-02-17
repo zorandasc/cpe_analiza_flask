@@ -1956,7 +1956,7 @@ Your cpe_inventory table is an event log → needed reconstruction.
 
 Your stb_inventory table (as you described) is a weekly snapshot → no reconstruction needed.
 
-# reported_at 
+# reported_at
 
 Why you shouldn’t use created_at for freshness
 
@@ -1979,7 +1979,6 @@ updated_at = heavily used in admin
 ✔ Use reported_at to decide if week is “fresh”
 ✔ Never change reported_at after first snapshot
 ✔ Let updated_at change freely
-
 
 # Final recommended mental model
 
@@ -2019,9 +2018,9 @@ And two business flows:
 
 So naturally:
 
-Flow	snapshot time	activity time
-complete	complete_reported_at	complete_updated_at
-missing	missing_reported_at	missing_updated_at
+Flow snapshot time activity time
+complete complete_reported_at complete_updated_at
+missing missing_reported_at missing_updated_at
 
 That’s exactly right.
 
@@ -2041,3 +2040,50 @@ Used for:
 • green/red operational status
 • detecting untouched flows
 • productivity tracking
+
+#--------------------------------------------------------------------------
+
+# 🚨 2. SQL injection risk in dynamic CASE columns
+
+```python
+f"WHEN ct.name = '{model["name"]}'"
+```
+
+If someone ever inserts a CPE type name like:
+
+```sql
+test'; DROP TABLE cpe_dismantle; --
+```
+
+💥 goodbye database
+
+Instead of injecting names directly, use IDs:
+
+```sql
+SUM(CASE WHEN ct.id = :cpe_id THEN cd.quantity ELSE 0 END)
+```
+
+#-------------------------------------------------------------------------
+
+# POSTGRES index
+
+If history grows large:
+
+# Add index:
+
+CREATE INDEX idx_cpe_dismantle_history
+ON cpe_dismantle(city_id, dismantle_type_id, week_end DESC);
+
+This will make your history view instant even with millions of rows.
+
+# -------------------------------------------------------------------------
+
+# ✔ Schema-driven columns
+
+Using:
+
+get_cpe_types_column_schema(...)
+
+means:
+✅ adding new CPE type requires ZERO SQL change
+(this is pro-level design)
