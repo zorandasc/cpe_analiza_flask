@@ -107,7 +107,9 @@
             },
           },
           scales: {
-            y: { beginAtZero: true, grid: { color: "#f0f0f0" } },
+            y: {  min: chartData.y_min,
+                  max: chartData.y_max, 
+                  grid: { color: "#f0f0f0" } },
             x: {},
           },
         },

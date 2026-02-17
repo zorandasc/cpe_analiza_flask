@@ -34,7 +34,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # ---------------------------------------
     # 1. Find min, max available week in all DB
     # ---------------------------------------
- 
+
     min_week, max_week = db.session.query(
         func.min(CpeInventory.week_end), func.max(CpeInventory.week_end)
     ).one()
@@ -162,7 +162,26 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # totals_by_type give us summary per cities for all cpe_types:
     # router → [180, 180, 200, 200, ...]
     # modem  → [50, 50, 50, 50, ...]
+    # ---------------------------------------
+    # 4.5 Dynamic Y-axis scaling (ALL datasets)
+    # ---------------------------------------
+    all_values = []
+    for values in totals_by_type.values():
+        all_values.extend(values)
 
+    if all_values:
+        y_min = min(all_values)
+        y_max = max(all_values)
+
+        padding = (y_max - y_min) * 0.1
+
+        if padding == 0:
+            padding = 1
+
+        y_min -= padding
+        y_max += padding
+    else:
+        y_min, y_max = 0, 1
     # ---------------------------------------
     # 5. Format output per mode
     # ---------------------------------------
@@ -186,6 +205,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         return {
             "labels": [w.strftime("%d-%m-%Y") for w in timeline],
             "datasets": [{"label": "Total", "data": values}],
+            "y_min": y_min,
+            "y_max": y_max,
         }
 
     # MODE 2 — single type
@@ -208,7 +229,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
             "labels": [w.strftime("%d-%m-%Y") for w in timeline],
             "datasets": [{"label": f"Ukupno ({cpe_type})", "data": values}],
             "devices": devices,
-            "mode": "type-total",
+            "y_min": y_min,
+            "y_max": y_max,
         }
 
     # MODE 3 — all types
@@ -217,6 +239,8 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     return {
         "labels": [w.strftime("%d-%m-%Y") for w in timeline],
         "datasets": datasets,
+        "y_min": y_min,
+        "y_max": y_max,
     }
 
 
