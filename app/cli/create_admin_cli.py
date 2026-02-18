@@ -17,7 +17,7 @@ def create_initial_admin(username="admin", plain_password="123"):
     admin = Users(
         username=username,
         password_hash=password_hash,
-        city_id=None,
+        cities=[],
         role=UserRole.ADMIN,
         created_at=datetime.datetime.now(),
         updated_at=datetime.datetime.now(),

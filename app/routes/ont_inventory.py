@@ -18,7 +18,7 @@ from app.services.ont_inventory import (
     update_recent_ont_inventory,
     get_ont_records_excel_export,
     parce_excel_segments,
-    save_imported_segments_to_db
+    save_imported_segments_to_db,
 )
 
 ont_inventory_bp = Blueprint(
@@ -36,7 +36,7 @@ def ont_records():
 
 
 @ont_inventory_bp.route("/update_ont", methods=["POST"])
-@login_required
+@login_required  # AUTENTIFICATION
 def update_ont_inventory():
     success, message = update_recent_ont_inventory(request.form)
     flash(message, "success" if success else "danger")

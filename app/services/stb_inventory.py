@@ -2,6 +2,7 @@
 from sqlalchemy import text
 from app.extensions import db
 from app.utils.dates import get_current_week_friday
+from app.utils.permissions import iptv_view_required
 from app.queries.stb_inventory import (
     get_last_4_weeks,
     get_stb_inventory_pivoted,
@@ -49,6 +50,9 @@ def get_stb_iptv_records_view_data():
 
 
 def update_recent_stb_inventory(form_data):
+    if not iptv_view_required():
+        return False, "Niste autorizovani."
+     
     current_week_end = get_current_week_friday()
 
     try:

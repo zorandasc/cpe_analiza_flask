@@ -24,7 +24,7 @@
       <th>ID</th>
       <th>Korisničko Ime</th>
       <th>Role</th>
-      <th>Organizacija</th>
+      <th>Organizacija/e</th>
       <th style="width: 160px">Akcije</th>
     </tr>
     </thead>
@@ -34,8 +34,16 @@
       <td>{{ user.id }}</td>
       <td>{{ user.username }}</td>
       <td>{{ user.role }}</td>
-      <td>{{ user.city.name if user.city else "—" }}</td>
-      {% if ( current_user.role== 'admin') %}
+      <td> 
+      {% if user.cities %}
+    {% for city in user.cities %}
+      <span class="badge bg-info text-light me-1">{{ city.name }}</span>
+    {% endfor %}
+  {% else %}
+    —
+  {% endif %}
+      </td>
+      {% if admin_required() %}
       <td>
         <a
           href="{{ url_for('admin.edit_user', id=user.id) }}"

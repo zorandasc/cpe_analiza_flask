@@ -3,6 +3,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.utils.dates import get_previous_month_end
 from openpyxl import load_workbook
+from app.utils.permissions import ftth_view_required
 from app.queries.ont_onventory import (
     get_last_4_months,
     get_ont_inventory_pivoted,
@@ -39,6 +40,9 @@ def get_ont_records_view_data():
 
 
 def update_recent_ont_inventory(form_data):
+    if not ftth_view_required():  # AUTHORIZATION
+        return False, "Niste autorizovani."
+
     previous_month_end = get_previous_month_end()
 
     try:
@@ -190,6 +194,9 @@ def parce_excel_segments(file_storage):
 
 
 def save_imported_segments_to_db(segments):
+    if not ftth_view_required():
+        return False, "Niste autorizovani."
+
     """
     Map the Excel segment indexses (0, 1, 2...) to your DB city_id
     """

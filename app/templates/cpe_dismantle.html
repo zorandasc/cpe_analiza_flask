@@ -254,10 +254,7 @@
                 %H:%M:%S') }} 
               </td>
               {% endif %}
-              <!--PRIKAZI EDIT BUTTON  AKO VRIJE POSTOJI-->
-                {% if r.city_id   %}
-                <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
-                  {% if ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))  %}
+                {% if r.city_id and can_access_city(r.city_id) %}
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
                 <!-- data-bs-target="#editModal" → tells which modal to open.-->
                 <!-- data-* attributes → store all the values of that row.-->
@@ -309,7 +306,6 @@
           
           </td>
           {% endif %}
-                {% endif %}
             </tr>
             {% endfor %}
           </tbody>
@@ -370,10 +366,7 @@
                 %H:%M:%S') }} 
               </td>
               {% endif %}
-              <!--PRIKAZI EDIT BUTTON  AKO POSTOJI CITY_ID-->
-                {% if r.city_id   %}
-                <!--PRIKAZI EDIT BUTTON ZA ADMIN USERA I ZA USERA KOJI PRIPADA TOM GRADU -->
-                  {% if ( current_user.role== 'admin' or (current_user.role == 'user' and current_user.city_id==r.city_id))  %}
+              {% if r.city_id and can_access_city(r.city_id) %}
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
                 <!-- data-bs-target="#editModal" → tells which modal to open.-->
                 <!-- data-* attributes → store all the values of that row.-->
@@ -426,7 +419,6 @@
                 </a>
           
           </td>
-          {% endif %}
                 {% endif %}
             </tr>
             {% endfor %}

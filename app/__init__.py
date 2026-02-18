@@ -8,6 +8,12 @@ from app.routes import register_routes
 from app.cli.create_admin_cli import create_initial_admin
 from app.cli.create_db_tables_cli import create_initial_db
 from app.cli.create_report_settings_cli import create_initial_report
+from app.utils.permissions import (
+    can_access_city,
+    admin_required,
+    iptv_view_required,
+    ftth_view_required,
+)
 
 mail = Mail()
 
@@ -55,5 +61,15 @@ def create_app():
 
     # Register routes
     register_routes(app)
+
+    # enable of insertions of function to jinja template
+    @app.context_processor
+    def inject_permissions():
+        return dict(
+            can_access_city=can_access_city,
+            admin_required=admin_required,
+            iptv_required=iptv_view_required,
+            ftth_required=ftth_view_required,
+        )
 
     return app

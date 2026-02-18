@@ -106,7 +106,9 @@ styles %} {{ super() }}
             />
           </div>
         </div>
+        {% if admin_required() %}
         <button class="btn btn-primary save-btn mt-3">Sačuvaj podešavanja</button>
+        {%endif%}
       </form>
     </div>
   </div>
@@ -124,6 +126,7 @@ styles %} {{ super() }}
       <tr>
         <td>{{ r.email }}</td>
         <td>{% if r.active %} ✔ {% else %} ✖ {% endif %}</td>
+         {% if admin_required() %}
         <td>
            <a
             href="{{ url_for('admin.report_remove_recipient', id=r.id) }}"
@@ -132,10 +135,12 @@ styles %} {{ super() }}
           >❌</a
         >
         </td>
+         {%endif%}
       </tr>
       {% endfor %}
     </tbody>
   </table>
+   {% if admin_required() %}
   <button
     class="btn btn-sm btn-success recipient-btn"
     data-bs-toggle="modal"
@@ -143,6 +148,7 @@ styles %} {{ super() }}
   >
     + Dodaj primaoca
   </button>
+   {%endif%}
 </div>
 
 <form method="POST" action="/admin/reports/recipients/add">

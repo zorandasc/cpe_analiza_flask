@@ -48,15 +48,20 @@ def get_cpe_records_view_data():
 
 def update_cpe_records(data):
     # 1. Extract and Convert Fields
-    city_id = data.get("city_id")
-    city_name = data.get("city")
-    updates = data.get("updates", [])
-
-    if not city_id or not updates:
-        return False, "Neispravan payload."
+    try:
+        city_id = int(data.get("city_id"))
+    except (TypeError, ValueError):
+        return False, "Neispravan city id."
 
     if not can_access_city(city_id):
         return False, "Niste autorizovani."
+
+    city_name = data.get("city")
+
+    updates = data.get("updates", [])
+
+    if not updates:
+        return False, "Neispravan payload."
 
     current_week_end = get_current_week_friday()
 

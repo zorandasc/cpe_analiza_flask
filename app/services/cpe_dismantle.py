@@ -53,15 +53,20 @@ def get_cpe_dismantle_view_data():
 
 
 def update_cpe_dismantle(data):
-    city_id = data["city_id"]
-    city_name = data["city"]
-    updates = data["updates"]
-
-    if not city_id or not updates:
-        return False, "Neispravan payload."
+    try:
+        city_id = int(data.get("city_id"))
+    except (TypeError, ValueError):
+        return False, "Neispravan city id."
 
     if not can_access_city(city_id):
         return False, "Niste autorizovani."
+
+    city_name = data["city"]
+
+    updates = data["updates"]
+
+    if not updates:
+        return False, "Neispravan payload."
 
     week_end = get_current_week_friday()
 
@@ -117,8 +122,6 @@ def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
 
     if not can_access_city(city.id):
         return None, None, None, None, "Niste autorizovani."
-
-    print(category)
 
     match category:
         case "complete":

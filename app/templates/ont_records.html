@@ -92,6 +92,7 @@ styles %} {{ super() }}
     Broj ONT uređaja u radu - Mjesečno stanje
   </h2>
   <div class="d-flex justify-content-between align-items-end">
+  {% if ftth_required() %}
   <button
     type="button"
     title="Ažuritajte posljednje stanje ONT opreme"
@@ -102,7 +103,7 @@ styles %} {{ super() }}
   >
     + Dodaj / Izmjeni Mjesečni Unos
   </button>
-
+{% endif %}
   <!--EVERY RECORD SHOULD HAVE SAME last_updated-->
   <span class="info">
     Posljedne ažurirano: {% if records %}
@@ -130,19 +131,21 @@ styles %} {{ super() }}
     </tbody>
   </table>
   <div class="d-flex justify-content-between align-items-center">
+   
   <a
       class="btn btn-sm btn-outline-secondary mb-2"
       href="{{ url_for('ont_inventory.export_ont_records_excel')}}"
     >
       Export Excel
     </a>
+    
   <form id="importForm" method="POST"  action="{{ url_for('ont_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
      <div class="col-auto">
         <input type="file" name="file" class="form-control" accept=".xlsx" required />    
     </div>
     <div class="col-auto">
-    <button type="submit" class="btn btn-danger btn-custom-excel">Import Excel</button>
+    {% if ftth_required() %}<button type="submit" class="btn btn-danger btn-custom-excel">Import Excel</button>{% endif %}
     </div>
     
 </form>

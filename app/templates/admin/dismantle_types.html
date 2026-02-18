@@ -36,7 +36,7 @@ block content %}
       <td>{{ s.label }}</td>
       <td>{{ s.group_name }}</td>
       <td>
-        {% if ( current_user.role== 'admin') %}
+        {% if admin_required() %}
         <a
           href="{{ url_for('admin.edit_dismantle_status', id=s.id) }}"
           class="btn btn-warning btn-sm"

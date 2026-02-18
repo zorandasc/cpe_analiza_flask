@@ -55,7 +55,9 @@ class CpeTypeEnum(str, enum.Enum):
 # compatible with database drivers like psycopg2.
 class UserRole(str, enum.Enum):
     ADMIN = "admin"
-    USER = "user"
+    USER_CPE = "user_cpe"
+    USER_IPTV = "user_iptv"
+    USER_FTTH = "user_ftth"
     VIEW = "view"
 
     def __str__(self):
@@ -68,6 +70,48 @@ class CityTypeEnum(str, enum.Enum):
 
     def __str__(self):
         return self.value
+
+
+# bridge table FOR MANY TO MANY RELATIONSHIP BETWEEN USERS AND CITY
+user_cities = db.Table(
+    "user_cities",
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+    db.Column("city_id", db.Integer, db.ForeignKey("cities.id"), primary_key=True),
+)
+
+
+class Users(db.Model, UserMixin):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # 2. Apply the Enum here
+    role: Mapped[UserRole] = mapped_column(
+        Enum(
+            UserRole,
+            native_enum=True,
+            name="user_role_enum",
+            # This tells SQLAlchemy to use the values ('admin') instead of names ('ADMIN')
+            values_callable=lambda x: [item.value for item in x],
+        ),
+        nullable=False,
+        # Default must match the Enum value
+        server_default=text("'user_cpe'"),
+    )
+    cities: Mapped[list["Cities"]] = relationship(
+        "Cities", secondary=user_cities, back_populates="users"
+    )
+
+    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime(timezone=True),
+        server_default=text("CURRENT_TIMESTAMP"),
+        onupdate=text("CURRENT_TIMESTAMP"),
+    )
 
 
 class Cities(db.Model):
@@ -97,7 +141,11 @@ class Cities(db.Model):
     ont_inventory: Mapped[list["OntInventory"]] = relationship(
         "OntInventory", back_populates="city"
     )
-    users: Mapped[list["Users"]] = relationship("Users", back_populates="city")
+    users: Mapped[list["Users"]] = relationship(
+        "Users",
+        secondary=user_cities,
+        back_populates="cities",
+    )
 
 
 class CpeTypes(db.Model):
@@ -242,7 +290,7 @@ class OntInventory(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     month_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
-    
+
     city_id: Mapped[Optional[int]] = mapped_column(Integer)
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
 
@@ -302,42 +350,6 @@ class IptvUsers(db.Model):
         server_default=func.now(),
         onupdate=func.now(),
     )
-
-
-class Users(db.Model, UserMixin):
-    __tablename__ = "users"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
-    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
-
-    # 2. Apply the Enum here
-    role: Mapped[UserRole] = mapped_column(
-        Enum(
-            UserRole,
-            native_enum=True,
-            name="user_role_enum",
-            # This tells SQLAlchemy to use the values ('admin') instead of names ('ADMIN')
-            values_callable=lambda x: [item.value for item in x],
-        ),
-        nullable=False,
-        # Default must match the Enum value
-        server_default=text("'user'"),
-    )
-
-    city_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("cities.id", name="fk_city")
-    )
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
-    )
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
-        DateTime(timezone=True),
-        server_default=text("CURRENT_TIMESTAMP"),
-        onupdate=text("CURRENT_TIMESTAMP"),
-    )
-
-    city: Mapped[Optional["Cities"]] = relationship("Cities", back_populates="users")
 
 
 class ReportSetting(db.Model):

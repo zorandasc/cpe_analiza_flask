@@ -45,7 +45,7 @@ block styles %} {{ super() }}
         <td>{{ city.type }}</td>
         <td>{{ city.is_active }}</td>
         <td>{{ city.include_in_total }}</td>
-        {% if ( current_user.role== 'admin') %}
+         {% if admin_required() %}
         <td>
           <a
             href="{{ url_for('admin.edit_city', id=city.id) }}"

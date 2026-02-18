@@ -663,7 +663,7 @@ def add_user():
         username = request.form.get("username")
         plain_password = request.form.get("password")
         # CHOOSED FROM SELECTION IN ADD FORM
-        city_id = request.form.get("city_id", type=int)
+        city_ids = request.form.getlist("city_ids", type=int)
         # CHOOSED FROM SELECTION IN ADD FORM
         role_string = request.form.get("role")
 
@@ -680,17 +680,19 @@ def add_user():
             flash("Username already exists", "danger")
             return redirect(url_for("admin.add_user"))
 
-        if selected_role == UserRole.USER and (not city_id or city_id == 0):
+        if selected_role == UserRole.USER_CPE and not city_ids:
             flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
             return redirect(url_for("admin.add_user"))
+
+        cities_selected = Cities.query.filter(Cities.id.in_(city_ids)).all()
 
         password_hash = generate_password_hash(plain_password)
 
         user = Users(
             username=username,
             password_hash=password_hash,
-            city_id=city_id if city_id != 0 else None,
             role=selected_role,  # SQLAlchemy handles the conversion to DB string
+            cities=cities_selected,
         )
         try:
             db.session.add(user)
@@ -1077,9 +1079,8 @@ def edit_dismantle_status(id):
 @admin_bp.route("/reports/settings", methods=["GET", "POST"])
 @login_required
 def report_settings():
-    if not admin_required():
-        flash("Niste Autorizovani.", "danger")
-        return redirect(url_for("admin.dashboard"))
+    if not view_required():
+        return redirect(url_for("admin.dismantle_status"))
     # ReportSettin should only have one row
     settings = ReportSetting.query.first()
 
@@ -1093,7 +1094,9 @@ def report_settings():
 
         flash("Podešavanja sačuvana.", "success")
 
+    # Dsiplay recipients to jinja template
     recipients = ReportRecipients.query.order_by(ReportRecipients.email).all()
+
     return render_template(
         "admin/report_settings.html", settings=settings, recipients=recipients
     )

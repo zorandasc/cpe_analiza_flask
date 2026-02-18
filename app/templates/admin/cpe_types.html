@@ -59,7 +59,7 @@ block styles %} {{ super() }}
         <td>{{ cpe.order_in_dismantle }}</td>
         <td>{{ cpe.header_color }}</td>
         <td>
-          {% if ( current_user.role== 'admin') %}
+          {% if admin_required() %}
           <a
             href="{{ url_for('admin.edit_cpe_type', id=cpe.id) }}"
             class="btn btn-warning btn-sm"
