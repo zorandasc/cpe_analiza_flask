@@ -677,11 +677,11 @@ def add_user():
         # Validation: username must be unique
         existing_user = Users.query.filter_by(username=username).first()
         if existing_user:
-            flash("Username already exists", "danger")
+            flash("Korisnićko ime već postoji.", "danger")
             return redirect(url_for("admin.add_user"))
 
         if selected_role == UserRole.USER_CPE and not city_ids:
-            flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
+            flash("Korisnik sa rolom 'user_cpe' mora imati izabran grad.", "danger")
             return redirect(url_for("admin.add_user"))
 
         cities_selected = Cities.query.filter(Cities.id.in_(city_ids)).all()
@@ -726,7 +726,7 @@ def edit_user(id):
         plain_password1 = request.form.get("password1")
         plain_password2 = request.form.get("password2")
         # CHOOSED FROM SELECTION IN ADD FORM
-        city_id = request.form.get("city_id", type=int)
+        city_ids = request.form.getlist("city_ids", type=int)
         # CHOOSED FROM SELECTION IN ADD FORM
         role_string = request.form.get("role")
 
@@ -762,12 +762,14 @@ def edit_user(id):
             return redirect(url_for("admin.edit_user", id=id))
 
         # if role changed to user
-        if selected_role == UserRole.USER and (not city_id or city_id == 0):
-            flash("Korisnik sa rolom 'user' mora imati izabran grad.", "danger")
+        if selected_role == UserRole.USER_CPE and not city_ids:
+            flash("Korisnik sa rolom 'user_cpe' mora imati izabran grad.", "danger")
             return redirect(url_for("admin.add_user"))
+        
+        cities_selected = Cities.query.filter(Cities.id.in_(city_ids)).all()
 
         user.username = username
-        user.city_id = city_id if city_id != 0 else None
+        user.cities=cities_selected
         user.role = selected_role
         user.updated_at = datetime.now()
 
@@ -1077,9 +1079,9 @@ def edit_dismantle_status(id):
 
 
 @admin_bp.route("/reports/settings", methods=["GET", "POST"])
-@login_required
+@login_required  # AUTENTIFICATION
 def report_settings():
-    if not view_required():
+    if not view_required():  # AUTHORIZATION
         return redirect(url_for("admin.dismantle_status"))
     # ReportSettin should only have one row
     settings = ReportSetting.query.first()

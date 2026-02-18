@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Add City{% endblock %} {% block
+{% extends "base.html" %} {% block title %}Promijeni korisnika{% endblock %} {% block
 content %}
 <div class="py-4">
   <div class="mx-auto shadow-lg p-3 bg-light" style="max-width: 800px">
@@ -43,10 +43,10 @@ content %}
       </div>
       <div class="mb-3">
         <label class="form-label">Skladište</label>
-        <select name="city_id" class="form-control">
+        <select name="city_ids" class="form-control" multiple>
           <option value="">-- Izaberite skladište --</option>
           {% for city in cities %}
-          <option value="{{ city.id }}" {% if user.city_id==city.id %}selected{% endif %}>{{ city.name }}</option>
+          <option value="{{ city.id }}" {% if city in user.cities %}selected{% endif %}>{{ city.name }}</option>
 
           {% endfor %}
         </select>

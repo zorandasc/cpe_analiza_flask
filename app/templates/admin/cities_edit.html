@@ -1,4 +1,4 @@
-{% extends "base.html" %} {% block title %}Edit City{% endblock %} {% block
+{% extends "base.html" %} {% block title %}Izmijeni Skladište{% endblock %} {% block
 content %}
 <div class=" py-4">
    <div class="mx-auto shadow-lg p-3 bg-light" style="max-width: 800px">
@@ -7,7 +7,7 @@ content %}
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="mb-3">
       <label class="form-label">Ime skladišta</label>
-      <input type="text" name="name" class="form-control" value="{{ city.name }}" required></input>
+      <input type="text" name="name" class="form-control" value="{{ city.name }}" required>
     </div>
      <div class="mb-3">
       <label class="form-label">Tip skladišta</label>
