@@ -138,16 +138,16 @@ styles %} {{ super() }}
     >
       Export Excel
     </a>
-    
+    {% if ftth_required() %}
   <form id="importForm" method="POST"  action="{{ url_for('ont_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
      <div class="col-auto">
         <input type="file" name="file" class="form-control" accept=".xlsx" required />    
     </div>
     <div class="col-auto">
-    {% if ftth_required() %}<button type="submit" class="btn btn-danger btn-custom-excel">Import Excel</button>{% endif %}
+    <button type="submit" class="btn btn-danger btn-custom-excel">Import Excel</button>
     </div>
-    
+    {% endif %}
 </form>
 </div>
 </div>

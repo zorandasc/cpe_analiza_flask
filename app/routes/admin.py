@@ -44,7 +44,7 @@ def dashboard():
 @admin_bp.route("/cpe_inventory")
 @login_required
 def cpe_inventory():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
@@ -145,7 +145,7 @@ def update_cpe_inventory(id):
 @admin_bp.route("/cpe_dismantle")
 @login_required
 def cpe_dismantle():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
@@ -250,7 +250,7 @@ def update_cpe_dismantle_inventory(id):
 @admin_bp.route("/stb_inventory")
 @login_required
 def stb_inventory():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
@@ -344,7 +344,7 @@ def update_stb_inventory(id):
 @admin_bp.route("/ont_inventory")
 @login_required
 def ont_inventory():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
@@ -441,7 +441,7 @@ def update_ont_inventory(id):
 @admin_bp.route("/iptv_users_inventory")
 @login_required
 def iptv_users_inventory():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
@@ -524,7 +524,7 @@ def update_iptv_users_inventory(id):
 @admin_bp.route("/cities")
 @login_required
 def cities():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
@@ -645,7 +645,7 @@ def delete_city(id):
 @admin_bp.route("/users")
 @login_required
 def users():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
     users = Users.query.order_by(Users.id).all()
@@ -765,11 +765,11 @@ def edit_user(id):
         if selected_role == UserRole.USER_CPE and not city_ids:
             flash("Korisnik sa rolom 'user_cpe' mora imati izabran grad.", "danger")
             return redirect(url_for("admin.add_user"))
-        
+
         cities_selected = Cities.query.filter(Cities.id.in_(city_ids)).all()
 
         user.username = username
-        user.cities=cities_selected
+        user.cities = cities_selected
         user.role = selected_role
         user.updated_at = datetime.now()
 
@@ -818,7 +818,7 @@ def delete_user(id):
 @admin_bp.route("/cpe_types")
 @login_required
 def cpe_types():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
     cpes = CpeTypes.query.order_by(CpeTypes.id).all()
@@ -927,7 +927,7 @@ def delete_cpe_type(id):
 @admin_bp.route("/stb_types")
 @login_required
 def stb_types():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
     stbs = StbTypes.query.order_by(StbTypes.id).all()
@@ -1028,7 +1028,7 @@ def delete_stb_type(id):
 @admin_bp.route("/dismantle_status")
 @login_required
 def dismantle_status():
-    if not view_required():
+    if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
     status = DismantleTypes.query.order_by(DismantleTypes.id).all()
@@ -1107,6 +1107,9 @@ def report_settings():
 @admin_bp.route("/reports/recipients/add", methods=["POST"])
 @login_required
 def report_add_recipient():
+    if not admin_required():
+        return redirect(url_for("admin.report_settings"))
+
     email = request.form["email"].lower().strip()
 
     db.session.add(ReportRecipients(email=email))
@@ -1118,6 +1121,9 @@ def report_add_recipient():
 @admin_bp.route("/reports/recipients/remove/<int:id>")
 @login_required
 def report_remove_recipient(id):
+    if not admin_required():
+        return redirect(url_for("admin.report_settings"))
+    
     email = ReportRecipients.query.get_or_404(id)
 
     flash("Email obrisan!", "success")
