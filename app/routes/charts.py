@@ -132,7 +132,11 @@ def ont_inventory_charts():
 @chart_bp.route("/cpe-charts", methods=["GET"])
 @login_required
 def cpe_inventory_charts():
+    selected_city_id = request.args.get("city_id", type=int)
+
     selected_cpe_id = request.args.get("cpe_id", type=int)
+
+    selected_weeks = request.args.get("weeks", type=int)
 
     raw_cpe_type = request.args.get("cpe_type", type=str)
 
@@ -155,10 +159,6 @@ def cpe_inventory_charts():
     # mutual exclusivity ON BACKEND
     if selected_cpe_id:
         selected_cpe_type = None
-
-    selected_city_id = request.args.get("city_id", type=int)
-
-    selected_weeks = request.args.get("weeks", type=int)
 
     # ---------------------------------------
     # GET CHART DATA
@@ -223,6 +223,10 @@ def cpe_dismantle_inventory_charts():
 
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
+    selected_dismantle_id = request.args.get("dismantle_id", type=int)
+
+    selected_weeks = request.args.get("weeks", type=int)
+
     raw_cpe_type = request.args.get("cpe_type", type=str)
 
     if raw_cpe_type:
@@ -244,10 +248,6 @@ def cpe_dismantle_inventory_charts():
     # mutual exclusivity ON BACKEND
     if selected_cpe_id:
         selected_cpe_type = None
-
-    selected_dismantle_id = request.args.get("dismantle_id", type=int)
-
-    selected_weeks = request.args.get("weeks", type=int)
 
     # ---------------------------------------
     # GET CHART DATA

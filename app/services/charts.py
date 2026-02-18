@@ -51,9 +51,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         )
         .join(CpeTypes, CpeTypes.id == CpeInventory.cpe_type_id)
         .join(Cities, Cities.id == CpeInventory.city_id)
-        .filter(
-            CpeInventory.week_end <= max_week,
-        )
+        .filter(CpeInventory.week_end <= max_week)
         .filter(CpeTypes.visible_in_total)  # only cpe types that are visisble
     )
 
@@ -247,7 +245,7 @@ def get_cpe_dismantle_chart_data(
     # 1. Find min, max available week in DB
     # ---------------------------------------
     min_week, max_week = db.session.query(
-        func.min(CpeInventory.week_end), func.max(CpeInventory.week_end)
+        func.min(CpeDismantle.week_end), func.max(CpeDismantle.week_end)
     ).one()
 
     if not max_week:
@@ -288,12 +286,12 @@ def get_cpe_dismantle_chart_data(
 
     if cpe_id:
         q = q.filter(CpeDismantle.cpe_type_id == cpe_id)
+    
+    if dismantle_type_id:
+        q = q.filter(DismantleTypes.id == dismantle_type_id)
 
     if cpe_type:
         q = q.filter(CpeTypes.type == cpe_type)
-
-    if dismantle_type_id:
-        q = q.filter(DismantleTypes.id == dismantle_type_id)
 
     rows = q.all()
 
@@ -304,11 +302,11 @@ def get_cpe_dismantle_chart_data(
     # 3. Rebuild weekly state per city/type, group data
     # --------------------------------------
     # create empty state
-    state = defaultdict(lambda: defaultdict(dict))
+    state = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
     # fill the state
     for city_id_, week_end, cpe_type_id_, type_key, qty in rows:
-        state[city_id_][type_key][week_end] = qty
+        state[city_id_][type_key][week_end] += qty
 
     # ---------------------------------------
     # 4. Aggregate into chart datasets USING CARRY FORWARD
