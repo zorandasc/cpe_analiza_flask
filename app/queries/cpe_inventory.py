@@ -12,11 +12,15 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
     case_columns = []
     sum_columns = []
 
-    for model in schema_list:
+    params = {"week_end": week_end}
+
+    for i, model in enumerate(schema_list):
+        place_holder = f"cpe_{i}"
+        
         case_columns.append(
             f"""
             COALESCE(
-                SUM(CASE WHEN cpe_name = '{model["name"]}' THEN quantity END),
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
                 0
             ) AS "{model["name"]}"
             """
@@ -24,11 +28,12 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
         sum_columns.append(
             f"""
             COALESCE(
-                SUM(CASE WHEN cpe_name = '{model["name"]}' THEN quantity END),
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
                 0
             ) AS "{model["name"]}"
             """
         )
+        params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
         WITH weekly_data AS (
@@ -75,8 +80,6 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
 
         ORDER BY city_id NULLS LAST;
     """
-
-    params = {"week_end": week_end}
 
     result = db.session.execute(text(SQL_QUERY), params)
 
@@ -127,7 +130,7 @@ def get_cpe_inventory_city_history(
             ) AS "{model["name"]}"
             """
         )
-         # this will fill params object with: cpe_1= model[1], cpe_2=model[2],..
+        # this will fill params object with: cpe_1= model[1], cpe_2=model[2],..
         params[place_holder] = model["id"]
 
     SQL_QUERY = f"""

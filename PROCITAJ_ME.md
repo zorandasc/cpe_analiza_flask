@@ -2049,6 +2049,8 @@ Used for:
 f"WHEN ct.name = '{model["name"]}'"
 ```
 
+# ATTACK
+
 If someone ever inserts a CPE type name like:
 
 ```sql

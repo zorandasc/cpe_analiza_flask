@@ -14,11 +14,15 @@ def get_cpe_dismantle_pivoted(
     case_columns = []
     sum_columns = []
 
-    for model in schema_list:
+    params = {"week_end": week_end, "city_type": city_type}
+
+    for i, model in enumerate(schema_list):
+        place_holder = f"cpe_{i}"
+        
         case_columns.append(
             f"""
             COALESCE(
-                SUM(CASE WHEN cpe_name = '{model["name"]}' THEN quantity END),
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
                 0
             ) AS "{model["name"]}"
             """
@@ -26,11 +30,12 @@ def get_cpe_dismantle_pivoted(
         sum_columns.append(
             f"""
             COALESCE(
-                SUM(CASE WHEN cpe_name = '{model["name"]}' THEN quantity END),
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
                 0
             ) AS "{model["name"]}"
             """
         )
+        params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
                 WITH WEEKLY_DATA AS (
@@ -85,8 +90,6 @@ def get_cpe_dismantle_pivoted(
             GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
             ORDER BY CITY_ID, DISMANTLE_TYPE_ID NULLS LAST;
     """
-
-    params = {"week_end": week_end, "city_type": city_type}
 
     result = db.session.execute(text(SQL_QUERY), params)
 
