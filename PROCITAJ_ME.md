@@ -2088,7 +2088,6 @@ means:
 ✅ adding new CPE type requires ZERO SQL change
 (this is pro-level design)
 
-
 # The correct mental model for snapshot data
 
 Inventory is a state, not an event.
@@ -2098,3 +2097,121 @@ So for any period:
 If there’s no snapshot at the start → use the last known value before it.
 
 This is how financial balances, stock levels, monitoring metrics, etc. are always plotted.
+
+# ---------------------------------------------------------------------
+
+# Users <-> Cities (many to many)
+
+Which is lazy by default.
+
+So SQLAlchemy will keep hitting DB unless you eager load.
+
+selectinload is like “preloading images only when you will display them”.
+
+```python
+
+users = Users.query.options(selectinload(Users.cities)).order_by(Users.id).all()
+
+```
+
+# Then why do we even care about selectinload?
+
+selectinload is for preventing many-object loops — not for single-user access.
+
+Because of THIS scenario (10 USERS):
+
+```python
+users = Users.query.all()
+return render_template("users.html", users=users)
+```
+
+SQLAlchemy runs:
+1️⃣ Load user
+
+```SQL
+SELECT * FROM users;
+```
+
+That’s 1 query.
+
+You now have 10 user objects in memory.
+
+THAN BECAUSE OF:
+
+```jinja
+{% for user in users %}
+{{ user.cities }}
+{% endfor %}
+```
+
+First time template touches user.cities
+2️⃣ Later (lazy load cities)
+
+For User 1, SQLAlchemy runs:
+
+```SQL
+SELECT cities.* FROM cities
+JOIN user_cities ...
+WHERE user_id = 1;
+```
+
+For User 2, it runs again
+
+```SQL
+SELECT cities.* ... WHERE user_id = 2;
+```
+
+And so on…
+
+Total queries:
+1 (users)
+
+- 10 (one per user)
+  = 11 queries
+
+That’s called N+1 PROBLEM:
+
+N (users) + 1
+
+# Why it matters more now
+
+Before:
+
+You had one city_id column — no relationship fetch.
+
+Now:
+
+You have:
+
+Users <-> Cities (many to many)
+
+Which is lazy by default.
+
+So SQLAlchemy will keep hitting DB unless you eager load.
+
+# ✅ What selectinload fixes
+
+Users.query.options(selectinload(Users.cities))
+
+Query 1 — all users
+SELECT \* FROM users;
+
+Query 2 — all related cities at once
+SELECT cities.\*
+FROM cities
+JOIN user_cities ON ...
+WHERE user_id IN (1,2,3,4,5...);
+
+Boom. Done.
+FOR 500 USERS
+📈 From 500 queries → 2 queries
+
+# You’ve now completely understood lazy loading vs eager loading.
+
+# 🔐 Important takeaway
+
+N+1 is only dangerous when:
+
+loop over many parents
+
+- access relationship inside loop

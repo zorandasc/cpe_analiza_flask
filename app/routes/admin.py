@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
+from sqlalchemy.orm import selectinload
 from app.extensions import db
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import update_cpe_type
@@ -648,7 +649,13 @@ def users():
     if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
-    users = Users.query.order_by(Users.id).all()
+
+    # WHY selectinload?
+    # BECAUSE USERS AND CITIES ARE N0W MANY-TO-MANY RELATION
+    # IF WE DO THIS users = Users.query.order_by(Users.id).all()
+    # WE ARE GENERATING N+1 PROBLEM
+    users = Users.query.options(selectinload(Users.cities)).order_by(Users.id).all()
+
     return render_template("admin/users.html", users=users)
 
 
@@ -719,7 +726,7 @@ def edit_user(id):
     if not admin_required():
         return redirect(url_for("admin.users"))
 
-    user = Users.query.get_or_404(id)
+    user = Users.query.options(selectinload(Users.cities)).get_or_404(id)
 
     if request.method == "POST":
         username = request.form.get("username")
@@ -1123,7 +1130,7 @@ def report_add_recipient():
 def report_remove_recipient(id):
     if not admin_required():
         return redirect(url_for("admin.report_settings"))
-    
+
     email = ReportRecipients.query.get_or_404(id)
 
     flash("Email obrisan!", "success")

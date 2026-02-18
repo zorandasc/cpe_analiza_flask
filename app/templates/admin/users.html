@@ -36,12 +36,12 @@
       <td>{{ user.role }}</td>
       <td> 
       {% if user.cities %}
-    {% for city in user.cities %}
-      <span class="badge bg-info text-dark me-1">{{ city.name }}</span>
-    {% endfor %}
-  {% else %}
-    —
-  {% endif %}
+          {% for city in user.cities %}
+            <span class="badge bg-info text-dark me-1">{{ city.name }}</span>
+          {% endfor %}
+      {% else %}
+          —
+      {% endif %}
       </td>
       {% if admin_required() %}
       <td>
