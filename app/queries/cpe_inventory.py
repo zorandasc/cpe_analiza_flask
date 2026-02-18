@@ -110,15 +110,25 @@ def get_cpe_inventory_city_history(
 
     case_columns = []
 
-    for model in schema_list:
+    params = {
+        "city_id": city_id,
+        "limit": per_page,
+        "offset": offset,
+    }
+
+    for i, model in enumerate(schema_list):
+        place_holder = f"cpe_{i}"
+        # build list of sql statement with parameterized values
         case_columns.append(
             f"""
             COALESCE(
-                SUM(CASE WHEN ct.name = '{model["name"]}' THEN ci.quantity END),
+                SUM(CASE WHEN ct.id = :{place_holder} THEN ci.quantity END),
                 0
             ) AS "{model["name"]}"
             """
         )
+         # this will fill params object with: cpe_1= model[1], cpe_2=model[2],..
+        params[place_holder] = model["id"]
 
     SQL_QUERY = f"""
         SELECT
@@ -132,12 +142,6 @@ def get_cpe_inventory_city_history(
         LIMIT :limit
         OFFSET :offset
     """
-
-    params = {
-        "city_id": city_id,
-        "limit": per_page,
-        "offset": offset,
-    }
 
     result = db.session.execute(text(SQL_QUERY), params)
 
