@@ -11,16 +11,15 @@ auth_bp = Blueprint(
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    #if current_user.is_authenticated:
-    #    return redirect(url_for("main.home"))
     if request.method == "POST":
         success, message = login_to_app(request.form)
-
-        flash(message, "success" if success else "danger")
-
+        
         if success:
+            flash(message, "success")
             return redirect(url_for("main.home"))
-
+        
+        # If it fails, we stay on the page and show the error
+        flash(message, "danger")
         return render_template("login.html")
 
     return render_template("login.html")
