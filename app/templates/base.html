@@ -23,7 +23,7 @@
       body {
   background-color: #f8f9fa; /* Light Bootstrap gray */
   background-image: radial-gradient(circle at top right, #f0eded 0%, #e0e2e3 100%);
-  min-height: 100vh;
+  min-height: 101vh;
 }
 
 .container {
@@ -34,11 +34,7 @@
   margin-top: 20px;
 }
 
-      body {
-        /* This ensures even pages with 1 row of data have enough 
-     "room" to scroll past the 50px trigger point without looping */
-        min-height: 101vh;
-      }
+
 
       /* --- Navbar Base --- */
       .navbar-custom {
@@ -68,6 +64,9 @@
         -webkit-backdrop-filter: blur(8px);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
       }
+          .navbar-sticky .logo img {
+            transform: scale(1.3);
+          }
 
       /* Shrink Logo on scroll */
       .navbar-sticky.scrolled .logo img {
@@ -117,11 +116,12 @@
       <div class="container-fluid">
         <a class="navbar-brand logo" href="{{ url_for('main.home') }}">
           <img
-            src="{{ url_for('static', filename='logo.png') }}"
+            src="{{ url_for('static', filename='logo12.png') }}"
             alt="CPE-ANALIZA Logo"
             height="50"
             class="d-inline-block align-text-top"
           />
+          
         </a>
 
         <button
