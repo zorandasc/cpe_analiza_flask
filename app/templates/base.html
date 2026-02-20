@@ -43,6 +43,15 @@
         transition: all 0.3s ease-in-out; /* Smooth transition for everything */
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
       }
+      .title{
+        font-size: 24px;
+        margin-top: 20px;
+                background: linear-gradient(to right, #814b89, #468388);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+      }
 
       .navbar-sticky {
         position: sticky;
@@ -121,9 +130,12 @@
             height="50"
             class="d-inline-block align-text-top"
           />
-          
         </a>
-
+          {% if not current_user.is_authenticated %}
+            <h1 class="title">
+                Upravljanje I Analiza Stanja CPE Opreme
+            </h1>
+          {% endif %}
         <button
           class="navbar-toggler"
           type="button"
@@ -139,7 +151,9 @@
         <div class="collapse navbar-collapse" id="navbarContent">
           <!-- LEFT -->
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item">
+          
+            {% if current_user.is_authenticated %}
+             <li class="nav-item">
               <a
                 class="nav-link {% if request.path == url_for('main.home') %}active{% endif %}"
                 href="{{ url_for('main.home') }}"
@@ -148,7 +162,6 @@
                 Početna
               </a>
             </li>
-            {% if current_user.is_authenticated %}
             <li class="nav-item">
               <a
                 class="nav-link {% if request.path == url_for('cpe_inventory.cpe_records') %}active{% endif %}"
