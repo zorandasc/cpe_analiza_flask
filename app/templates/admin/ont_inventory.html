@@ -89,10 +89,20 @@
 </div>
 
   <div class="table-responsive mb-0">
-  
-    <div class="d-flex justify-content-between align-items-center mb-3">
+
+     <form id="importForm" method="POST" action="{{ url_for('ont_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end justify-content-end mb-4">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-auto">
+        <input type="file" name="file" class="form-control" accept=".xlsx" required />
+      </div>
+      <div class="col-auto">
+        <button type="submit" class="btn btn-danger btn-custom-excel">Import Excel</button>
+      </div>
+    </form>
+ 
+    <div class="d-flex justify-content-between align-items-end mb-3">
       <nav>
-        <ul class="pagination">
+        <ul class="pagination mb-0">
           {% if pagination.has_prev %}
           <li class="page-item">
             <a
@@ -202,5 +212,150 @@
   </div>
 </div>
 
+<div class="modal fade" id="importResultModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rezultat Importa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="validationAlert" class="alert d-none"></div>
+        <table class="table table-sm">
+          <thead>
+            <tr><th>Segment</th><th>Vrijednost</th></tr>
+          </thead>
+          <tbody id="resultTableBody"></tbody>
+        </table>
+        <div class="mt-3">
+            <strong>Zbir svih segmenata:</strong> <span id="calcTotal"></span><br>
+            <strong>Totalna suma iz Excela:</strong> <span id="excelTotal"></span>
+        </div>
+      </div>
+      <div class="modal-footer row g-3 align-items-end">
+      <button type="button" class="btn btn-secondary col-auto" data-bs-dismiss="modal">Odustani</button>
+      
+      <button type="button" id="confirmInsert" class="btn btn-success col-auto">
+          <i class="bi bi-database-fill-add"></i> Potvrdi i Snimi u Bazu
+      </button>
 
+      <div class="col-auto">
+                <label class="form-label">Za Mijesec</label>
+                <input type="text" name="month_end_excel" class="form-control" style="width: 180px;" value="" disabled>
+            </div>
+</div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+let currentSegments = []; // Global variable to store parsed data
+
+//----------------------------------------------
+//SENDING EXEL FILE FROM FILE PICKER TO BACKEND FOR PARSING AND SHOWING RESULT
+//---------------------------------------------
+
+//CHECK IF DOM LOADED
+document.addEventListener('DOMContentLoaded', function() {
+    const importForm = document.getElementById('importForm');
+    
+    if (importForm) {
+        importForm.addEventListener('submit', async function(e) {
+            // This line PREVENTS the redirect to /upload
+            e.preventDefault(); 
+            
+            //1. GET THE FORM
+            const formData = new FormData(this);
+
+            //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
+            //this.action, is from form:
+            //action="{{ url_for('ont_inventory.import_ont_records_excel') }}"
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    // Note: No 'Content-Type' header here, 
+                    // browser sets it automatically for FormData
+                });
+
+                if (!response.ok) throw new Error('Server error');
+
+                //3. AWAIT THE RESPONSE
+                const data = await response.json();
+
+                //4. GET MODAL ELEMENT FOR DISPLAY SEGMENTS
+                const modalElement = document.getElementById('importResultModal');
+                const modal = new bootstrap.Modal(modalElement);
+                const tableBody = document.getElementById('resultTableBody');
+                const alertBox = document.getElementById('validationAlert');
+
+                // 4.1. Clear previous table rows
+                tableBody.innerHTML = '';
+                
+                // 4.2. Map segments to rows
+                data.segments.forEach((val, index) => {
+                    const row = `<tr><td>Skladište/Segment ${index + 1}</td><td class="text-end">${val}</td></tr>`;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                });
+
+                // 4.3. Update totals
+                document.getElementById('calcTotal').innerText = data.calculated_total;
+                document.getElementById('excelTotal').innerText = data.excel_grand_total;
+
+                // 4.4. Update Alert Box color and message
+                alertBox.classList.remove('d-none', 'alert-success', 'alert-danger');
+                if (data.match) {
+                    alertBox.classList.add('alert-success');
+                    alertBox.innerText = "Sve vrijednosti se podudaraju sa Totalnom sumom iz excela!";
+                } else {
+                    alertBox.classList.add('alert-danger');
+                    alertBox.innerText = "Pažnja: Izračunati zbir se ne slaže sa Grand Totalom iz fajla!";
+                }
+
+                // 5. Finally, show the modal
+                modal.show();
+
+                // 6. STORE SEGMENT FOR POSSIBLE SENDING INTO ISERT TO DB ROUTE
+                currentSegments = data.segments;
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert("Došlo je do greške prilikom slanja fajla.");
+            }
+        });
+    }
+});
+
+//----------------------------------------
+//SENDING PARSED SEGMENT EXSTRACTED FROM EXCEL TO ROUTE FOR INSERTION TO DB
+//------------------------------------------
+
+//confirmInsert ID OF BUTTON
+document.getElementById('confirmInsert').addEventListener('click',async function(){
+  if (currentSegments.length === 0) return
+
+  try{
+    const response=await fetch("{{url_for('ont_inventory.save_imported_segments')}}",{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-CSRFToken': "{{csrf_token()}}"
+      },
+      body: JSON.stringify({segments: currentSegments})
+    })
+
+    if(response.ok){
+      //alert("Podaci su uspješno sačuvani!");
+      location.reload();// Refresh to see updated table
+    }else{
+      throw new Error('Snimanje nije uspjelo.')
+    }
+  }
+  catch(error){
+    alert("Greška: " + error.message);
+  }
+})
+</script>
 {% endblock %}

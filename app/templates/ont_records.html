@@ -294,7 +294,11 @@ styles %} {{ super() }}
 <script>
 let currentSegments = []; // Global variable to store parsed data
 
-//SENDING EXEL FILE FROM FILE PICKER TO BACKEND PARSING AND SHOWING RESULT
+//----------------------------------------------
+//SENDING EXEL FILE FROM FILE PICKER TO BACKEND FOR PARSING AND SHOWING RESULT
+//---------------------------------------------
+
+//CHECK IF DOM LOADED
 document.addEventListener('DOMContentLoaded', function() {
     const importForm = document.getElementById('importForm');
     
@@ -305,10 +309,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             //1. GET THE FORM
             const formData = new FormData(this);
-            const modalElement = document.getElementById('importResultModal');
-            const modal = new bootstrap.Modal(modalElement);
-            const tableBody = document.getElementById('resultTableBody');
-            const alertBox = document.getElementById('validationAlert');
 
             //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
             //this.action, is from form:
@@ -325,6 +325,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 //3. AWAIT THE RESPONSE
                 const data = await response.json();
+
+                //4. GET MODAL ELEMENT FOR DISPLAY SEGMENTS
+                const modalElement = document.getElementById('importResultModal');
+                const modal = new bootstrap.Modal(modalElement);
+                const tableBody = document.getElementById('resultTableBody');
+                const alertBox = document.getElementById('validationAlert');
 
                 // 4.1. Clear previous table rows
                 tableBody.innerHTML = '';
@@ -363,7 +369,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+//----------------------------------------
 //SENDING PARSED SEGMENT EXSTRACTED FROM EXCEL TO ROUTE FOR INSERTION TO DB
+//------------------------------------------
+
+//confirmInsert ID OF BUTTON
 document.getElementById('confirmInsert').addEventListener('click',async function(){
   if (currentSegments.length === 0) return
 

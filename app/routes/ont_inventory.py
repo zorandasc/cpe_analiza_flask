@@ -95,6 +95,7 @@ def import_ont_records_excel():
     # The dictionary returned here contains 'segments', 'match', etc.
     results = parce_excel_segments(file)
 
+    # RETRUN PARSED SEGMENTS TO MODAL FOR DISPLAY
     return results  # Flask converts dict to JSON automatically
 
 
