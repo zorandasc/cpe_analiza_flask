@@ -33,7 +33,7 @@ def get_ont_records_view_data():
     records_grouped = _group_records(records, month_keys)
 
     return {
-        "previous_month_end": previous_month_end.strftime("%d-%m-%Y"),
+        "previous_month_end": previous_month_end,
         "months": months,
         "records": records_grouped,
     }

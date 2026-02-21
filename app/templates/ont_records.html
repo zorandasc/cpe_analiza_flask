@@ -163,7 +163,7 @@ styles %} {{ super() }}
 
         <div class="modal-header custom-modal-header">
           <h4 class="modal-title">
-            Dodaj novo stanje za: {{ previous_month_end }}
+            Dodaj novo stanje za: {{ previous_month_end.strftime("%d-%m-%Y") }}
           </h4>
           <button
             type="button"
@@ -258,11 +258,17 @@ styles %} {{ super() }}
             <strong>Totalna suma iz Excela:</strong> <span id="excelTotal"></span>
         </div>
       </div>
-      <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
-    <button type="button" id="confirmInsert" class="btn btn-success">
-        <i class="bi bi-database-fill-add"></i> Potvrdi i Snimi u Bazu
-    </button>
+      <div class="modal-footer row g-3 align-items-end">
+      <button type="button" class="btn btn-secondary col-auto" data-bs-dismiss="modal">Odustani</button>
+      
+      <button type="button" id="confirmInsert" class="btn btn-success col-auto">
+          <i class="bi bi-database-fill-add"></i> Potvrdi i Snimi u Bazu
+      </button>
+
+      <div class="col-auto">
+                <label class="form-label">Za Mijesec</label>
+                <input type="text" name="month_end_excel" class="form-control" style="width: 180px;" value="{{previous_month_end.strftime('%d-%m-%Y')}}" disabled>
+            </div>
 </div>
     </div>
 
