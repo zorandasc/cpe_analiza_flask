@@ -2242,3 +2242,16 @@ services:
     env_file:
       - /opt/my-app/config/.env  # Path on the server
 ```
+
+# SENDING EMAIL
+
+Switche of using flask_mailman
+When you use flask_mailman, you are trying to use SMTP (Port 587). In many corporate environments:
+
+Port 443 (Web) is open for everyone (so you can use Webmail and Outlook).
+
+Port 587 (SMTP) is blocked for security reasons to prevent "rogue" scripts or viruses from sending mass spam.
+
+If you want your Flask app to send mail exactly like your browser or Outlook app does—bypassing the blocked SMTP ports—you should use Exchange Web Services (EWS).
+
+Instead of flask_mailman, use the exchangelib library. It specifically uses Port 443.

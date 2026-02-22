@@ -32,10 +32,10 @@ class Config:
 
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
 
-    MAIL_SERVER = "webmail.mtel.ba"
-    MAIL_PORT = 587
-    MAIL_USE_TLS= True   # Use STARTTLS
-    MAIL_USE_SSL= False  # Do NOT use both
-    MAIL_USERNAME = r'IN\cpe.reporting'
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = "cpe.reporting@mtel.ba"
+    #MAIL_SERVER = "webmail.mtel.ba"
+    #MAIL_PORT = 587
+    #MAIL_USE_TLS= True   # Use STARTTLS
+    #MAIL_USE_SSL= False  # Do NOT use both
+    #MAIL_USERNAME = r'IN\cpe.reporting'
+    #MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    #MAIL_DEFAULT_SENDER = "cpe.reporting@mtel.ba"
