@@ -2218,7 +2218,7 @@ loop over many parents
 
 - access relationship inside loop
 
-# removed config.py from git 
+# removed old compromised config.py from git repostory
 
 # This removes the file from the 'tracking' index, not your hard drive
 git rm --cached app/config.py
@@ -2228,3 +2228,17 @@ git commit -m "Remove sensitive config from tracking"
 
 # Push to GitHub
 git push origin main
+
+# WORKING WITH .env FILE ON SERVER
+Option A: Use a Volume Mount (Easiest for internal servers)
+Keep the .env file on the server's hard drive in a secure folder (e.g., /opt/my-app/config/.env).
+
+Update your docker-compose.prod.yml to point to it:
+
+```YAML
+services:
+  flask:
+    image: your-internal-registry/flask-app:latest
+    env_file:
+      - /opt/my-app/config/.env  # Path on the server
+```
