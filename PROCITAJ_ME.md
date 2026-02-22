@@ -2221,15 +2221,19 @@ loop over many parents
 # removed old compromised config.py from git repostory
 
 # This removes the file from the 'tracking' index, not your hard drive
+
 git rm --cached app/config.py
 
 # Now commit that change
+
 git commit -m "Remove sensitive config from tracking"
 
 # Push to GitHub
+
 git push origin main
 
 # WORKING WITH .env FILE ON SERVER
+
 Option A: Use a Volume Mount (Easiest for internal servers)
 Keep the .env file on the server's hard drive in a secure folder (e.g., /opt/my-app/config/.env).
 
@@ -2264,3 +2268,19 @@ Since flask_mailman only speaks SMTP, you would use a library called exchangelib
 If you want your Flask app to send mail exactly like your browser or Outlook app does—bypassing the blocked SMTP ports—you should use Exchange Web Services (EWS).
 
 Instead of flask_mailman, use the exchangelib library. It specifically uses Port 443.
+
+# START FLASK APP AFTER HOST MACHINE GOES DOWN (RESTART):
+
+1. In docker-compose:
+
+flask:
+image: cpe-analiza-flask:latest
+restart: unless-stopped
+
+unless-stopped (Recommended) Starts the container on reboot only if it was running when the host went down. If you manually ran docker compose stop, it stays stopped.
+
+2. Ensure Docker itself starts on boot
+
+# Enable Docker to start on system boot
+
+sudo systemctl enable docker

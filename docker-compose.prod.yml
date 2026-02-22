@@ -4,6 +4,7 @@
 services:
   db:
     image: postgres:16
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
@@ -22,6 +23,7 @@ services:
 
   flask:
     image: cpe-analiza-flask:latest
+    restart: unless-stopped
     ports:
       - "5000:5000"
     environment:
@@ -42,6 +44,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4
+    restart: unless-stopped
     environment:
       TZ: Europe/Belgrade
       PGADMIN_DEFAULT_EMAIL: ${PG_ADMIN_MAIL}
