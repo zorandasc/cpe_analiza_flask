@@ -1,4 +1,4 @@
-# commands.py (or cli.py)
+import os
 from flask.cli import with_appcontext
 import click
 from werkzeug.security import generate_password_hash
@@ -9,8 +9,15 @@ import datetime
 
 @click.command("create-admin")  # Define the command name
 @with_appcontext
-def create_initial_admin(username="admin", plain_password="123"):
+def create_initial_admin():
     """CLI command to create a default admin user."""
+
+    username = os.environ.get("APP_ADMIN_USER", "admin")
+    plain_password = os.environ.get("APP_ADMIN_PASS")
+
+    if not plain_password:
+        click.echo("Error: APP_ADMIN_PASS not set in environment.")
+        return
 
     password_hash = generate_password_hash(plain_password)
 

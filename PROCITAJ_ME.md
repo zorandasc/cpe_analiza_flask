@@ -2218,7 +2218,7 @@ loop over many parents
 
 - access relationship inside loop
 
-# removed config.py from git
+# removed config.py from git 
 
 # This removes the file from the 'tracking' index, not your hard drive
 git rm --cached app/config.py

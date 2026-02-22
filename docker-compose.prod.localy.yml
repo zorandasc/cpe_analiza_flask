@@ -1,7 +1,25 @@
 #--------------------------------------------------
-# JUST START POSTGRES AND PG ADMIN CONTAINER WITHOUT FLASK APP
+# FIRST BUILD THE FLASK APP THAN START THE APP
 #---------------------------------------------------
 services:
+  flask:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      DB_NAME: ${DB_NAME}
+      APP_ADMIN_USER: ${APP_ADMIN_USER}
+      APP_ADMIN_PASS: ${APP_ADMIN_PASS}
+      SECRET_KEY:  ${SECRET_KEY}
+      CRON_JOB_SECRET: ${CRON_JOB_SECRET}
+      MAIL_PASSWORD:  ${MAIL_PASSWORD}
+    depends_on:
+      - db
+
   db:
     image: postgres:16
     environment:
