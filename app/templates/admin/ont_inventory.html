@@ -233,17 +233,17 @@
         </div>
       </div>
       <div class="modal-footer row g-3 align-items-end">
-      <button type="button" class="btn btn-secondary col-auto" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-secondary col-auto" data-bs-dismiss="modal">Odustani</button>
       
-      <button type="button" id="confirmInsert" class="btn btn-success col-auto">
-          <i class="bi bi-database-fill-add"></i> Potvrdi i Snimi u Bazu
-      </button>
+        <button type="button" id="confirmInsert" class="btn btn-success col-auto">
+            <i class="bi bi-database-fill-add"></i> Potvrdi i Snimi u Bazu
+        </button>
 
-      <div class="col-auto">
-                <label class="form-label">Za Mijesec</label>
-                <input type="text" name="month_end_excel" class="form-control" style="width: 180px;" value="" disabled>
-            </div>
-</div>
+        <div class="col-auto">
+            <label class="form-label">Za Mijesec</label>
+            <input type="date" id="adminDatePicker" name="selected_date" class="form-control" style="width: 180px;" required>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -332,18 +332,46 @@ document.addEventListener('DOMContentLoaded', function() {
 //SENDING PARSED SEGMENT EXSTRACTED FROM EXCEL TO ROUTE FOR INSERTION TO DB
 //------------------------------------------
 
-//confirmInsert ID OF BUTTON
+//confirmInsert IS ID OF BUTTON
 document.getElementById('confirmInsert').addEventListener('click',async function(){
   if (currentSegments.length === 0) return
 
+  //get the date
+  const dateInput=document.getElementById('adminDatePicker');
+  const selectedDate=new Date(dateInput.value);
+
+  // 1. Check if date is selected
+  if (!dateInput.value) {
+        alert("Molimo odaberite datum!");
+        return;
+    }
+
+  // 2. Logic to VALIDATEif it's the last day of the month
+  // We check if the next day is the 1st of the next month
+  const nextDay = new Date(selectedDate);
+   // Calculate next day by adding 1 day to selected day, 
+  nextDay.setDate(selectedDate.getDate() + 1);
+
+  //if it is not 1, selectedDate is not last
+  if(nextDay.getDate() !==1){
+    alert("Greška: Morate odabrati posljednji dan u mjesecu (npr. 31.01., 28.02., itd.)");
+    return;
+  }
+
+  // 3. Prepare payload
+  const payload={
+    segments: currentSegments,
+    selected_date: dateInput.value
+  }
+
   try{
-    const response=await fetch("{{url_for('ont_inventory.save_imported_segments')}}",{
+    const response=await fetch("{{url_for('admin.save_ont_imported_segments')}}",{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
         'X-CSRFToken': "{{csrf_token()}}"
       },
-      body: JSON.stringify({segments: currentSegments})
+      body: JSON.stringify(payload)
     })
 
     if(response.ok){

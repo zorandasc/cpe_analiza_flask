@@ -14,8 +14,3 @@ def home():
     return render_template("home.html")
 
 
-@main_bp.route("/test123")
-@login_required
-def test123():
-    return render_template("test123.html")
-

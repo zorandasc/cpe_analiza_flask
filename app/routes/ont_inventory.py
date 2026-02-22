@@ -114,7 +114,7 @@ def save_imported_segments():
             }
         ), 400
 
-    success, message = save_imported_segments_to_db(segments)
+    success, message = save_imported_segments_to_db(segments,[])
 
     flash(message, "success" if success else "danger")
 

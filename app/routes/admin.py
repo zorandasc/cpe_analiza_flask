@@ -1,11 +1,12 @@
 from datetime import datetime
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import selectinload
 from app.extensions import db
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import update_cpe_type
+from app.services.ont_inventory import parce_excel_segments, save_imported_segments_to_db
 
 from app.models import (
     Cities,
@@ -523,7 +524,48 @@ def update_ont_inventory(id):
         )
     )
 
+# called from js inside ont_records.html
+@admin_bp.route("/ont_inventory/upload-excel", methods=["POST"])
+@login_required
+def import_ont_records_excel():
+    if "file" not in request.files:
+        return "No file part", 400
 
+    file = request.files["file"]
+
+    # The dictionary returned here contains 'segments', 'match', etc.
+    results = parce_excel_segments(file)
+
+    # RETRUN PARSED SEGMENTS TO MODAL FOR DISPLAY
+    return results  # Flask converts dict to JSON automatically
+
+
+@admin_bp.route("/ont_inventory/save-segments", methods=["POST"])
+@login_required
+def save_ont_imported_segments():
+    data = request.get_json()
+
+    segments = data.get("segments", [])
+    selected_date = data.get("selected_date")
+
+    if not segments:
+        return jsonify(
+            {
+                "success": False,
+                "message": "error: Nema podataka",
+            }
+        ), 400
+
+    success, message = save_imported_segments_to_db(segments,selected_date)
+
+    flash(message, "success" if success else "danger")
+
+    return jsonify(
+        {
+            "success": success,
+            "message": message,
+        }
+    ), 200 if success else 403
 
 ###########################################################
 # ---------------ROUTES FOR CITIES CRUD--------------------------

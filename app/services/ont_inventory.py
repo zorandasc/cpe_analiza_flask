@@ -1,4 +1,5 @@
-# Business logic + write operations
+import calendar
+from datetime import datetime
 from sqlalchemy import text
 from app.extensions import db
 from app.utils.dates import get_previous_month_end
@@ -193,14 +194,31 @@ def parce_excel_segments(file_storage):
     }
 
 
-def save_imported_segments_to_db(segments):
-    if not ftth_view_required():
-        return False, "Niste autorizovani."
-
+def save_imported_segments_to_db(segments, target_date=None):
     """
     Map the Excel segment indexses (0, 1, 2...) to your DB city_id
     """
-    previous_month_end = get_previous_month_end()
+
+    if not ftth_view_required():
+        return False, "Niste autorizovani."
+
+    # Backend sanitization
+    # If target_date is provided (Admin), use it.
+    # Otherwise (User), get current month end.
+    if target_date:
+        # If target_date is a string from JSON, convert to object
+        if isinstance(target_date, str):
+            dt = datetime.strptime(target_date, "%Y-%m-%d")
+        else:
+            dt = target_date
+
+        # FORCE the date to the last day of that specific month
+        last_day = calendar.monthrange(dt.year, dt.month)[1]
+        month_to_save = dt.replace(day=last_day).date()
+
+    else:
+        # Regular user logic: get actual current month end
+        month_to_save = get_previous_month_end()
 
     # SEG 1 BANJA LUKA -> (city_id=3)
     # SEG 2 BIJELJINA-> (city_id=6)
@@ -234,7 +252,7 @@ def save_imported_segments_to_db(segments):
                 """),
                 {
                     "city_id": city_id,
-                    "month_end": previous_month_end,
+                    "month_end": month_to_save,
                     "quantity": quantity,
                 },
             )
@@ -242,7 +260,7 @@ def save_imported_segments_to_db(segments):
         db.session.commit()
         return (
             True,
-            f"Uspješno ažurirano {len(segments)} skladišta za {previous_month_end}.",
+            f"Uspješno ažurirano {len(segments)} skladišta za {month_to_save}.",
         )
 
     except Exception as e:
