@@ -5,6 +5,7 @@ services:
   db:
     image: postgres:16
     environment:
+      TZ: Europe/Belgrade
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASS}
       POSTGRES_DB: ${DB_NAME}
@@ -16,6 +17,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     environment:
+      TZ: Europe/Belgrade
       PGADMIN_DEFAULT_EMAIL: ${PG_ADMIN_MAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PG_ADMIN_PASS}
     ports:
