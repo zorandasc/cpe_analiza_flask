@@ -4,7 +4,7 @@ from collections import defaultdict
 from flask import render_template, current_app
 from app.extensions import db
 from app.utils.dates import get_current_week_friday
-from app.models import ReportSetting, ReportRecipients, CpeTypeEnum
+from app.models import ReportSetting, CpeTypeEnum
 from app.services.email_service import send_email
 from app.services.charts import (
     get_cpe_inventory_chart_data,
@@ -36,66 +36,21 @@ def run_weekly_report_job():
     if settings.last_sent_at and settings.last_sent_at.date() == now.date():
         return "Already sent"
 
-    # FORGE EMAIL TO SEND
-    recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
-
-    if not recipients:
-        return "No recipients"
-
     pdf_path = generate_pdf()
 
-    body_text = """
-        Dragi Svi,
+    # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
+    success, message = send_email(pdf_path=pdf_path)
 
-        U prilogu Vam dostavljamo sedmični izvještaj o inventaru CPE opreme.
+    if success:
+        # Only mark as sent if the email actually went out
+        settings.last_sent_at = datetime.now()
+        db.session.commit()
+        return message
 
-        Sažetak:
-        - Pregled stanja ukupne, raspoložive i demontirane CPE opreme
-        - Značajne sedmične promjene
-        - Analiza trendova
-
-        S poštovanjem,
-        Automatizovani sistem izvještavanja
-    """
-
-    body_html = """
-            <html>
-                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <p>Dragi Svi,</p>
-                    
-                    <p>U prilogu Vam dostavljamo sedmični izvještaj o inventaru <strong>CPE opreme</strong>.</p>
-                    
-                    <p><strong>Sažetak:</strong></p>
-                    <ul style="list-style-type: disc; margin-left: 20px;">
-                        <li>Pregled stanja ukupne, raspoložive i demontirane CPE opreme</li>
-                        <li>Značajne sedmične promjene</li>
-                        <li>Analiza trendova</li>
-                    </ul>
-                    
-                    <p>S poštovanjem,<br>
-                    <em>Automatizovani sistem izvještavanja</em></p>
-                </body>
-            </html>
-    """
-    # OR BUILD EMAIL  BODY VIA TEMPLATE:
-    # body_html = render_template(
-    # "emails/weekly_report.html",
-    # total=this_week_total,
-    # delta=cpe_total_delta,)
-
-    # SEND EMAIL TO RECIPIENTS
-    send_email(
-        pdf_path=pdf_path,
-        recipients=recipients,
-        subject="Sedmični izvještaj o CPE inventaru",
-        body_text=body_text,
-        body_html=body_html,
-    )
-
-    settings.last_sent_at = datetime.now()
-    db.session.commit()
-
-    return "Sent"
+    else:
+        # Do NOT update last_sent_at.
+        # The cron job will hit this again in 10 minutes and retry.
+        return f"Failed with {message}- Will retry next cron hit"
 
 
 def generate_pdf():
@@ -340,7 +295,7 @@ def build_report_chart(chart_data, output_filename, title):
     ax.set_facecolor("#f8f9fa")  # Light grey background inside chart
 
     # 2. DEFINE A MODERN COLOR PALETTE
-    colors = ["#3498db", "#e74c3c", "#2ecc71",  "#9b59b6","#f1c40f", "#FF69B4"]
+    colors = ["#3498db", "#e74c3c", "#2ecc71", "#9b59b6", "#f1c40f", "#FF69B4"]
 
     # 3. PLOT WITH CUSTOM STYLING
     for i, dataset in enumerate(datasets):

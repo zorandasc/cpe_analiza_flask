@@ -2252,6 +2252,15 @@ Port 443 (Web) is open for everyone (so you can use Webmail and Outlook).
 
 Port 587 (SMTP) is blocked for security reasons to prevent "rogue" scripts or viruses from sending mass spam.
 
+If SMTP (Port 587/25) is blocked even over VPN, the "corporate way" to send email over HTTPS (Port 443) without using the cloud is Exchange Web Services (EWS).
+
+EWS is the "internal" API that Outlook itself uses to talk to Exchange. It is available on almost every corporate Exchange server at a specific URL.
+
+For m:tel, your EWS endpoint is almost certainly:
+https://webmail.mtel.ba/EWS/Exchange.asmx
+
+Since flask_mailman only speaks SMTP, you would use a library called exchangelib. It is specifically designed for local corporate Exchange servers.
+
 If you want your Flask app to send mail exactly like your browser or Outlook app does—bypassing the blocked SMTP ports—you should use Exchange Web Services (EWS).
 
 Instead of flask_mailman, use the exchangelib library. It specifically uses Port 443.

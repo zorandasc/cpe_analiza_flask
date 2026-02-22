@@ -1,6 +1,7 @@
-from flask_mailman import EmailMessage, EmailMultiAlternatives
-from flask import current_app
+# from flask_mailman import EmailMessage, EmailMultiAlternatives
+# from flask import current_app
 import os
+from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter
 from exchangelib import (
     Credentials,
     Account,
@@ -9,7 +10,10 @@ from exchangelib import (
     Message,
     FileAttachment,
     HTMLBody,
+    Mailbox,
 )
+
+from app.models import ReportRecipients
 
 # SEND EMAIL USING FLASK_MAILMAN: IT USE SMTP 587/25 PORT FOR SENDING MAIL
 """
@@ -39,11 +43,53 @@ def send_email(pdf_path, recipients, subject, body_text, body_html=""):
       """
 
 
+# 1. Bypass SSL verification if m:tel uses internal self-signed certs
+BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
+
+
 # SEND EMAIL USING exchangelib: it uses the same HTTPS "pipeline" as your browser and Outlook,
-def send_email(pdf_path, recipients, subject, body_text, body_html=""):
+def send_email(pdf_path):
+    recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
+
     if not recipients:
         print("Weekly report: no active recipients")
-        return False
+        return False, "Nema primaoca."
+
+    subject = "Sedmični izvještaj o CPE inventaru"
+
+    body_text = """
+        Dragi Svi,
+
+        U prilogu Vam dostavljamo sedmični izvještaj o inventaru CPE opreme.
+
+        Sažetak:
+        - Pregled stanja ukupne, raspoložive i demontirane CPE opreme
+        - Značajne sedmične promjene
+        - Analiza trendova
+
+        S poštovanjem,
+        Automatizovani sistem izvještavanja
+    """
+
+    body_html = """
+            <html>
+                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                    <p>Dragi Svi,</p>
+                    
+                    <p>U prilogu Vam dostavljamo sedmični izvještaj o inventaru <strong>CPE opreme</strong>.</p>
+                    
+                    <p><strong>Sažetak:</strong></p>
+                    <ul style="list-style-type: disc; margin-left: 20px;">
+                        <li>Pregled stanja ukupne, raspoložive i demontirane CPE opreme</li>
+                        <li>Značajne sedmične promjene</li>
+                        <li>Analiza trendova</li>
+                    </ul>
+                    
+                    <p>S poštovanjem,<br>
+                    <em>Automatizovani sistem izvještavanja</em></p>
+                </body>
+            </html>
+    """
 
     try:
         # 1. Setup Configuration (Keep these in your config or .env)
@@ -59,13 +105,16 @@ def send_email(pdf_path, recipients, subject, body_text, body_html=""):
             access_type=DELEGATE,
         )
 
+        # 3. Convert string emails to Mailbox objects for exchangelib
+        to_recipients = [Mailbox(email_address=addr) for addr in recipients]
+
         # 2. Create the Message
         message = Message(
             account=account,
             subject=subject,
             # If body_html is provided, we use it; otherwise, we use body_text
             body=HTMLBody(body_html) if body_html else body_text,
-            to_recipients=recipients,
+            to_recipients=to_recipients,
         )
 
         # 3. Attach the PDF
@@ -80,8 +129,8 @@ def send_email(pdf_path, recipients, subject, body_text, body_html=""):
 
             # 4. Send
         message.send_and_save()
-        return True
+        return True, "Email poslan uspiješno."
 
     except Exception as e:
-        print(f"Failed to send weekly report email via EWS: {e}")
-        return False
+        print(f"Failed to send weekly report email via EWS: {str(e)}")
+        return False, "Dogodila se greška prilikom slanja email-a."

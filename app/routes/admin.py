@@ -1,12 +1,26 @@
 from datetime import datetime
-from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from flask_login import login_required, current_user
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import selectinload
 from app.extensions import db
+from app.services.email_service import send_email
+from app.services.reports import generate_pdf
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import update_cpe_type
-from app.services.ont_inventory import parce_excel_segments, save_imported_segments_to_db
+from app.services.ont_inventory import (
+    parce_excel_segments,
+    save_imported_segments_to_db,
+)
 
 from app.models import (
     Cities,
@@ -143,7 +157,9 @@ def update_cpe_inventory(id):
         )
     )
 
+
 # ------------------------------------------------------------
+
 
 @admin_bp.route("/cpe_dismantle")
 @login_required
@@ -249,7 +265,9 @@ def update_cpe_dismantle_inventory(id):
         )
     )
 
-#--------------------------------------------------------------
+
+# --------------------------------------------------------------
+
 
 @admin_bp.route("/stb_inventory")
 @login_required
@@ -344,7 +362,8 @@ def update_stb_inventory(id):
         )
     )
 
-#--------------------------------------------------------------
+
+# --------------------------------------------------------------
 
 
 @admin_bp.route("/iptv_users_inventory")
@@ -426,7 +445,9 @@ def update_iptv_users_inventory(id):
         url_for("admin.iptv_users_inventory", week_end=request.args.get("week_end"))
     )
 
+
 # ------------------------------------------------------------------------
+
 
 @admin_bp.route("/ont_inventory")
 @login_required
@@ -524,6 +545,7 @@ def update_ont_inventory(id):
         )
     )
 
+
 # called from js inside ont_records.html
 @admin_bp.route("/ont_inventory/upload-excel", methods=["POST"])
 @login_required
@@ -556,7 +578,7 @@ def save_ont_imported_segments():
             }
         ), 400
 
-    success, message = save_imported_segments_to_db(segments,selected_date)
+    success, message = save_imported_segments_to_db(segments, selected_date)
 
     flash(message, "success" if success else "danger")
 
@@ -566,6 +588,7 @@ def save_ont_imported_segments():
             "message": message,
         }
     ), 200 if success else 403
+
 
 ###########################################################
 # ---------------ROUTES FOR CITIES CRUD--------------------------
@@ -1137,7 +1160,7 @@ def edit_dismantle_status(id):
 @login_required  # AUTENTIFICATION
 def report_settings():
     if not view_required():  # AUTHORIZATION
-        return redirect(url_for("admin.dismantle_status"))
+        return redirect(url_for("admin.report_settings"))
     # ReportSettin should only have one row
     settings = ReportSetting.query.first()
 
@@ -1184,4 +1207,36 @@ def report_remove_recipient(id):
     flash("Email obrisan!", "success")
     db.session.delete(email)
     db.session.commit()
+    return redirect(url_for("admin.report_settings"))
+
+
+# DOWNLOAD WEEKLY pdf REPORT MANNUALY
+@admin_bp.route("/reports/download")
+@login_required
+def download_weekly_report():
+    if not view_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.report_settings"))
+    pdf_path = generate_pdf()
+
+    return send_file(
+        pdf_path,
+        as_attachment=True,
+        download_name="weekly_report.pdf",
+        mimetype="application/pdf",
+    )
+
+
+@admin_bp.route("/reports/send_weekly", methods=["POST"])
+def send_weekly_report():
+    if not admin_required():  # AUTHORIZATION
+        return redirect(url_for("admin.report_settings"))
+
+    pdf_path = generate_pdf()
+
+     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
+    success, message = send_email(pdf_path=pdf_path)
+
+    flash(f"Status: {message}", "success" if success else "danger")
+
     return redirect(url_for("admin.report_settings"))

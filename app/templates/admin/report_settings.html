@@ -14,10 +14,14 @@ styles %} {{ super() }}
   background: linear-gradient(to right, #4568dc, #b06ab3);
   }
   .recipient-btn{
-    
-  background: #43c6ac; /* fallback for old browsers */
+    background-image: linear-gradient(to right, #c6ffdd, #fbd786, #f7797d);
+  
+  }
+   .send-btn{
+    background: #43c6ac; /* fallback for old browsers */
   background: -webkit-linear-gradient(to right, #43c6ac, #191654); /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(to right, #43c6ac, #191654);
+ 
   }
 </style>
 {% endblock %} {% block content%}
@@ -29,12 +33,13 @@ styles %} {{ super() }}
   >
     <span class="me-2">⬅</span> Nazad
   </a>
-  <a
-      href="{{ url_for('reports.download_weekly_report') }}"
-      class="btn btn-warning pdf-btn"
-    >
-      Generiši ručno izvještaj (.pdf)
-    </a>
+  
+    <form id="pdfForm" action="{{ url_for('admin.download_weekly_report') }}" method="GET">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" id="pdfBtn"  class="btn btn-warning pdf-btn">
+        <span id="pdfbtnText">Generiši i sačuvaj (.pdf) izvještaj</span>
+      </button>
+    </form>
   </div>
   <div class="card shadow-sm mb-4">
     <div class="card-body bg-light">
@@ -141,17 +146,27 @@ styles %} {{ super() }}
     </tbody>
   </table>
    {% if admin_required() %}
+   <div class="d-flex justify-content-between">
   <button
-    class="btn btn-sm btn-success recipient-btn"
+    class="btn  btn-warning recipient-btn"
     data-bs-toggle="modal"
     data-bs-target="#addRecipientModal"
   >
     + Dodaj primaoca
   </button>
+
+    <form id="reportForm" action="{{ url_for('admin.send_weekly_report') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <button type="submit" id="sendBtn"  class="btn btn-success send-btn">
+        <span id="btnText">Pošalji izvještaj ručno</span>
+        <span id="btnSpinner" style="display: none;" class="spinner-border spinner-border-sm"></span>
+      </button>
+    </form>
+    </div>
    {%endif%}
 </div>
 
-<form method="POST" action="/admin/reports/recipients/add">
+<form method="POST" action="{{ url_for('admin.report_add_recipient') }}">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
   <div class="modal fade" id="addRecipientModal">
     <div class="modal-dialog">
@@ -171,4 +186,42 @@ styles %} {{ super() }}
 </form>
 
 
+<script>
+
+  //Double Click problem for Pošalji izvještaj ručno button
+  //It listens for the submit event, disables the button, and provides visual feedback.
+  document.getElementById('reportForm').addEventListener('submit', function(e){
+    const btn=document.getElementById('sendBtn')
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('btnSpinner');
+
+    // Prevent multiple clicks
+    btn.disabled=true;
+
+    // Change appearance
+    btnText.innerText = "Slanje u toku...";
+    spinner.style.display = "inline-block";
+  })
+
+   //Double Click problem for: Generiši i sačuvaj (.pdf) izvještaj button
+  //We canot use the same logic like sending because donload is GET route
+  //The reason the spinner never stops is that when a browser receives 
+  //a send_file (a download), it doesn't "change pages."
+  document.getElementById('pdfForm').addEventListener('submit', function(e){
+    const btn=document.getElementById('pdfBtn')
+    const btnText = document.getElementById('pdfbtnText');
+   
+   // 1. Change the text so they know it's working
+    const originalText = btnText.innerText;
+    btnText.innerText = "Priprema fajla...";
+    btn.classList.add('disabled');
+
+    // 2. Simply reset the button after 5 seconds
+    setTimeout(function() {
+        btn.classList.remove('disabled');
+        btnText.innerText = originalText;
+    }, 5000);
+  })
+
+</script>
 {% endblock %}
