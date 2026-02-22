@@ -2217,3 +2217,14 @@ N+1 is only dangerous when:
 loop over many parents
 
 - access relationship inside loop
+
+# removed config.py from git
+
+# This removes the file from the 'tracking' index, not your hard drive
+git rm --cached app/config.py
+
+# Now commit that change
+git commit -m "Remove sensitive config from tracking"
+
+# Push to GitHub
+git push origin main
