@@ -2313,3 +2313,9 @@ Be very careful with this command:
 docker compose down -v  # The -v deletes all volumes!
 ```
 The -v flag (volumes) will wipe your database permanently. In production, always just use docker compose down
+
+
+# ON REMOTE SERVER THERE ARE:
+-	THREE IMAGES
+-	docker-compose.prod.yml
+-	.env file (HIDDEN)
