@@ -16,7 +16,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       #WAIT UNTIL POSTGRES IS READY THAN START FLASK OR PGADMIN
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -26,18 +26,12 @@ services:
     restart: unless-stopped
     ports:
       - "5000:5000"
+    env_file:
+      - .env
     environment:
       TZ: Europe/Belgrade
       DB_HOST: db
       DB_PORT: 5432
-      DB_USER: ${DB_USER}
-      DB_PASS: ${DB_PASS}
-      DB_NAME: ${DB_NAME}
-      APP_ADMIN_USER: ${APP_ADMIN_USER}
-      APP_ADMIN_PASS: ${APP_ADMIN_PASS}
-      SECRET_KEY: ${SECRET_KEY}
-      CRON_JOB_SECRET: ${CRON_JOB_SECRET}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
