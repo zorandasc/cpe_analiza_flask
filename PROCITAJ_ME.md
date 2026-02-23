@@ -2218,6 +2218,8 @@ loop over many parents
 
 - access relationship inside loop
 
+# --------------------------------------------------------------------------
+
 # removed old compromised config.py from git repostory
 
 # This removes the file from the 'tracking' index, not your hard drive
@@ -2247,6 +2249,8 @@ services:
       - /opt/my-app/config/.env  # Path on the server
 ```
 
+# --------------------------------------------------------------------
+
 # SENDING EMAIL
 
 Switche of using flask_mailman
@@ -2269,13 +2273,17 @@ If you want your Flask app to send mail exactly like your browser or Outlook app
 
 Instead of flask_mailman, use the exchangelib library. It specifically uses Port 443.
 
+# -----------------------------------------------------------------------------------
+
 # START FLASK APP AFTER HOST MACHINE GOES DOWN (RESTART):
 
 1. In docker-compose:
 
+```yml
 flask:
 image: cpe-analiza-flask:latest
 restart: unless-stopped
+```
 
 unless-stopped (Recommended) Starts the container on reboot only if it was running when the host went down. If you manually ran docker compose stop, it stays stopped.
 
@@ -2283,4 +2291,25 @@ unless-stopped (Recommended) Starts the container on reboot only if it was runni
 
 # Enable Docker to start on system boot
 
+```bash
 sudo systemctl enable docker
+```
+
+# -----------------------------------------------------------------------
+
+# POSTGRES DATABASE PGDATA
+
+On a standard Linux host, Docker stores named volumes in a protected directory:
+ /var/lib/docker/volumes/project_name_pgdata/_data
+
+Container Deletion: If you run docker compose down, the container is deleted, but the volume remains.
+
+Container Update: When you pull a new postgres:17 image and restart, the new container "re-attaches" to that same folder, and all your CPE inventory data is still there.
+
+. The "Nuclear" Command Warning
+Be very careful with this command:
+
+```Bash
+docker compose down -v  # The -v deletes all volumes!
+```
+The -v flag (volumes) will wipe your database permanently. In production, always just use docker compose down
