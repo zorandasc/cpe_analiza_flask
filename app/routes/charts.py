@@ -5,6 +5,7 @@ from app.models import CityTypeEnum, CpeTypeEnum
 from app.services.charts import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
+    get_cpe_broken_chart_data,
     get_stb_inventory_chart_data,
     get_ont_inventory_chart_data,
     get_iptv_inventory_chart_data,
@@ -319,6 +320,101 @@ def cpe_dismantle_inventory_charts():
         selected_cpe_type=selected_cpe_type,
         selected_dismantle_id=selected_dismantle_id,
         selected_dismantle=selected_dismantle,
+        selected_city_id=selected_city_id,
+        selected_city_name=selected_city_name,
+        selected_weeks=selected_weeks,
+    )
+
+
+
+# GET REQUEST + query parameter FOR FILTERS
+@chart_bp.route("/cpe-broken-charts", methods=["GET"])
+@login_required
+def cpe_broken_inventory_charts():
+    selected_city_id = request.args.get("city_id", type=int)
+
+    selected_cpe_id = request.args.get("cpe_id", type=int)
+
+    selected_weeks = request.args.get("weeks", type=int)
+
+    raw_cpe_type = request.args.get("cpe_type", type=str)
+
+    if raw_cpe_type:
+        try:
+            selected_cpe_type = CpeTypeEnum(raw_cpe_type)
+
+        except ValueError:
+            selected_cpe_type = None
+    else:
+        selected_cpe_type = None
+
+    # convert empty string ""  →  None
+    if not selected_cpe_type:
+        selected_cpe_type = None
+
+    if not selected_cpe_type:
+        selected_cpe_type = None
+
+    # mutual exclusivity ON BACKEND
+    if selected_cpe_id:
+        selected_cpe_type = None
+
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
+    chart_data = get_cpe_broken_chart_data(
+        city_id=selected_city_id,
+        cpe_id=selected_cpe_id,
+        cpe_type=selected_cpe_type,
+        weeks=selected_weeks,
+    )
+
+    # ---------------------------------------
+    # FOR LISTING IN HTML SELECT ELEMENTS
+    # ---------------------------------------
+    # lists of cities in cpe_inventory
+    cities = get_distinct_joined_values(
+        base_key="cpe_dis",
+        join_key="city",
+        base_fk="city_id",
+        extra_joins="""
+        LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
+        """,
+        where_clause="AND j.type=:city_type",
+        params={"city_type": CityTypeEnum.IJ.value},
+    )
+
+    # SHOW ONLY CPES THAT ARE ACTIVE IN TOTAL
+    cpes = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")
+
+    # LIST OF CPE TYPES STRING NOT ENUMS
+    cpe_types = sorted({cpe["cpe_type"] for cpe in cpes})
+
+    # -----------------------------------
+    # FOR BUILDING DYNAMIC TITLE IN CHART.JS
+    # ---------------------------------------
+    selected_cpe_name = None
+    selected_city_name = None
+
+    if selected_cpe_id:
+        selected_cpe_name = next(
+            (c["label"] for c in cpes if c["id"] == selected_cpe_id), None
+        )
+
+    if selected_city_id:
+        selected_city_name = next(
+            (c.name for c in cities if c.id == selected_city_id), None
+        )
+
+    return render_template(
+        "charts/cpe_broken_dashboard.html",
+        chart_data=chart_data,
+        cities=cities,
+        cpes=cpes,
+        types=cpe_types,
+        selected_cpe_id=selected_cpe_id,
+        selected_cpe_name=selected_cpe_name,
+        selected_cpe_type=selected_cpe_type,
         selected_city_id=selected_city_id,
         selected_city_name=selected_city_name,
         selected_weeks=selected_weeks,

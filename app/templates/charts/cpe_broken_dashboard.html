@@ -1,0 +1,129 @@
+{% extends "base.html" %} 
+{% block title %}Grafikoni{% endblock %} 
+
+{% block content %}
+<div class="py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{{ url_for('charts.chart_home') }}"
+            class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
+            <span class="me-2">⬅</span> Nazad
+        </a>
+        <h2 class="h4 text-secondary mb-0">Trendovi neispravne CPE opreme</h2>
+        <span class="badge bg-primary">Ažurirano: {{ "now"|datetimeformat if datetimeformat else "Danas" }}</span>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body bg-light">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Skladište</label>
+                    <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
+                        <option value="">--Ukupno Za Sva Skladišta --</option>
+                        {% for city in cities %}
+                        <option value="{{ city.id }}" {% if city.id == selected_city_id %}selected{% endif %}>
+                            {{ city.name |capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">CPE uređaj</label>
+                       <!--document.querySelector('[name=cpe_id]').value='' IS FOR mutual exclusivity WITH cpe_type ON FRONTEND-->
+                    <select name="cpe_id" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_type]').value=''; this.form.submit()">
+                         <option value="">-- Svi uređaji --</option>
+                        {% for cpe in cpes %}
+                        <option value="{{ cpe.id}}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
+                            {{ cpe.label|capitalize }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label fw-bold">Vremenski period</label>
+                    <select name="weeks" class="form-select shadow-sm" onchange="this.form.submit()">
+                        <option value="">Sve dostupno</option>
+                        {% for w in [5, 10, 20, 50] %}
+                        <option value="{{ w }}" {% if w == selected_weeks %}selected{% endif %}>
+                            Poslednjih {{ w }} nedelja
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                 <div class="col-md-5">
+                    <label class="form-label fw-bold">Tip CPE uređaja</label>
+                      <!--document.querySelector('[name=cpe_id]').value='' IS FOR mutual exclusivity WITH cpe_id ON FRONTEND-->
+                    <select name="cpe_type" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_id]').value=''; this.form.submit()">
+                         <option value="">-- Svi Tipovi --</option>
+                        {% for cpe_type in types %}
+                        <option value="{{ cpe_type}}" {% if cpe_type == selected_cpe_type %}selected{% endif %}>
+                            {{ cpe_type }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline-secondary w-100">
+                        Poništi
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <div class="row align-items-center">
+            
+            <div class="col-md-4">
+                <div class="p-3 rounded border d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Analitika količine</h5>
+                    <select id="chartType" class="form-select form-select-sm w-auto">
+                        <option value="bar">Bar chart</option>
+                        <option value="line" selected>Line chart</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                {% if chart_data.devices %}
+                <div class="p-3 rounded border">
+                    <strong>Uključeni uređaji:</strong>
+                    <ul class="list-inline mb-0 mt-1">
+                        {% for d in chart_data.devices %}
+                        <li class="list-inline-item badge bg-light text-dark border">{{ d }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div style="position: relative; height: 500px;">
+            <canvas id="ctxChart"></canvas>
+        </div>
+    </div>
+</div>
+    <button class="btn btn-sm btn-outline-secondary mb-4 mt-4" id="exportChart" data-filename="stanje_neispravne_cpe_opreme.png">
+    Export chart (PNG)
+    </button>
+</div>
+
+{% block scripts %}
+<script>
+   window.chartContext = {
+        mainTitle:"Ukupno stanje neispravne CPE opreme po tipu",
+        cpeId: {{ selected_cpe_id or "null" }},
+        cpeType: {{ selected_cpe_type|tojson }},
+        cpeName: {{ selected_cpe_name|tojson }},
+        cityName: {{ selected_city_name|tojson }},
+        weeks: {{ selected_weeks or "null" }},
+    };
+    </script>
+    {% include "charts/_chart_logic.html" %}
+{% endblock %}
+
+{% endblock %}
+

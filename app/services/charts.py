@@ -2,7 +2,14 @@ from collections import defaultdict
 from datetime import timedelta
 from sqlalchemy import func, text
 from app.extensions import db
-from app.models import CpeInventory, CpeDismantle, DismantleTypes, CpeTypes, Cities
+from app.models import (
+    CpeInventory,
+    CpeDismantle,
+    CpeBroken,
+    DismantleTypes,
+    CpeTypes,
+    Cities,
+)
 
 
 # cpe inventory IS EVENT/STATE-CHANGE TABLE
@@ -286,7 +293,7 @@ def get_cpe_dismantle_chart_data(
 
     if cpe_id:
         q = q.filter(CpeDismantle.cpe_type_id == cpe_id)
-    
+
     if dismantle_type_id:
         q = q.filter(DismantleTypes.id == dismantle_type_id)
 
@@ -374,6 +381,175 @@ def get_cpe_dismantle_chart_data(
         devices = (
             db.session.query(CpeTypes.name, CpeTypes.label)
             .filter(CpeTypes.type == cpe_type, CpeTypes.visible_in_dismantle)
+            .distinct()
+            .order_by(CpeTypes.name)
+            .all()
+        )
+
+        # Flatten the list of Row objects into a list of strings
+        devices = [cpe.label for cpe in devices]
+
+        return {
+            "labels": [w.strftime("%d-%m-%Y") for w in timeline],
+            "datasets": [{"label": f"Ukupno ({cpe_type})", "data": values}],
+            "devices": devices,
+            "y_min": y_min,
+            "y_max": y_max,
+        }
+
+    # MODE 3 — all types
+    datasets = [{"label": k, "data": v} for k, v in totals_by_type.items()]
+
+    return {
+        "labels": [w.strftime("%d-%m-%Y") for w in timeline],
+        "datasets": datasets,
+        "y_min": y_min,
+        "y_max": y_max,
+    }
+
+
+# cpe inventory IS EVENT/STATE-CHANGE TABLE
+# You only need carry-forward when your table
+# stores sparse changes instead of full state.
+def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
+
+    # ---------------------------------------
+    # 1. Find min, max available week in all DB
+    # ---------------------------------------
+
+    min_week, max_week = db.session.query(
+        func.min(CpeBroken.week_end), func.max(CpeBroken.week_end)
+    ).one()
+
+    if not max_week:
+        return {"labels": [], "datasets": []}
+
+    if weeks:
+        # for example: if week 5 , we need to substract 5*7 days
+        start_week = max_week - timedelta(days=7 * (weeks - 1))
+    else:
+        start_week = min_week
+
+    # CONTINUOE TIMELINE OF FRIDAYS
+    timeline = build_timeline(start_week, max_week)
+
+    # ---------------------------------------
+    # 2. Base query (sparse snapshots) on some week_end there is no data
+    # ---------------------------------------
+    q = (
+        db.session.query(
+            CpeBroken.city_id,
+            CpeBroken.week_end,
+            CpeBroken.cpe_type_id,
+            CpeTypes.type,
+            CpeBroken.quantity,
+        )
+        .join(CpeTypes, CpeTypes.id == CpeBroken.cpe_type_id)
+        .join(Cities, Cities.id == CpeBroken.city_id)
+        .filter(CpeBroken.week_end <= max_week)
+        .filter(CpeTypes.visible_in_broken)  # only cpe types that are visisble
+    )
+
+    if city_id:
+        q = q.filter(Cities.id == city_id)
+    else:
+        # Totat sum by all cities but Without Raspoloziva oprema
+        q = q.filter(Cities.include_in_total)
+
+    if cpe_id:
+        q = q.filter(CpeBroken.cpe_type_id == cpe_id)
+
+    if cpe_type:
+        q = q.filter(CpeTypes.type == cpe_type)
+
+    rows = q.all()
+
+    if not rows:
+        return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
+
+    # ---------------------------------------
+    # 3. Rebuild weekly state per city/type -DATA GROUPING
+    # ---------------------------------------
+    # 3.1 create empty state
+    state = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+
+
+    # 3.2 FILL THE STATE WITH VALUES
+    for city_id_, week_end, cpe_type_id_, type_key, qty in rows:
+        state[city_id_][type_key][week_end] += qty
+
+    # ---------------------------------------
+    # 4. Aggregate into chart datasets
+    # ---------------------------------------
+ 
+    totals_by_type = defaultdict(lambda: [0] * len(timeline))
+
+    # FILL totals_by_type USING THE Logic THE CARRY FORWARD LOGIC
+    for city_data in state.values():
+        # now we are inside one city
+        # week_map is actuall list of data from db (weeks, quantities) for that cpe_type and city_id
+        # week_map = {2026-01-23: 100,2026-02-06: 120}
+        for type_key, week_map in city_data.items():
+            # 1. FIND ALL WEEKS THAT ARE BEFORE start_week
+            previous_weeks = [w for w in week_map if w < start_week]
+            # 2. AND THAN USE LATEST QUANTITY FROM LAST WEEK BEFORE start_week
+            last_quantity = week_map[max(previous_weeks)] if previous_weeks else 0
+            # 3. WHAY? BECAUSE IF THERE IS NO REAL WEEK in week_map FORM DB
+            # FOR FIRST ITERATION THAN WE HAVE VALUE TO POPULATE
+
+            # FOR FILTER WEEKS=5, i WILL GO FROM 1..5
+            for i, w in enumerate(timeline):
+                if w in week_map:
+                    last_quantity = week_map[w]  # week_map[w] is quantity, w is date
+                totals_by_type[type_key][i] += last_quantity
+
+    # ---------------------------------------
+    # 4.5 Dynamic Y-axis scaling (ALL datasets)
+    # ---------------------------------------
+    all_values = []
+    for values in totals_by_type.values():
+        # extend() takes those individual lists and merges them into one big flat list:
+        all_values.extend(values)
+
+    if all_values:
+        y_min = min(all_values)
+        y_max = max(all_values)
+
+        padding = (y_max - y_min) * 0.1
+
+        if padding == 0:
+            padding = 1
+
+        y_min -= padding
+        y_max += padding
+
+        y_min = max(0, y_min)  # Don't go below zero
+    else:
+        y_min, y_max = 0, 1  # Default range if no data exists
+
+    # ---------------------------------------
+    # 5. Format output per mode
+    # ---------------------------------------
+
+    # MODE 1 — single device
+    if cpe_id:
+       
+        values = next(iter(totals_by_type.values()), [])
+        return {
+            "labels": [w.strftime("%d-%m-%Y") for w in timeline],
+            "datasets": [{"label": "Total", "data": values}],
+            "y_min": y_min,
+            "y_max": y_max,
+        }
+
+    # MODE 2 — single type
+    if cpe_type:
+        values = totals_by_type.get(cpe_type, [])
+
+        # all devices under that type
+        devices = (
+            db.session.query(CpeTypes.name, CpeTypes.label)
+            .filter(CpeTypes.type == cpe_type, CpeTypes.visible_in_total)
             .distinct()
             .order_by(CpeTypes.name)
             .all()
@@ -604,8 +780,6 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
 # -----------------
 # HELPERS FUNCTIONS
 # -----------------
-
-
 def build_timeline(start_week, max_week):
     """
     Build continuous set of fridays from start_week to max_week
