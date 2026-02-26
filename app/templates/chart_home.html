@@ -131,6 +131,7 @@ box-shadow:
     </div>
   </div>
   </a>
+
    <a
             href="{{ url_for('charts.cpe_dismantle_inventory_charts') }}"
             class="dashboard-link"
@@ -147,6 +148,24 @@ box-shadow:
     </div>
   </div>
   </a>
+
+  <a
+            href="{{ url_for('charts.cpe_dismantle_inventory_charts') }}"
+            class="dashboard-link"
+          >
+  <div class="card">
+    <div class="title">Neispravna CPE oprema - IJ</div>
+    <div class="icon"><img
+                  src="{{ url_for('static', filename='charts.png') }}"
+                  alt="Icon"
+                  class="card-icon custom-icon"
+                /></div>
+    <div class="content">
+      <p>Pregled promjene stanja neispravne CPE opreme po IJ</p>
+    </div>
+  </div>
+  </a>
+
   <a
             href="{{ url_for('charts.stb_inventory_charts') }}"
             class="dashboard-link"
@@ -184,14 +203,14 @@ box-shadow:
             class="dashboard-link"
           >
    <div class="card">
-    <div class="title">ONT uređaji - GPON mreža</div>
+    <div class="title">GPON/XDSL korisnici -pristupna mreža</div>
     <div class="icon"><img
                   src="{{ url_for('static', filename='charts.png') }}"
                   alt="Icon"
                   class="card-icon custom-icon"
                 /></div>
     <div class="content">
-      <p>Pregled promjene stanja ONT uređaja na GPON pristupnoj mreži. Mjesečni nivo.</p>
+      <p>Pregled promjene stanja korisnika na FTTH pristupnoj mreži. Mjesečni nivo.</p>
     </div>
   </div>
    </a>
