@@ -31,7 +31,7 @@ cpe_broken_bp = Blueprint(
 @cpe_broken_bp.route("/")
 @login_required
 def cpe_broken():
-    data = get_cpe_broken_view_data()
+    data= get_cpe_broken_view_data()
 
     return render_template("cpe_broken.html", **data)
 

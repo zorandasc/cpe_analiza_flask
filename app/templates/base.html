@@ -21,18 +21,18 @@
         scroll-padding-top: 80px;
       }
       body {
-  background-color: #f8f9fa; /* Light Bootstrap gray */
-  background-image: radial-gradient(circle at top right, #f0eded 0%, #e0e2e3 100%);
-  min-height: 101vh;
-}
+        background-color: #f8f9fa; /* Light Bootstrap gray */
+        background-image: radial-gradient(circle at top right, #f0eded 0%, #e0e2e3 100%);
+        min-height: 101vh;
+      }
 
-.container {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-  margin-top: 20px;
-}
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        margin-top: 20px;
+      }
 
 
 
@@ -178,6 +178,15 @@
                 aria-current="page"
               >
                 Demontirana CPE oprema
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link {% if request.path == url_for('cpe_broken_inventory.cpe_broken') %}active{% endif %}"
+                href="{{ url_for('cpe_broken_inventory.cpe_broken') }}"
+                aria-current="page"
+              >
+                Neispravna CPE oprema
               </a>
             </li>
             <li class="nav-item">
