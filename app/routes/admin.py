@@ -952,11 +952,13 @@ def edit_cpe_type(id):
             "type": request.form.get("type"),
             "order_total": request.form.get("order_in_total"),
             "order_dismantle": request.form.get("order_in_dismantle"),
+            "order_broken": request.form.get("order_in_broken"),
             "header_color": request.form.get("header_color"),
             "has_remote": "has_remote" in request.form,
             "has_adapter": "has_adapter" in request.form,
             "visible_in_total": "visible_in_total" in request.form,
             "visible_in_dismantle": "visible_in_dismantle" in request.form,
+            "visible_in_broken": "visible_in_broken" in request.form,
         }
 
         success, message = update_cpe_type(id, form_data)
@@ -1234,7 +1236,7 @@ def send_weekly_report():
 
     pdf_path = generate_pdf()
 
-     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
+    # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
     success, message = send_email(pdf_path=pdf_path)
 
     flash(f"Status: {message}", "success" if success else "danger")

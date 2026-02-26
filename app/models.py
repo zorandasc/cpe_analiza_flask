@@ -138,6 +138,9 @@ class Cities(db.Model):
     cpe_inventory: Mapped[list["CpeInventory"]] = relationship(
         "CpeInventory", back_populates="city"
     )
+    cpe_broken: Mapped[list["CpeBroken"]] = relationship(
+        "CpeBroken", back_populates="city"
+    )
     ont_inventory: Mapped[list["OntInventory"]] = relationship(
         "OntInventory", back_populates="city"
     )
@@ -169,6 +172,10 @@ class CpeTypes(db.Model):
         Boolean, server_default=text("true")
     )
 
+    visible_in_broken: Mapped[Optional[bool]] = mapped_column(
+        Boolean, server_default=text("true")
+    )
+
     has_remote = mapped_column(Boolean, nullable=False, server_default="false")
 
     has_adapter = mapped_column(Boolean, nullable=False, server_default="true")
@@ -177,6 +184,8 @@ class CpeTypes(db.Model):
 
     order_in_dismantle: Mapped[Optional[int]] = mapped_column(Integer)
 
+    order_in_broken: Mapped[Optional[int]] = mapped_column(Integer)
+
     header_color: Mapped[Optional[str]] = mapped_column(String(50))
 
     cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
@@ -184,6 +193,9 @@ class CpeTypes(db.Model):
     )
     cpe_inventory: Mapped[list["CpeInventory"]] = relationship(
         "CpeInventory", back_populates="cpe_type"
+    )
+    cpe_broken: Mapped[list["CpeBroken"]] = relationship(
+        "CpeBroken", back_populates="cpe_type"
     )
 
 
@@ -218,6 +230,31 @@ class StbTypes(db.Model):
         "StbInventory", back_populates="stb_type"
     )
 
+class CpeInventory(db.Model):
+    __tablename__ = "cpe_inventory"
+    __table_args__ = (
+        # UniqueConstraint for upsert (updat/insert) One row = one city + one CPE + one week
+        UniqueConstraint("city_id", "cpe_type_id", "week_end", name="uq_city_cpe_week"),
+        # Data integrity only friday of week is enforced at DB level
+        CheckConstraint("EXTRACT(DOW FROM week_end) = 5", name="ck_week_end_friday"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), nullable=False)
+    cpe_type_id: Mapped[int] = mapped_column(ForeignKey("cpe_types.id"), nullable=False)
+    week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    city = relationship("Cities", back_populates="cpe_inventory")
+    cpe_type = relationship("CpeTypes", back_populates="cpe_inventory")
 
 class CpeDismantle(db.Model):
     __tablename__ = "cpe_dismantle"
@@ -252,12 +289,11 @@ class CpeDismantle(db.Model):
     cpe_type = relationship("CpeTypes", back_populates="cpe_dismantle")
     dismantle_type = relationship("DismantleTypes", back_populates="cpe_dismantle")
 
-
-class CpeInventory(db.Model):
-    __tablename__ = "cpe_inventory"
+class CpeBroken(db.Model):
+    __tablename__ = "cpe_broken"
     __table_args__ = (
         # UniqueConstraint for upsert (updat/insert) One row = one city + one CPE + one week
-        UniqueConstraint("city_id", "cpe_type_id", "week_end", name="uq_city_cpe_week"),
+        UniqueConstraint("city_id", "cpe_type_id", "week_end", name="uqb_city_cpe_week"),
         # Data integrity only friday of week is enforced at DB level
         CheckConstraint("EXTRACT(DOW FROM week_end) = 5", name="ck_week_end_friday"),
     )
@@ -276,9 +312,8 @@ class CpeInventory(db.Model):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    city = relationship("Cities", back_populates="cpe_inventory")
-    cpe_type = relationship("CpeTypes", back_populates="cpe_inventory")
-
+    city = relationship("Cities", back_populates="cpe_broken")
+    cpe_type = relationship("CpeTypes", back_populates="cpe_broken")
 
 class OntInventory(db.Model):
     __tablename__ = "ont_inventory"
@@ -304,7 +339,6 @@ class OntInventory(db.Model):
     city: Mapped[Optional["Cities"]] = relationship(
         "Cities", back_populates="ont_inventory"
     )
-
 
 class StbInventory(db.Model):
     __tablename__ = "stb_inventory"
@@ -332,7 +366,6 @@ class StbInventory(db.Model):
         "StbTypes", back_populates="stb_inventory"
     )
 
-
 class IptvUsers(db.Model):
     __tablename__ = "iptv_users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -350,7 +383,6 @@ class IptvUsers(db.Model):
         server_default=func.now(),
         onupdate=func.now(),
     )
-
 
 class ReportSetting(db.Model):
     __tablename__ = "report_settings"
@@ -373,7 +405,6 @@ class ReportSetting(db.Model):
     updated_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now()
     )
-
 
 class ReportRecipients(db.Model):
     __tablename__ = "report_recipients"

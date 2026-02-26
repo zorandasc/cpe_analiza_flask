@@ -114,6 +114,32 @@ block content %}
         <div class="form-text">Manji broj = kolona ide više lijevo</div>
       </div>
        <hr/>
+       <hr/>
+       <div class="mb-3 form-check">
+        <input
+          type="checkbox"
+          class="form-check-input"
+          id="visible_in_broken"
+          name="visible_in_broken"
+          {%if cpe.visible_in_broken%}checked{%endif%}
+        />
+        <label class="form-check-label" for="visible_in_broken">
+          Vidljiv u tabeli neispravne CPE oprema
+        </label>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Položaj u tabeli neispravne CPE oprema</label>
+        <input
+          type="number"
+          name="order_in_broken"
+          class="form-control"
+          min="2"
+          value="{{ cpe.order_in_broken}}"
+          required
+        />
+        <div class="form-text">Manji broj = kolona ide više lijevo</div>
+      </div>
+       <hr/>
       <div class="mb-3">
         <label class="form-label">Boja zaglavlja</label>
         <input

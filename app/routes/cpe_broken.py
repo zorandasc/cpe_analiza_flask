@@ -13,37 +13,37 @@ from flask_login import login_required
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from io import BytesIO
-from app.services.cpe_inventory import (
-    get_cpe_records_view_data,
-    get_cpe_records_history,
-    update_cpe_records,
-    get_cpe_records_excel_export,
+from app.services.cpe_broken import (
+    get_cpe_broken_view_data,
+    get_cpe_broken_history,
+    update_cpe_broken,
+    get_cpe_broken_excel_export,
 )
 
 
-cpe_inventory_bp = Blueprint(
-    "cpe_inventory",
+cpe_broken_bp = Blueprint(
+    "cpe_broken_inventory",
     __name__,
-    url_prefix="/cpe-records",
+    url_prefix="/cpe-broken-records",
 )
 
 
-@cpe_inventory_bp.route("/")
+@cpe_broken_bp.route("/")
 @login_required
-def cpe_records():
-    data = get_cpe_records_view_data()
+def cpe_broken():
+    data = get_cpe_broken_view_data()
 
-    return render_template("cpe_records.html", **data)
+    return render_template("cpe_broken.html", **data)
 
 
-# UPDATE ROUTE FOR CPE-RECORDS TABLE, CALLED FROM INSIDE FORME INSIDE cpe-record
+# UPDATE ROUTE FOR cpe_broken TABLE, CALLED FROM INSIDE FORME INSIDE cpe-record
 # THIS IS JSON API ROUTE, IT DOESNOT RETURN HTNL PAGE
-@cpe_inventory_bp.route("/update", methods=["POST"])
+@cpe_broken_bp.route("/update", methods=["POST"])
 @login_required
-def cpe_records_update():
+def cpe_broken_update():
     data = request.get_json(silent=True)
 
-    success, message = update_cpe_records(data or {})
+    success, message = update_cpe_broken(data or {})
 
     flash(message, "success" if success else "danger")
 
@@ -56,35 +56,35 @@ def cpe_records_update():
     ), 200 if success else 403
 
 
-@cpe_inventory_bp.route("/history/<int:id>")
+@cpe_broken_bp.route("/history/<int:id>")
 @login_required
-def cpe_records_city_history(id):
+def cpe_broken_city_history(id):
     page = request.args.get("page", 1, int)
 
     per_page = 20
 
-    city, records, schema_list, error = get_cpe_records_history(id, page, per_page)
+    city, records, schema_list, error = get_cpe_broken_history(id, page, per_page)
 
     if error:
         flash(error, "danger")
         return redirect(url_for("main.home"))
 
     return render_template(
-        "cpe_records_history.html",
+        "cpe_broken_history.html",
         records=records,
         schema=schema_list,
         city=city,
     )
 
 
-@cpe_inventory_bp.route("/export/cpe-records.xlsx")
+@cpe_broken_bp.route("/export/cpe_broken.xlsx")
 @login_required
-def export_cpe_records_excel():
+def export_cpe_broken_excel():
     warehouse_fill = PatternFill("solid", fgColor="EEEEEE")
     warehouse_font = Font(color="666666")
     total_font = Font(bold=True)
 
-    headers, rows, current_week_end = get_cpe_records_excel_export()
+    headers, rows, current_week_end = get_cpe_broken_excel_export()
 
     wb = Workbook()
     ws = wb.active

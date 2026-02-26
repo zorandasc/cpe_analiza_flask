@@ -385,7 +385,7 @@
           <button 
             type="button" 
             class="btn btn-custom-save" 
-            onclick="submitDismantleUpdate('editModal')">
+            onclick="submitUpdate('editModal')">
             <span class="text-white fw-bold fs-4">
               <svg
                 fill="#ffffff"
@@ -491,7 +491,7 @@
     return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
   }
 
-  async function submitDismantleUpdate(modalId){
+  async function submitUpdate(modalId){
     const modal=document.getElementById(modalId)
     //THIS IS FOR name ATTRIBUTTE ON MODAL INPUT
     const cityId=modal.querySelector("#modal-city-id").value

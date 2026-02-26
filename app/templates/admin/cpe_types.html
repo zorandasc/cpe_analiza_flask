@@ -17,7 +17,7 @@ block styles %} {{ super() }}
     <span class="me-2">⬅</span> Nazad
   </a>
   <div class="d-flex justify-content-between align-items-center mb-2">
-    <h2>Tipovi CPE opreme</h2>
+    <h2>Modeli CPE opreme</h2>
     {% if ( current_user.role== 'admin') %}
     <a href="{{ url_for('admin.add_cpe_type') }}" class="btn btn-primary my-3"
       >Dodaj CPE model</a
@@ -31,17 +31,19 @@ block styles %} {{ super() }}
     <thead class="table-success">
       <tr>
         <th>Id</th>
-        <th>Ime</th>
+        <th >Ime</th>
         <th>Labela</th>
         <th>Tip</th>
         <th>Ima daljinski</th>
         <th>Ima adapter</th>
-        <th>Vidljiv u tabeli CPE </th>
-        <th>Položaj u tabeli CPE </th>
-        <th>Vidljiv u tabeli CPE demontaža</th>
-        <th>Položaj u tabeli CPE demontaža</th>
+        <th>Vidljiv u CPE ukupno</th>
+        <th>Položaj u CPE ukupno</th>
+        <th>Vidljiv u CPE demontaža</th>
+        <th>Položaj u CPE demontaža</th>
+        <th>Vidljiv u CPE neispravna</th>
+        <th>Položaj u CPE neispravna</th>
         <th>Boja zaglavlja</th>
-        <th style="width: 130px">Akcije</th>
+        <th style="width: 130px" >Akcije</th>
       </tr>
     </thead>
     <tbody>
@@ -57,17 +59,19 @@ block styles %} {{ super() }}
         <td>{{ cpe.order_in_total }}</td>
         <td>{{ cpe.visible_in_dismantle }}</td>
         <td>{{ cpe.order_in_dismantle }}</td>
+        <td>{{ cpe.visible_in_broken }}</td>
+        <td>{{ cpe.order_in_broken }}</td>
         <td>{{ cpe.header_color }}</td>
-        <td>
+        <td >
           {% if admin_required() %}
           <a
             href="{{ url_for('admin.edit_cpe_type', id=cpe.id) }}"
-            class="btn btn-warning btn-sm"
+            class="btn btn-warning btn-sm w-100 mb-1"
             >Edit</a
           >
           <a
             href="{{ url_for('admin.delete_cpe_type', id=cpe.id) }}"
-            class="btn btn-danger btn-sm"
+            class="btn btn-danger btn-sm w-100"
             onclick="return confirm('Obriši CPE opremu?');"
             >Delete</a
           >

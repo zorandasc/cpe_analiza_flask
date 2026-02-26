@@ -14,6 +14,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
 from io import BytesIO
+from app.services.cpe_broken import get_cpe_broken_view_data
 from app.services.cpe_dismantle import (
     get_cpe_dismantle_view_data,
     update_cpe_dismantle,
@@ -33,9 +34,15 @@ cpe_dismantle_bp = Blueprint(
 @cpe_dismantle_bp.route("/")
 @login_required
 def cpe_dismantle_records():
-    data = get_cpe_dismantle_view_data()
+    data_dismantle = get_cpe_dismantle_view_data()
 
-    return render_template("cpe_dismantle.html", **data)
+    data_broken = get_cpe_broken_view_data()
+
+    return render_template(
+        "cpe_dismantle.html",
+        data_broken=data_broken,
+        **data_dismantle
+    )
 
 
 @cpe_dismantle_bp.route("/update", methods=["POST"])

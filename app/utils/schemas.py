@@ -33,6 +33,8 @@ def get_cpe_types_column_schema(
             "header_color": ct.header_color,
             "order_in_total": ct.order_in_total,
             "order_in_dismantle": ct.order_in_dismantle,
+            "order_in_broken": ct.order_in_broken,
+            
         }
         for ct in cpe_types
     ]
