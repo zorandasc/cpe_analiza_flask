@@ -301,6 +301,17 @@ block styles %} {{ super() }}
         </div>
 
         <div class="col-md-6">
+          <a href="{{ url_for('admin.cpe_broken') }}" class="dashboard-link">
+            <div class="card dashboard-card shadow p-3">
+              <div class="card-body text-center">
+                <h4 class="card-title">Stanje neispravne CPE opreme</h4>
+                <p>Pregled ukupnog stanja neispravne CPE opreme -IJ</p>
+              </div>
+            </div>
+          </a>
+        </div>
+
+        <div class="col-md-6">
           <a href="{{ url_for('admin.stb_inventory') }}" class="dashboard-link">
             <div class="card dashboard-card shadow p-3">
               <div class="card-body text-center">

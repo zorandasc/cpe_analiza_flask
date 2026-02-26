@@ -25,8 +25,9 @@ from app.services.ont_inventory import (
 from app.models import (
     Cities,
     CityTypeEnum,
-    CpeDismantle,
     CpeInventory,
+    CpeDismantle,
+    CpeBroken,
     CpeTypeEnum,
     CpeTypes,
     DismantleTypes,
@@ -85,7 +86,7 @@ def cpe_inventory():
         "cpe_type_id",
         "week_end",
         "updated_at",
-        "reported_at",
+        "created_at",
     ]
     if sort_by not in allowed_sorts:
         sort_by = "id"
@@ -265,6 +266,110 @@ def update_cpe_dismantle_inventory(id):
         )
     )
 
+
+# -------------------------------------------------------------
+@admin_bp.route("/cpe_broken")
+@login_required
+def cpe_broken():
+    if not admin_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    # THIS REQUEST ARG WE ARE GETTING FROM TEMPLATE <a LINK:
+    # href="{{ url_for('admin_cpe_records', page=pagination.next_num, sort=sort_by, direction=direction) }}"
+    page = request.args.get("page", 1, type=int)
+    per_page = 50
+
+    # WHEN INCICIALY LANDING ON PAGE
+    # DEFAULT VIEW JE SORT BY UPDATE_AT AND DESC, THE MOST RESCENT ON THE TOP
+    sort_by = request.args.get("sort", "updated_at")
+    direction = request.args.get("direction", "desc")
+
+    # filters
+    week_end = request.args.get("week_end", type=str)
+    city_id = request.args.get("city_id", type=int)
+
+    # Whitelist allowed sort columns (prevents SQL injection)
+    allowed_sorts = [
+        "id",
+        "city_id",
+        "cpe_type_id",
+        "week_end",
+        "updated_at",
+        "created_at",
+    ]
+    if sort_by not in allowed_sorts:
+        sort_by = "id"
+
+    query = CpeBroken.query
+
+    # 🔍 FILTERS
+    if week_end:
+        query = query.filter(CpeBroken.week_end == week_end)
+
+    if city_id:
+        query = query.filter(CpeBroken.city_id == city_id)
+
+    order_column = getattr(CpeBroken, sort_by)
+    if direction == "desc":
+        order_column = order_column.desc()
+
+    pagination = query.order_by(order_column).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    cities = (
+        Cities.query.filter(Cities.type == CityTypeEnum.IJ.value)
+        .order_by(Cities.id)
+        .all()
+    )
+
+
+    return render_template(
+        "admin/cpe_broken.html",
+        records=pagination.items,
+        pagination=pagination,
+        # pass argument because of refresh, it must be preserved
+        sort_by=sort_by,
+        direction=direction,
+        cities=cities,
+        week_end=week_end,
+        city_id=city_id,
+    )
+
+@admin_bp.route("/cpe_broken/update/<int:id>", methods=["POST"])
+@login_required
+def update_cpe_broken(id):
+    if not admin_required():
+        return redirect(url_for("admin.cpe_broken"))
+
+    table_row = CpeBroken.query.get_or_404(id)
+
+    quantity = request.form.get("quantity", type=int)
+
+    if quantity is None:
+        flash("Neispravna količina.", "danger")
+        return redirect(url_for("admin.cpe_broken"))
+
+    table_row.quantity = quantity
+    table_row.updated_at = datetime.now()
+
+    try:
+        db.session.commit()
+        flash("Stanje neispravne CPE uspješno izmijenjeno!", "success")
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Greška prilikom izmjene: {e}", "danger")
+        return redirect(url_for("admin.cpe_broken"))
+
+    return redirect(
+        url_for(
+            "admin.cpe_broken",
+            week_end=request.args.get("week_end"),
+            city_id=request.args.get("city_id"),
+        )
+    )
 
 # --------------------------------------------------------------
 
