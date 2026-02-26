@@ -2300,7 +2300,7 @@ sudo systemctl enable docker
 # POSTGRES DATABASE PGDATA
 
 On a standard Linux host, Docker stores named volumes in a protected directory:
- /var/lib/docker/volumes/project_name_pgdata/_data
+/var/lib/docker/volumes/project_name_pgdata/\_data
 
 Container Deletion: If you run docker compose down, the container is deleted, but the volume remains.
 
@@ -2312,10 +2312,33 @@ Be very careful with this command:
 ```Bash
 docker compose down -v  # The -v deletes all volumes!
 ```
+
 The -v flag (volumes) will wipe your database permanently. In production, always just use docker compose down
 
-
 # ON REMOTE SERVER THERE ARE:
--	THREE IMAGES
--	docker-compose.prod.yml
--	.env file (HIDDEN)
+
+- THREE IMAGES
+- docker-compose.prod.yml
+- .env file (HIDDEN)
+
+# -----------------------------------------------------------------------------------
+
+# Logical Layering
+
+# Database should:
+
+Filter
+
+Aggregate
+
+Group
+
+Pivot
+
+# Python should:
+
+Format
+
+Group for template
+
+Add presentation flags

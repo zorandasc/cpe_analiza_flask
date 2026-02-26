@@ -1,1 +1,0 @@
-def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
