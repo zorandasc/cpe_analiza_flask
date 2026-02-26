@@ -141,6 +141,19 @@ box-shadow:
     </div>
   </div>
   </a>
+   <a href="{{ url_for('cpe_broken_inventory.cpe_broken') }}" class="dashboard-link">
+  <div class="card">
+    <div class="title">Stanje neispravne CPE opreme</div>
+    <div class="icon"><img
+              src="{{ url_for('static', filename='broken.png') }}"
+              alt="Icon"
+              class="card-icon custom-icon"
+            /></div>
+    <div class="content">
+      <p>Pregled i upravljanje ukupnim stanjem neispravne CPE opreme po IJ</p>
+    </div>
+  </div>
+  </a>
   <a href="{{ url_for('stb_inventory.stb_iptv_records')  }}" class="dashboard-link">
   <div class="card">
     <div class="title">Stanje STB uređaja - IPTV platforma</div>
