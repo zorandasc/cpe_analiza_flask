@@ -90,7 +90,7 @@ def iptv_inventory_charts():
 
 
 # GET REQUEST + query parameter FOR FILTERS
-@chart_bp.route("/ont-charts", methods=["GET"])
+@chart_bp.route("/access-charts", methods=["GET"])
 @login_required
 def ont_inventory_charts():
     # But still → submit GET params, GET + query parameter
@@ -109,7 +109,7 @@ def ont_inventory_charts():
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
     cities = get_distinct_joined_values(
-        base_key="ont", join_key="city", base_fk="city_id"
+        base_key="access", join_key="city", base_fk="city_id"
     )
 
     # -----------------------------------
@@ -120,7 +120,7 @@ def ont_inventory_charts():
         selected_city_name = next((c.name for c in cities if c.id == selected_id), None)
 
     return render_template(
-        "charts/ont_dashboard.html",
+        "charts/access_dashboard.html",
         chart_data=chart_data,
         cities=cities,
         selected_id=selected_id,
@@ -324,7 +324,6 @@ def cpe_dismantle_inventory_charts():
         selected_city_name=selected_city_name,
         selected_weeks=selected_weeks,
     )
-
 
 
 # GET REQUEST + query parameter FOR FILTERS

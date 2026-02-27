@@ -55,7 +55,7 @@
           </tr>
         </thead>
         <tbody>
-        {% for label, vals in summary.cpetotal.items() %}
+          {% for label, vals in summary.cpetotal.items() %}
           <tr>
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
@@ -78,7 +78,7 @@
           </tr>
         </thead>
         <tbody>
-        {% for label, vals in summary.cpewarehouse.items() %}
+          {% for label, vals in summary.cpewarehouse.items() %}
           <tr>
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
@@ -101,7 +101,7 @@
           </tr>
         </thead>
         <tbody>
-        {% for label, vals in summary.cpedismantle.items() %}
+          {% for label, vals in summary.cpedismantle.items() %}
           <tr>
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
@@ -124,7 +124,7 @@
           </tr>
         </thead>
         <tbody>
-         {% for label, vals in summary.stb.items() %}
+          {% for label, vals in summary.stb.items() %}
           <tr>
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
@@ -133,17 +133,16 @@
               {{ vals.difference }}
             </td>
           </tr>
-           {% endfor %}
-           {% for label, vals in summary.iptv.items() %}
-            <tr>
-                <td>{{label}}</td>
-                <td>{{ vals.previous }}</td>
-                <td>{{ vals.current }}</td>
-                <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-                  {{ vals.difference }}
-                </td>
-              </tr>
-           {% endfor %}
+          {% endfor %} {% for label, vals in summary.iptv.items() %}
+          <tr>
+            <td>{{label}}</td>
+            <td>{{ vals.previous }}</td>
+            <td>{{ vals.current }}</td>
+            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+              {{ vals.difference }}
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
       </table>
 
@@ -157,16 +156,16 @@
           </tr>
         </thead>
         <tbody>
-        {% for label, vals in summary.ont.items() %}
-             <tr>
-                <td>{{label}}</td>
-                <td>{{ vals.previous }}</td>
-                <td>{{ vals.current }}</td>
-                <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-                  {{ vals.difference }}
-                </td>
-              </tr>
-           {% endfor %}
+          {% for label, vals in summary.access.items() %}
+          <tr>
+            <td>{{label}}</td>
+            <td>{{ vals.previous }}</td>
+            <td>{{ vals.current }}</td>
+            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+              {{ vals.difference }}
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
       </table>
       <!--

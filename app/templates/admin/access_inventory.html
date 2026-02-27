@@ -95,7 +95,7 @@
 
   <div class="table-responsive mb-0">
 
-     <form id="importForm" method="POST" action="{{ url_for('ont_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end justify-content-end mb-4">
+     <form id="importForm" method="POST" action="{{ url_for('access_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end justify-content-end mb-4">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="col-auto">
         <input type="file" name="file" class="form-control" accept=".xlsx" required />
@@ -112,7 +112,7 @@
           <li class="page-item">
             <a
               class="page-link"
-              href="{{ url_for('admin.ont_inventory', month_end=month_end, city_id=city_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}"
+              href="{{ url_for('admin.access_inventory', month_end=month_end, city_id=city_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}"
               >Previus</a
             >
           </li>
@@ -120,7 +120,7 @@
           <li class="page-item {% if p == pagination.page %}active{% endif %}">
             <a
               class="page-link"
-              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, page=p, sort=sort_by, direction=direction) }}"
+              href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, page=p, sort=sort_by, direction=direction) }}"
               >{{ p }}</a
             >
           </li>
@@ -130,7 +130,7 @@
           <li class="page-item">
             <a
               class="page-link"
-              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, page=pagination.next_num, sort=sort_by, direction=direction) }}"
+              href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, page=pagination.next_num, sort=sort_by, direction=direction) }}"
               >Next</a
             >
           </li>
@@ -163,32 +163,32 @@
         <tr>
           <td>
             <a
-              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, sort='id', direction='asc' if direction=='desc' else 'desc') }}"
               >Id</a
             >
           </td>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
               >Skladišta</a
             >
           </th>
           <th>Količina</th>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='month_end', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, sort='month_end', direction='asc' if direction=='desc' else 'desc') }}"
               >Mjesec</a
             >
           </th>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Kreirano</a
             >
           </th>
           <th>
             <a
-              href="{{ url_for('admin.ont_inventory',month_end=month_end, city_id=city_id, sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
+              href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, sort='updated_at', direction='asc' if direction=='desc' else 'desc') }}"
               >Ažurirano</a
             >
           </th>
@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
             //this.action, is from form:
-            //action="{{ url_for('ont_inventory.import_ont_records_excel') }}"
+            //action="{{ url_for('access_inventory.import_ont_records_excel') }}"
             try {
                 const response = await fetch(this.action, {
                     method: 'POST',

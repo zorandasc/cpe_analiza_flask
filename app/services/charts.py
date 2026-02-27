@@ -80,7 +80,7 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     # (3, datetime.date(2026, 1, 9), 7, <CpeTypeEnum.ONT: 'ONT'>, 7)
     # (3, datetime.date(2026, 1, 9), 8, <CpeTypeEnum.ONT: 'ONT'>, 444)
     # for city_id=13, week=5, cpe_type='ONt':
-    # print(row, "\n"): 10 rows, 5 for ont nokia 5 for huawei
+    # print(row, "\n"): 10 rows, 5 for access nokia 5 for huawei
     if not rows:
         return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
 
@@ -473,7 +473,6 @@ def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=No
     # 3.1 create empty state
     state = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
-
     # 3.2 FILL THE STATE WITH VALUES
     for city_id_, week_end, cpe_type_id_, type_key, qty in rows:
         state[city_id_][type_key][week_end] += qty
@@ -481,7 +480,7 @@ def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=No
     # ---------------------------------------
     # 4. Aggregate into chart datasets
     # ---------------------------------------
- 
+
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
     # FILL totals_by_type USING THE Logic THE CARRY FORWARD LOGIC
@@ -533,7 +532,6 @@ def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=No
 
     # MODE 1 — single device
     if cpe_id:
-       
         values = next(iter(totals_by_type.values()), [])
         return {
             "labels": [w.strftime("%d-%m-%Y") for w in timeline],
@@ -707,7 +705,7 @@ def get_iptv_inventory_chart_data(weeks=None):
     }
 
 
-# ont inventory (Snapshot tables)
+# access inventory (Snapshot tables)
 # IN HERE I DONT USE CARRY FORWARD LOGIC IN PYTHON.
 # WHY? BECAUSE IF THERE IS NO WEEK SQL WILL JUST CONNECT ACROS EXSISTING WEEKS
 # stb inventory IS SNAPSHOT TABLE, UPDATE IS HAPPENING ACROSS ALL CITIES
@@ -724,13 +722,13 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
         sql = f"""
             WITH last_month AS (
             SELECT DISTINCT month_end
-            FROM ont_inventory 
+            FROM access_inventory 
             WHERE 1=1 {where}
             ORDER BY month_end DESC
             LIMIT :months
             )
             SELECT i.month_end, SUM(i.quantity) AS total
-            FROM ont_inventory i
+            FROM access_inventory i
             JOIN last_month m ON m.month_end=i.month_end
             WHERE 1=1 {where}
             GROUP BY i.month_end
@@ -740,7 +738,7 @@ def get_ont_inventory_chart_data(city_id=None, months=None):
     else:
         sql = f"""
             SELECT month_end, SUM(quantity) AS total
-            FROM ont_inventory
+            FROM access_inventory
             WHERE 1=1 {where}
             GROUP BY month_end
             ORDER BY month_end
@@ -798,7 +796,7 @@ BASE_TABLES = {
     "cpe": "cpe_inventory",
     "cpe_dis": "cpe_dismantle",
     "stb": "stb_inventory",
-    "ont": "ont_inventory",
+    "access": "access_inventory",
 }
 
 JOIN_TABLES = {
@@ -832,7 +830,7 @@ JOIN_TABLES = {
 # ONE EXAMPLE OF get_distinct_joined_values() FUNCTION ABSTRACTION:
 """
 SELECT DISTINCT c.id, c.name
-FROM ont_inventory i
+FROM access_inventory i
 JOIN cities c ON c.id = i.city_id
 ORDER BY c.id
 """

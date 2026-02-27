@@ -17,7 +17,7 @@ from app.services.email_service import send_email
 from app.services.reports import generate_pdf
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import update_cpe_type
-from app.services.ont_inventory import (
+from app.services.access_inventory import (
     parce_excel_segments,
     save_imported_segments_to_db,
 )
@@ -31,7 +31,7 @@ from app.models import (
     CpeTypeEnum,
     CpeTypes,
     DismantleTypes,
-    OntInventory,
+    AccessInventory,
     StbInventory,
     StbTypes,
     IptvUsers,
@@ -324,7 +324,6 @@ def cpe_broken():
         .all()
     )
 
-
     return render_template(
         "admin/cpe_broken.html",
         records=pagination.items,
@@ -336,6 +335,7 @@ def cpe_broken():
         week_end=week_end,
         city_id=city_id,
     )
+
 
 @admin_bp.route("/cpe_broken/update/<int:id>", methods=["POST"])
 @login_required
@@ -370,6 +370,7 @@ def update_cpe_broken(id):
             city_id=request.args.get("city_id"),
         )
     )
+
 
 # --------------------------------------------------------------
 
@@ -554,9 +555,9 @@ def update_iptv_users_inventory(id):
 # ------------------------------------------------------------------------
 
 
-@admin_bp.route("/ont_inventory")
+@admin_bp.route("/access_inventory")
 @login_required
-def ont_inventory():
+def access_inventory():
     if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
@@ -580,16 +581,16 @@ def ont_inventory():
     if sort_by not in allowed_sorts:
         sort_by = "id"
 
-    query = OntInventory.query
+    query = AccessInventory.query
 
     # 🔍 FILTERS
     if month_end:
-        query = query.filter(OntInventory.month_end == month_end)
+        query = query.filter(AccessInventory.month_end == month_end)
 
     if city_id:
-        query = query.filter(OntInventory.city_id == city_id)
+        query = query.filter(AccessInventory.city_id == city_id)
 
-    order_column = getattr(OntInventory, sort_by)
+    order_column = getattr(AccessInventory, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
 
@@ -605,7 +606,7 @@ def ont_inventory():
     )
 
     return render_template(
-        "admin/ont_inventory.html",
+        "admin/access_inventory.html",
         records=pagination.items,
         pagination=pagination,
         sort_by=sort_by,
@@ -616,19 +617,19 @@ def ont_inventory():
     )
 
 
-@admin_bp.route("/ont_inventory/update/<int:id>", methods=["POST"])
+@admin_bp.route("/access_inventory/update/<int:id>", methods=["POST"])
 @login_required
 def update_ont_inventory(id):
     if not admin_required():
-        return redirect(url_for("admin.ont_inventory"))
+        return redirect(url_for("admin.access_inventory"))
 
-    table_row = OntInventory.query.get_or_404(id)
+    table_row = AccessInventory.query.get_or_404(id)
 
     quantity = request.form.get("quantity", type=int)
 
     if quantity is None:
         flash("Neispravna količina.", "danger")
-        return redirect(url_for("admin.ont_inventory"))
+        return redirect(url_for("admin.access_inventory"))
 
     table_row.quantity = quantity
     table_row.updated_at = datetime.now()
@@ -640,19 +641,19 @@ def update_ont_inventory(id):
     except Exception as e:
         db.session.rollback()
         flash(f"Greška prilikom izmjene: {e}", "danger")
-        return redirect(url_for("admin.ont_inventory"))
+        return redirect(url_for("admin.access_inventory"))
 
     return redirect(
         url_for(
-            "admin.ont_inventory",
+            "admin.access_inventory",
             month_end=request.args.get("month_end"),
             city_id=request.args.get("city_id"),
         )
     )
 
 
-# called from js inside ont_records.html
-@admin_bp.route("/ont_inventory/upload-excel", methods=["POST"])
+# called from js inside access_records.html
+@admin_bp.route("/access_inventory/upload-excel", methods=["POST"])
 @login_required
 def import_ont_records_excel():
     if "file" not in request.files:
@@ -667,7 +668,7 @@ def import_ont_records_excel():
     return results  # Flask converts dict to JSON automatically
 
 
-@admin_bp.route("/ont_inventory/save-segments", methods=["POST"])
+@admin_bp.route("/access_inventory/save-segments", methods=["POST"])
 @login_required
 def save_ont_imported_segments():
     data = request.get_json()
@@ -799,7 +800,7 @@ def delete_city(id):
 
     cpe_count = len(city.cpe_inventory)
     cpe_dismantle_count = len(city.cpe_dismantle)
-    ont_count = len(city.ont_inventory)
+    ont_count = len(city.access_inventory)
     users_count = len(city.users)
 
     # PROTECT CITY DELETE: block if related rows exist
@@ -1257,6 +1258,10 @@ def edit_dismantle_status(id):
 
     return render_template("admin/dismantle_types_edit.html", dismantle=dismantle)
 
+
+###########################################################
+# ---------------ROUTES FOR ACCESS TYPES CRUD--------------------------
+############################################################
 
 ###########################################################
 # ---------------ROUTES FOR REPORT PAGE SETTTINGS-------------------------

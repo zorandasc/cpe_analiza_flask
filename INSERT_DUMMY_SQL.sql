@@ -179,7 +179,7 @@ LIMIT 600;
 
 
 
-INSERT INTO ont_inventory (
+INSERT INTO access_inventory (
     city_id, 
     month_end, 
     quantity,

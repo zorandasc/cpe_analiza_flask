@@ -4,7 +4,7 @@ from .cpe_inventory import cpe_inventory_bp
 from .cpe_dismantle import cpe_dismantle_bp
 from .cpe_broken import cpe_broken_bp
 from .stb_inventory import stb_inventory_bp
-from .ont_inventory import ont_inventory_bp
+from .access_inventory import ont_inventory_bp
 from .charts import chart_bp
 from .admin import admin_bp
 from .reports import report_bp

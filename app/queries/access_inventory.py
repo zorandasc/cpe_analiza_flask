@@ -5,7 +5,7 @@ from app.extensions import db
 def get_last_4_months():
     SQL = """ 
         SELECT DISTINCT month_end
-        FROM ont_inventory
+        FROM access_inventory
         ORDER BY month_end DESC
         LIMIT 4
     """
@@ -44,7 +44,7 @@ def get_ont_inventory_pivoted(months: list):
             {", ".join(pivot_cols)},
             max(i.updated_at) AS last_updated
         FROM cities c
-        LEFT JOIN ont_inventory i
+        LEFT JOIN access_inventory i
             ON c.id=i.city_id
         WHERE C.TYPE = 'IJ' and c.is_active = true
         GROUP BY c.id, c.name

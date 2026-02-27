@@ -141,8 +141,8 @@ class Cities(db.Model):
     cpe_broken: Mapped[list["CpeBroken"]] = relationship(
         "CpeBroken", back_populates="city"
     )
-    ont_inventory: Mapped[list["OntInventory"]] = relationship(
-        "OntInventory", back_populates="city"
+    access_inventory: Mapped[list["AccessInventory"]] = relationship(
+        "AccessInventory", back_populates="city"
     )
     users: Mapped[list["Users"]] = relationship(
         "Users",
@@ -230,6 +230,7 @@ class StbTypes(db.Model):
         "StbInventory", back_populates="stb_type"
     )
 
+
 class CpeInventory(db.Model):
     __tablename__ = "cpe_inventory"
     __table_args__ = (
@@ -255,6 +256,7 @@ class CpeInventory(db.Model):
 
     city = relationship("Cities", back_populates="cpe_inventory")
     cpe_type = relationship("CpeTypes", back_populates="cpe_inventory")
+
 
 class CpeDismantle(db.Model):
     __tablename__ = "cpe_dismantle"
@@ -289,11 +291,14 @@ class CpeDismantle(db.Model):
     cpe_type = relationship("CpeTypes", back_populates="cpe_dismantle")
     dismantle_type = relationship("DismantleTypes", back_populates="cpe_dismantle")
 
+
 class CpeBroken(db.Model):
     __tablename__ = "cpe_broken"
     __table_args__ = (
         # UniqueConstraint for upsert (updat/insert) One row = one city + one CPE + one week
-        UniqueConstraint("city_id", "cpe_type_id", "week_end", name="uqb_city_cpe_week"),
+        UniqueConstraint(
+            "city_id", "cpe_type_id", "week_end", name="uqb_city_cpe_week"
+        ),
         # Data integrity only friday of week is enforced at DB level
         CheckConstraint("EXTRACT(DOW FROM week_end) = 5", name="ck_week_end_friday"),
     )
@@ -315,30 +320,85 @@ class CpeBroken(db.Model):
     city = relationship("Cities", back_populates="cpe_broken")
     cpe_type = relationship("CpeTypes", back_populates="cpe_broken")
 
-class OntInventory(db.Model):
-    __tablename__ = "ont_inventory"
+
+class AccessInventory(db.Model):
+    __tablename__ = "access_inventory"
     __table_args__ = (
-        ForeignKeyConstraint(["city_id"], ["cities.id"], name="fk_city"),
-        PrimaryKeyConstraint("id", name="ont_inventory_pkey"),
-        UniqueConstraint("city_id", "month_end", name="uq_ont_moonth"),
+        UniqueConstraint(
+            "city_id", "access_type_id", "month_end",
+            name="uq_city_access_month"
+        ),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    month_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
 
-    city_id: Mapped[Optional[int]] = mapped_column(Integer)
-    quantity: Mapped[Optional[int]] = mapped_column(Integer)
+    month_end: Mapped[datetime.date] = mapped_column(
+        Date, nullable=False
+    )
+
+    city_id: Mapped[int] = mapped_column(
+        ForeignKey("cities.id"), nullable=False
+    )
+
+    access_type_id: Mapped[int] = mapped_column(
+        ForeignKey("access_types.id"), nullable=False
+    )
+
+    quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default=func.now()
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now()
     )
 
-    city: Mapped[Optional["Cities"]] = relationship(
-        "Cities", back_populates="ont_inventory"
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now()
     )
+
+    city = relationship(
+        "Cities",
+        back_populates="access_inventory"
+    )
+
+    access_type = relationship(
+        "AccessTypes",
+        back_populates="access_inventory"
+    )
+
+
+class AccessTypes(db.Model):
+    __tablename__ = "access_types"
+
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        unique=True
+    )
+
+    label: Mapped[Optional[str]] = mapped_column(
+        String(200)
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("true")
+    )
+
+    access_inventory: Mapped[list["AccessInventory"]] = relationship(
+        "AccessInventory",
+        back_populates="access_type"
+    )
+
 
 class StbInventory(db.Model):
     __tablename__ = "stb_inventory"
@@ -366,6 +426,7 @@ class StbInventory(db.Model):
         "StbTypes", back_populates="stb_inventory"
     )
 
+
 class IptvUsers(db.Model):
     __tablename__ = "iptv_users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -383,6 +444,7 @@ class IptvUsers(db.Model):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
 
 class ReportSetting(db.Model):
     __tablename__ = "report_settings"
@@ -405,6 +467,7 @@ class ReportSetting(db.Model):
     updated_at: Mapped[datetime.datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now()
     )
+
 
 class ReportRecipients(db.Model):
     __tablename__ = "report_recipients"

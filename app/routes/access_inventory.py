@@ -13,7 +13,7 @@ from flask_login import login_required
 from openpyxl import Workbook
 from openpyxl.styles import Font
 from io import BytesIO
-from app.services.ont_inventory import (
+from app.services.access_inventory import (
     get_ont_records_view_data,
     update_recent_ont_inventory,
     get_ont_records_excel_export,
@@ -22,17 +22,17 @@ from app.services.ont_inventory import (
 )
 
 ont_inventory_bp = Blueprint(
-    "ont_inventory",
+    "access_inventory",
     __name__,
-    url_prefix="/ont-records",
+    url_prefix="/access-records",
 )
 
 
 @ont_inventory_bp.route("/")
 @login_required
-def ont_records():
+def access_records():
     data = get_ont_records_view_data()
-    return render_template("ont_records.html", **data)
+    return render_template("access_records.html", **data)
 
 
 @ont_inventory_bp.route("/update_ont", methods=["POST"])
@@ -40,10 +40,10 @@ def ont_records():
 def update_ont_inventory():
     success, message = update_recent_ont_inventory(request.form)
     flash(message, "success" if success else "danger")
-    return redirect(url_for("ont_inventory.ont_records"))
+    return redirect(url_for("access_inventory.access_records"))
 
 
-@ont_inventory_bp.route("/export/ont-records.xlsx")
+@ont_inventory_bp.route("/export/access-records.xlsx")
 @login_required
 def export_ont_records_excel():
     headers, rows, current_month_end = get_ont_records_excel_export()
@@ -83,7 +83,7 @@ def export_ont_records_excel():
     )
 
 
-# called from js inside ont_records.html
+# called from js inside access_records.html
 @ont_inventory_bp.route("/upload-excel", methods=["POST"])
 @login_required
 def import_ont_records_excel():
@@ -114,7 +114,7 @@ def save_imported_segments():
             }
         ), 400
 
-    success, message = save_imported_segments_to_db(segments,[])
+    success, message = save_imported_segments_to_db(segments, [])
 
     flash(message, "success" if success else "danger")
 

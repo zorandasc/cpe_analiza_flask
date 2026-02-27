@@ -122,7 +122,7 @@ def generate_pdf():
         "cpedismantle": cpe_dismantle_summary,
         "stb": stb_summary,
         "iptv": iptv_summary,
-        "ont": ont_summary,
+        "access": ont_summary,
     }
 
     # ----------------------------------------------

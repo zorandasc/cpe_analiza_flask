@@ -5,7 +5,7 @@ from app.extensions import db
 from app.utils.dates import get_previous_month_end
 from openpyxl import load_workbook
 from app.utils.permissions import ftth_view_required
-from app.queries.ont_onventory import (
+from app.queries.access_inventory import (
     get_last_4_months,
     get_ont_inventory_pivoted,
 )
@@ -59,13 +59,13 @@ def update_recent_ont_inventory(form_data):
                 continue
 
             # because of UNIQUE (city_id, week_end) constraints
-            # added when defining table OntInventory in postgres
+            # added when defining table AccessInventory in postgres
             # business logic is: “For this month, insert if missing, update if exists”
             # That is exactly what PostgreSQL ON CONFLICT DO UPDATE is for.
             # ORM add_all() cannot do UPSERT cleanly
             db.session.execute(
                 text("""
-                    INSERT INTO ont_inventory (city_id, month_end, quantity)
+                    INSERT INTO access_inventory (city_id, month_end, quantity)
                     VALUES (:city_id, :month_end, :quantity)
                     ON CONFLICT (city_id, month_end)
                     DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
@@ -117,8 +117,8 @@ def get_ont_records_excel_export():
     headers = ["Skladišta"] + month_keys
 
     rows = []
-    for ont in records_grouped:
-        row = [ont["name"]] + [ont["dates"][m]["quantity"] for m in month_keys]
+    for access in records_grouped:
+        row = [access["name"]] + [access["dates"][m]["quantity"] for m in month_keys]
         rows.append(row)
 
     return headers, rows, previous_month_end
@@ -245,7 +245,7 @@ def save_imported_segments_to_db(segments, target_date=None):
             # UPSERT
             db.session.execute(
                 text("""
-                    INSERT INTO ont_inventory (city_id, month_end, quantity)
+                    INSERT INTO access_inventory (city_id, month_end, quantity)
                     VALUES (:city_id, :month_end, :quantity)
                     ON CONFLICT (city_id, month_end)
                     DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();

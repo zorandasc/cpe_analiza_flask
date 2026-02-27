@@ -134,12 +134,12 @@ styles %} {{ super() }}
    
   <a
       class="btn btn-sm btn-outline-secondary mb-2"
-      href="{{ url_for('ont_inventory.export_ont_records_excel')}}"
+      href="{{ url_for('access_inventory.export_ont_records_excel')}}"
     >
       Export Excel
   </a>
   {% if ftth_required() %}
-  <form id="importForm" method="POST"  action="{{ url_for('ont_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
+  <form id="importForm" method="POST"  action="{{ url_for('access_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="col-auto">
           <input type="file" name="file" class="form-control" accept=".xlsx" required />    
@@ -157,7 +157,7 @@ styles %} {{ super() }}
     <div class="modal-content">
       <form
         method="POST"
-        action="{{url_for('ont_inventory.update_ont_inventory')}}"
+        action="{{url_for('access_inventory.update_ont_inventory')}}"
       >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -312,7 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
             //this.action, is from form:
-            //action="{{ url_for('ont_inventory.import_ont_records_excel') }}"
+            //action="{{ url_for('access_inventory.import_ont_records_excel') }}"
             try {
                 const response = await fetch(this.action, {
                     method: 'POST',
@@ -378,7 +378,7 @@ document.getElementById('confirmInsert').addEventListener('click',async function
   if (currentSegments.length === 0) return
 
   try{
-    const response=await fetch("{{url_for('ont_inventory.save_imported_segments')}}",{
+    const response=await fetch("{{url_for('access_inventory.save_imported_segments')}}",{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
