@@ -68,31 +68,44 @@ def update_recent_access_inventory(form_data):
     previous_month_end = get_previous_month_end()
 
     try:
+        access_type_id = int(form_data["access_type_id"])
+    except (KeyError, ValueError):
+        return False, "Nevažeći tip pristupa."
+
+    # Security + data integrity.
+    access_type = AccessTypes.query.get(access_type_id)
+    if not access_type:
+        return False, "Tip pristupa ne postoji."
+
+    SQL = text("""
+        INSERT INTO access_inventory (city_id, access_type_id, month_end, quantity)
+        VALUES (:city_id, :access_type_id, :month_end, :quantity)
+        ON CONFLICT (city_id, access_type_id, month_end)
+        DO UPDATE SET quantity = EXCLUDED.quantity,
+                    updated_at = NOW();
+    """)
+
+    try:
         for key, value in form_data.items():
-            if key == "__TOTAL__":
+            if key in ("__TOTAL__", "access_type_id"):
                 continue
             try:
                 city_id = int(key)
                 quantity = int(value or 0)
-
             except ValueError:
                 # Skip this record if ID or Quantity is invalid
                 continue
 
-            # because of UNIQUE (city_id, week_end) constraints
+            # because of UNIQUE (city_id,access_type_id, week_end) constraints
             # added when defining table AccessInventory in postgres
             # business logic is: “For this month, insert if missing, update if exists”
             # That is exactly what PostgreSQL ON CONFLICT DO UPDATE is for.
             # ORM add_all() cannot do UPSERT cleanly
             db.session.execute(
-                text("""
-                    INSERT INTO access_inventory (city_id, month_end, quantity)
-                    VALUES (:city_id, :month_end, :quantity)
-                    ON CONFLICT (city_id, month_end)
-                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
-                """),
+                SQL,
                 {
                     "city_id": city_id,
+                    "access_type_id": access_type_id,
                     "month_end": previous_month_end,
                     "quantity": quantity,
                 },
