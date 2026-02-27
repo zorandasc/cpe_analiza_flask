@@ -427,7 +427,7 @@ The best practice is to normalize the data by moving the CPE type names into a s
 ```sql
 CREATE TABLE cpe_types (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL  -- e.g., 'iads', 'stb_arr_4205', 'ont_huaw', etc.
+    name VARCHAR(50) UNIQUE NOT NULL  -- e.g., 'iads', 'stb_arr_4205', 'access_huaw', etc.
 );
 
 CREATE TABLE cpe_inventory (

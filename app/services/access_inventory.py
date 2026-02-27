@@ -2,19 +2,20 @@ import calendar
 from datetime import datetime
 from sqlalchemy import text
 from app.extensions import db
+from app.models import AccessTypes
 from app.utils.dates import get_previous_month_end
 from openpyxl import load_workbook
 from app.utils.permissions import ftth_view_required
 from app.queries.access_inventory import (
     get_last_4_months,
-    get_ont_inventory_pivoted,
+    get_access_inventory_pivoted,
 )
 
 
 TOTAL_KEY = "__TOTAL__"
 
 
-def get_ont_records_view_data():
+def get_access_records_view_data():
     # calculate current month date
     previous_month_end = get_previous_month_end()
 
@@ -28,19 +29,39 @@ def get_ont_records_view_data():
 
     month_keys = [m["key"] for m in months]
 
-    # get the pivoted data from db
-    records = get_ont_inventory_pivoted(month_keys)
+    access_types = AccessTypes.query.all()
 
-    records_grouped = _group_records(records, month_keys)
+    grouped_data = {}
+
+    # Right now you're running N queries: 1 per access_type
+    # This is perfectly fine for small numbers (3–6 types).
+    # But if one day: 20 access type
+    # then Single query grouped by (city_id, access_type_id).
+    for at in access_types:
+        # get the pivoted data from db for every access_type_id
+        records = get_access_inventory_pivoted(months=month_keys, access_type_id=at.id)
+
+        # last_updated per access_type_id
+        last_updated = max(
+            (r["last_updated"] for r in records if r["last_updated"] is not None),
+            default=None,
+        )
+
+        # group data for view
+        grouped_data[at.name] = {
+            "rows": _group_records(records, month_keys),
+            "last_updated": last_updated,
+        }
 
     return {
         "previous_month_end": previous_month_end,
         "months": months,
-        "records": records_grouped,
+        "access_types": access_types,
+        "records": grouped_data,
     }
 
 
-def update_recent_ont_inventory(form_data):
+def update_recent_access_inventory(form_data):
     if not ftth_view_required():  # AUTHORIZATION
         return False, "Niste autorizovani."
 
@@ -92,7 +113,7 @@ def update_recent_ont_inventory(form_data):
         return False, "Greška prilikom čuvanja podataka."
 
 
-def get_ont_records_excel_export():
+def get_access_records_excel_export():
     previous_month_end = get_previous_month_end()
 
     # month is used in SQL + and for structure of html table
@@ -108,7 +129,7 @@ def get_ont_records_excel_export():
     month_keys = [m["key"] for m in months]
 
     # get the pivoted data from db
-    records = get_ont_inventory_pivoted(month_keys)
+    records = get_access_inventory_pivoted(month_keys)
 
     records_grouped = _group_records(records, month_keys)
 

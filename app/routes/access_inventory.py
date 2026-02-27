@@ -14,39 +14,39 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from io import BytesIO
 from app.services.access_inventory import (
-    get_ont_records_view_data,
-    update_recent_ont_inventory,
-    get_ont_records_excel_export,
+    get_access_records_view_data,
+    update_recent_access_inventory,
+    get_access_records_excel_export,
     parce_excel_segments,
     save_imported_segments_to_db,
 )
 
-ont_inventory_bp = Blueprint(
+access_inventory_bp = Blueprint(
     "access_inventory",
     __name__,
     url_prefix="/access-records",
 )
 
 
-@ont_inventory_bp.route("/")
+@access_inventory_bp.route("/")
 @login_required
 def access_records():
-    data = get_ont_records_view_data()
+    data = get_access_records_view_data()
     return render_template("access_records.html", **data)
 
 
-@ont_inventory_bp.route("/update_ont", methods=["POST"])
+@access_inventory_bp.route("/update_ont", methods=["POST"])
 @login_required  # AUTENTIFICATION
-def update_ont_inventory():
-    success, message = update_recent_ont_inventory(request.form)
+def update_access_inventory():
+    success, message = update_recent_access_inventory(request.form)
     flash(message, "success" if success else "danger")
     return redirect(url_for("access_inventory.access_records"))
 
 
-@ont_inventory_bp.route("/export/access-records.xlsx")
+@access_inventory_bp.route("/export/access-records.xlsx")
 @login_required
-def export_ont_records_excel():
-    headers, rows, current_month_end = get_ont_records_excel_export()
+def export_access_records_excel():
+    headers, rows, current_month_end = get_access_records_excel_export()
 
     wb = Workbook()
     ws = wb.active
@@ -78,15 +78,15 @@ def export_ont_records_excel():
     return send_file(
         output,
         as_attachment=True,
-        download_name="stanje_ont_opreme.xlsx",
+        download_name="stanje_access_opreme.xlsx",
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
 
 # called from js inside access_records.html
-@ont_inventory_bp.route("/upload-excel", methods=["POST"])
+@access_inventory_bp.route("/upload-excel", methods=["POST"])
 @login_required
-def import_ont_records_excel():
+def import_access_records_excel():
     if "file" not in request.files:
         return "No file part", 400
 
@@ -99,7 +99,7 @@ def import_ont_records_excel():
     return results  # Flask converts dict to JSON automatically
 
 
-@ont_inventory_bp.route("/save-segments", methods=["POST"])
+@access_inventory_bp.route("/save-segments", methods=["POST"])
 @login_required
 def save_imported_segments():
     data = request.get_json()

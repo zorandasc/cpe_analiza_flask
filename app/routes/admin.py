@@ -620,7 +620,7 @@ def access_inventory():
 
 @admin_bp.route("/access_inventory/update/<int:id>", methods=["POST"])
 @login_required
-def update_ont_inventory(id):
+def update_access_inventory(id):
     if not admin_required():
         return redirect(url_for("admin.access_inventory"))
 
@@ -656,7 +656,7 @@ def update_ont_inventory(id):
 # called from js inside access_records.html
 @admin_bp.route("/access_inventory/upload-excel", methods=["POST"])
 @login_required
-def import_ont_records_excel():
+def import_access_records_excel():
     if "file" not in request.files:
         return "No file part", 400
 
@@ -671,7 +671,7 @@ def import_ont_records_excel():
 
 @admin_bp.route("/access_inventory/save-segments", methods=["POST"])
 @login_required
-def save_ont_imported_segments():
+def save_access_imported_segments():
     data = request.get_json()
 
     segments = data.get("segments", [])
@@ -801,11 +801,11 @@ def delete_city(id):
 
     cpe_count = len(city.cpe_inventory)
     cpe_dismantle_count = len(city.cpe_dismantle)
-    ont_count = len(city.access_inventory)
+    access_count = len(city.access_inventory)
     users_count = len(city.users)
 
     # PROTECT CITY DELETE: block if related rows exist
-    if cpe_count > 0 or cpe_dismantle_count > 0 or ont_count > 0 or users_count > 0:
+    if cpe_count > 0 or cpe_dismantle_count > 0 or access_count > 0 or users_count > 0:
         flash(
             "Nemože biti brisano! Skladište ima aktivne unose. Možete ga onemogućit.",
             "danger",
@@ -1269,10 +1269,10 @@ def access_types():
     if not admin_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
-    
+
     all_access = AccessTypes.query.order_by(AccessTypes.id).all()
     for a in all_access:
-        print(a,"/n")
+        print(a, "/n")
 
     return render_template("admin/access_types.html", all_access=all_access)
 

@@ -11,7 +11,7 @@ from app.services.charts import (
     get_cpe_dismantle_chart_data,
     get_stb_inventory_chart_data,
     get_iptv_inventory_chart_data,
-    get_ont_inventory_chart_data,
+    get_access_inventory_chart_data,
 )
 
 
@@ -88,7 +88,7 @@ def generate_pdf():
     iptv_total = get_iptv_inventory_chart_data(weeks=10)
 
     # ALL DATA FOR 5 WEEKS
-    ont_total = get_ont_inventory_chart_data(city_id=None, months=5)
+    access_total = get_access_inventory_chart_data(city_id=None, months=5)
 
     # ----------------------------------------------
     # SUMMARY SECTION (LAST 2 WEEKS) IN PDF REPORT
@@ -113,7 +113,9 @@ def generate_pdf():
         iptv_total["datasets"], ["IPTV korisnici"]
     )
 
-    ont_summary = extract_current_previous_diff(ont_total["datasets"], ["ONT uređaji"])
+    access_summary = extract_current_previous_diff(
+        access_total["datasets"], ["ONT uređaji"]
+    )
 
     # ADD TO DATA LIST TO ADD TO PDF
     data["summary"] = {
@@ -122,7 +124,7 @@ def generate_pdf():
         "cpedismantle": cpe_dismantle_summary,
         "stb": stb_summary,
         "iptv": iptv_summary,
-        "access": ont_summary,
+        "access": access_summary,
     }
 
     # ----------------------------------------------
@@ -194,10 +196,10 @@ def generate_pdf():
         title="Trend IPTV korisnika, IPTV platforma (Zadnjih 10 sedmica)",
     )
 
-    # "ont_chart_image": "static/reports/charts/ont_trend.png",
-    data["ont_chart_image"] = build_report_chart(
-        chart_data=ont_total,
-        output_filename="ont_trend.png",
+    # "access_chart_image": "static/reports/charts/access_trend.png",
+    data["access_chart_image"] = build_report_chart(
+        chart_data=access_total,
+        output_filename="access_trend.png",
         title="Trend ukupne ONT opreme, pristupn GPON mreža (Zadnjih 5 mijeseci)",
     )
 

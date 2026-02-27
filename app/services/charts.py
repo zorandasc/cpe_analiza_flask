@@ -709,7 +709,7 @@ def get_iptv_inventory_chart_data(weeks=None):
 # IN HERE I DONT USE CARRY FORWARD LOGIC IN PYTHON.
 # WHY? BECAUSE IF THERE IS NO WEEK SQL WILL JUST CONNECT ACROS EXSISTING WEEKS
 # stb inventory IS SNAPSHOT TABLE, UPDATE IS HAPPENING ACROSS ALL CITIES
-def get_ont_inventory_chart_data(city_id=None, months=None):
+def get_access_inventory_chart_data(city_id=None, months=None):
 
     params = {}
 

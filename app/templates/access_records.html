@@ -88,8 +88,11 @@ styles %} {{ super() }}
 </style>
 {% endblock %} {% block content%}
 <div class="py-2">
-  <h2 class="mb-4 text-center title">
-    Broj ONT uređaja u radu - Mjesečno stanje
+ 
+  
+{% for at in access_types%}
+   <h2 class="mb-4 text-center title">
+    Broj {{at.name}} uređaja u radu - Mjesečno stanje
   </h2>
   <div class="d-flex justify-content-between align-items-end">
   {% if ftth_required() %}
@@ -106,8 +109,7 @@ styles %} {{ super() }}
 {% endif %}
   <!--EVERY RECORD SHOULD HAVE SAME last_updated-->
   <span class="info">
-    Posljedne ažurirano: {% if records %}
-    {{records[0]['last_updated'].strftime('%d-%m-%Y %H:%M')}} {% endif %}
+    Posljedne ažurirano: {{ records[at.name].last_updated }}
   </span>
 </div>
   <table class="table table-bordered table-striped shadow mb-4">
@@ -120,7 +122,7 @@ styles %} {{ super() }}
       </tr>
     </thead>
     <tbody>
-      {% for r in records%}
+      {% for r in records[at.name].rows%}
       <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
         <td>{{r.name}}</td>
         {% for month in months %}
@@ -130,16 +132,17 @@ styles %} {{ super() }}
       {% endfor %}
     </tbody>
   </table>
+{% endfor %}
   <div class="d-flex justify-content-between align-items-center">
    
   <a
       class="btn btn-sm btn-outline-secondary mb-2"
-      href="{{ url_for('access_inventory.export_ont_records_excel')}}"
+      href="{{ url_for('access_inventory.export_access_records_excel')}}"
     >
       Export Excel
   </a>
   {% if ftth_required() %}
-  <form id="importForm" method="POST"  action="{{ url_for('access_inventory.import_ont_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
+  <form id="importForm" method="POST"  action="{{ url_for('access_inventory.import_access_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="col-auto">
           <input type="file" name="file" class="form-control" accept=".xlsx" required />    
@@ -157,7 +160,7 @@ styles %} {{ super() }}
     <div class="modal-content">
       <form
         method="POST"
-        action="{{url_for('access_inventory.update_ont_inventory')}}"
+        action="{{url_for('access_inventory.update_access_inventory')}}"
       >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -172,7 +175,8 @@ styles %} {{ super() }}
           ></button>
         </div>
         <div class="modal-body">
-          {% for r in records %} {% if not r.is_total %}
+        {% for at in access_types%}
+          {% for r in records[at.name].rows %} {% if not r.is_total %}
           <div class="d-flex mb-2">
             <div class="cpe-label-wrap">{{r.name}}</div>
             <input
@@ -184,6 +188,7 @@ styles %} {{ super() }}
             />
           </div>
           {% endif %} {% endfor %}
+          {% endfor %}
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-custom-save">
@@ -312,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
             //this.action, is from form:
-            //action="{{ url_for('access_inventory.import_ont_records_excel') }}"
+            //action="{{ url_for('access_inventory.import_access_records_excel') }}"
             try {
                 const response = await fetch(this.action, {
                     method: 'POST',

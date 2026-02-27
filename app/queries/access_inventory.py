@@ -14,16 +14,16 @@ def get_last_4_months():
     return [row[0] for row in rows.all()]  # LIST OF DATES
 
 
-def get_ont_inventory_pivoted(months: list):
+def get_access_inventory_pivoted(months: list, access_type_id):
     if not months:
         # Return empty data lists immediately if no active CPE types are found
         return []
 
     pivot_cols = []
 
-    # This prevents SQL injection by using parameterized queries.
-    params = {}
+    params = {"access_type_id": access_type_id}
 
+    # This prevents SQL injection by using parameterized queries.
     # idx is number: 0,1,2,3,
     # m is date object
     for idx, m in enumerate(months):
@@ -46,6 +46,7 @@ def get_ont_inventory_pivoted(months: list):
         FROM cities c
         LEFT JOIN access_inventory i
             ON c.id=i.city_id
+            AND i.access_type_id = :access_type_id
         WHERE C.TYPE = 'IJ' and c.is_active = true
         GROUP BY c.id, c.name
         ),

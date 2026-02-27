@@ -7,7 +7,7 @@ from app.services.charts import (
     get_cpe_dismantle_chart_data,
     get_cpe_broken_chart_data,
     get_stb_inventory_chart_data,
-    get_ont_inventory_chart_data,
+    get_access_inventory_chart_data,
     get_iptv_inventory_chart_data,
     get_distinct_joined_values,
 )
@@ -92,7 +92,7 @@ def iptv_inventory_charts():
 # GET REQUEST + query parameter FOR FILTERS
 @chart_bp.route("/access-charts", methods=["GET"])
 @login_required
-def ont_inventory_charts():
+def access_inventory_charts():
     # But still → submit GET params, GET + query parameter
     selected_id = request.args.get("id", type=int)
 
@@ -101,7 +101,7 @@ def ont_inventory_charts():
     # ---------------------------------------
     # GET CHART DATA
     # ---------------------------------------
-    chart_data = get_ont_inventory_chart_data(
+    chart_data = get_access_inventory_chart_data(
         city_id=selected_id, months=selected_months
     )
 
