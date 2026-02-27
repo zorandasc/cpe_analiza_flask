@@ -32,6 +32,7 @@ from app.models import (
     CpeTypes,
     DismantleTypes,
     AccessInventory,
+    AccessTypes,
     StbInventory,
     StbTypes,
     IptvUsers,
@@ -1262,6 +1263,107 @@ def edit_dismantle_status(id):
 ###########################################################
 # ---------------ROUTES FOR ACCESS TYPES CRUD--------------------------
 ############################################################
+@admin_bp.route("/access_types")
+@login_required
+def access_types():
+    if not admin_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
+    
+    all_access = AccessTypes.query.order_by(AccessTypes.id).all()
+    for a in all_access:
+        print(a,"/n")
+
+    return render_template("admin/access_types.html", all_access=all_access)
+
+
+@admin_bp.route("/access_types/add", methods=["GET", "POST"])
+@login_required
+def add_access_types():
+    if not admin_required():
+        return redirect(url_for("admin.access_types"))
+
+    # THIS IS FOR SUMBITING REQUEST
+    if request.method == "POST":
+        name = request.form.get("name")
+        label = request.form.get("label")
+
+        # Validation: name must be unique
+        existing_access_type = AccessTypes.query.filter_by(name=name).first()
+        if existing_access_type:
+            flash("Pistupna već postoji", "danger")
+            return redirect(url_for("admin.add_access_types"))
+
+        db.session.add(AccessTypes(name=name, label=label))
+        db.session.commit()
+        return redirect(url_for("admin.access_types"))
+
+    # THIS IS FOR GET REQUEST WHEN INICIALY OPENING ADD FORM
+    return render_template(
+        "admin/access_types_add.html",
+    )
+
+
+@admin_bp.route("/access_types/edit/<int:id>", methods=["GET", "POST"])
+@login_required
+def edit_access_types(id):
+    if not admin_required():
+        return redirect(url_for("admin.access_types"))
+
+    access = AccessTypes.query.get_or_404(id)
+
+    if request.method == "POST":
+        name = request.form.get("name")
+        label = request.form.get("label")
+
+        # Username uniqueness (except current user)
+        existing_access_type = AccessTypes.query.filter(
+            AccessTypes.name == name, AccessTypes.id != id
+        ).first()
+        if existing_access_type:
+            flash("Tip pristupna već postoji!", "danger")
+            return redirect(url_for("admin.edit_access_types", id=id))
+
+        access.id = id
+        access.name = name
+        access.label = label
+        access.is_active = "is_active" in request.form  # THIS IS THE CORRECT WAY
+
+        try:
+            db.session.commit()
+            flash("Pristupna uspješno izmijenjena!", "success")
+            return redirect(url_for("admin.access_types"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Greška prilikom izmjene pristupne tehnologije: {e}", "danger")
+            return redirect(url_for("admin.edit_access_types", id=id))
+
+    return render_template("admin/access_types_edit.html", access=access)
+
+
+@admin_bp.route("/access_types/delete/<int:id>")
+@login_required
+def delete_access_types(id):
+    if not admin_required():
+        return redirect(url_for("admin.access_types"))
+
+    access = AccessTypes.query.get_or_404(id)
+
+    access_count = len(access.access_inventory)
+
+    # PROTECT CITY DELETE: block if related rows exist
+    if access_count > 0:
+        flash(
+            "Nemože biti brisano! Pristupna ima aktivne unose. Možete ju onemogućiti.",
+            "danger",
+        )
+        return redirect(url_for("admin.access_types"))
+
+    flash("Pristupna tehnologija obrisana!", "success")
+    db.session.delete(access)
+    db.session.commit()
+    return redirect(url_for("admin.access_types"))
+
 
 ###########################################################
 # ---------------ROUTES FOR REPORT PAGE SETTTINGS-------------------------

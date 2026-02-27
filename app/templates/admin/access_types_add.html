@@ -1,0 +1,24 @@
+{% extends "base.html" %} {% block title %}Dodaj Pristupnu{% endblock %} {% block
+content %}
+<div class=" py-4">
+  <div class="mx-auto shadow-lg p-3 bg-light" style="max-width: 800px">
+    <h2>Dodaj novu pristupnu tehnologiju</h2>
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-3">
+        <label class="form-label">Ime</label>
+        <input type="text" name="name" class="form-control" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Labela</label>
+        <input type="text" name="label" class="form-control" required />
+      </div>
+      <button type="submit" class="btn btn-success">Save</button>
+      <a href="{{ url_for('admin.access_types') }}" class="btn btn-secondary"
+        >Cancel</a
+      >
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %} {% block title %}Pristupne tehnologije{% endblock %} {% block content
+%}
+<div class=" py-4">
+  <a href="{{ url_for('admin.dashboard') }}"
+            class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
+            <span class="me-2">⬅</span> Nazad
+        </a>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+  <h2>Pristupne tehnologije</h2>
+{% if admin_required() %}
+  <a href="{{ url_for('admin.add_access_types') }}" class="btn btn-primary my-3"
+    >Dodaj pristupnu tehnologiju</a
+  >
+   {%endif%}
+  </div>
+  {% if error %}
+  <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  <table class="table table-striped table-bordered shadow-lg">
+     <thead class="table-success">
+    <tr>
+      <th>Id</th>
+      <th>Ime</th>
+      <th>Labela</th>
+      <th>Aktivan</th>
+      <th style="width: 160px">Akcije</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for access in all_access %}
+    <tr>
+      <td>{{ access.id }}</td>
+      <td>{{ access.name }}</td>
+      <td>{{ access.label }}</td>
+      <td>{{ access.is_active }}</td>
+      <td>
+        {% if admin_required() %}
+        <a
+          href="{{ url_for('admin.edit_access_types', id=access.id) }}"
+          class="btn btn-warning btn-sm"
+          >Edit</a
+        >
+        <a
+          href="{{ url_for('admin.delete_access_types', id=access.id) }}"
+          class="btn btn-danger btn-sm"
+          onclick="return confirm('Obriši pristupnu tehnologiju?')"
+          >Delete</a
+        >
+        {%endif%}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
