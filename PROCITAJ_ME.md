@@ -2342,3 +2342,76 @@ Format
 Group for template
 
 Add presentation flags
+
+# -mitating ont_inventory to access_inventory
+ont_inventory
+(id, city_id, quantity, month_end)
+UNIQUE(city_id, month_end)
+
+access_types
+(id, name)
+
+access_inventory   (renamed table)
+(id, city_id, access_type_id, quantity, month_end)
+UNIQUE(city_id, access_type_id, month_end)
+
+STEP 1 — Rename Table
+ALTER TABLE ont_inventory RENAME TO access_inventory;
+
+STEP 2 — Create access_types Table
+
+Use table (good choice, not enum).
+
+CREATE TABLE access_types (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+STEP 3 — Insert First Access Type
+INSERT INTO access_types (id, name)
+VALUES (1, 'GPON-ONT');
+
+STEP 4 — Add access_type_id Column (Initially Nullable)
+
+⚠ Important: Do NOT immediately make it NOT NULL.
+
+ALTER TABLE access_inventory
+ADD COLUMN access_type_id INTEGER;
+
+STEP 5 — Populate Existing Rows
+
+Since old table only contained ONT data:
+
+UPDATE access_inventory
+SET access_type_id = 1;
+
+Now all rows are GPON.
+
+
+STEP 6 — Add Foreign Key Constraint
+ALTER TABLE access_inventory
+ADD CONSTRAINT fk_access_type
+FOREIGN KEY (access_type_id)
+REFERENCES access_types(id)
+
+STEP 7 — Make Column NOT NULL
+
+Now safe:
+
+ALTER TABLE access_inventory
+ALTER COLUMN access_type_id SET NOT NULL;
+
+🔹 STEP 8 — Drop Old Unique Constraint
+
+ALTER TABLE access_inventory
+DROP CONSTRAINT ont_inventory_city_id_month_end_key;
+
+STEP 9 — Add New Unique Constraint
+ALTER TABLE access_inventory
+ADD CONSTRAINT uq_city_access_month
+UNIQUE (city_id, access_type_id, month_end);
+
+Rename constraint names to match new table:
+
+ALTER TABLE access_inventory
+RENAME CONSTRAINT fk_access_type TO fk_access_inventory_type;

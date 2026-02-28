@@ -29,7 +29,7 @@ def get_access_records_view_data():
 
     month_keys = [m["key"] for m in months]
 
-    access_types = AccessTypes.query.all()
+    access_types = AccessTypes.query.filter_by(is_active=True).order_by(AccessTypes.id).all()
 
     grouped_data = {}
 

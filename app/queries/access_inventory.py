@@ -44,10 +44,14 @@ def get_access_inventory_pivoted(months: list, access_type_id):
             {", ".join(pivot_cols)},
             max(i.updated_at) AS last_updated
         FROM cities c
+
+        JOIN access_types at
+            ON at.id=:access_type_id
+            AND at.is_active=true
         LEFT JOIN access_inventory i
             ON c.id=i.city_id
-            AND i.access_type_id = :access_type_id
-        WHERE C.TYPE = 'IJ' and c.is_active = true
+            AND i.access_type_id = at.id
+        WHERE C.TYPE = 'IJ' AND c.is_active = true
         GROUP BY c.id, c.name
         ),
         final_data AS (
