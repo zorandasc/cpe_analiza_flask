@@ -686,7 +686,7 @@
   //######################################
 
   //ATTACH LISTENER TO completeModal MODAL
-   document
+  document
     .getElementById("completeModal")
     .addEventListener("show.bs.modal", function (event) {
       
@@ -722,7 +722,7 @@
       fillDismantleModal(this, cpeData);
     });
 
-    function fillDismantleModal(modal, payload){
+  function fillDismantleModal(modal, payload){
       //Find the corresponding input fields in the modal and fill it with json data
       modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
           //CPE NAME AND DAMAGE CODE VEC IMAMO NA INPUT-IMA
@@ -736,29 +736,25 @@
     })
   }
 
+    //##############################################
+    //    THIS IS FOR SENDING UPDATED DATA FROM MODAL TO BACKEND
+    //##############################################
+    /* WE WANT DATA TO SEND TO LOOK LIKE THIS
+    {
+    "city_id": 3,
+    "city":"Banja Luka"
+    "updates": [
+      {"cpe_type_id": 1,
+        "dismantle_type_id": 1,
+        "quantity": 120},
+      {"cpe_type_id": 1,
+        "dismantle_type_id": 2,
+        "quantity": 15},
+      {"cpe_type_id": 3,
+        "dismantle_type_id": 3,
+        "quantity": 8}]}*/
 
-  
-    
-
-  //##############################################
-  //    THIS IS FOR SENDING UPDATED DATA FROM MODAL TO BACKEND
-  //##############################################
-  /* WE WANT DATA TO SEND TO LOOK LIKE THIS
-  {
-  "city_id": 3,
-  "city":"Banja Luka"
-  "updates": [
-    {"cpe_type_id": 1,
-      "dismantle_type_id": 1,
-      "quantity": 120},
-    {"cpe_type_id": 1,
-      "dismantle_type_id": 2,
-      "quantity": 15},
-    {"cpe_type_id": 3,
-      "dismantle_type_id": 3,
-      "quantity": 8}]}*/
-
-  //Read CSRF token in JavaScript
+    //Read CSRF token in JavaScript
   function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
   }

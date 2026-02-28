@@ -88,7 +88,7 @@
     <span class="me-2">⬅</span> Nazad
   </a>
 
-  <h2 class="mb-0">Unosi ONT Stanja</h2>
+  <h2 class="mb-0">Unosi ONT/XDSL Stanja</h2>
 
   <div style="width: 95px;" class="d-none d-md-block"></div>
 </div>
@@ -143,6 +143,15 @@
               <input type="date" name="month_end" class="form-control" value="{{month_end}}">
           </div>
           <div class="col-auto">
+              <label class="form-label mb-1">Pristupna Tehnologija</label>
+              <select name="access_type_id" class="form-select">
+                  <option>Sve</option>
+                  {% for acs in access %}
+                  <option value="{{acs.id}}" {% if access_type_id == acs.id %}selected{% endif %}>{{acs.name}}</option>
+                  {% endfor %}
+              </select>
+          </div>
+          <div class="col-auto">
               <label class="form-label mb-1">Skladište</label>
               <select name="city_id" class="form-select">
                   <option>Sve</option>
@@ -170,8 +179,13 @@
           <th>
             <a
               href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
-              >Skladišta</a
+              >IJ</a
             >
+          </th>
+           <th>
+          
+              Pristupna Tehnologija
+           
           </th>
           <th>Količina</th>
           <th>
@@ -200,8 +214,9 @@
         <tr>
           <td>{{ r.id }}</td>
           <td>{{ r.city.name }}</td>
+          <td>{{ r.access_type.name }}</td>
           <td>
-            <form method="post" action="{{ url_for('admin.update_access_inventory',month_end=month_end, city_id=city_id, id=r.id) }}" class="d-flex justify-content-between align-items-center">
+            <form method="post" action="{{ url_for('admin.update_access_inventory',month_end=month_end, city_id=city_id, access_type_id=access_type_id, id=r.id) }}" class="d-flex justify-content-between align-items-center">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="number" name="quantity" value="{{r.quantity}}" min=0 class="form-control form-control-sm" style="width: 80px;">
               {% if admin_required() %} <button class="btn btn-sm btn-success btn-custom-save">Save</button> {% endif %}

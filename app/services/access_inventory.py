@@ -126,8 +126,18 @@ def update_recent_access_inventory(form_data):
         return False, "Greška prilikom čuvanja podataka."
 
 
-def get_access_records_excel_export():
+def get_access_records_excel_export(id):
     previous_month_end = get_previous_month_end()
+
+    try:
+        access_type_id = int(id)
+    except (KeyError, ValueError):
+        return False, "Nevažeći tip pristupa."
+    
+    # Security + data integrity.
+    access_type = AccessTypes.query.get(access_type_id)
+    if not access_type:
+        return False, "Tip pristupa ne postoji."
 
     # month is used in SQL + and for structure of html table
     # covert datetime.date to date string
@@ -142,7 +152,9 @@ def get_access_records_excel_export():
     month_keys = [m["key"] for m in months]
 
     # get the pivoted data from db
-    records = get_access_inventory_pivoted(month_keys)
+    records = get_access_inventory_pivoted(
+        months=month_keys, access_type_id=access_type_id
+    )
 
     records_grouped = _group_records(records, month_keys)
 
@@ -155,7 +167,7 @@ def get_access_records_excel_export():
         row = [access["name"]] + [access["dates"][m]["quantity"] for m in month_keys]
         rows.append(row)
 
-    return headers, rows, previous_month_end
+    return access_type.name, headers, rows, previous_month_end
 
 
 def parce_excel_segments(file_storage):

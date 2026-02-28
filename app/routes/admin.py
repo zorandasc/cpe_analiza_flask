@@ -419,9 +419,7 @@ def stb_inventory():
         page=page, per_page=per_page, error_out=False
     )
 
-    # THIS IS DATA FOR NEW CPE MODAL
-    # Mora biti CpeTypes jer dodajemo novi element u CPEInventory
-    stbs = StbTypes.query.filter_by(is_active=True).order_by(StbTypes.id).all()
+    stbs = StbTypes.query.order_by(StbTypes.id).all()
 
     return render_template(
         "admin/stb_inventory.html",
@@ -575,6 +573,7 @@ def access_inventory():
 
     # filters
     month_end = request.args.get("month_end", type=str)
+    access_type_id = request.args.get("access_type_id", type=int)
     city_id = request.args.get("city_id", type=int)
 
     # Whitelist allowed sort columns (prevents SQL injection)
@@ -588,6 +587,9 @@ def access_inventory():
     if month_end:
         query = query.filter(AccessInventory.month_end == month_end)
 
+    if access_type_id:
+        query = query.filter(AccessInventory.access_type_id == access_type_id)
+
     if city_id:
         query = query.filter(AccessInventory.city_id == city_id)
 
@@ -598,6 +600,9 @@ def access_inventory():
     pagination = query.order_by(order_column).paginate(
         page=page, per_page=per_page, error_out=False
     )
+
+    # THIS IS DATA FOR SELECTION IN ACCESS FILTER
+    access = AccessTypes.query.order_by(AccessTypes.id).all()
 
     # THIS IS DATA FOR SELECTION IN CITY FILTER
     cities = (
@@ -612,8 +617,10 @@ def access_inventory():
         pagination=pagination,
         sort_by=sort_by,
         direction=direction,
+        access=access,
         cities=cities,
         month_end=month_end,
+        access_type_id=access_type_id,
         city_id=city_id,
     )
 
@@ -648,6 +655,7 @@ def update_access_inventory(id):
         url_for(
             "admin.access_inventory",
             month_end=request.args.get("month_end"),
+            access_type_id=request.args.get("access_type_id"),
             city_id=request.args.get("city_id"),
         )
     )

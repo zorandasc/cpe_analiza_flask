@@ -43,14 +43,14 @@ def update_access_inventory():
     return redirect(url_for("access_inventory.access_records"))
 
 
-@access_inventory_bp.route("/export/access-records.xlsx")
+@access_inventory_bp.route("/export/access-records.xlsx/<int:id>")
 @login_required
-def export_access_records_excel():
-    headers, rows, current_month_end = get_access_records_excel_export()
+def export_access_records_excel(id):
+    access_name, headers, rows, current_month_end = get_access_records_excel_export(id)
 
     wb = Workbook()
     ws = wb.active
-    ws.title = "Stanje ONT Opreme"
+    ws.title = f"Stanje {access_name} Opreme"
 
     meta = wb.create_sheet("Info")
     meta.append(["Kreirano:", datetime.now().strftime("%d-%m-%Y %H:%M")])

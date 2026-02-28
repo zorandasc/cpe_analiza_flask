@@ -134,7 +134,7 @@ styles %} {{ super() }}
     <!-- EXPORT EXCEL-->
     <a
       class="btn btn-sm btn-outline-secondary mb-2"
-      href="{{ url_for('access_inventory.export_access_records_excel')}}">
+      href="{{ url_for('access_inventory.export_access_records_excel', id=at.id)}}">
       Export Excel
     </a>
     <!-- MODAL FOR MANUALY IMPORT-->
