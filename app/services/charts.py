@@ -709,7 +709,7 @@ def get_iptv_inventory_chart_data(weeks=None):
 # IN HERE I DONT USE CARRY FORWARD LOGIC IN PYTHON.
 # WHY? BECAUSE IF THERE IS NO WEEK SQL WILL JUST CONNECT ACROS EXSISTING WEEKS
 # stb inventory IS SNAPSHOT TABLE, UPDATE IS HAPPENING ACROSS ALL CITIES
-def get_access_inventory_chart_data(city_id=None, months=None):
+def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
 
     params = {}
 
@@ -721,11 +721,11 @@ def get_access_inventory_chart_data(city_id=None, months=None):
     if months:
         sql = f"""
             WITH last_month AS (
-            SELECT DISTINCT month_end
-            FROM access_inventory 
-            WHERE 1=1 {where}
-            ORDER BY month_end DESC
-            LIMIT :months
+                SELECT DISTINCT month_end
+                FROM access_inventory 
+                WHERE 1=1 {where}
+                ORDER BY month_end DESC
+                LIMIT :months
             )
             SELECT i.month_end, SUM(i.quantity) AS total
             FROM access_inventory i
@@ -817,6 +817,12 @@ JOIN_TABLES = {
         "pk": "id",
         "cols": "j.id, j.label",  # what is returnet
         "order_by": "j.label",
+    },
+    "access_type": {
+        "table": "access_types",
+        "pk": "id",
+        "cols": "j.id, j.name",  # what is returnet
+        "order_by": "j.name",
     },
     "dis_type": {
         "table": "dismantle_types",

@@ -94,7 +94,9 @@ def iptv_inventory_charts():
 @login_required
 def access_inventory_charts():
     # But still → submit GET params, GET + query parameter
-    selected_id = request.args.get("id", type=int)
+    selected_access_id = request.args.get("access_id", type=int)
+
+    selected_city_id = request.args.get("city_id", type=int)
 
     selected_months = request.args.get("months", type=int)
 
@@ -102,7 +104,7 @@ def access_inventory_charts():
     # GET CHART DATA
     # ---------------------------------------
     chart_data = get_access_inventory_chart_data(
-        city_id=selected_id, months=selected_months
+        access_id=selected_access_id, city_id=selected_city_id, months=selected_months
     )
 
     # ---------------------------------------
@@ -112,18 +114,33 @@ def access_inventory_charts():
         base_key="access", join_key="city", base_fk="city_id"
     )
 
+    access = get_distinct_joined_values(
+        base_key="access", join_key="access_type", base_fk="access_type_id"
+    )
+
     # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     # ---------------------------------------
     selected_city_name = None
-    if selected_id:
-        selected_city_name = next((c.name for c in cities if c.id == selected_id), None)
+    if selected_city_id:
+        selected_city_name = next(
+            (c.name for c in cities if c.id == selected_city_id), None
+        )
+
+    selected_access_name = None
+    if selected_access_id:
+        selected_access_name = next(
+            (a.name for a in access if a.id == selected_access_id), None
+        )
 
     return render_template(
         "charts/access_dashboard.html",
         chart_data=chart_data,
+        access=access,
+        selected_access_id=selected_access_id,
+        selected_access_name=selected_access_name,
         cities=cities,
-        selected_id=selected_id,
+        selected_city_id=selected_city_id,
         selected_city_name=selected_city_name,
         selected_months=selected_months,
     )

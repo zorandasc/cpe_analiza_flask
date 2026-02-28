@@ -15,7 +15,9 @@
       title = `Trend za tip CPE opreme: ${ctx.cpeType}`;
     } else if (ctx?.stbId) {
       title += `Trend za uređaj: ${ctx.stbName}`;
-    } else {
+    } else if (ctx?.accessName) {
+      title += `Trend za pristupnu: ${ctx.accessName}`;
+    }else {
       title = ctx.mainTitle;
     }
 
