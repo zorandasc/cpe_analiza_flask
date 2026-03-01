@@ -181,6 +181,7 @@ LIMIT 600;
 
 INSERT INTO access_inventory (
     city_id, 
+    access_type_id,
     month_end, 
     quantity,
     created_at, 
@@ -188,6 +189,7 @@ INSERT INTO access_inventory (
 )
 SELECT 
     sub.city_id, 
+    sub.access_type_id,
     sub.month_end, 
     (FLOOR(RANDOM() * 100) + 1)::INT,
     NOW(), 
@@ -195,12 +197,16 @@ SELECT
 FROM (
     SELECT 
         c.id as city_id, 
-        -- Calculates the last day of the month for each date in the series
+        at.id as access_type_id, -- References the access_types table
+        -- Calculates the last day of the month
         (date_trunc('month', d.month_date) + interval '1 month - 1 day')::date as month_end
     FROM 
         generate_series(3, 11) AS c(id)
     CROSS JOIN (
-        -- Generates a series of dates from 5 years ago to today, stepping by 1 month
+        SELECT id FROM access_types -- Joins all available access types
+    ) at
+    CROSS JOIN (
+        -- Generates a series of dates
         SELECT generate_series(
             date_trunc('month', NOW() - interval '5 years'), 
             '2025-12-01'::date,
@@ -209,7 +215,7 @@ FROM (
     ) d
 ) sub
 ORDER BY RANDOM() 
-LIMIT 600;
+LIMIT 900;
 
 
 --A CROSS JOIN (also known as a Cartesian Product) is the most "aggressive" way 

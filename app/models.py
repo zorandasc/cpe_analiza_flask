@@ -325,20 +325,20 @@ class AccessInventory(db.Model):
     __tablename__ = "access_inventory"
     __table_args__ = (
         UniqueConstraint(
-            "city_id", "access_type_id", "month_end",
-            name="uq_city_access_month"
+            "city_id", "access_type_id", "month_end", name="uq_city_access_month"
+        ),
+        # it must be last day of every month
+        CheckConstraint(
+            "EXTRACT(DAY FROM (month_end + INTERVAL '1 day')) = 1",
+            name="ck_month_end_is_last_day",
         ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    month_end: Mapped[datetime.date] = mapped_column(
-        Date, nullable=False
-    )
+    month_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
-    city_id: Mapped[int] = mapped_column(
-        ForeignKey("cities.id"), nullable=False
-    )
+    city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), nullable=False)
 
     access_type_id: Mapped[int] = mapped_column(
         ForeignKey("access_types.id"), nullable=False
@@ -347,56 +347,36 @@ class AccessInventory(db.Model):
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now()
+        DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
     updated_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
-        onupdate=func.now()
+        onupdate=func.now(),
     )
 
-    city = relationship(
-        "Cities",
-        back_populates="access_inventory"
-    )
+    city = relationship("Cities", back_populates="access_inventory")
 
-    access_type = relationship(
-        "AccessTypes",
-        back_populates="access_inventory"
-    )
+    access_type = relationship("AccessTypes", back_populates="access_inventory")
 
 
 class AccessTypes(db.Model):
     __tablename__ = "access_types"
 
-    id: Mapped[int] = mapped_column(
-        Integer,
-        primary_key=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
-    name: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
-        unique=True
-    )
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
 
-    label: Mapped[Optional[str]] = mapped_column(
-        String(200)
-    )
+    label: Mapped[Optional[str]] = mapped_column(String(200))
 
     is_active: Mapped[bool] = mapped_column(
-        Boolean,
-        nullable=False,
-        server_default=text("true")
+        Boolean, nullable=False, server_default=text("true")
     )
 
     access_inventory: Mapped[list["AccessInventory"]] = relationship(
-        "AccessInventory",
-        back_populates="access_type"
+        "AccessInventory", back_populates="access_type"
     )
 
 

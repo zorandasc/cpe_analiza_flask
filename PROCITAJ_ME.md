@@ -2344,6 +2344,7 @@ Group for template
 Add presentation flags
 
 # -mitating ont_inventory to access_inventory
+
 ont_inventory
 (id, city_id, quantity, month_end)
 UNIQUE(city_id, month_end)
@@ -2351,7 +2352,7 @@ UNIQUE(city_id, month_end)
 access_types
 (id, name)
 
-access_inventory   (renamed table)
+access_inventory (renamed table)
 (id, city_id, access_type_id, quantity, month_end)
 UNIQUE(city_id, access_type_id, month_end)
 
@@ -2363,8 +2364,8 @@ STEP 2 — Create access_types Table
 Use table (good choice, not enum).
 
 CREATE TABLE access_types (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE
+id SERIAL PRIMARY KEY,
+name VARCHAR(50) NOT NULL UNIQUE
 );
 
 STEP 3 — Insert First Access Type
@@ -2386,7 +2387,6 @@ UPDATE access_inventory
 SET access_type_id = 1;
 
 Now all rows are GPON.
-
 
 STEP 6 — Add Foreign Key Constraint
 ALTER TABLE access_inventory
@@ -2415,3 +2415,8 @@ Rename constraint names to match new table:
 
 ALTER TABLE access_inventory
 RENAME CONSTRAINT fk_access_type TO fk_access_inventory_type;
+
+STEP 10 — Add New check constraints must be last day of month
+ALTER TABLE access_inventory
+ADD CONSTRAINT ck_month_end_last_day
+CHECK (EXTRACT(DAY FROM (month_end + INTERVAL '1 day')) = 1);
