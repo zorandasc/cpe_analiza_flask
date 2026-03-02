@@ -152,6 +152,7 @@ styles %} {{ super() }}
         </div>
       </div>
     </a>
+<!--
     <a
       href="{{ url_for('cpe_broken_inventory.cpe_broken') }}"
       class="dashboard-link"
@@ -172,6 +173,7 @@ styles %} {{ super() }}
         </div>
       </div>
     </a>
+-->
     <a
       href="{{ url_for('stb_inventory.stb_iptv_records')  }}"
       class="dashboard-link"
@@ -198,7 +200,7 @@ styles %} {{ super() }}
         <div class="title">Stanje ONT/XDSL korisnika - pristupna mreža</div>
         <div class="icon">
           <img
-            src="{{ url_for('static', filename='access.png') }}"
+            src="{{ url_for('static', filename='ont.png') }}"
             alt="Icon"
             class="card-icon custom-icon"
           />
