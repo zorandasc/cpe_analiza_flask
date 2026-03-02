@@ -682,7 +682,7 @@ def import_access_records_excel():
 def save_access_imported_segments():
     data = request.get_json()
 
-    segments = data.get("segments", [])
+    segments = data.get("segments", {})
     selected_date = data.get("selected_date")
 
     if not segments:
