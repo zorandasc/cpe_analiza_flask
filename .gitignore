@@ -3,3 +3,5 @@ __pycache__/
 instance/
 *.pyc
 app/generated_reports/weekly_report.pdf
+
+app/static/reports/charts
