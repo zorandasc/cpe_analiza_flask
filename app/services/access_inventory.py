@@ -29,7 +29,9 @@ def get_access_records_view_data():
 
     month_keys = [m["key"] for m in months]
 
-    access_types = AccessTypes.query.filter_by(is_active=True).order_by(AccessTypes.id).all()
+    access_types = (
+        AccessTypes.query.filter_by(is_active=True).order_by(AccessTypes.id).all()
+    )
 
     grouped_data = {}
 
@@ -133,7 +135,7 @@ def get_access_records_excel_export(id):
         access_type_id = int(id)
     except (KeyError, ValueError):
         return False, "Nevažeći tip pristupa."
-    
+
     # Security + data integrity.
     access_type = AccessTypes.query.get(access_type_id)
     if not access_type:
@@ -187,56 +189,84 @@ def parce_excel_segments(file_storage):
 
     sheet = wb.active  # Or wb['Sheet1']
     # list of all segments
-    summaries = []
-    current_subtotal = 0
+    # Track two separate subtotals
+    summaries_col_15 = []
+    summaries_col_17 = []
+
+    subtotal_15 = 0
+    subtotal_17 = 0
     # Assuming header is row 1, data starts at row 2
     starting_row = 2
     # Column O in excel is the 15th column
-    column_index = 15
+    min_column_index = 15
+    max_column_index = 17
 
     for row in sheet.iter_rows(
-        min_row=starting_row, max_col=column_index, min_col=column_index
+        min_row=starting_row, max_col=max_column_index, min_col=min_column_index
     ):
-        cell = row[0]
-        border = cell.border
-        val = cell.value if isinstance(cell.value, (int, float)) else 0
+        cell_15 = row[0]
+        cell_17 = row[2]
+
+        border = cell_15.border  # Assuming borders are consistent across the row
+        val_15 = cell_15.value if isinstance(cell_15.value, (int, float)) else 0
+        val_17 = cell_17.value if isinstance(cell_17.value, (int, float)) else 0
 
         # 1. STOP & CAPTURE: Grand Total Detection
         if border.top.style == "medium" and border.bottom.style == "medium":
-            grand_total_from_file = val
-            print(f"--- VALIDATION: Grand Total Found: {grand_total_from_file} ---")
+            grand_total_from_file_15 = val_15
+            grand_total_from_file_17 = val_17
+            print(f"--- VALIDATION: Grand Total Found: {grand_total_from_file_15} ---")
+            print(f"--- VALIDATION: Grand Total Found: {grand_total_from_file_17} ---")
             break
 
         # 2. TRIGGER TOP BORDER: New Group Starts (Top Style)
         if border.top.style == "medium":
-            if current_subtotal > 0:
-                summaries.append(current_subtotal)
-            current_subtotal = val
+            if subtotal_15 > 0 or subtotal_17 > 0:
+                summaries_col_15.append(subtotal_15)
+                summaries_col_17.append(subtotal_17)
+            subtotal_15 = val_15
+            subtotal_17 = val_17
 
         # 3. TRIGGER BOTTOM BORDER: Current Group Ends (Bottom Style)
         elif border.bottom.style == "medium":
-            current_subtotal += val
-            if current_subtotal > 0:
-                summaries.append(current_subtotal)
-            current_subtotal = 0
+            subtotal_15 += val_15
+            subtotal_17 += val_17
+            if subtotal_15 > 0 or subtotal_17 > 0:
+                summaries_col_15.append(subtotal_15)
+                summaries_col_17.append(subtotal_17)
+            subtotal_15 = 0
+            subtotal_17 = 0
 
         # 4. NORMAL: Regular accumulation
         else:
-            current_subtotal += val
+            subtotal_15 += val_15
+            subtotal_17 += val_17
 
     # Final cleanup if data remains (in case Grand Total row was missing)
-    if current_subtotal > 0:
-        summaries.append(current_subtotal)
+    if subtotal_15 > 0 or subtotal_17 > 0:
+        summaries_col_15.append(subtotal_15)
+        summaries_col_17.append(subtotal_17)
 
     # --- Verification Logic ---
-    calculated_total = sum(summaries)
-    is_valid = calculated_total == grand_total_from_file
+    calculated_total_15 = sum(summaries_col_15)
+    is_valid_15 = calculated_total_15 == grand_total_from_file_15
+
+    calculated_total_17 = sum(summaries_col_17)
+    is_valid_17 = calculated_total_17 == grand_total_from_file_17
 
     return {
-        "segments": summaries,
-        "calculated_total": calculated_total,
-        "excel_grand_total": grand_total_from_file,
-        "match": is_valid,
+        "gpon": {
+            "segments": summaries_col_15,
+            "calculated_total": calculated_total_15,
+            "excel_grand_total": grand_total_from_file_15,
+            "match": is_valid_15,
+        },
+        "xdsl": {
+            "segments": summaries_col_17,
+            "calculated_total": calculated_total_17,
+            "excel_grand_total": grand_total_from_file_17,
+            "match": is_valid_17,
+        },
     }
 
 
@@ -249,8 +279,8 @@ def save_imported_segments_to_db(segments, target_date=None):
         return False, "Niste autorizovani."
 
     # Backend sanitization
-    # If target_date is provided (Admin), use it.
-    # Otherwise (User), get current month end.
+    # If target_date is provided than it is from (Admin) dashboard, use it.
+    # Otherwise (User) it is from regular user domain, get current month end.
     if target_date:
         # If target_date is a string from JSON, convert to object
         if isinstance(target_date, str):
