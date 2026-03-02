@@ -385,8 +385,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 modal.show();
 
                 // 6. STORE SEGMENT FOR POSSIBLE SENDING INTO ISERT TO DB ROUTE
-                window.currentgponSegments = data.gpon.segments;
-                window.currentxdslSegments = data.xdsl.segments;
+                window.currentSegmentsGPON = data.gpon.segments;
+                window.currentSegmentsXDSL = data.xdsl.segments;
+                
                
 
             } catch (error) {
@@ -402,9 +403,9 @@ document.addEventListener('DOMContentLoaded', function() {
 //------------------------------------------
 //confirmInsert ID OF BUTTON
 document.getElementById('confirmInsert').addEventListener('click',async function(){
-  if (window.currentSegmentsGPON.length === 0 && window.currentSegmentsXDSL===0) return
+  
 
-  const payload = {
+    const payload = {
         gpon: window.currentSegmentsGPON,
         xdsl: window.currentSegmentsXDSL
         // month_end is handled by your backend service default or admin input

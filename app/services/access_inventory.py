@@ -270,7 +270,7 @@ def parce_excel_segments(file_storage):
     }
 
 
-def save_imported_segments_to_db(segments, target_date=None):
+def save_imported_segments_to_db(payload, target_date=None):
     """
     Map the Excel segment indexses (0, 1, 2...) to your DB city_id
     """
@@ -296,6 +296,9 @@ def save_imported_segments_to_db(segments, target_date=None):
         # Regular user logic: get actual current month end
         month_to_save = get_previous_month_end()
 
+    # Mapping: Payload Key -> access_type_id
+    type_mapping = {"gpon": 1, "xdsl": 3}
+
     # SEG 1 BANJA LUKA -> (city_id=3)
     # SEG 2 BIJELJINA-> (city_id=6)
     # SEG 3 BRCKO-> (city_id=7)
@@ -308,36 +311,47 @@ def save_imported_segments_to_db(segments, target_date=None):
     # Map the Excel segment index (0, 1, 2...) to your DB city_id
     # Ensure this order matches your Excel segments exactly!
     city_mapping = [3, 6, 7, 5, 9, 4, 11, 10, 8]
+    total_inserted = 0
 
     try:
-        for index, value in enumerate(segments):
-            # Guard against Excel providing more segments than we have city mappings
-            if index >= len(city_mapping):
-                break
+        # Loop through each access type (gpon, then xdsl)
+        for type_key, segments in payload.items():
+        
+            access_type_id = type_mapping.get(type_key)
 
-            city_id = city_mapping[index]
-            quantity = int(value or 0)
+            if not access_type_id:
+                continue
 
-            # UPSERT
-            db.session.execute(
-                text("""
-                    INSERT INTO access_inventory (city_id, month_end, quantity)
-                    VALUES (:city_id, :month_end, :quantity)
-                    ON CONFLICT (city_id, month_end)
-                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
-                """),
-                {
-                    "city_id": city_id,
-                    "month_end": month_to_save,
-                    "quantity": quantity,
-                },
-            )
+            for index, value in enumerate(segments):
+                # Guard against Excel providing more segments than we have city mappings
+                if index >= len(city_mapping):
+                    break
+
+                city_id = city_mapping[index]
+                quantity = int(value or 0)
+
+                # UPSERT
+                db.session.execute(
+                    text("""
+                        INSERT INTO access_inventory (city_id, access_type_id, month_end, quantity)
+                        VALUES (:city_id,:at_id, :month_end, :quantity)
+                        ON CONFLICT (city_id, access_type_id, month_end)
+                        DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
+                    """),
+                    {
+                        "city_id": city_id,
+                        "at_id": access_type_id,
+                        "month_end": month_to_save,
+                        "quantity": quantity,
+                    },
+                )
+                total_inserted += 1
 
         db.session.commit()
         return (
-            True,
-            f"Uspješno ažurirano {len(segments)} skladišta za {month_to_save}.",
-        )
+                True,
+                f"Uspješno ažurirano {total_inserted} zapisa za {month_to_save}.",
+            )
 
     except Exception as e:
         db.session.rollback()

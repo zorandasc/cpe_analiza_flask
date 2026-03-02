@@ -102,11 +102,9 @@ def import_access_records_excel():
 @access_inventory_bp.route("/save-segments", methods=["POST"])
 @login_required
 def save_imported_segments():
-    data = request.get_json()
+    payload = request.get_json()
 
-    segments = data.get("segments", [])
-
-    if not segments:
+    if not payload:
         return jsonify(
             {
                 "success": False,
@@ -114,7 +112,7 @@ def save_imported_segments():
             }
         ), 400
 
-    success, message = save_imported_segments_to_db(segments, [])
+    success, message = save_imported_segments_to_db(payload, {})
 
     flash(message, "success" if success else "danger")
 
