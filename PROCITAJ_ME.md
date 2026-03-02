@@ -1776,7 +1776,7 @@ That rule alone will never betray you.
 
 Activate: source .venv/Scripts/activate
 
-Install: python -m pip install <package-name>
+# Install: python -m pip install <package-name>
 
 python -m pip install -r requirements.txt
 

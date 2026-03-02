@@ -3,6 +3,7 @@ from datetime import date, datetime
 from collections import defaultdict
 from flask import render_template, current_app
 from app.extensions import db
+from app.services.magic import generate_link_for_view_user
 from app.utils.dates import get_current_week_friday
 from app.models import ReportSetting, CpeTypeEnum
 from app.services.email_service import send_email
@@ -38,8 +39,10 @@ def run_weekly_report_job():
 
     pdf_path = generate_pdf()
 
+    magic_link=generate_link_for_view_user()
+
     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
-    success, message = send_email(pdf_path=pdf_path)
+    success, message = send_email(pdf_path=pdf_path, link=magic_link)
 
     if success:
         # Only mark as sent if the email actually went out

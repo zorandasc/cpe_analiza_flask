@@ -8,6 +8,7 @@ from .access_inventory import access_inventory_bp
 from .charts import chart_bp
 from .admin import admin_bp
 from .reports import report_bp
+from .magic import magic_bp
 
 
 def register_routes(app):
@@ -21,3 +22,4 @@ def register_routes(app):
     app.register_blueprint(chart_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(report_bp)
+    app.register_blueprint(magic_bp)

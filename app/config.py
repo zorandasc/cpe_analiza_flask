@@ -30,12 +30,6 @@ class Config:
 
     CRON_JOB_SECRET = os.environ.get("CRON_JOB_SECRET")
 
+    # this will be respected only if session.permanent=True
+    # which is deffined in auth service
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
-
-    #MAIL_SERVER = "webmail.mtel.ba"
-    #MAIL_PORT = 587
-    #MAIL_USE_TLS= True   # Use STARTTLS
-    #MAIL_USE_SSL= False  # Do NOT use both
-    #MAIL_USERNAME = r'IN\cpe.reporting'
-    #MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    #MAIL_DEFAULT_SENDER = "cpe.reporting@mtel.ba"

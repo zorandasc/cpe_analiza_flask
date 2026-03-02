@@ -14,6 +14,7 @@ from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import selectinload
 from app.extensions import db
 from app.services.email_service import send_email
+from app.services.magic import generate_link_for_view_user
 from app.services.reports import generate_pdf
 from app.utils.permissions import view_required, admin_required
 from app.services.admin import update_cpe_type
@@ -1449,6 +1450,7 @@ def download_weekly_report():
     )
 
 
+# GENERATE EMAIL MANNUALY
 @admin_bp.route("/reports/send_weekly", methods=["POST"])
 def send_weekly_report():
     if not admin_required():  # AUTHORIZATION
@@ -1456,8 +1458,10 @@ def send_weekly_report():
 
     pdf_path = generate_pdf()
 
-    # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
-    success, message = send_email(pdf_path=pdf_path)
+    magic_link = generate_link_for_view_user()
+
+    # SEND EMAIL TO RECIPIENTS, RETUNRS: BOOLEAN and STRING REASON
+    success, message = send_email(pdf_path=pdf_path, link=magic_link)
 
     flash(f"Status: {message}", "success" if success else "danger")
 

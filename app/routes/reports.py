@@ -1,17 +1,10 @@
 from flask import (
     current_app,
     Blueprint,
-    send_file,
-    flash,
-    redirect,
-    url_for,
     request,
     abort,
 )
-from flask_login import login_required
-from app.utils.permissions import view_required
-from app.services.reports import run_weekly_report_job, generate_pdf
-
+from app.services.reports import run_weekly_report_job
 
 report_bp = Blueprint(
     "reports",
@@ -29,6 +22,3 @@ def schedule_weekly_report():
     # run_weekly_report_job() IS A SERVICE SCHEDULER
     result = run_weekly_report_job()
     return {"status": result}
-
-
-

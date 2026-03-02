@@ -11,3 +11,4 @@ matplotlib
 flask-mailman
 python-dotenv
 exchangelib
+itsdangerous

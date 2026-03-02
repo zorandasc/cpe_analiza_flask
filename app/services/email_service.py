@@ -1,4 +1,3 @@
-# from flask_mailman import EmailMessage, EmailMultiAlternatives
 # from flask import current_app
 import os
 from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter
@@ -15,40 +14,12 @@ from exchangelib import (
 
 from app.models import ReportRecipients
 
-# SEND EMAIL USING FLASK_MAILMAN: IT USE SMTP 587/25 PORT FOR SENDING MAIL
-"""
-def send_email(pdf_path, recipients, subject, body_text, body_html=""):
-    if not recipients:
-        print("Weekly report: no active recipients")
-        return False
-
-    try:
-        message = EmailMultiAlternatives(
-            subject=subject,
-            body=body_text,
-            to=[email for email in recipients],
-        )
-
-        # 2. Attach the HTML version as an alternative
-        message.attach_alternative(body_html, "text/html")
-
-        message.attach_file(pdf_path)
-        message.send()
-
-        return True
-
-    except Exception as e:
-        print(f"Failed to send weekly report email: {e}")
-      return False
-      """
-
-
 # 1. Bypass SSL verification if m:tel uses internal self-signed certs
 BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
 
 # SEND EMAIL USING exchangelib: it uses the same HTTPS "pipeline" as your browser and Outlook,
-def send_email(pdf_path):
+def send_email(pdf_path, link):
     recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
 
     if not recipients:
@@ -57,7 +28,7 @@ def send_email(pdf_path):
 
     subject = "Sedmični izvještaj o CPE inventaru"
 
-    body_text = """
+    body_text = f"""
         Dragi Svi,
 
         U prilogu Vam dostavljamo sedmični izvještaj o inventaru CPE opreme.
@@ -67,28 +38,39 @@ def send_email(pdf_path):
         - Značajne sedmične promjene
         - Analiza trendova
 
+        Više detalja na linku:
+        {link}
+
         S poštovanjem,
         Automatizovani sistem izvještavanja
     """
 
-    body_html = """
-            <html>
-                <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                    <p>Dragi Svi,</p>
-                    
-                    <p>U prilogu Vam dostavljamo sedmični izvještaj o inventaru <strong>CPE opreme</strong>.</p>
-                    
-                    <p><strong>Sažetak:</strong></p>
-                    <ul style="list-style-type: disc; margin-left: 20px;">
-                        <li>Pregled stanja ukupne, raspoložive i demontirane CPE opreme</li>
-                        <li>Značajne sedmične promjene</li>
-                        <li>Analiza trendova</li>
-                    </ul>
-                    
-                    <p>S poštovanjem,<br>
-                    <em>Automatizovani sistem izvještavanja</em></p>
-                </body>
-            </html>
+    body_html = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <p>Dragi Svi,</p>
+            
+            <p>U prilogu Vam dostavljamo sedmični izvještaj o inventaru <strong>CPE opreme</strong>.</p>
+            
+            <p><strong>Sažetak:</strong></p>
+            <ul style="list-style-type: disc; margin-left: 20px;">
+                <li>Pregled stanja ukupne, raspoložive i demontirane CPE opreme</li>
+                <li>Značajne sedmične promjene</li>
+                <li>Analiza trendova</li>
+            </ul>
+
+            <p>Više detalja možete pogledati klikom na link ispod:</p>
+
+            <p>
+                <a href="{link}">
+                    Otvori Aplikaciju CPE izvještaj
+                </a>
+            </p>
+            
+            <p>S poštovanjem,<br>
+            <em>Automatizovani sistem izvještavanja</em></p>
+        </body>
+    </html>
     """
 
     try:

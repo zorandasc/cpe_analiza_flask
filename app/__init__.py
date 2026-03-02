@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
-from flask_mailman import Mail
 from app.config import Config
 from app.extensions import db, login_manager
 from app.models import Users
@@ -14,8 +13,6 @@ from app.utils.permissions import (
     iptv_view_required,
     ftth_view_required,
 )
-
-mail = Mail()
 
 
 def create_app():
@@ -33,8 +30,6 @@ def create_app():
     # If token is missing or invalid → Flask returns 400 Bad Request.
     csrf = CSRFProtect(app)
 
-    # Initialize  flask-mailman
-    mail.init_app(app)
 
     # Initialize SQLAlchemy with the app
     db.init_app(app)
