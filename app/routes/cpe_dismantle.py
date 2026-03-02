@@ -34,9 +34,11 @@ cpe_dismantle_bp = Blueprint(
 @cpe_dismantle_bp.route("/")
 @login_required
 def cpe_dismantle_records():
-    data = get_cpe_dismantle_view_data()
+    data_dismantle = get_cpe_dismantle_view_data()
 
-    return render_template("cpe_dismantle.html", **data)
+    data_broken = get_cpe_broken_view_data()
+
+    return render_template("cpe_dismantle.html", broken=data_broken, **data_dismantle)
 
 
 @cpe_dismantle_bp.route("/update", methods=["POST"])
