@@ -127,7 +127,7 @@ styles %} {{ super() }}
   <!--EVERY RECORD SHOULD HAVE SAME last_updated-->
   <span class="info">
     Posljedne ažurirano:{% if records[0] %} {{
-    records[0]['last_updated'].strftime('%d-%m-%Y%H:%M') }} {% endif %}
+    records[0]['last_updated'].strftime('%d-%m-%Y %H:%M') }} {% endif %}
   </span>
   <a
               href="{{ url_for('stb_inventory.stb_records_history') }}"

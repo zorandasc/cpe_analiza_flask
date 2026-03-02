@@ -107,7 +107,9 @@ styles %} {{ super() }}
     {% endif %}
     <!-- last_updated-->
     <span class="info">
-        Posljedne ažurirano: {{ records[at.name].last_updated }}
+        Posljedne ažurirano:{% if records[at.name].last_updated %} 
+        {{ records[at.name].last_updated.strftime('%d-%m-%Y %H:%M')  }}
+        {% endif %}
     </span>
     </div>
     <!-- TABLE-->
@@ -147,7 +149,7 @@ styles %} {{ super() }}
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="modal-header custom-modal-header">
               <h4 class="modal-title">
-                Dodaj novo stanje za: {{ previous_month_end.strftime("%d-%m-%Y") }}
+                Dodaj novo stanje za {{at.name}}: {{ previous_month_end.strftime("%d-%m-%Y") }}
               </h4>
               <button
                 type="button"

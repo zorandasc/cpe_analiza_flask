@@ -297,7 +297,7 @@ def save_imported_segments_to_db(payload, target_date=None):
         month_to_save = get_previous_month_end()
 
     # Mapping: Payload Key -> access_type_id
-    type_mapping = {"gpon": 1, "xdsl": 3}
+    type_mapping = {"gpon": 1, "xdsl": 2}
 
     # SEG 1 BANJA LUKA -> (city_id=3)
     # SEG 2 BIJELJINA-> (city_id=6)

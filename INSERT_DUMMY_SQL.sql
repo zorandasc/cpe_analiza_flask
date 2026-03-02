@@ -191,7 +191,7 @@ SELECT
     sub.city_id, 
     sub.access_type_id,
     sub.month_end, 
-    (FLOOR(RANDOM() * 100) + 1)::INT,
+    FLOOR(RANDOM() * (10000 - 1000 + 1) + 1000)::INT,
     NOW(), 
     NOW()
 FROM (
@@ -215,7 +215,6 @@ FROM (
     ) d
 ) sub
 ORDER BY RANDOM() 
-LIMIT 900;
 
 
 --A CROSS JOIN (also known as a Cartesian Product) is the most "aggressive" way 
