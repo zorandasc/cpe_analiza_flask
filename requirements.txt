@@ -8,7 +8,6 @@ openpyxl
 flask-wtf
 weasyprint
 matplotlib
-flask-mailman
 python-dotenv
 exchangelib
 itsdangerous
