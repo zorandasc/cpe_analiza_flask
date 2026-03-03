@@ -21,7 +21,7 @@
                         <option value="">--Ukupno Za Sva Skladišta --</option>
                         {% for city in cities %}
                         <option value="{{ city.id }}" {% if city.id == selected_city_id %}selected{% endif %}>
-                            {{ city.name |capitalize }}
+                            {{ city.name}}
                         </option>
                         {% endfor %}
                     </select>
@@ -33,7 +33,7 @@
                          <option value="">-- Svi uređaji --</option>
                         {% for cpe in cpes %}
                         <option value="{{ cpe.id}}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
-                            {{ cpe.label|capitalize }}
+                            {{ cpe.label }}
                         </option>
                         {% endfor %}
                     </select>
@@ -44,7 +44,7 @@
                         <option value="">Sve dostupno</option>
                         {% for w in [5, 10, 20, 50] %}
                         <option value="{{ w }}" {% if w == selected_weeks %}selected{% endif %}>
-                            Poslednjih {{ w }} nedelja
+                            Poslednjih {{ w }} sedmica
                         </option>
                         {% endfor %}
                     </select>

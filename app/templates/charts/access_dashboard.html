@@ -21,7 +21,7 @@
                         <option value="">--Ukupno Sve tehnologije --</option>
                         {% for ac in access %}
                         <option value="{{ ac.id }}" {% if ac.id == selected_access_id %}selected{% endif %}>
-                            {{ ac.name |capitalize }}
+                            {{ ac.name }}
                         </option>
                         {% endfor %}
                     </select>
@@ -33,7 +33,7 @@
                         <option value="">--Ukupno Sva Skladišta --</option>
                         {% for city in cities %}
                         <option value="{{ city.id }}" {% if city.id == selected_city_id %}selected{% endif %}>
-                            {{ city.name |capitalize }}
+                            {{ city.name  }}
                         </option>
                         {% endfor %}
                     </select>
@@ -45,7 +45,7 @@
                         <option value="">Sve dostupno</option>
                         {% for m in [5, 10, 20, 50] %}
                         <option value="{{ m }}" {% if m == selected_months %}selected{% endif %}>
-                            Poslednjih {{ m }} mijeseci
+                            Poslednjih {{ m }} mjeseci
                         </option>
                         {% endfor %}
                     </select>

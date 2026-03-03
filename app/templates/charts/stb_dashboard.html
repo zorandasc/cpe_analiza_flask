@@ -21,7 +21,7 @@
                         <option value="">--Ukupno Svi uređaji --</option>
                         {% for stb in stbs %}
                         <option value="{{ stb.id }}" {% if stb.id == selected_id %}selected{% endif %}>
-                            {{ stb.label|capitalize }}
+                            {{ stb.label }}
                         </option>
                         {% endfor %}
                     </select>
@@ -33,7 +33,7 @@
                         <option value="">Sve dostupno</option>
                         {% for w in [5, 10, 20, 50] %}
                         <option value="{{ w }}" {% if w == selected_weeks %}selected{% endif %}>
-                            Poslednjih {{ w }} nedelja
+                            Poslednjih {{ w }} sedmica
                         </option>
                         {% endfor %}
                     </select>

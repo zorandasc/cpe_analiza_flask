@@ -28,11 +28,14 @@ echo "Starting Flask server..."
 # Use the production-ready server (e.g., gunicorn) instead of 'flask run'
 #It ensures:
 
-#exec gunicorn
+#exec replaces the current shell process with the Gunicorn process, 
+# which is commonly used in startup scripts to ensure the application 
+# runs as PID 1 and receives system signals directly.
 #Gunicorn becomes PID 1
-#Docker can stop container cleanly
-#no zombie processes
-#proper signal handling
+#Docker can stop container cleanly, no zombie processes and proper signal handling
+# enables threading with 2 threads per worker
+#--timeout 120 sets the maximum time (in seconds) a worker can take to process a request 
+#--keep-alive 5 enables HTTP keep-alive with a 5-second timeout, allowing reuse of connections for multiple requests.
 exec gunicorn \
   --bind 0.0.0.0:5000 \
   --workers 3 \
