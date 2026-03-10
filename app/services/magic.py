@@ -18,7 +18,7 @@ def generate_link_for_view_user():
     view_user = Users.query.filter_by(username="view", role=UserRole.VIEW).first()
 
     if not view_user:
-        raise Exception("View user not configured properly.")
+        raise Exception("Korisnika sa imenom view i rolom view, mora da postoji na sistemu.")
 
     # EMBED USER IN TOKEN
     token = generate_login_token(view_user)
