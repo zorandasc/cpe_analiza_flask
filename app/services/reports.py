@@ -39,7 +39,7 @@ def run_weekly_report_job():
 
     pdf_path = generate_pdf()
 
-    magic_link=generate_link_for_view_user()
+    magic_link = generate_link_for_view_user()
 
     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
     success, message = send_email(pdf_path=pdf_path, link=magic_link)
@@ -203,7 +203,7 @@ def generate_pdf():
     data["access_chart_image"] = build_report_chart(
         chart_data=access_total,
         output_filename="access_trend.png",
-        title="Trend ukupne ONT opreme, pristupn GPON mreža (Zadnjih 5 mijeseci)",
+        title="Trend ukupne ONT opreme, pristupn GPON mreža (Zadnjih 5 mjeseci)",
     )
 
     # ----------------------------------------------

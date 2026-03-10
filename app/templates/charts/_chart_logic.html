@@ -17,7 +17,7 @@
       title += `Trend za uređaj: ${ctx.stbName}`;
     } else if (ctx?.accessName) {
       title += `Trend za pristupnu: ${ctx.accessName}`;
-    }else {
+    } else {
       title = ctx.mainTitle;
     }
 
@@ -34,7 +34,7 @@
     }
 
     if (ctx?.months) {
-      title += ` | poslednjih: ${ctx.months} mijeseci`;
+      title += ` | poslednjih: ${ctx.months} mjeseci`;
     }
     return title;
   }
@@ -109,9 +109,11 @@
             },
           },
           scales: {
-            y: {  min: chartData.y_min,
-                  max: chartData.y_max, 
-                  grid: { color: "#f0f0f0" } },
+            y: {
+              min: chartData.y_min,
+              max: chartData.y_max,
+              grid: { color: "#f0f0f0" },
+            },
             x: {},
           },
         },

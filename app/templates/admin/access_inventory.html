@@ -1,5 +1,5 @@
-{% extends "base.html" %} {% block title %}Inventar ONT opreme{% endblock %} {% block styles
-%} {{ super() }}
+{% extends "base.html" %} {% block title %}Inventar ONT opreme{% endblock %} {%
+block styles %} {{ super() }}
 <style>
   /* Modern table header */
   .table-custom-head th {
@@ -13,17 +13,29 @@
   }
 
   .btn-custom-save {
-   background: linear-gradient(to bottom, #14d120 0%, #1f5222 100%);
+    background: linear-gradient(to bottom, #14d120 0%, #1f5222 100%);
     color: white;
   }
 
-   .btn-custom-excel{
-    background-image: linear-gradient(to right, #b8cbb8 0%, #b8cbb8 0%, #b465da 0%, #cf6cc9 33%, #ee609c 66%, #ee609c 100%);
+  .btn-custom-excel {
+    background-image: linear-gradient(
+      to right,
+      #b8cbb8 0%,
+      #b8cbb8 0%,
+      #b465da 0%,
+      #cf6cc9 33%,
+      #ee609c 66%,
+      #ee609c 100%
+    );
   }
 
-  .btn-custom-filter{
+  .btn-custom-filter {
     background: #4568dc; /* fallback for old browsers */
-    background: -webkit-linear-gradient(to right, #4568dc, #b06ab3); /* Chrome 10-25, Safari 5.1-6 */
+    background: -webkit-linear-gradient(
+      to right,
+      #4568dc,
+      #b06ab3
+    ); /* Chrome 10-25, Safari 5.1-6 */
     background: linear-gradient(to right, #4568dc, #b06ab3);
     color: white;
   }
@@ -84,27 +96,43 @@
 {% endblock %} {% block content%}
 <div class="py-4">
   <div class="d-flex align-items-center justify-content-between mb-4">
-  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary d-inline-flex align-items-center">
-    <span class="me-2">⬅</span> Nazad
-  </a>
+    <a
+      href="{{ url_for('admin.dashboard') }}"
+      class="btn btn-outline-secondary d-inline-flex align-items-center"
+    >
+      <span class="me-2">⬅</span> Nazad
+    </a>
 
-  <h2 class="mb-0">Unosi ONT/XDSL Stanja</h2>
+    <h2 class="mb-0">Unosi ONT/XDSL Stanja</h2>
 
-  <div style="width: 95px;" class="d-none d-md-block"></div>
-</div>
+    <div style="width: 95px" class="d-none d-md-block"></div>
+  </div>
 
   <div class="table-responsive mb-0">
-
-     <form id="importForm" method="POST" action="{{ url_for('access_inventory.import_access_records_excel') }}" enctype="multipart/form-data" class="row g-3 align-items-end justify-content-end mb-4">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <form
+      id="importForm"
+      method="POST"
+      action="{{ url_for('access_inventory.import_access_records_excel') }}"
+      enctype="multipart/form-data"
+      class="row g-3 align-items-end justify-content-end mb-4"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="col-auto">
-        <input type="file" name="file" class="form-control" accept=".xlsx" required />
+        <input
+          type="file"
+          name="file"
+          class="form-control"
+          accept=".xlsx"
+          required
+        />
       </div>
       <div class="col-auto">
-        <button type="submit" class="btn btn-danger btn-custom-excel">Import Excel</button>
+        <button type="submit" class="btn btn-danger btn-custom-excel">
+          Import Excel
+        </button>
       </div>
     </form>
- 
+
     <div class="d-flex justify-content-between align-items-end mb-3">
       <nav>
         <ul class="pagination mb-0">
@@ -138,31 +166,60 @@
         </ul>
       </nav>
       <form method="get" class="row g-3 align-items-end">
-          <div class="col-auto">
-              <label class="form-label mb-1">Mijesec</label>
-              <input type="date" name="month_end" class="form-control" value="{{month_end}}">
-          </div>
-          <div class="col-auto">
-              <label class="form-label mb-1">Pristupna Tehnologija</label>
-              <select name="access_type_id" class="form-select">
-                  <option>Sve</option>
-                  {% for acs in access %}
-                  <option value="{{acs.id}}" {% if access_type_id == acs.id %}selected{% endif %}>{{acs.name}}</option>
-                  {% endfor %}
-              </select>
-          </div>
-          <div class="col-auto">
-              <label class="form-label mb-1">Skladište</label>
-              <select name="city_id" class="form-select">
-                  <option>Sve</option>
-                  {% for city in cities %}
-                  <option value="{{city.id}}" {% if city_id == city.id %}selected{% endif %}>{{city.name}}</option>
-                  {% endfor %}
-              </select>
-          </div>
-          <div class="col-auto">
-              <button type="submit" class="btn btn-primary btn-custom-filter">Filter</button>
-          </div>
+        <div class="col-auto">
+          <label class="form-label mb-1">Mjesec</label>
+          <input
+            type="date"
+            name="month_end"
+            class="form-control"
+            value="{{month_end}}"
+          />
+        </div>
+        <div class="col-auto">
+          <label class="form-label mb-1">Pristupna Tehnologija</label>
+          <select name="access_type_id" class="form-select">
+            <option>Sve</option>
+            {% for acs in access %}
+            <option
+              value="{{acs.id}}"
+              {%
+              if
+              access_type_id=""
+              ="acs.id"
+              %}selected{%
+              endif
+              %}
+            >
+              {{acs.name}}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <label class="form-label mb-1">Skladište</label>
+          <select name="city_id" class="form-select">
+            <option>Sve</option>
+            {% for city in cities %}
+            <option
+              value="{{city.id}}"
+              {%
+              if
+              city_id=""
+              ="city.id"
+              %}selected{%
+              endif
+              %}
+            >
+              {{city.name}}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary btn-custom-filter">
+            Filter
+          </button>
+        </div>
       </form>
     </div>
     <table
@@ -182,11 +239,7 @@
               >IJ</a
             >
           </th>
-           <th>
-          
-              Pristupna Tehnologija
-           
-          </th>
+          <th>Pristupna Tehnologija</th>
           <th>Količina</th>
           <th>
             <a
@@ -216,10 +269,29 @@
           <td>{{ r.city.name }}</td>
           <td>{{ r.access_type.name }}</td>
           <td>
-            <form method="post" action="{{ url_for('admin.update_access_inventory',month_end=month_end, city_id=city_id, access_type_id=access_type_id, id=r.id) }}" class="d-flex justify-content-between align-items-center">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <input type="number" name="quantity" value="{{r.quantity}}" min=0 class="form-control form-control-sm" style="width: 80px;">
-              {% if admin_required() %} <button class="btn btn-sm btn-success btn-custom-save">Save</button> {% endif %}
+            <form
+              method="post"
+              action="{{ url_for('admin.update_access_inventory',month_end=month_end, city_id=city_id, access_type_id=access_type_id, id=r.id) }}"
+              class="d-flex justify-content-between align-items-center"
+            >
+              <input
+                type="hidden"
+                name="csrf_token"
+                value="{{ csrf_token() }}"
+              />
+              <input
+                type="number"
+                name="quantity"
+                value="{{r.quantity}}"
+                min="0"
+                class="form-control form-control-sm"
+                style="width: 80px"
+              />
+              {% if admin_required() %}
+              <button class="btn btn-sm btn-success btn-custom-save">
+                Save
+              </button>
+              {% endif %}
             </form>
           </td>
           <td>{{ r.month_end.strftime('%d-%m-%Y') }}</td>
@@ -232,14 +304,17 @@
   </div>
 </div>
 
-
- <!-- MODAL FOR EXCEL IMPORTL-->
+<!-- MODAL FOR EXCEL IMPORTL-->
 <div class="modal fade" id="importResultModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Rezultat Importa</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
       </div>
       <div class="modal-body">
         <div id="validationAlert" class="alert d-none"></div>
@@ -263,188 +338,207 @@
               <td id="excelTotalGPON" class="text-end">0</td>
               <td id="excelTotalXDSL" class="text-end">0</td>
             </tr>
-          
           </tfoot>
         </table>
       </div>
       <div class="modal-footer row g-3 align-items-end">
-      <button type="button" class="btn btn-secondary col-auto" data-bs-dismiss="modal">Odustani</button>
-      
-      <button type="button" id="confirmInsert" class="btn btn-success col-auto">
+        <button
+          type="button"
+          class="btn btn-secondary col-auto"
+          data-bs-dismiss="modal"
+        >
+          Odustani
+        </button>
+
+        <button
+          type="button"
+          id="confirmInsert"
+          class="btn btn-success col-auto"
+        >
           <i class="bi bi-database-fill-add"></i> Potvrdi i Snimi u Bazu
-      </button>
+        </button>
 
-      <div class="col-auto">
-            <label class="form-label">Za Mijesec</label>
-            <input type="date" id="adminDatePicker" name="selected_date" class="form-control" style="width: 180px;" required>
+        <div class="col-auto">
+          <label class="form-label">Za Mjesec</label>
+          <input
+            type="date"
+            id="adminDatePicker"
+            name="selected_date"
+            class="form-control"
+            style="width: 180px"
+            required
+          />
         </div>
-</div>
+      </div>
     </div>
-
   </div>
 </div>
 
-
 <script>
+  //----------------------------------------------
+  //SENDING EXEL FILE FROM FILE PICKER TO BACKEND FOR PARSING AND SHOWING RESULT
+  //---------------------------------------------
+  //CHECK IF DOM LOADED
+  document.addEventListener("DOMContentLoaded", function () {
+    const importForm = document.getElementById("importForm");
 
-//----------------------------------------------
-//SENDING EXEL FILE FROM FILE PICKER TO BACKEND FOR PARSING AND SHOWING RESULT
-//---------------------------------------------
-//CHECK IF DOM LOADED
-document.addEventListener('DOMContentLoaded', function() {
-    const importForm = document.getElementById('importForm');
-    
     if (importForm) {
-        importForm.addEventListener('submit', async function(e) {
-            // This line PREVENTS the redirect to /upload
-            e.preventDefault(); 
-            
-            //1. GET THE FORM
-            const formData = new FormData(this);
+      importForm.addEventListener("submit", async function (e) {
+        // This line PREVENTS the redirect to /upload
+        e.preventDefault();
 
-            //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
-            //this.action, is from form:
-            //action="{{ url_for('access_inventory.import_access_records_excel') }}"
-            try {
-                const response = await fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    // Note: No 'Content-Type' header here, 
-                    // browser sets it automatically for FormData
-                });
+        //1. GET THE FORM
+        const formData = new FormData(this);
 
-                if (!response.ok) throw new Error('Server error');
+        //2. SEND CHOOSEN FILE (formData) TO BACKEND (this.action)
+        //this.action, is from form:
+        //action="{{ url_for('access_inventory.import_access_records_excel') }}"
+        try {
+          const response = await fetch(this.action, {
+            method: "POST",
+            body: formData,
+            // Note: No 'Content-Type' header here,
+            // browser sets it automatically for FormData
+          });
 
-                //3. AWAIT THE RESPONSE
-                const data = await response.json();
+          if (!response.ok) throw new Error("Server error");
 
-                //4. GET MODAL ELEMENT FOR DISPLAY SEGMENTS
-                const modalElement = document.getElementById('importResultModal');
-                const modal = new bootstrap.Modal(modalElement);
-                const tableBody = document.getElementById('resultTableBody');
-                const alertBox = document.getElementById('validationAlert');
+          //3. AWAIT THE RESPONSE
+          const data = await response.json();
 
-                // 4.1. Clear previous table rows
-                tableBody.innerHTML = '';
+          //4. GET MODAL ELEMENT FOR DISPLAY SEGMENTS
+          const modalElement = document.getElementById("importResultModal");
+          const modal = new bootstrap.Modal(modalElement);
+          const tableBody = document.getElementById("resultTableBody");
+          const alertBox = document.getElementById("validationAlert");
 
-                // 4.2. Map segments to rows
-                // Iterate using GPON array (assuming xDSL has same length)
-                // And in service we also segment by xdsl by gpon column: border = cell_15.border
-                data.gpon.segments.forEach((gponVal, index) => {
-                    const xdslVal = data.xdsl.segments[index] || 0;
-                    const row = `<tr>
+          // 4.1. Clear previous table rows
+          tableBody.innerHTML = "";
+
+          // 4.2. Map segments to rows
+          // Iterate using GPON array (assuming xDSL has same length)
+          // And in service we also segment by xdsl by gpon column: border = cell_15.border
+          data.gpon.segments.forEach((gponVal, index) => {
+            const xdslVal = data.xdsl.segments[index] || 0;
+            const row = `<tr>
                                     <td>Skladište/Segment ${index + 1}
                                     <td class="text-end">${gponVal}</td>
                                     <td class="text-end">${xdslVal}</td>
                                  </tr>`;
-                    tableBody.insertAdjacentHTML('beforeend', row);
-                });
-                 
-                // Update calculated totals in the footer
-                document.getElementById('calcTotalGPON').innerText = data.gpon.calculated_total;
-                document.getElementById('calcTotalXDSL').innerText = data.xdsl.calculated_total;
+            tableBody.insertAdjacentHTML("beforeend", row);
+          });
 
-                // Update Excel grand totals
-                document.getElementById('excelTotalGPON').innerText = data.gpon.excel_grand_total;
-                document.getElementById('excelTotalXDSL').innerText = data.xdsl.excel_grand_total;
-             
-                // 4.4. Update Alert Box color and message
-                alertBox.classList.remove('d-none', 'alert-success', 'alert-danger');
-                if (data.gpon.match && data.xdsl.match) {
-                    alertBox.classList.add('alert-success');
-                    alertBox.innerText = "Sve vrijednosti se podudaraju!";
-                } else {
-                    alertBox.classList.add('alert-danger');
-                    alertBox.innerText = "Pažnja: Izračunati zbir se ne slaže sa Grand Totalom iz fajla!";
-                }
-            
-                // 5. Finally, show the modal
-                modal.show();
+          // Update calculated totals in the footer
+          document.getElementById("calcTotalGPON").innerText =
+            data.gpon.calculated_total;
+          document.getElementById("calcTotalXDSL").innerText =
+            data.xdsl.calculated_total;
 
-                // 6. STORE SEGMENT FOR POSSIBLE SENDING INTO ISERT TO DB ROUTE
-                window.currentSegmentsGPON = data.gpon.segments;
-                window.currentSegmentsXDSL = data.xdsl.segments;
-                
-               
+          // Update Excel grand totals
+          document.getElementById("excelTotalGPON").innerText =
+            data.gpon.excel_grand_total;
+          document.getElementById("excelTotalXDSL").innerText =
+            data.xdsl.excel_grand_total;
 
-            } catch (error) {
-                console.error('Error:', error);
-                alert("Došlo je do greške prilikom slanja fajla.");
-            }
-        });
+          // 4.4. Update Alert Box color and message
+          alertBox.classList.remove("d-none", "alert-success", "alert-danger");
+          if (data.gpon.match && data.xdsl.match) {
+            alertBox.classList.add("alert-success");
+            alertBox.innerText = "Sve vrijednosti se podudaraju!";
+          } else {
+            alertBox.classList.add("alert-danger");
+            alertBox.innerText =
+              "Pažnja: Izračunati zbir se ne slaže sa Grand Totalom iz fajla!";
+          }
+
+          // 5. Finally, show the modal
+          modal.show();
+
+          // 6. STORE SEGMENT FOR POSSIBLE SENDING INTO ISERT TO DB ROUTE
+          window.currentSegmentsGPON = data.gpon.segments;
+          window.currentSegmentsXDSL = data.xdsl.segments;
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Došlo je do greške prilikom slanja fajla.");
+        }
+      });
     }
-});
+  });
 
-//----------------------------------------
-//SENDING PARSED SEGMENT EXSTRACTED FROM EXCEL TO ROUTE FOR INSERTION TO DB
-//------------------------------------------
+  //----------------------------------------
+  //SENDING PARSED SEGMENT EXSTRACTED FROM EXCEL TO ROUTE FOR INSERTION TO DB
+  //------------------------------------------
 
-//confirmInsert IS ID OF BUTTON
-document.getElementById('confirmInsert').addEventListener('click',async function(){
+  //confirmInsert IS ID OF BUTTON
+  document
+    .getElementById("confirmInsert")
+    .addEventListener("click", async function () {
+      //get the date
+      const dateInput = document.getElementById("adminDatePicker");
+      const selectedDate = new Date(dateInput.value);
 
-
-  //get the date
-  const dateInput=document.getElementById('adminDatePicker');
-  const selectedDate=new Date(dateInput.value);
-
-  // 1. Check if date is selected
-  if (!dateInput.value) {
+      // 1. Check if date is selected
+      if (!dateInput.value) {
         alert("Molimo odaberite datum!");
         return;
-  }
+      }
 
-  // Check if selected date is in the future
-  const today = new Date().setHours(0, 0, 0, 0);
+      // Check if selected date is in the future
+      const today = new Date().setHours(0, 0, 0, 0);
 
-  const selectedDateOnly = new Date(selectedDate);
-  selectedDateOnly.setHours(0, 0, 0, 0);
+      const selectedDateOnly = new Date(selectedDate);
+      selectedDateOnly.setHours(0, 0, 0, 0);
 
-  if (selectedDateOnly > today) {
-    alert("Greška: Ne možete odabrati datum u budućnosti.");
-    return;
-  }
+      if (selectedDateOnly > today) {
+        alert("Greška: Ne možete odabrati datum u budućnosti.");
+        return;
+      }
 
-  // 2. Logic to VALIDATEif it's the last day of the month
-  // We check if the next day is the 1st of the next month
-  const nextDay = new Date(selectedDate);
-   // Calculate next day by adding 1 day to selected day, 
-  nextDay.setDate(selectedDate.getDate() + 1);
+      // 2. Logic to VALIDATEif it's the last day of the month
+      // We check if the next day is the 1st of the next month
+      const nextDay = new Date(selectedDate);
+      // Calculate next day by adding 1 day to selected day,
+      nextDay.setDate(selectedDate.getDate() + 1);
 
-  //if it is not 1, selectedDate is not last
-  if(nextDay.getDate() !==1){
-    alert("Greška: Morate odabrati posljednji dan u mjesecu (npr. 31.01., 28.02., itd.)");
-    return;
-  }
+      //if it is not 1, selectedDate is not last
+      if (nextDay.getDate() !== 1) {
+        alert(
+          "Greška: Morate odabrati posljednji dan u mjesecu (npr. 31.01., 28.02., itd.)",
+        );
+        return;
+      }
 
-  // 3. Prepare payload
-  const payload={
-    segments: {
-        gpon: window.currentSegmentsGPON,
-        xdsl: window.currentSegmentsXDSL
-    },
-    selected_date: dateInput.value
-  }
+      // 3. Prepare payload
+      const payload = {
+        segments: {
+          gpon: window.currentSegmentsGPON,
+          xdsl: window.currentSegmentsXDSL,
+        },
+        selected_date: dateInput.value,
+      };
 
-  try{
-    const response=await fetch("{{url_for('admin.save_access_imported_segments')}}",{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'X-CSRFToken': "{{csrf_token()}}"
-      },
-      body: JSON.stringify(payload)
-    })
+      try {
+        const response = await fetch(
+          "{{url_for('admin.save_access_imported_segments')}}",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": "{{csrf_token()}}",
+            },
+            body: JSON.stringify(payload),
+          },
+        );
 
-    if(response.ok){
-      //alert("Podaci su uspješno sačuvani!");
-      location.reload();// Refresh to see updated table
-    }else{
-      throw new Error('Snimanje nije uspjelo.')
-    }
-  }
-  catch(error){
-    alert("Greška: " + error.message);
-  }
-})
+        if (response.ok) {
+          //alert("Podaci su uspješno sačuvani!");
+          location.reload(); // Refresh to see updated table
+        } else {
+          throw new Error("Snimanje nije uspjelo.");
+        }
+      } catch (error) {
+        alert("Greška: " + error.message);
+      }
+    });
 </script>
 {% endblock %}
