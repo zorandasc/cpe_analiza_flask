@@ -2420,3 +2420,143 @@ STEP 10 — Add New check constraints must be last day of month
 ALTER TABLE access_inventory
 ADD CONSTRAINT ck_month_end_last_day
 CHECK (EXTRACT(DAY FROM (month_end + INTERVAL '1 day')) = 1);
+
+# ------------------------------------------------------------------
+
+# DUMP DB
+
+# -------------------------------------------------------------
+
+Docker creates a managed volume on the host machine.
+
+```bash
+docker volume inspect pgdata
+```
+
+/var/lib/docker/volumes/pgdata/\_data
+
+# Recommended: Daily automated pg_dump
+
+```bash
+pg_dump -U myuser -h localhost -F c -f /backups/db_$(date +%F).dump mydb
+```
+
+or
+
+```bash
+pg_dump -U myuser -F c mydb > /network_storage/db_$(date +%F).dump
+```
+
+This:
+
+Is compressed
+
+Binary format
+
+Can restore selectively
+
+Usually smaller than DB size
+
+Restore:
+
+```bash
+pg_restore -U myuser -d mydb backup.dump
+```
+
+# Backup without restore test = illusion of safety.
+
+At least once:
+
+createdb test_restore
+pg_restore -d test_restore backup.dump
+
+If it restores successfully → you're safe.
+
+# How big is your database?
+
+```sql
+SELECT pg_size_pretty(pg_database_size('mydb'));
+
+SELECT
+    pg_database.datname,
+    pg_size_pretty(pg_database_size(pg_database.datname)) AS size
+FROM pg_database;
+
+```
+
+# ----------------------------------------------------------------------------
+
+# Passwordless login link or Magic login link
+
+flask-login uses session cookies.
+Those cookies are:
+
+Created after login
+
+Stored in the browser
+
+Signed with your secret key
+
+Tied to a specific client
+
+You cannot pre-generate a session cookie and embed it in email safely.
+
+A temporary signed token → user clicks link → backend validates token → logs user in using login_user().
+
+How It Works
+
+You generate a signed token for the user
+
+You email a link like:
+
+https://yourapp.com/magic-login/<token>
+
+User clicks link
+
+Backend:
+
+verifies token
+
+logs user in with login_user(user)
+
+redirects to dashboard
+
+```bash
+pip install itsdangerous
+
+```
+
+So to ensure your magic login respects 60 minutes:
+session.permanent = True # ← IMPORTANT
+
+# -------------------------------------------------------------
+
+# Permanent session
+
+If you do:
+
+session.permanent = True
+
+Then Flask:
+
+Uses PERMANENT_SESSION_LIFETIME
+
+Sets cookie expiration timestamp
+
+Enforces timeout (e.g. 60 minutes in your case)
+
+Since you configured:
+
+PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+
+PERMANENT_SESSION_LIFETIME does NOT automatically apply.
+
+Many developers assume this config alone is enough:
+
+PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+
+It is not.
+
+It only works if:
+
+session.permanent = True

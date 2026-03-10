@@ -22,6 +22,9 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    # "http://10.198.3.92:5000"
+    APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://10.198.3.92:5000")
+
     # Flask-login uses sessions to store temporary, user-specific data
     # (like the logged-in user's ID). To ensure this data can't be tampered with
     # by clients, Flask requires a SECRET_KEY to cryptographically sign the

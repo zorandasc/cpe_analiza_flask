@@ -5,13 +5,33 @@ from flask import current_app, url_for
 from app.models import UserRole, Users
 
 
-# TOKEN GENERATOR
+# 1. TOKEN GENERATOR TO EMBED IN LINK
 def generate_login_token(user):
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     return serializer.dumps(user.id, salt="email-login")
 
 
-# VERIFY TOKEN
+# 2. GENERATE MAGIC LINK WITH TOKEN
+def generate_link_for_view_user():
+
+    # GET VIEW USER
+    view_user = Users.query.filter_by(username="view", role=UserRole.VIEW).first()
+
+    if not view_user:
+        raise Exception("View user not configured properly.")
+
+    # EMBED USER IN TOKEN
+    token = generate_login_token(view_user)
+
+    base_url = current_app.config["APP_BASE_URL"]
+
+    # GENERATE LINK WITH EMBEDED TOKEN TO ROUTE
+    login_link = f"{base_url}/magic-login/{token}"
+
+    return login_link
+
+
+# USED IN ROUTE magic.magic_login  TO VERIFY TOKEN
 def verify_login_token(token, max_age=43200):  # 12h
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     try:
@@ -20,18 +40,3 @@ def verify_login_token(token, max_age=43200):  # 12h
         return None
 
     return Users.query.get(user_id)
-
-
-# GENERATE MAGIC LINK
-def generate_link_for_view_user():
-
-    view_user = Users.query.filter_by(username="view", role=UserRole.VIEW).first()
-
-    if not view_user:
-        raise Exception("View user not configured properly.")
-
-    token = generate_login_token(view_user)
-
-    login_link = url_for("magic.magic_login", token=token, _external=True)
-
-    return login_link

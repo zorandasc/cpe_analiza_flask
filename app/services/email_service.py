@@ -18,7 +18,8 @@ from app.models import ReportRecipients
 BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
 
-# SEND EMAIL USING exchangelib: it uses the same HTTPS "pipeline" as your browser and Outlook,
+# SEND EMAIL USING exchangelib: 
+# it uses the same HTTPS "pipeline" as your browser and Outlook,
 def send_email(pdf_path, link):
     recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
 
