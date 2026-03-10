@@ -1458,7 +1458,11 @@ def send_weekly_report():
 
     pdf_path = generate_pdf()
 
-    magic_link = generate_link_for_view_user()
+    try:
+        magic_link = generate_link_for_view_user()
+    except RuntimeError as e:
+        flash(str(e), "danger")
+        return redirect(url_for("admin.dashboard"))
 
     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOOLEAN and STRING REASON
     success, message = send_email(pdf_path=pdf_path, link=magic_link)

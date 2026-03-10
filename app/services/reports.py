@@ -39,7 +39,11 @@ def run_weekly_report_job():
 
     pdf_path = generate_pdf()
 
-    magic_link = generate_link_for_view_user()
+    try:
+        magic_link = generate_link_for_view_user()
+    except RuntimeError as e:
+        print(str(e))
+    return
 
     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
     success, message = send_email(pdf_path=pdf_path, link=magic_link)
