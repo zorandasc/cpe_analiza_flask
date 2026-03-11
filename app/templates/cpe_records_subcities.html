@@ -260,13 +260,6 @@
                 {% if r.city_id and can_access_city(r.city_id) %}
               <td>
                 
-               <a
-              href="{{ url_for('cpe_inventory.cpe_records_subcities', id=r.city_id) }}"
-              class="btn btn-sm "
-              title="Sub gradovi"
-              >
-              +
-                </a>
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
                 <!-- data-bs-target="#editModal" → tells which modal to open.-->
                 <!-- data-* attributes → store all the values of that row.-->

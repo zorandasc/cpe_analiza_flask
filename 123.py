@@ -179,3 +179,86 @@ def get_cpe_inventory_city_history(
     )
 
     return paginate
+
+
+
+def get_cpe_inventory_subcities(schema_list: list, week_end: datetime.date):
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
+    case_columns = []
+    sum_columns = []
+
+    params = {"week_end": week_end}
+
+    for i, model in enumerate(schema_list):
+        place_holder = f"cpe_{i}"
+        
+        case_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+        sum_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+        params[place_holder] = model["name"]
+
+    SQL_QUERY = f"""
+        WITH weekly_data AS (
+            SELECT
+                c.id   AS city_id,
+                c.name AS city_name,
+                c.include_in_total,
+                ct.name AS cpe_name,
+                ci.quantity AS quantity,
+                ci.updated_at AS updated_at
+            FROM cities c
+            LEFT JOIN cpe_inventory ci
+                ON c.id = ci.city_id
+                --Use the latest available record whose week_end is ≤ current business Friday
+                --Give me the latest week if we are in new week which doesnot have data yet
+                AND ci.week_end =(
+                SELECT MAX(ci2.week_end)
+                FROM cpe_inventory ci2
+                WHERE ci2.city_id=c.id
+                AND ci2.week_end <= :week_end
+                )
+            LEFT JOIN cpe_types ct
+                ON ct.id = ci.cpe_type_id
+            WHERE c.is_active = true
+        )
+        SELECT
+            city_id,
+            city_name,
+            {", ".join(case_columns)},
+            MAX(updated_at) AS max_updated_at
+        FROM weekly_data
+        GROUP BY city_id, city_name
+
+        UNION ALL
+
+        SELECT
+            NULL,
+            'UKUPNO',
+            {", ".join(sum_columns)},
+            NULL
+        FROM weekly_data
+        --EXCLUDE RASPLOZIVA OPREMA
+        WHERE include_in_total = true
+
+        ORDER BY city_id NULLS LAST;
+    """
+
+    result = db.session.execute(text(SQL_QUERY), params)
+
+    return [row._asdict() for row in result.all()]

@@ -9,6 +9,7 @@ from app.utils.schemas import get_cpe_types_column_schema
 from app.queries.cpe_inventory import (
     get_cpe_inventory_pivoted,
     get_cpe_inventory_city_history,
+    get_cpe_inventory_subcities,
 )
 
 
@@ -36,6 +37,37 @@ def get_cpe_records_view_data():
 
     # ordering of rows, total penultimate, Rasploziva Oprema last
     records_grouped = _reorder_cpe_records(records_grouped)
+
+    return {
+        "today": today.strftime("%d-%m-%Y"),
+        "saturday": saturday,
+        "current_week_end": current_week_end.strftime("%d-%m-%Y"),
+        "schema": schema_list,
+        "records": records_grouped,
+    }
+
+
+def get_cpe_records_subcities(city_id: int):
+    # to display today date on title
+    today = date.today()
+
+    # SATURDAY BEFORE MONDAY OF THIS WEEK
+    # to mark row (red) if updated_at less than saturday
+    saturday = get_passed_saturday()
+
+    # DATE OF FRIDAY IN THIS WEEK
+    current_week_end = get_current_week_friday()
+
+    # list of all cpe_types object in db THAT ARE ACTIVE
+    schema_list = get_cpe_types_column_schema("visible_in_total", "order_in_total")
+
+    # Build pivoted cpe_inventory records fOR schema list but only for current week
+    # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
+    # SQL → records (flat rows)
+    records = get_cpe_inventory_subcities(schema_list, city_id, current_week_end)
+
+    # list of grouped dicts for sending to template
+    records_grouped = _group_records(records, schema_list)
 
     return {
         "today": today.strftime("%d-%m-%Y"),

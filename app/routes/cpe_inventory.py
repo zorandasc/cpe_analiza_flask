@@ -18,6 +18,7 @@ from app.services.cpe_inventory import (
     get_cpe_records_history,
     update_cpe_records,
     get_cpe_records_excel_export,
+    get_cpe_records_subcities,
 )
 
 
@@ -34,6 +35,15 @@ def cpe_records():
     data = get_cpe_records_view_data()
 
     return render_template("cpe_records.html", **data)
+
+
+@cpe_inventory_bp.route("/subcities/<int:id>")
+@login_required
+def cpe_records_subcities(id):
+
+    data = get_cpe_records_subcities(city_id=id)
+
+    return render_template("cpe_records_subcities.html", **data)
 
 
 # UPDATE ROUTE FOR CPE-RECORDS TABLE, CALLED FROM INSIDE FORME INSIDE cpe-record
