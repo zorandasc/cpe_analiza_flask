@@ -716,8 +716,10 @@ def cities():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
-    cities = Cities.query.order_by(Cities.id).all()
-    return render_template("admin/cities.html", cities=cities)
+    major_cities = (
+        Cities.query.filter(Cities.parent_city_id.is_(None)).order_by(Cities.name).all()
+    )
+    return render_template("admin/cities.html", major_cities=major_cities)
 
 
 @admin_bp.route("/cities/add", methods=["GET", "POST"])
@@ -729,6 +731,7 @@ def add_city():
     # THIS IS FOR SUMBITING REQUEST
     if request.method == "POST":
         name = request.form.get("name")
+        parent_city_id = request.form.get("parent_city_id", type=int)
         type_string = request.form.get("type")
 
         # 1. Validation: Convert string to Enum object safely
@@ -744,14 +747,26 @@ def add_city():
             flash("Skladište već postoji", "danger")
             return redirect(url_for("admin.add_city"))
 
-        db.session.add(Cities(name=name, type=selected_type))
+        if parent_city_id:
+            parent = Cities.query.get(parent_city_id)
+            if not parent:
+                flash("Grad ne postoji.", "danger")
+                return redirect(url_for("admin.add_city"))
+
+        db.session.add(
+            Cities(name=name, parent_city_id=parent_city_id, type=selected_type)
+        )
         db.session.commit()
         flash("Novo skladište dodano", "success")
         return redirect(url_for("admin.cities"))
 
+    cities = (
+        Cities.query.filter(Cities.parent_city_id.is_(None)).order_by(Cities.name).all()
+    )
+
     types = [t.value for t in CityTypeEnum]
     # THIS IS FOR GET REQUEST WHEN OPENING ADD FORM
-    return render_template("admin/cities_add.html", types=types)
+    return render_template("admin/cities_add.html", types=types, cities=cities)
 
 
 @admin_bp.route("/cities/edit/<int:id>", methods=["GET", "POST"])
@@ -765,6 +780,7 @@ def edit_city(id):
     if request.method == "POST":
         name = request.form.get("name")
         type_string = request.form.get("type")
+        parent_city_id = request.form.get("parent_city_id", type=int)
 
         # 1. Validation: Convert string to Enum object safely
         try:
@@ -781,8 +797,15 @@ def edit_city(id):
             flash("Skladiste već postoji!", "danger")
             return redirect(url_for("admin.edit_city", id=id))
 
+        if parent_city_id:
+            parent = Cities.query.get(parent_city_id)
+            if not parent:
+                flash("Grad ne postoji.", "danger")
+                return redirect(url_for("admin.add_city"))
+
         city.name = name
         city.type = selected_type
+        city.parent_city_id = parent_city_id
         city.is_active = "is_active" in request.form
         city.include_in_total = "include_in_total" in request.form
 
@@ -795,9 +818,15 @@ def edit_city(id):
             flash(f"Greška prilikom izmjene: {e}", "danger")
             return redirect(url_for("admin.edit_city", id=id))
 
+    cities = (
+        Cities.query.filter(Cities.parent_city_id.is_(None)).order_by(Cities.name).all()
+    )
+
     types = [t.value for t in CityTypeEnum]
 
-    return render_template("admin/cities_edit.html", city=city, types=types)
+    return render_template(
+        "admin/cities_edit.html", city=city, types=types, cities=cities
+    )
 
 
 @admin_bp.route("/cities/delete/<int:id>")

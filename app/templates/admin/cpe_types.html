@@ -53,13 +53,47 @@ block styles %} {{ super() }}
         <td>{{ cpe.name }}</td>
         <td>{{ cpe.label }}</td>
         <td>{{ cpe.type }}</td>
-        <td>{{ cpe.has_remote }}</td>
-        <td>{{ cpe.has_adapter }}</td>
-        <td>{{ cpe.visible_in_total }}</td>
+      
+          <td>
+            {% if cpe.has_remote %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
+     
+        <td>
+            {% if cpe.has_adapter  %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
+      
+         <td>
+            {% if cpe.visible_in_total %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
         <td>{{ cpe.order_in_total }}</td>
-        <td>{{ cpe.visible_in_dismantle }}</td>
+         <td>
+            {% if cpe.visible_in_dismantle %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
         <td>{{ cpe.order_in_dismantle }}</td>
-        <td>{{ cpe.visible_in_broken }}</td>
+      
+         <td>
+            {% if cpe.visible_in_broken  %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
         <td>{{ cpe.order_in_broken }}</td>
         <td>{{ cpe.header_color }}</td>
         <td >

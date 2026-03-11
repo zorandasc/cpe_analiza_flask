@@ -30,6 +30,7 @@ block styles %} {{ super() }}
       <tr>
         <th>ID</th>
         <th>Ime</th>
+        <th>Organizacija</th>
         <th>Tip Skladišta</th>
         <th>Aktivno</th>
         <th>Uključeno u ukupnoj sumi opreme</th>
@@ -37,30 +38,84 @@ block styles %} {{ super() }}
       </tr>
     </thead>
     <tbody>
-      {% for city in cities %}
+      {% for city in major_cities %}
 
       <tr>
         <td>{{ city.id }}</td>
-        <td>{{ city.name }}</td>
-        <td>{{ city.type }}</td>
-        <td>{{ city.is_active }}</td>
-        <td>{{ city.include_in_total }}</td>
-         {% if admin_required() %}
         <td>
-          <a
-            href="{{ url_for('admin.edit_city', id=city.id) }}"
-            class="btn btn-warning btn-sm"
-            >Edit</a
-          >
-          <a
-            href="{{ url_for('admin.delete_city', id=city.id) }}"
-            class="btn btn-danger btn-sm"
-            onclick="return confirm('Obrišite skladište?');"
-            >Delete</a
-          >
+          <strong>{{ city.name }}</strong>
+        </td>
+        <td>{{ city.parent_city.name if city.parent_city else "—" }}</td>
+        <td>{{ city.type }}</td>
+        <td>
+          {% if city.is_active %}
+            <span class="badge bg-success">Da</span>
+          {% else %}
+            <span class="badge bg-danger">Ne</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if city.include_in_total  %}
+            <span class="badge bg-success">Da</span>
+          {% else %}
+            <span class="badge bg-danger">Ne</span>
+          {% endif %}
+        </td>
+        
+        {% if admin_required() %}
+        <td>
+            <a
+              href="{{ url_for('admin.edit_city', id=city.id) }}"
+              class="btn btn-warning btn-sm"
+              >Edit</a
+            >
+            <a
+              href="{{ url_for('admin.delete_city', id=city.id) }}"
+              class="btn btn-danger btn-sm"
+              onclick="return confirm('Obrišite skladište?');"
+              >Delete</a
+            >
         </td>
         {%endif%}
       </tr>
+      {% for sub in city.sub_cities %}
+        <tr>
+          <td>{{ sub.id }}</td>
+          <td>&nbsp;&nbsp;&nbsp;↳ {{ sub.name }}</td>
+          <td>{{ sub.parent_city.name if sub.parent_city else "—" }}</td>
+          <td>{{ sub.type }}</td>
+          <td>
+            {% if sub.is_active %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if sub.include_in_total  %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
+          
+          {% if admin_required() %}
+          <td>
+              <a
+                href="{{ url_for('admin.edit_city', id=sub.id) }}"
+                class="btn btn-warning btn-sm"
+                >Edit</a
+              >
+              <a
+                href="{{ url_for('admin.delete_city', id=sub.id) }}"
+                class="btn btn-danger btn-sm"
+                onclick="return confirm('Obrišite skladište?');"
+                >Delete</a
+              >
+          </td>
+        {%endif%}
+        </tr>
+      {% endfor %}
       {% endfor %}
     </tbody>
   </table>

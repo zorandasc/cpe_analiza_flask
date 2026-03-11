@@ -10,6 +10,16 @@ content %}
         <input type="text" name="name" class="form-control" required />
       </div>
       <div class="mb-3">
+        <label class="form-label">Organizacija</label>
+        <select name="parent_city_id" class="form-control">
+          <option value="">--Izaberite Organizaciju--</option>
+          {% for city in cities %}
+          <option value="{{ city.id }}">{{ city.name }}</option>
+
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
         <label class="form-label">Tip skladišta</label>
         <select name="type" class="form-control" required>
           {% for t in types %}

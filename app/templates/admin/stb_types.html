@@ -32,7 +32,13 @@
       <td>{{ stb.id }}</td>
       <td>{{ stb.name }}</td>
       <td>{{ stb.label }}</td>
-      <td>{{ stb.is_active }}</td>
+      <td>
+            {% if stb.is_active %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
       <td>
         {% if ( current_user.role== 'admin') %}
         <a

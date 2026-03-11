@@ -9,6 +9,16 @@ content %}
       <label class="form-label">Ime skladišta</label>
       <input type="text" name="name" class="form-control" value="{{ city.name }}" required>
     </div>
+    <div class="mb-3">
+        <label class="form-label">Organizacija</label>
+        <select name="parent_city_id" class="form-control">
+          <option value="">--Izaberite Organizaciju--</option>
+          {% for c in cities %}
+          <option value="{{ c.id }}" {% if c.id==city.parent_city_id %}selected{% endif %}>{{ c.name }}</option>
+
+          {% endfor %}
+        </select>
+      </div>
      <div class="mb-3">
       <label class="form-label">Tip skladišta</label>
        <select name="type" class="form-control">

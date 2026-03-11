@@ -32,7 +32,13 @@
       <td>{{ access.id }}</td>
       <td>{{ access.name }}</td>
       <td>{{ access.label }}</td>
-      <td>{{ access.is_active }}</td>
+      <td>
+            {% if access.is_active  %}
+              <span class="badge bg-success">Da</span>
+            {% else %}
+              <span class="badge bg-danger">Ne</span>
+            {% endif %}
+          </td>
       <td>
         {% if admin_required() %}
         <a
