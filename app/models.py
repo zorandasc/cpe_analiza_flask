@@ -118,6 +118,9 @@ class Cities(db.Model):
     __tablename__ = "cities"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    parent_city_id: Mapped[int | None] = mapped_column(
+        ForeignKey("cities.id"), nullable=True
+    )
     # 2. Use the Enum type here
     # native_enum=True tells Postgres to create a custom TYPE
     type: Mapped[Optional[CityTypeEnum]] = mapped_column(
@@ -149,6 +152,9 @@ class Cities(db.Model):
         secondary=user_cities,
         back_populates="cities",
     )
+
+    # relationship to self
+    parent_city = relationship("Cities", remote_side=[id], backref="sub_cities")
 
 
 class CpeTypes(db.Model):

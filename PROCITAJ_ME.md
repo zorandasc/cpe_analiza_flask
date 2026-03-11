@@ -2560,3 +2560,10 @@ It is not.
 It only works if:
 
 session.permanent = True
+
+# ---------------------------------------------------------------------
+
+# index
+
+CREATE INDEX idx_cities_parent ON cities(parent_city_id);
+
