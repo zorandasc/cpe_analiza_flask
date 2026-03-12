@@ -215,6 +215,7 @@ def _group_records(records, schema_list):
             grouped[cid] = {
                 "city_id": row["city_id"],
                 "city_name": row["city_name"],
+                "subcity_count": row.get("subcity_count", 0) if cid is not None else None,
                 "max_updated_at": row["max_updated_at"],
                 "cpe": {
                     cpe["name"]: {

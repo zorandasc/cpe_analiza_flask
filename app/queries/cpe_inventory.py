@@ -58,20 +58,33 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id
             WHERE c.is_active = true
+        ),
+        subcity_counts AS (
+            SELECT
+                parent_city_id AS major_city_id,
+                COUNT(*) AS subcity_count
+            FROM cities
+            WHERE parent_city_id IS NOT NULL
+            AND is_active = true
+            GROUP BY parent_city_id
         )
         SELECT
-            major_city_id AS city_id,
-            city_name,
+            wd.major_city_id AS city_id,
+            wd.city_name,
+            COALESCE(sc.subcity_count,0) AS subcity_count,
             {", ".join(case_columns)},
             MAX(updated_at) AS max_updated_at
-        FROM weekly_data
-        GROUP BY major_city_id, city_name
+        FROM weekly_data wd
+        LEFT JOIN subcity_counts sc
+            ON sc.major_city_id = wd.major_city_id
+        GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count
 
         UNION ALL
 
         SELECT
             NULL,
             'UKUPNO',
+            NULL,
             {", ".join(sum_columns)},
             NULL
         FROM weekly_data
