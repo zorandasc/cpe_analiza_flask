@@ -2567,3 +2567,49 @@ session.permanent = True
 
 CREATE INDEX idx_cities_parent ON cities(parent_city_id);
 
+# ---------------------------------------------------
+
+# Logica za parent prikaz in main table cpe_inavntory table:
+
+Case 1
+Banja Luka active
+   Warehouse A active
+   Warehouse B active
+
+Result:Banja Luka (sum of A+B+parent)
+
+
+Case 2
+Banja Luka inactive
+   Warehouse A active
+
+Result: Banja Luka (sum of A)
+
+Parent still appears because data exists.
+
+
+
+Case 3
+Banja Luka inactive
+   Warehouse A inactive
+
+Result: not shown No active data.
+
+# Logica za subcities prikaz in subcities table za cpe_inventoru:
+
+Case 2
+Banja Luka inactive
+   Warehouse A active
+
+Result: Only show Warehouse A active in subcities
+
+Parent still appears because data exists.
+
+
+# secret is in main query:
+
+
+# secret in subcities query:
+
+ WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
+                AND c.is_active = true

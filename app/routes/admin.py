@@ -841,11 +841,18 @@ def delete_city(id):
     cpe_dismantle_count = len(city.cpe_dismantle)
     access_count = len(city.access_inventory)
     users_count = len(city.users)
+    subcities_count = len(city.sub_cities)
 
     # PROTECT CITY DELETE: block if related rows exist
-    if cpe_count > 0 or cpe_dismantle_count > 0 or access_count > 0 or users_count > 0:
+    if (
+        cpe_count > 0
+        or cpe_dismantle_count > 0
+        or access_count > 0
+        or users_count > 0
+        or subcities_count > 0
+    ):
         flash(
-            "Nemože biti brisano! Skladište ima aktivne unose. Možete ga onemogućit.",
+            "Nemože biti brisano! Skladište ima aktivne unose ili podskladišta. Možete ga onemogućit.",
             "danger",
         )
         return redirect(url_for("admin.cities"))

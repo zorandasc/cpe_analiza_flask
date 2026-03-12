@@ -85,13 +85,6 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
     return [row._asdict() for row in result.all()]
 
 
-
-
-    result = db.session.execute(text(SQL_QUERY), params)
-
-    return [row._asdict() for row in result.all()]
-
-
 def get_cpe_inventory_city_history(
     city_id: int, schema_list: list, page: int, per_page: int
 ):
@@ -220,7 +213,7 @@ def get_cpe_inventory_subcities(
                 )
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id
-            WHERE  c.id = :major_city_id OR c.parent_city_id = :major_city_id
+            WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
                 AND c.is_active = true
         )
         SELECT
