@@ -86,7 +86,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
 
 
 def get_cpe_inventory_city_history(
-    city_id: int, schema_list: list, page: int, per_page: int
+    city_id: int, schema_list: list, page: int, per_page: int, scope: str
 ):
     """
     Retrieves the historical records for a specific city_id, pivoted by CPE type.
@@ -96,14 +96,24 @@ def get_cpe_inventory_city_history(
         # Return empty data lists immediately if no active CPE types are found
         return []
 
+    if scope == "major":
+        city_filter = """
+            ci.city_id IN (
+                SELECT id
+                FROM cities
+                WHERE id = :city_id
+                OR parent_city_id = :city_id
+            )
+            """
+    else:
+        city_filter = "ci.city_id = :city_id"
+
     # We need a separate query to get the total count for pagination
-    count_query = text(
-        """SELECT 
-                COUNT(DISTINCT WEEK_END) 
-            FROM CPE_INVENTORY 
-            WHERE CITY_ID=:city_id
-        """
-    )
+    count_query = text(f"""
+        SELECT COUNT(DISTINCT WEEK_END)
+        FROM CPE_INVENTORY ci
+        WHERE {city_filter}
+    """)
 
     total_count = db.session.execute(count_query, {"city_id": city_id}).scalar()
 
@@ -138,7 +148,7 @@ def get_cpe_inventory_city_history(
             {", ".join(case_columns)}
         FROM cpe_inventory ci
         LEFT JOIN cpe_types ct ON ct.id=ci.cpe_type_id
-        WHERE ci.city_id = :city_id
+        WHERE {city_filter}
         GROUP BY ci.WEEK_END
         ORDER BY ci.week_end DESC
         LIMIT :limit

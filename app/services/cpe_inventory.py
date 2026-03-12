@@ -137,11 +137,7 @@ def update_cpe_records(data):
         return False, "Došlo je do greške prilikom unosa u bazu."
 
 
-def get_cpe_records_history(
-    city_id: int,
-    page: int,
-    per_page: int,
-):
+def get_cpe_records_history(city_id: int, page: int, per_page: int, scope: str):
     # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
     city = Cities.query.get(city_id)
 
@@ -156,7 +152,11 @@ def get_cpe_records_history(
 
     # paginated_records is iterable SimplePagination object
     records = get_cpe_inventory_city_history(
-        city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
+        city_id=city.id,
+        schema_list=schema_list,
+        page=page,
+        per_page=per_page,
+        scope=scope,
     )
 
     return city, records, schema_list, None

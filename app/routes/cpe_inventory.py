@@ -73,8 +73,10 @@ def cpe_records_city_history(id):
 
     per_page = 20
 
-    city, records, schema_list, error = get_cpe_records_history(id, page, per_page)
+    scope = request.args.get("scope", "city")
 
+    city, records, schema_list, error = get_cpe_records_history(id, page, per_page, scope)
+   
     if error:
         flash(error, "danger")
         return redirect(url_for("main.home"))

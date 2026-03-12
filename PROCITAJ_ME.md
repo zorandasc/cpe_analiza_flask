@@ -2569,29 +2569,65 @@ CREATE INDEX idx_cities_parent ON cities(parent_city_id);
 
 # ---------------------------------------------------
 
-# Logica za parent prikaz in main table cpe_inavntory table:
+# CPE_INVENTORT TABEL SADA IMA MAJOR CITY TABLE AND SUB CITIES TABLE
+
+Banja Luka group
+├ Banja Luka inventory
+├ City A inventory
+└ City B inventory
+
+# Major City Total = Major City Inventory + All Sub-Cities
+
+# IN MAJOR CITY CPE_INVENTORY QUERRY:
+
+COALESCE(c.parent_city_id, c.id) AS major_city_id
+
+produces:
+
+| city_id | parent_city_id | major_city_id |
+| ------- | -------------- | ------------- |
+| 1       | NULL           | 1             |
+| 10      | 1              | 1             |
+| 20      | 1              | 1             |
+
+So all rows map to the same major city.
+
+When you run:
+
+GROUP BY major_city_id
+
+Postgres calculates:
+
+40 + 60 + 50 = 150
+
+So the major city's own quantity is automatically included.
+
+# IN SUBCITIES QUERY:
+
+WHERE
+c.id = :major_city_id
+OR c.parent_city_id = :major_city_id
+
+# Logica za prikaz cpe_inavntory table u onsou na is_active state:
 
 Case 1
 Banja Luka active
-   Warehouse A active
-   Warehouse B active
+Warehouse A active
+Warehouse B active
 
 Result:Banja Luka (sum of A+B+parent)
 
-
 Case 2
 Banja Luka inactive
-   Warehouse A active
+Warehouse A active
 
 Result: Banja Luka (sum of A)
 
 Parent still appears because data exists.
 
-
-
 Case 3
 Banja Luka inactive
-   Warehouse A inactive
+Warehouse A inactive
 
 Result: not shown No active data.
 
@@ -2599,17 +2635,22 @@ Result: not shown No active data.
 
 Case 2
 Banja Luka inactive
-   Warehouse A active
+Warehouse A active
 
 Result: Only show Warehouse A active in subcities
 
-Parent still appears because data exists.
-
-
-# secret is in main query:
-
+In major table Parent still appears because data exists.
 
 # secret in subcities query:
 
- WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
-                AND c.is_active = true
+WHERE (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
+AND c.is_active = true
+
+# You will have 3 queries in your CPE_INVENTORY system:
+
+1️⃣ Major city overview
+group by major_city_id
+2️⃣ Subcity page
+group by city_id
+3️⃣ Major city history
+group by week_end
