@@ -2569,6 +2569,9 @@ CREATE INDEX idx_cities_parent ON cities(parent_city_id);
 
 # ---------------------------------------------------
 
+ALTER TABLE cities
+ADD COLUMN parent_city_id INT NULL REFERENCES cities(id);
+
 # CPE_INVENTORT TABEL SADA IMA MAJOR CITY TABLE AND SUB CITIES TABLE
 
 Banja Luka group
@@ -2654,3 +2657,86 @@ group by major_city_id
 group by city_id
 3️⃣ Major city history
 group by week_end
+
+# --------------------------------------------
+
+# DOCKER VOLUMEN PGDATA
+
+```bash
+docker volume ls
+
+
+docker volume inspect cpe-analiza_pgdata
+
+```
+
+"Mountpoint": "/var/lib/docker/volumes/cpe-analiza_pgdata/\_data",
+
+# BACKUP/RESTORE MYDB FORM POSTGRES CONTAINER:
+
+1.Find id of Postgres docker container:
+
+```sh
+docker ps
+```
+
+3. Backup directly to host
+
+```sh
+docker exec <container> pg_dump -U <user> -F c -d <db_name> > test_backup.dump
+
+
+docker exec 4a6de36c2105 pg_dump -U postgres -F c -d mydb > test_backup.dump
+```
+
+4. Restore from docker container:
+
+Clean restore (RECOMMENDED)
+
+👉 Drop DB → recreate → restore
+
+```sql
+DROP DATABASE mydb;
+CREATE DATABASE mydb;
+```
+
+```sh
+
+docker exec -i <container> pg_restore -U <user> -d mydb < test_backup.dump
+
+
+docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb < test_backup.dump
+```
+
+5. Alternative: Restore into test DB restore_test:
+
+```Bash
+docker exec -it <container> psql -U <user> -c "CREATE DATABASE restore_test;"
+
+docker exec -i 4a6de36c2105 pg_restore -U postgres -d restore_test < test_backup.dump
+```
+
+# ----------------------.env file-------------
+
+env_file:
+
+- .env
+
+All variables in .env are loaded into the container
+
+environment:
+TZ: Europe/Belgrade
+DB_HOST: db
+DB_PORT: 5432
+
+These are added to the container environment
+
+Can override values from env_file
+
+env_file:
+
+- .env
+  environment:
+  DB_NAME: mydb_test
+
+DB_NAME in the container = mydb_test (overrides .env)

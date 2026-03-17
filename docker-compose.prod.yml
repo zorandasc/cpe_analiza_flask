@@ -32,6 +32,23 @@ services:
       TZ: Europe/Belgrade
       DB_HOST: db
       DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+    depends_on:
+      db:
+        condition: service_healthy
+        
+  flask_test:
+    image: cpe-analiza-flask:latest
+    restart: unless-stopped
+    ports:
+      - "6000:5000"   # different port
+    env_file:
+      - .env
+    environment:
+      TZ: Europe/Belgrade
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}_test  # point to test DB
     depends_on:
       db:
         condition: service_healthy
