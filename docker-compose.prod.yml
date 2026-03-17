@@ -36,12 +36,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-        
+
   flask_test:
     image: cpe-analiza-flask:latest
     restart: unless-stopped
     ports:
-      - "6000:5000"   # different port
+      - "4000:5000"   # different port
     env_file:
       - .env
     environment:
