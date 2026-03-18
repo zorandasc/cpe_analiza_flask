@@ -5,6 +5,10 @@ from app.utils.simplepagination import SimplePagination
 
 
 def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
+    """
+    Retrieves the  records for a all major city_id, pivoted by CPE type.
+    This query handles pagination internally based on the unique WEEK_END timestamp.
+    """
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
         return []
@@ -73,7 +77,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             wd.city_name,
             COALESCE(sc.subcity_count,0) AS subcity_count,
             {", ".join(case_columns)},
-            MAX(updated_at) AS max_updated_at
+            MIN(updated_at) AS max_updated_at
         FROM weekly_data wd
         LEFT JOIN subcity_counts sc
             ON sc.major_city_id = wd.major_city_id
@@ -104,6 +108,9 @@ def get_cpe_inventory_city_history(
     """
     Retrieves the historical records for a specific city_id, pivoted by CPE type.
     This query handles pagination internally based on the unique WEEK_END timestamp.
+
+    scope = "city"   → history for one city
+    scope = "major"  → history for major city + all its subcities
     """
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
@@ -184,6 +191,10 @@ def get_cpe_inventory_city_history(
 def get_cpe_inventory_subcities(
     schema_list: list, major_city_id: int, week_end: datetime.date
 ):
+    """
+    Retrieves the records for sub city for a specific major_city_id, pivoted by CPE type.
+    This query handles pagination internally based on the unique WEEK_END timestamp.
+    """
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
         return []

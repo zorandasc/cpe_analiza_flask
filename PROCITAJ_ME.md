@@ -2744,3 +2744,32 @@ env_file:
   DB_NAME: mydb_test
 
 DB_NAME in the container = mydb_test (overrides .env)
+
+# ------------
+
+# yep — this is one of those classic “ghost data” bugs that can eat hours 😄
+
+# Clean up your current data
+
+```sql
+DELETE FROM cpe_inventory
+WHERE city_id NOT IN (SELECT id FROM cities);
+
+```
+The real fix (important)
+
+You should enforce this at database level, not just app level.
+
+✅ Add proper FK constraint
+
+If not already present:
+
+ALTER TABLE cpe_inventory
+ADD CONSTRAINT fk_cpe_inventory_city
+FOREIGN KEY (city_id)
+REFERENCES cities(id)
+ON DELETE RESTRICT;
+
+or if you prefer cleanup:
+
+ON DELETE CASCADE
