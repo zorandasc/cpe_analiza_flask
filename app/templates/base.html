@@ -121,10 +121,10 @@
   </head>
   <body>
   {% if config['DB_NAME'].endswith('_test') %}
-  <div style="background-color:#ed4877 ;color:white;padding:5px;text-align:center;">
-     ☣ ☢ ☠ - TESTNO OKRUZENJE - TESTNA BAZA: mydb_test
-  </div>
-{% endif %}
+    <div style="background-color:#ed4877;color:white;text-align:center;position:fixed;width: 100%;z-index: 3000;height:1.8rem;">
+      ☣ ☢ ☠ - TESTNO OKRUZENJE - TESTNA BAZA: mydb_test
+    </div>
+  {% endif %}
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg navbar-custom navbar-sticky">
       <div class="container-fluid">

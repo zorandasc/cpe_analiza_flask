@@ -2714,6 +2714,10 @@ docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb < test_backup.dump
 docker exec -it <container> psql -U <user> -c "CREATE DATABASE restore_test;"
 
 docker exec -i 4a6de36c2105 pg_restore -U postgres -d restore_test < test_backup.dump
+
+docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb_test < mydb_backup.dump
+docker stop 740d60fedd12
+docker start 740d60fedd12
 ```
 
 # ----------------------.env file-------------
