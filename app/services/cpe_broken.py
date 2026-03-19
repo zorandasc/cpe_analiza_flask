@@ -9,6 +9,7 @@ from app.utils.schemas import get_cpe_types_column_schema
 from app.queries.cpe_broken import (
     get_cpe_broken_pivoted,
     get_cpe_broken_city_history,
+    get_cpe_broken_subcities,
 )
 
 
@@ -36,6 +37,36 @@ def get_cpe_broken_view_data():
     # list of grouped dicts for sending to template
     records_grouped = _group_records(records, schema_list)
 
+    return {
+        "today": today.strftime("%d-%m-%Y"),
+        "saturday": saturday,
+        "current_week_end": current_week_end.strftime("%d-%m-%Y"),
+        "schema": schema_list,
+        "records": records_grouped,
+    }
+
+
+def get_cpe_broken_subcities_view(city_id: int):
+    # to display today date on title
+    today = date.today()
+
+    # SATURDAY BEFORE MONDAY OF THIS WEEK
+    # to mark row (red) if updated_at less than saturday
+    saturday = get_passed_saturday()
+
+    # DATE OF FRIDAY IN THIS WEEK
+    current_week_end = get_current_week_friday()
+
+    # list of all cpe_types object in db THAT ARE ACTIVE
+    schema_list = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")
+
+    # Build pivoted cpe_inventory records fOR schema list but only for current week
+    # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
+    # SQL → records (flat rows)
+    records = get_cpe_broken_subcities(schema_list, city_id, current_week_end)
+
+    # list of grouped dicts for sending to template
+    records_grouped = _group_records(records, schema_list)
 
     return {
         "today": today.strftime("%d-%m-%Y"),
@@ -105,11 +136,8 @@ def update_cpe_broken(data):
         return False, "Došlo je do greške prilikom unosa u bazu."
 
 
-def get_cpe_broken_history(
-    city_id: int,
-    page: int,
-    per_page: int,
-):
+def get_cpe_broken_history(city_id: int, page: int, per_page: int, scope: str):
+
     # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
     city = Cities.query.get(city_id)
 
@@ -124,7 +152,11 @@ def get_cpe_broken_history(
 
     # paginated_records is iterable SimplePagination object
     records = get_cpe_broken_city_history(
-        city_id=city.id, schema_list=schema_list, page=page, per_page=per_page
+        city_id=city.id,
+        schema_list=schema_list,
+        scope=scope,
+        page=page,
+        per_page=per_page,
     )
 
     return city, records, schema_list, None
@@ -182,6 +214,9 @@ def _group_records(records, schema_list):
             grouped[cid] = {
                 "city_id": row["city_id"],
                 "city_name": row["city_name"],
+                "subcity_count": row.get("subcity_count", 0)
+                if cid is not None
+                else None,
                 "max_updated_at": row["max_updated_at"],
                 "cpe": {
                     cpe["name"]: {

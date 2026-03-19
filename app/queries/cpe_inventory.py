@@ -53,6 +53,8 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             LEFT JOIN cities mc ON mc.id = COALESCE(c.parent_city_id, c.id)
             LEFT JOIN cpe_inventory ci
                 ON c.id = ci.city_id
+                --Use the latest available record whose week_end is ≤ current business Friday
+                --Give me the latest week if we are in new week which doesnot have data yet
                 AND ci.week_end =(
                     SELECT MAX(ci2.week_end)
                     FROM cpe_inventory ci2
@@ -63,6 +65,7 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
                 ON ct.id = ci.cpe_type_id
             WHERE c.is_active = true
         ),
+        --subcity_counts number of subcities under major city
         subcity_counts AS (
             SELECT
                 parent_city_id AS major_city_id,
@@ -240,10 +243,10 @@ def get_cpe_inventory_subcities(
                 --Use the latest available record whose week_end is ≤ current business Friday
                 --Give me the latest week if we are in new week which doesnot have data yet
                 AND ci.week_end =(
-                SELECT MAX(ci2.week_end)
-                FROM cpe_inventory ci2
-                WHERE ci2.city_id=c.id
-                AND ci2.week_end <= :week_end
+                    SELECT MAX(ci2.week_end)
+                    FROM cpe_inventory ci2
+                    WHERE ci2.city_id=c.id
+                    AND ci2.week_end <= :week_end
                 )
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id

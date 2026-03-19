@@ -15,6 +15,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from io import BytesIO
 from app.services.cpe_broken import (
     get_cpe_broken_view_data,
+    get_cpe_broken_subcities_view,
     get_cpe_broken_history,
     update_cpe_broken,
     get_cpe_broken_excel_export,
@@ -28,12 +29,21 @@ cpe_broken_bp = Blueprint(
 )
 
 
+# >>>>OVA RUTA SE NE KORISTI ZATO STO JE BROKEN U DISMANTLE<<<<
 @cpe_broken_bp.route("/")
 @login_required
 def cpe_broken():
-    data= get_cpe_broken_view_data()
+    data = get_cpe_broken_view_data()
 
     return render_template("cpe_broken.html", **data)
+
+
+@cpe_broken_bp.route("/subcities/<int:id>")
+@login_required
+def cpe_broken_subcities(id):
+    data = get_cpe_broken_subcities_view(city_id=id)
+
+    return render_template("cpe_broken_subcities.html", **data)
 
 
 # UPDATE ROUTE FOR cpe_broken TABLE, CALLED FROM INSIDE FORME INSIDE cpe-record
@@ -63,7 +73,11 @@ def cpe_broken_city_history(id):
 
     per_page = 20
 
-    city, records, schema_list, error = get_cpe_broken_history(id, page, per_page)
+    scope = request.args.get("scope", "city")
+
+    city, records, schema_list, error = get_cpe_broken_history(
+        id, page, per_page, scope
+    )
 
     if error:
         flash(error, "danger")

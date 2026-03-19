@@ -140,12 +140,12 @@ styles %} {{ super() }}
 <div class=" py-2">
   <div class="table-responsive">
     <div class="d-flex justify-content-between align-items-center">
-  <a
-    href="{{ url_for('cpe_inventory.cpe_records') }}"
-    class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
-  >
-    <span class="me-2">⬅</span> Nazad
-  </a>
+   <button
+      onclick="history.back()"
+      class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
+    >
+      <span class="me-2">⬅</span> Nazad
+    </button>
   </div>
     <h1 class="mb-4 text-center">Istorija CPE opreme za {{ city.name }}</h1>
     <nav>

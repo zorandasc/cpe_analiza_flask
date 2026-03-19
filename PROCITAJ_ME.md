@@ -10,6 +10,8 @@
 
 # --INSTA PACKETS----
 
+# Install: python -m pip install <package-name>
+
 # pip install Flask
 
 # pip install -U Flask-SQLAlchemy -ORM LAYER

@@ -349,3 +349,35 @@ ORDER BY
 	RANDOM()
 LIMIT
 	600
+
+
+-- CPE BROKEN ----------------------------------
+
+INSERT INTO
+    CPE_BROKEN (
+        CITY_ID,
+        CPE_TYPE_ID,
+        QUANTITY,
+        WEEK_END,
+        CREATED_AT,
+        UPDATED_AT
+    )
+SELECT
+    C.ID AS CITY_ID,
+    T.ID AS CPE_TYPE_ID,
+    (FLOOR(RANDOM() * 500) + 1)::INT AS QUANTITY,
+    F.FRIDAY_DATE AS WEEK_END,
+    F.FRIDAY_DATE AS CREATED_AT,
+    F.FRIDAY_DATE AS UPDATED_AT
+FROM
+    CITIES C
+    CROSS JOIN CPE_TYPES T
+    CROSS JOIN (
+        -- Generates the last 80 Fridays
+        SELECT
+            (
+                DATE_TRUNC('week', NOW()) + INTERVAL '4 days' - (W || ' weeks')::INTERVAL
+            )::DATE AS FRIDAY_DATE
+        FROM
+            GENERATE_SERIES(1, 79) AS W
+    ) AS F;

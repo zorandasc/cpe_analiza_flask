@@ -221,6 +221,8 @@
 
 </style>
 {% endblock %} {% block content%}
+
+<!--OVAJ TEMPLATE SE NE KORISTI ZATO STO JE BROKEN VIEW U DISMANTLE VIEW-->
 <div class=" py-2">
    
       <h2 class="text-center title">Stanje demontirane neispravne TO za dan: {{ today }}</h2>
@@ -250,6 +252,9 @@
             <tr class="{% if not r.city_id %}fw-bold total-row {% elif r.city_id == 13 %}ras-row fw-bold{% endif %}">
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                 {{ r.city_name }}
+                 {% if r.subcity_count and r.subcity_count > 0 %}
+                    <span class="badge bg-info">({{ r.subcity_count }})</span>
+                  {% endif %}
               </td>
               {% for item in schema %}
               <td>{{ r.cpe[item.name]['quantity'] }}</td>
@@ -263,7 +268,25 @@
                  <!--PRIKAZI EDIT BUTTON AKO CITY_ID POSTOJI AND ZA ADMIN USERA AND USER PRIPADA TOM GRADU-->
                 {% if r.city_id and can_access_city(r.city_id) %}
               <td>
-                
+                {% if r.subcity_count  %}
+                  <a
+                    href="{{ url_for('cpe_broken.cpe_broken_subcities', id=r.city_id) }}"
+                    class="btn btn-sm btn-custom-save"
+                    title="Gradovi regije"
+                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2em" height="2em" viewBox="0 -0.5 21 21" version="1.1">
+        
+                          <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                              <g id="Dribbble-Light-Preview" transform="translate(-419.000000, -520.000000)" fill="#eeeeee">
+                                  <g id="icons" transform="translate(56.000000, 160.000000)">
+                                      <path d="M374.55,369 L377.7,369 L377.7,371 L374.55,371 L374.55,374 L372.45,374 L372.45,371 L369.3,371 L369.3,369 L372.45,369 L372.45,366 L374.55,366 L374.55,369 Z M373.5,378 C368.86845,378 365.1,374.411 365.1,370 C365.1,365.589 368.86845,362 373.5,362 C378.13155,362 381.9,365.589 381.9,370 C381.9,374.411 378.13155,378 373.5,378 L373.5,378 Z M373.5,360 C367.70085,360 363,364.477 363,370 C363,375.523 367.70085,380 373.5,380 C379.29915,380 384,375.523 384,370 C384,364.477 379.29915,360 373.5,360 L373.5,360 Z" id="plus_circle-[#1441]">
+                                      </path>
+                                  </g>
+                              </g>
+                          </g>
+                      </svg>
+                    </a>
+                {% else %}
            
                 <!-- data-bs-toggle="modal" → tells Bootstrap to open a modal.-->
                 <!-- data-bs-target="#brokenModal" → tells which modal to open.-->
@@ -297,7 +320,7 @@
                     </svg>
                   </span>
                 </button>
-               
+                {% endif %}
               </td>
               
               <td>

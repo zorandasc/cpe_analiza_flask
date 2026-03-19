@@ -308,7 +308,7 @@
               <td>
               
             <a
-              href="{{ url_for('cpe_inventory.cpe_records_city_history', id=r.city_id, scope='city') }}"
+              href="{{ url_for('cpe_broken_inventory.cpe_broken_city_history', id=r.city_id, scope='city') }}"
               class="btn btn-sm btn-custom-history"
               title="Istorija promjena"
               >
@@ -323,10 +323,6 @@
             {% endfor %}
           </tbody>
         </table>
-          <a class="btn btn-sm btn-outline-secondary"
-            href="{{ url_for('cpe_inventory.export_cpe_records_excel')}}">
-            Export Excel
-          </a>
       
       </div>
     
@@ -442,9 +438,6 @@
 
 
 <script>
-
- 
-
   //######################################
   //    THIS IS FOR SENDING DATA FROM BUTTON TO MODAL, DISPLAY DATA IN FORM
   //######################################
@@ -511,7 +504,7 @@
       })
      })
 
-     const res=await fetch("/cpe-records/update", {
+     const res=await fetch("/cpe-broken-records/update", {
       method:'POST',
       headers:{
         "Content-Type": "application/json",
