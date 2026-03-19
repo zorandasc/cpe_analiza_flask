@@ -41,7 +41,7 @@ def cpe_broken():
 @cpe_broken_bp.route("/subcities/<int:id>")
 @login_required
 def cpe_broken_subcities(id):
-    data = get_cpe_broken_subcities_view(city_id=id)
+    data = get_cpe_broken_subcities_view(major_city_id=id)
 
     return render_template("cpe_broken_subcities.html", **data)
 

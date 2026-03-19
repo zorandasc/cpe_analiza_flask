@@ -113,8 +113,12 @@ def get_cpe_dismantle_pivoted(
 
 
 def get_cpe_dismantle_subcities(
-    schema_list: list, week_end: datetime.date, city_type: str
+    schema_list: list, week_end: datetime.date, major_city_id: int
 ):
+    """
+    Retrieves the records for sub city for a specific major_city_id, pivoted by CPE type.
+    This query handles pagination internally based on the unique WEEK_END timestamp.
+    """
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
         return []
@@ -122,7 +126,7 @@ def get_cpe_dismantle_subcities(
     case_columns = []
     sum_columns = []
 
-    params = {"week_end": week_end, "city_type": city_type}
+    params = {"major_city_id": major_city_id, "week_end": week_end}
 
     for i, model in enumerate(schema_list):
         place_holder = f"cpe_{i}"
@@ -146,10 +150,11 @@ def get_cpe_dismantle_subcities(
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-                WITH WEEKLY_DATA AS (
+            WITH WEEKLY_DATA AS (
                 SELECT
                     C.ID AS CITY_ID,
                     C.NAME AS CITY_NAME,
+                    c.include_in_total,
                     CT.NAME AS CPE_NAME,
                     CD.QUANTITY,
                     CD.DISMANTLE_TYPE_ID,
@@ -166,7 +171,7 @@ def get_cpe_dismantle_subcities(
                 )
                 LEFT JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
                 LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
-                WHERE C.TYPE = :city_type
+                WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
                     AND c.is_active = true
             )
             SELECT
@@ -176,10 +181,10 @@ def get_cpe_dismantle_subcities(
                 DISMANTLE_CODE,
                 {", ".join(case_columns)},
                 MAX(updated_at) FILTER (
-                WHERE dismantle_type_id = 1
+                    WHERE dismantle_type_id = 1
                 ) AS complete_updated_at,
                 MAX(updated_at) FILTER (
-                WHERE dismantle_type_id IN (2,3,4)
+                    WHERE dismantle_type_id IN (2,3,4)
                 ) AS missing_updated_at
             FROM WEEKLY_DATA
             GROUP BY CITY_ID, CITY_NAME, DISMANTLE_TYPE_ID,DISMANTLE_CODE

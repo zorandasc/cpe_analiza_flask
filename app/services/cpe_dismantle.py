@@ -8,6 +8,7 @@ from datetime import date
 from app.utils.schemas import get_cpe_types_column_schema
 from app.queries.cpe_dismantle import (
     get_cpe_dismantle_pivoted,
+    get_cpe_dismantle_subcities,
     get_cpe_dismantle_city_history,
 )
 
@@ -52,8 +53,34 @@ def get_cpe_dismantle_view_data():
     }
 
 
-def get_cpe_dismantle_subcities_view():
-    pass
+def get_cpe_dismantle_subcities_view(major_city_id: int):
+    # to display today date on title
+    today = date.today()
+
+    # SATURDAY of this week
+    # to mark row (red) if updated_at less than
+    saturday = get_passed_saturday()
+
+    # date of friday in week
+    current_week_end = get_current_week_friday()
+
+    # list of all cpe_types object in db but only if visible_in_dismantle
+    schema_list = get_cpe_types_column_schema(
+        "visible_in_dismantle", "order_in_dismantle"
+    )
+
+    # 1. Build pivoted records from schema list but only for current week_end
+    records = get_cpe_dismantle_subcities(schema_list, current_week_end, major_city_id)
+
+    records_grouped = _group_records(records, schema_list)
+
+    return {
+        "today": today.strftime("%d-%m-%Y"),
+        "saturday": saturday,
+        "current_week_end": current_week_end.strftime("%d-%m-%Y"),
+        "schema": schema_list,
+        "dismantle": records_grouped,
+    }
 
 
 def update_cpe_dismantle(data):
@@ -235,7 +262,9 @@ def _group_records(records, schema_list):
             grouped[cid] = {
                 "city_id": row["city_id"],
                 "city_name": row["city_name"],
-                "subcity_count": row.get("subcity_count", 0) if cid is not None else None,
+                "subcity_count": row.get("subcity_count", 0)
+                if cid is not None
+                else None,
                 "complete_updated_at": row["complete_updated_at"],
                 "missing_updated_at": row["missing_updated_at"],
                 "cpe": {

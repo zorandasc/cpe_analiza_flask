@@ -104,7 +104,7 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date, city_type
 
 
 def get_cpe_broken_subcities(
-    schema_list: list, major_city_id: int, week_end: datetime.date
+    schema_list: list, week_end: datetime.date, major_city_id: int
 ):
     """
     Retrieves the records for sub city for a specific major_city_id, pivoted by CPE type.

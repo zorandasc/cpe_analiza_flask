@@ -46,7 +46,7 @@ def get_cpe_broken_view_data():
     }
 
 
-def get_cpe_broken_subcities_view(city_id: int):
+def get_cpe_broken_subcities_view(major_city_id: int):
     # to display today date on title
     today = date.today()
 
@@ -63,7 +63,7 @@ def get_cpe_broken_subcities_view(city_id: int):
     # Build pivoted cpe_inventory records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
     # SQL → records (flat rows)
-    records = get_cpe_broken_subcities(schema_list, city_id, current_week_end)
+    records = get_cpe_broken_subcities(schema_list, current_week_end, major_city_id)
 
     # list of grouped dicts for sending to template
     records_grouped = _group_records(records, schema_list)

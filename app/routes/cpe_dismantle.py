@@ -44,7 +44,7 @@ def cpe_dismantle_records():
 @cpe_dismantle_bp.route("/subcities/<int:id>")
 @login_required
 def cpe_dismantle_subcities(id):
-    data = get_cpe_dismantle_subcities_view(city_id=id)
+    data = get_cpe_dismantle_subcities_view(major_city_id=id)
 
     return render_template("cpe_dismantle_subcities.html", **data)
 
