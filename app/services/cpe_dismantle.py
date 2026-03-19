@@ -52,6 +52,10 @@ def get_cpe_dismantle_view_data():
     }
 
 
+def get_cpe_dismantle_subcities_view():
+    pass
+
+
 def update_cpe_dismantle(data):
     try:
         city_id = int(data.get("city_id"))
@@ -231,6 +235,7 @@ def _group_records(records, schema_list):
             grouped[cid] = {
                 "city_id": row["city_id"],
                 "city_name": row["city_name"],
+                "subcity_count": row.get("subcity_count", 0) if cid is not None else None,
                 "complete_updated_at": row["complete_updated_at"],
                 "missing_updated_at": row["missing_updated_at"],
                 "cpe": {

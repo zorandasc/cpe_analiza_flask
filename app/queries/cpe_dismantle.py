@@ -18,7 +18,115 @@ def get_cpe_dismantle_pivoted(
 
     for i, model in enumerate(schema_list):
         place_holder = f"cpe_{i}"
-        
+
+        case_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+        sum_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN cpe_name = :{place_holder} THEN quantity END),
+                0
+            ) AS "{model["name"]}"
+            """
+        )
+        params[place_holder] = model["name"]
+
+    SQL_QUERY = f"""
+            WITH WEEKLY_DATA AS (
+                SELECT
+                    COALESCE(c.parent_city_id, c.id) AS major_city_id,
+                    C.ID AS CITY_ID,
+                    mc.name AS city_name,
+                    CT.NAME AS CPE_NAME,
+                    CD.QUANTITY,
+                    CD.DISMANTLE_TYPE_ID,
+                    DT.CODE AS DISMANTLE_CODE,
+                    CD.UPDATED_AT
+                FROM CITIES C
+                LEFT JOIN cities mc ON mc.id = COALESCE(c.parent_city_id, c.id)
+                LEFT JOIN CPE_DISMANTLE CD
+                    ON C.ID = CD.CITY_ID
+                    AND CD.WEEK_END = (
+                        SELECT MAX(CD2.WEEK_END)
+                        FROM CPE_DISMANTLE CD2
+                        WHERE CD2.CITY_ID = C.ID
+                        AND CD2.WEEK_END <= :week_end
+                )
+                LEFT JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
+                LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
+                WHERE C.TYPE = :city_type
+                    AND c.is_active = true
+            ),
+            --subcity_counts number of subcities under major city
+            subcity_counts AS (
+                SELECT
+                    parent_city_id AS major_city_id,
+                    COUNT(*) AS subcity_count
+                FROM cities
+                WHERE parent_city_id IS NOT NULL
+                AND is_active = true
+                GROUP BY parent_city_id
+            )
+            SELECT
+                wd.major_city_id AS city_id,
+                wd.city_name,
+                COALESCE(sc.subcity_count,0) AS subcity_count,
+                DISMANTLE_TYPE_ID,
+                DISMANTLE_CODE,
+                {", ".join(case_columns)},
+                MIN(updated_at) FILTER (
+                    WHERE dismantle_type_id = 1
+                ) AS complete_updated_at,
+                MIN(updated_at) FILTER (
+                    WHERE dismantle_type_id IN (2,3,4)
+                ) AS missing_updated_at
+            FROM WEEKLY_DATA wd
+            LEFT JOIN subcity_counts sc
+                ON sc.major_city_id = wd.major_city_id
+            GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count, DISMANTLE_TYPE_ID,DISMANTLE_CODE
+
+            UNION ALL
+
+            SELECT
+                NULL AS city_id,
+                'UKUPNO' AS city_name,
+                 NULL,
+                DISMANTLE_TYPE_ID,
+                DISMANTLE_CODE,
+                {", ".join(sum_columns)},
+                NULL AS complete_updated_at,
+                NULL AS missing_updated_at
+            FROM WEEKLY_DATA
+            GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
+            ORDER BY CITY_ID, DISMANTLE_TYPE_ID NULLS LAST;
+    """
+
+    result = db.session.execute(text(SQL_QUERY), params)
+
+    return [row._asdict() for row in result.all()]
+
+
+def get_cpe_dismantle_subcities(
+    schema_list: list, week_end: datetime.date, city_type: str
+):
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
+    case_columns = []
+    sum_columns = []
+
+    params = {"week_end": week_end, "city_type": city_type}
+
+    for i, model in enumerate(schema_list):
+        place_holder = f"cpe_{i}"
+
         case_columns.append(
             f"""
             COALESCE(

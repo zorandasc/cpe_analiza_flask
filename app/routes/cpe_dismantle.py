@@ -17,6 +17,7 @@ from io import BytesIO
 from app.services.cpe_broken import get_cpe_broken_view_data
 from app.services.cpe_dismantle import (
     get_cpe_dismantle_view_data,
+    get_cpe_dismantle_subcities_view,
     update_cpe_dismantle,
     get_cpe_dismantle_history,
     get_cpe_dismantle_excel_export,
@@ -39,6 +40,13 @@ def cpe_dismantle_records():
     data_broken = get_cpe_broken_view_data()
 
     return render_template("cpe_dismantle.html", broken=data_broken, **data_dismantle)
+
+@cpe_dismantle_bp.route("/subcities/<int:id>")
+@login_required
+def cpe_dismantle_subcities(id):
+    data = get_cpe_dismantle_subcities_view(city_id=id)
+
+    return render_template("cpe_dismantle_subcities.html", **data)
 
 
 @cpe_dismantle_bp.route("/update", methods=["POST"])
