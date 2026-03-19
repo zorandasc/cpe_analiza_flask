@@ -210,22 +210,49 @@ def get_cpe_dismantle_subcities(
 
 
 def get_cpe_dismantle_city_history(
-    city_id: int, schema_list: list, list_of_dismantles: list, page: int, per_page: int
+    city_id: int,
+    scope: str,
+    schema_list: list,
+    list_of_dismantles: list,
+    page: int,
+    per_page: int,
 ):
+    """
+    Retrieves the historical records for a specific city_id, pivoted by CPE type.
+    This query handles pagination internally based on the unique WEEK_END timestamp.
+
+    scope = "city"   → history for one city
+    scope = "major"  → history for major city + all its subcities
+    """
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
         return []
 
+    if scope == "major":
+        city_filter = """
+            cd.city_id IN (
+                SELECT id
+                FROM cities
+                WHERE id = :city_id
+                OR parent_city_id = :city_id
+            )
+            """
+    else:
+        city_filter = "cd.city_id = :city_id"
+
     # We need a separate query to get the total count for pagination
     count_query = text(
-        """SELECT COUNT(*) FROM (
-            SELECT cd.week_end, dt.code
-            FROM cpe_dismantle cd
-            JOIN dismantle_types dt ON dt.id = cd.dismantle_type_id
-            WHERE cd.city_id = :city_id
-            AND cd.dismantle_type_id IN :d_list
-            GROUP BY cd.week_end, dt.code
-        ) t
+        f"""
+            SELECT COUNT(*) FROM (
+                SELECT 
+                    cd.week_end, 
+                    dt.code
+                FROM cpe_dismantle cd
+                JOIN dismantle_types dt ON dt.id = cd.dismantle_type_id
+                WHERE {city_filter}
+                    AND cd.dismantle_type_id IN :d_list
+                GROUP BY cd.week_end, dt.code
+            ) t
         """
     )
 
@@ -275,8 +302,8 @@ def get_cpe_dismantle_city_history(
         FROM cpe_dismantle cd
         JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
         LEFT JOIN cpe_types ct ON ct.id=cd.cpe_type_id
-        WHERE cd.city_id = :city_id
-        AND dismantle_type_id IN :d_list
+        WHERE {city_filter}
+            AND dismantle_type_id IN :d_list
         GROUP BY cd.WEEK_END,DT.CODE
         ORDER BY cd.week_end DESC
         LIMIT :limit

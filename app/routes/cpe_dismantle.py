@@ -41,12 +41,47 @@ def cpe_dismantle_records():
 
     return render_template("cpe_dismantle.html", broken=data_broken, **data_dismantle)
 
+
 @cpe_dismantle_bp.route("/subcities/<int:id>")
 @login_required
 def cpe_dismantle_subcities(id):
     data = get_cpe_dismantle_subcities_view(major_city_id=id)
 
-    return render_template("cpe_dismantle_subcities.html", **data)
+    category = request.args.get("category", "complete")
+
+    return render_template("cpe_dismantle_subcities.html", **data, category=category)
+
+
+@cpe_dismantle_bp.route("/history/<int:id>/<category>")
+@login_required
+def cpe_dismantle_city_history(id, category):
+
+    page = request.args.get("page", 1, int)
+
+    # history records for major city or subcity
+    scope = request.args.get("scope", "city")
+
+    per_page = 20
+
+    city, records, schema_list, category, error = get_cpe_dismantle_history(
+        id,
+        scope,
+        category,
+        page,
+        per_page,
+    )
+
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("main.home"))
+
+    return render_template(
+        "cpe_dismantle_history.html",
+        records=records,
+        category=category,
+        schema=schema_list,
+        city=city,
+    )
 
 
 @cpe_dismantle_bp.route("/update", methods=["POST"])
@@ -64,30 +99,6 @@ def cpe_dismantle_update():
             "message": message,
         }
     ), 200 if success else 403
-
-
-@cpe_dismantle_bp.route("/history/<int:id>/<category>")
-@login_required
-def cpe_dismantle_city_history(id, category):
-    page = request.args.get("page", 1, int)
-
-    per_page = 20
-
-    city, records, schema_list, category, error = get_cpe_dismantle_history(
-        id, page, per_page, category
-    )
-
-    if error:
-        flash(error, "danger")
-        return redirect(url_for("main.home"))
-
-    return render_template(
-        "cpe_dismantle_history.html",
-        records=records,
-        category=category,
-        schema=schema_list,
-        city=city,
-    )
 
 
 @cpe_dismantle_bp.route("/export/cpe-dismantle.xlsx/<category>")

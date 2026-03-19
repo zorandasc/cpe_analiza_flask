@@ -144,7 +144,9 @@ def update_cpe_dismantle(data):
         return False, "Došlo je do greške prilikom unosa u bazu."
 
 
-def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
+def get_cpe_dismantle_history(
+    id: int, scope: str, category: str, page: int, per_page: int
+):
     # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
     city = Cities.query.get(id)
 
@@ -170,6 +172,7 @@ def get_cpe_dismantle_history(id: int, page: int, per_page: int, category: str):
     # paginated_records is iterable SimplePagination object
     records = get_cpe_dismantle_city_history(
         city_id=city.id,
+        scope=scope,
         schema_list=schema_list,
         list_of_dismantles=list_of_dismantles,
         page=page,

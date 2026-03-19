@@ -71,12 +71,16 @@ def cpe_broken_update():
 def cpe_broken_city_history(id):
     page = request.args.get("page", 1, int)
 
-    per_page = 20
-
+    # history records for major city or subcity
     scope = request.args.get("scope", "city")
 
+    per_page = 20
+
     city, records, schema_list, error = get_cpe_broken_history(
-        id, page, per_page, scope
+        id,
+        scope,
+        page,
+        per_page,
     )
 
     if error:

@@ -193,7 +193,7 @@ def get_cpe_broken_subcities(
 
 
 def get_cpe_broken_city_history(
-    city_id: int, schema_list: list, page: int, per_page: int, scope: str
+    city_id: int, scope: str, schema_list: list, page: int, per_page: int
 ):
     """
     Retrieves the historical records for a specific city_id, pivoted by CPE type.
@@ -208,7 +208,7 @@ def get_cpe_broken_city_history(
 
     if scope == "major":
         city_filter = """
-            ci.city_id IN (
+            cb.city_id IN (
                 SELECT id
                 FROM cities
                 WHERE id = :city_id
@@ -216,12 +216,12 @@ def get_cpe_broken_city_history(
             )
             """
     else:
-        city_filter = "ci.city_id = :city_id"
+        city_filter = "cb.city_id = :city_id"
 
     # We need a separate query to get the total count for pagination
     count_query = text(f"""
         SELECT COUNT(DISTINCT WEEK_END)
-        FROM cpe_broken ci
+        FROM cpe_broken cb
         WHERE {city_filter}
     """)
 
@@ -244,7 +244,7 @@ def get_cpe_broken_city_history(
         case_columns.append(
             f"""
             COALESCE(
-                SUM(CASE WHEN ct.id = :{place_holder} THEN ci.quantity END),
+                SUM(CASE WHEN ct.id = :{place_holder} THEN cb.quantity END),
                 0
             ) AS "{model["name"]}"
             """
@@ -256,11 +256,11 @@ def get_cpe_broken_city_history(
         SELECT
             WEEK_END,
             {", ".join(case_columns)}
-        FROM cpe_broken ci
-        LEFT JOIN cpe_types ct ON ct.id=ci.cpe_type_id
+        FROM cpe_broken cb
+        LEFT JOIN cpe_types ct ON ct.id=cb.cpe_type_id
         WHERE {city_filter}
-        GROUP BY ci.WEEK_END
-        ORDER BY ci.week_end DESC
+        GROUP BY cb.WEEK_END
+        ORDER BY cb.week_end DESC
         LIMIT :limit
         OFFSET :offset
     """

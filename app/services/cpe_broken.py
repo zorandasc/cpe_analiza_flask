@@ -136,10 +136,15 @@ def update_cpe_broken(data):
         return False, "Došlo je do greške prilikom unosa u bazu."
 
 
-def get_cpe_broken_history(city_id: int, page: int, per_page: int, scope: str):
+def get_cpe_broken_history(
+    id: int,
+    scope: str,
+    page: int,
+    per_page: int,
+):
 
     # POSALJI ISTORIJSKU PAGINACIJU ZA TAJ GRAD
-    city = Cities.query.get(city_id)
+    city = Cities.query.get(id)
 
     if not city:
         return None, None, None, "Grad ne postoji."
@@ -153,8 +158,8 @@ def get_cpe_broken_history(city_id: int, page: int, per_page: int, scope: str):
     # paginated_records is iterable SimplePagination object
     records = get_cpe_broken_city_history(
         city_id=city.id,
-        schema_list=schema_list,
         scope=scope,
+        schema_list=schema_list,
         page=page,
         per_page=per_page,
     )
