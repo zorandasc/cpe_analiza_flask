@@ -300,7 +300,7 @@
                 <td class="text-center">
                   
               <a
-                href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=r.city_id, category='complete', scope='major') }}"
+                href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=r.city_id, category='complete', scope='city') }}"
                 class="btn btn-sm btn-custom-history"
                 title="Istorija promjena"
                 >
@@ -407,7 +407,7 @@
                   
               <a
             
-                href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=r.city_id, category='damage') }}"
+                href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=r.city_id, category='damage', scope='city') }}"
                 class="btn btn-sm btn-custom-history"
                 title="Istorija promjena"
                 >
