@@ -254,12 +254,13 @@
               
                 <td> {{ r.cpe[item.name]['damages']['comp']['quantity'] }}</td>
                 {% endfor %}
-                {% if r.complete_updated_at %}
+               
                 <td class="{% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
-                  {{ r.complete_updated_at.strftime('%d-%m-%Y
-                  %H:%M:%S') }} 
+                  {% if r.complete_updated_at %}
+                    {{ r.complete_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
+                  {% endif %}
                 </td>
-                {% endif %}
+               
                   {% if r.city_id and can_access_city(r.city_id) %}
                   
                 <td class="text-center">
@@ -360,12 +361,13 @@
                 </td>
                 {% endif %}
                 {% endfor %}
-                {% if r.missing_updated_at %}
+                
                 <td class="group-start {% if r.missing_updated_at %}{% if r.missing_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
-                  {{ r.missing_updated_at.strftime('%d-%m-%Y
-                  %H:%M:%S') }} 
+                  {% if r.missing_updated_at %}
+                    {{ r.missing_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
+                  {% endif %}
                 </td>
-                {% endif %}
+               
                 {% if r.city_id and can_access_city(r.city_id) %}
                 
                 <td class="group-start text-center">

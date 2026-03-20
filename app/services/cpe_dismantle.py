@@ -327,8 +327,42 @@ def ensure_snapshot(city_id, week_end):
     # IF WE MAKE PARTIAL UPDATED FOR NEW WEEK, WE WILL GET NULL FOR OTHER
     # SO FOR NEW WEEK_END/city_id WE COPY OLD UNUPDATE DATA
     """
-    # 1. CHECK IF CITY_ID/WEEK_END COMBINATION ALREADY EXISTS
-    # Detect first update of week
+
+    # 1. CHECK IS THERE ANY PRIOR DATA
+    last_week = db.session.execute(
+        text("""
+        SELECT MAX(week_end)
+        FROM cpe_dismantle
+        WHERE city_id = :city_id AND week_end < :week_end
+    """),
+        {"city_id": city_id, "week_end": week_end},
+    ).scalar()
+
+    if last_week is None:
+        # 2. IF NOT (FIRST UPDATE FOR CITY) INICIALIZE WITH ALL ZERO QUANTITY
+        # WHICH WILL BE UPDATE ON UPSERT WITH REAL DATA
+        db.session.execute(
+            text("""
+            INSERT INTO cpe_dismantle (
+                    city_id, cpe_type_id, dismantle_type_id, week_end, quantity, updated_at
+                )
+            SELECT
+                :city_id,
+                ct.id,
+                dt.id,
+                :week_end,
+                0,
+                now()
+            FROM cpe_types ct
+            CROSS JOIN dismantle_types dt
+            ON CONFLICT DO NOTHING
+                                
+        """),
+            {"city_id": city_id, "week_end": week_end},
+        )
+        return
+    # IF THERE IS PRIOR DATA
+    # 3. CHECK IF CITY_ID/WEEK_END COMBINATION ALREADY EXISTS FOR THIS WEEK
     exists = db.session.execute(
         text("""
                 SELECT 1 FROM cpe_dismantle
@@ -338,11 +372,12 @@ def ensure_snapshot(city_id, week_end):
         {"city_id": city_id, "week_end": week_end},
     ).scalar()
 
-    # 2. IF YES RETURN
     if exists:
+        # 3. IF YES RETURN
         return
 
-    # 3. IF NO COPY DATA FROM LAST WEEK_END TO THIS WEEK_END
+    # IF NO COPY FROM PREVIOUS WEEK
+    # 4. IF NO COPY DATA FROM LAST WEEK_END TO THIS WEEK_END
     # clone previous week row: week_end < :week_end
     db.session.execute(
         text("""
