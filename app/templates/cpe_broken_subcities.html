@@ -220,12 +220,12 @@
 {% endblock %} {% block content%}
 <div class="py-2">
 <div class="d-flex justify-content-between align-items-center">
-   <button
-      onclick="history.back()"
+   <a
+      href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_records') }}"
       class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
     >
       <span class="me-2">⬅</span> Nazad
-    </button>
+    </a>
   </div>
     <h2 class="text-center title">Stanje CPE opreme za dan: {{ today }}</h2>
       <span class="info">Sedmica ažuriranja {{current_week_end}} (Petak)</span>
