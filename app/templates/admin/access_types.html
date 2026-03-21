@@ -1,13 +1,17 @@
 {% extends "base.html" %} {% block title %}Pristupne tehnologije{% endblock %} {% block content
 %}
 <div class=" py-4">
+<div class="d-flex align-items-center justify-content-between">
   <a href="{{ url_for('admin.dashboard') }}"
             class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
             <span class="me-2">⬅</span> Nazad
-        </a>
-        <div class="d-flex justify-content-between align-items-center mb-2">
+  </a>
   <h2>Pristupne tehnologije</h2>
-{% if admin_required() %}
+  <div style="width: 95px;" class="d-none d-md-block"></div>
+</div>
+<div class="d-flex justify-content-end align-items-center mb-2">
+  
+  {% if admin_required() %}
   <a href="{{ url_for('admin.add_access_types') }}" class="btn btn-primary my-3"
     >Dodaj pristupnu tehnologiju</a
   >
