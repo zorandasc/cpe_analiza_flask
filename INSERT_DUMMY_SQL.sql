@@ -381,3 +381,22 @@ FROM
         FROM
             GENERATE_SERIES(1, 79) AS W
     ) AS F;
+
+
+
+	-- INSERT INTO CITIES VISIBILITIES-------------
+
+	INSERT INTO city_visibility_settings (city_id, table_type, is_visible, included_in_total_sum)
+SELECT 
+    c.id, 
+    tt.table_type, 
+    true, 
+    true
+FROM cities c
+CROSS JOIN (
+    VALUES 
+        ('cpe_inventory'), 
+        ('cpe_dismantle'), 
+        ('cpe_broken'), 
+        ('access_inventory')
+) AS tt(table_type);

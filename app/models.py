@@ -157,6 +157,18 @@ class Cities(db.Model):
     parent_city = relationship("Cities", remote_side=[id], backref="sub_cities")
 
 
+class CityVisibilitySettings(db.Model):
+    __tablename__ = "city_visibility_settings"
+
+    __table_args__ = (db.UniqueConstraint("city_id", "dataset_key", name="uq_city_dataset"),)
+
+    id = mapped_column(Integer, primary_key=True)
+    city_id = mapped_column(ForeignKey("cities.id"), nullable=False)
+    dataset_key = mapped_column(String(100), nullable=False)
+    is_visible = mapped_column(Boolean, server_default=text("true"))
+    included_in_total_sum = mapped_column(Boolean, server_default=text("true"))
+
+
 class CpeTypes(db.Model):
     __tablename__ = "cpe_types"
 

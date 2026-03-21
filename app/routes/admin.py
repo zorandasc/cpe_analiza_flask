@@ -41,6 +41,7 @@ from app.models import (
     Users,
     ReportSetting,
     ReportRecipients,
+    CityVisibilitySettings,
 )
 
 
@@ -861,6 +862,67 @@ def delete_city(id):
     db.session.delete(city)
     db.session.commit()
     return redirect(url_for("admin.cities"))
+
+
+###########################################################
+# ---------------ROUTES FOR CITIES VISIBILITY--------------------------
+############################################################
+@admin_bp.route("/cities/cities_visibility")
+@login_required
+def cities_visibility():
+    if not admin_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("admin.dashboard"))
+
+    cities = Cities.query.order_by(Cities.id).all()
+    settings = CityVisibilitySettings.query.all()
+
+    datasets = {
+        "cpe_inventory": "CPE Oprema",
+        "cpe_dismantle": "CPE Demontirana",
+        "cpe_broken": "CPE Neispravna",
+        "access_inventory": "Pristupna FTTH mreža",
+    }
+
+    # Map for quick lookup
+    settings_map = {(s.city_id, s.dataset_key): s for s in settings}
+
+    # In template we use settings_map to find setting object
+    # from city_visibility_settings table using city_id and dataset_key
+    # for city in cities:
+    #    for key in datasets.keys():
+    #        setting=settings_map.get((city.id, key))
+    #        print(setting)
+
+    return render_template(
+        "admin/cities_visibility.html",
+        cities=cities,
+        datasets=datasets,
+        settings_map=settings_map,
+    )
+
+
+@admin_bp.route("/cities/cities_visibility/update", methods=["POST"])
+@login_required
+def cities_visibility_update():
+    if not admin_required():
+        return redirect(url_for("admin.dashboard"))
+    # 1. Get the values from form submision
+    city_id = int(request.form["city_id"])
+    dataset_key = request.form["dataset_key"]
+    is_visible = "is_visible" in request.form
+
+    # 2. find the the row in city_visibility_settings table
+    setting = CityVisibilitySettings.query.filter_by(
+        city_id=city_id, dataset_key=dataset_key
+    ).first()
+
+    # 3. Change in db
+    setting.is_visible = is_visible
+
+    db.session.commit()
+
+    return redirect(request.referrer)
 
 
 ###########################################################

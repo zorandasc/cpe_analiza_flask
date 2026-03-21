@@ -20,9 +20,10 @@ block styles %} {{ super() }}
   <div class="d-flex justify-content-between align-items-center mb-2">
     <h2>Skladišta i Izvršne Jedinice</h2>
     {% if ( current_user.role== 'admin') %}
+    <a href="{{ url_for('admin.cities_visibility') }}" class="btn btn-warning my-3"
+      >Podešavanja vidljivosti skladišta i IJ</a>
     <a href="{{ url_for('admin.add_city') }}" class="btn btn-primary my-3"
-      >Dodaj Novo Skladište</a
-    >
+      >Dodaj Novo Skladište</a>
     {%endif%}
   </div>
   <table class="table table-striped table-bordered shadow-lg">
