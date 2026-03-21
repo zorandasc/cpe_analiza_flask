@@ -7,6 +7,20 @@ block styles %} {{ super() }}
     z-index: 1020;
     box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.6);
   }
+
+  .toggle input {
+  display: none;
+}
+
+.toggle .icon {
+  cursor: pointer;
+  opacity: 0.3;
+  font-size: 16px;
+}
+
+.toggle input:checked + .icon {
+  opacity: 1;
+}
 </style>
 {% endblock %} {% block content
 %}
@@ -56,11 +70,18 @@ block styles %} {{ super() }}
                 <input type="hidden" name="city_id" value="{{ city.id }}">
                 <input type="hidden" name="dataset_key" value="{{ key }}">
                 <input type="hidden" name="field" value="is_visible">
-                <input type="checkbox"
-                      name="value"
-                      value="true"
-                      onchange="this.form.submit()"
-                      {% if setting and setting.is_visible %}checked{% endif %}>
+                <label class="toggle">
+                  <input type="checkbox"
+                        name="value"
+                        value="true"
+                        onchange="this.form.submit()"
+                        {% if setting and setting.is_visible %}checked{% endif %}>
+                  {% if setting and setting.is_visible %}
+                    <span class="badge bg-success">Da</span>
+                  {% else %}
+                    <span class="badge bg-danger">Ne</span>
+                  {% endif %}
+                </label>
               </form>
               </td>
               <td class="text-center">
@@ -69,11 +90,18 @@ block styles %} {{ super() }}
                 <input type="hidden" name="city_id" value="{{ city.id }}">
                 <input type="hidden" name="dataset_key" value="{{ key }}">
                 <input type="hidden" name="field" value="included_in_total_sum">
-                <input type="checkbox"
-                      name="value"
-                      value="true"
-                      onchange="this.form.submit()"
-                      {% if setting and setting.included_in_total_sum %}checked{% endif %}>
+                <label class="toggle">
+                  <input type="checkbox"
+                        name="value"
+                        value="true"
+                        onchange="this.form.submit()"
+                        {% if setting and setting.included_in_total_sum %}checked{% endif %}>
+                  {% if setting and setting.included_in_total_sum %}
+                    <span class="badge bg-success">Da</span>
+                  {% else %}
+                    <span class="badge bg-danger">Ne</span>
+                  {% endif %}
+                </label>
             </form>
         </td>
         {% endfor %}
