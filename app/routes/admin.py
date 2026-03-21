@@ -907,18 +907,20 @@ def cities_visibility():
 def cities_visibility_update():
     if not admin_required():
         return redirect(url_for("admin.dashboard"))
+
     # 1. Get the values from form submision
     city_id = int(request.form["city_id"])
     dataset_key = request.form["dataset_key"]
-    is_visible = "is_visible" in request.form
+    field = request.form["field"]
+    value = request.form.get("value") == "true"
 
     # 2. find the the row in city_visibility_settings table
     setting = CityVisibilitySettings.query.filter_by(
         city_id=city_id, dataset_key=dataset_key
     ).first()
 
-    # 3. Change in db
-    setting.is_visible = is_visible
+    # 3. Change boolean fields for city_id/dataset_key in db
+    setattr(setting, field, value)
 
     db.session.commit()
 

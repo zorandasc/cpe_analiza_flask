@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% block title %}Skladišta{% endblock %}{%
 block styles %} {{ super() }}
 <style>
-  th {
+  thead {
     position: sticky;
     top: 60px;
     z-index: 1020;
@@ -24,14 +24,20 @@ block styles %} {{ super() }}
   <div style="width: 95px;" class="d-none d-md-block"></div>
   </div>
   <table class="table table-striped table-bordered shadow-lg">
-     <thead class="table-success">
-      <tr>
-          <th>Skladište</th>
-          {% for key in datasets.values() %}
-            <th>{{ key }}</th>
-          {% endfor %}
-        </tr>
-    </thead>
+  <thead class="table-success">
+  <tr>
+    <th rowspan="2">Skladište</th>
+    {% for key in datasets.values() %}
+      <th colspan="2" class="text-center">{{ key }}</th>
+    {% endfor %}
+  </tr>
+  <tr>
+    {% for key in datasets.values() %}
+      <th class="text-center">Vidljivo</th>
+      <th class="text-center">Uključeno u sumu</th>
+    {% endfor %}
+  </tr>
+</thead>
     <tbody>
     {% for city in cities %}
     <tr>
@@ -45,15 +51,29 @@ block styles %} {{ super() }}
         <!--setting is object from city_visibility_settings table-->
         {% set setting=settings_map.get((city.id, key))%}
         <td class="text-center">
-            <form method="POST" action="{{ url_for('admin.cities_visibility_update') }}">
+            <form method="POST" action="{{ url_for('admin.cities_visibility_update') }}" style="display:inline; margin-right:5px;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <input type="hidden" name="city_id" value="{{ city.id }}">
                 <input type="hidden" name="dataset_key" value="{{ key }}">
-                <input 
-                    type="checkbox"  
-                    name="is_visible" 
-                    onchange="this.form.submit()" 
-                    {%if setting and setting.is_visible%}checked{% endif %}>
+                <input type="hidden" name="field" value="is_visible">
+                <input type="checkbox"
+                      name="value"
+                      value="true"
+                      onchange="this.form.submit()"
+                      {% if setting and setting.is_visible %}checked{% endif %}>
+              </form>
+              </td>
+              <td class="text-center">
+              <form method="POST" action="{{ url_for('admin.cities_visibility_update') }}" style="display:inline; margin-right:5px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="city_id" value="{{ city.id }}">
+                <input type="hidden" name="dataset_key" value="{{ key }}">
+                <input type="hidden" name="field" value="included_in_total_sum">
+                <input type="checkbox"
+                      name="value"
+                      value="true"
+                      onchange="this.form.submit()"
+                      {% if setting and setting.included_in_total_sum %}checked{% endif %}>
             </form>
         </td>
         {% endfor %}
