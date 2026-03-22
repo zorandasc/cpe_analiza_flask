@@ -41,18 +41,25 @@ def get_access_inventory_pivoted(months: list, access_type_id):
         WITH monthly_data AS(SELECT
             c.id,
             c.name,
+            s.included_in_total_sum AS included_in_total_sum,
             {", ".join(pivot_cols)},
             max(i.updated_at) AS last_updated
         FROM cities c
 
+        JOIN city_visibility_settings s
+                ON s.city_id =c.id
+                AND s.dataset_key = 'access_inventory'
+
         JOIN access_types at
             ON at.id=:access_type_id
             AND at.is_active=true
+
         LEFT JOIN access_inventory i
             ON c.id=i.city_id
             AND i.access_type_id = at.id
-        WHERE C.TYPE = 'IJ' AND c.is_active = true
-        GROUP BY c.id, c.name
+
+        WHERE s.is_visible = true
+        GROUP BY c.id, c.name, s.included_in_total_sum
         ),
         final_data AS (
             SELECT
@@ -70,6 +77,7 @@ def get_access_inventory_pivoted(months: list, access_type_id):
                 {", ".join([f'COALESCE(SUM("{m}"),0)' for m in months])},
                 NULL AS last_updated
             FROM monthly_data
+            WHERE included_in_total_sum = true
         )
         SELECT * 
         FROM final_data
