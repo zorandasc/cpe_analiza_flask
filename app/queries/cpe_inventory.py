@@ -45,12 +45,19 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
                 c.id AS city_id,
                 mc.name AS city_name,
-                c.include_in_total,
+                s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
                 ci.quantity AS quantity,
                 ci.updated_at AS updated_at
             FROM cities c
-            LEFT JOIN cities mc ON mc.id = COALESCE(c.parent_city_id, c.id)
+
+            JOIN city_visibility_settings s
+                ON s.city_id =c.id
+                AND s.dataset_key = 'cpe_inventory'
+
+            LEFT JOIN cities mc 
+                ON mc.id = COALESCE(c.parent_city_id, c.id)
+
             LEFT JOIN cpe_inventory ci
                 ON c.id = ci.city_id
                 --Use the latest available record whose week_end is ≤ current business Friday
@@ -61,18 +68,26 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
                     WHERE ci2.city_id=c.id
                     AND ci2.week_end <= :week_end
                 )
+
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id
-            WHERE c.is_active = true
+
+            WHERE s.is_visible = true
         ),
         --subcity_counts number of subcities under major city
         subcity_counts AS (
             SELECT
                 parent_city_id AS major_city_id,
                 COUNT(*) AS subcity_count
-            FROM cities
+            FROM cities c
+
+            JOIN city_visibility_settings s
+                ON s.city_id = c.id
+                AND s.dataset_key = 'cpe_inventory'
+
             WHERE parent_city_id IS NOT NULL
-            AND is_active = true
+                AND s.is_visible = true
+
             GROUP BY parent_city_id
         )
         SELECT
@@ -82,8 +97,10 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             {", ".join(case_columns)},
             MIN(updated_at) AS max_updated_at
         FROM weekly_data wd
+
         LEFT JOIN subcity_counts sc
             ON sc.major_city_id = wd.major_city_id
+            
         GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count
 
         UNION ALL
@@ -233,11 +250,16 @@ def get_cpe_inventory_subcities(
             SELECT
                 c.id   AS city_id,
                 c.name AS city_name,
-                c.include_in_total,
+                s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
                 ci.quantity AS quantity,
                 ci.updated_at AS updated_at
             FROM cities c
+
+            JOIN city_visibility_settings s
+                ON s.city_id =c.id
+                AND s.dataset_key = 'cpe_inventory'
+
             LEFT JOIN cpe_inventory ci
                 ON c.id = ci.city_id
                 --Use the latest available record whose week_end is ≤ current business Friday
@@ -250,8 +272,9 @@ def get_cpe_inventory_subcities(
                 )
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id
-            WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
-                AND c.is_active = true
+
+            WHERE (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
+                AND s.is_visible = true
         )
         SELECT
             city_id,

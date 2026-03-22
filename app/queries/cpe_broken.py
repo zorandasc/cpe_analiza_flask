@@ -4,7 +4,7 @@ from datetime import datetime
 from app.utils.simplepagination import SimplePagination
 
 
-def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date, city_type: str):
+def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
         return []
@@ -12,7 +12,7 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date, city_type
     case_columns = []
     sum_columns = []
 
-    params = {"week_end": week_end, "city_type": city_type}
+    params = {"week_end": week_end}
 
     for i, model in enumerate(schema_list):
         place_holder = f"cpe_{i}"
@@ -41,12 +41,19 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date, city_type
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
                 c.id   AS city_id,
                 mc.name AS city_name,
-                c.include_in_total,
+                s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
                 ci.quantity AS quantity,
                 ci.updated_at AS updated_at
             FROM cities c
-            LEFT JOIN cities mc ON mc.id = COALESCE(c.parent_city_id, c.id)
+
+            JOIN city_visibility_settings s
+                ON s.city_id =c.id
+                AND s.dataset_key = 'cpe_broken'
+            
+            LEFT JOIN cities mc 
+                ON mc.id = COALESCE(c.parent_city_id, c.id)
+
             LEFT JOIN cpe_broken ci
                 ON c.id = ci.city_id
                 --Use the latest available record whose week_end is ≤ current business Friday
@@ -59,17 +66,23 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date, city_type
                 )
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id
-            WHERE C.TYPE = :city_type
-                    AND c.is_active = true
+
+            WHERE s.is_visible = true
         ),
         --subcity_counts number of subcities under major city
         subcity_counts AS (
             SELECT
                 parent_city_id AS major_city_id,
                 COUNT(*) AS subcity_count
-            FROM cities
+            FROM cities c
+
+            JOIN city_visibility_settings s
+                ON s.city_id =c.id
+                AND s.dataset_key = 'cpe_broken'
+
             WHERE parent_city_id IS NOT NULL
-            AND is_active = true
+                AND s.is_visible = true
+
             GROUP BY parent_city_id
         )
         SELECT
@@ -79,8 +92,10 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date, city_type
             {", ".join(case_columns)},
             MIN(updated_at) AS max_updated_at
         FROM weekly_data wd
+
         LEFT JOIN subcity_counts sc
             ON sc.major_city_id = wd.major_city_id
+
         GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count
 
         UNION ALL
@@ -145,11 +160,16 @@ def get_cpe_broken_subcities(
             SELECT
                 c.id   AS city_id,
                 c.name AS city_name,
-                c.include_in_total,
+                s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
                 ci.quantity AS quantity,
                 ci.updated_at AS updated_at
             FROM cities c
+
+            JOIN city_visibility_settings s
+                ON s.city_id =c.id
+                AND s.dataset_key = 'cpe_broken'
+
             LEFT JOIN cpe_broken ci
                 ON c.id = ci.city_id
                 --Use the latest available record whose week_end is ≤ current business Friday
@@ -162,8 +182,9 @@ def get_cpe_broken_subcities(
                 )
             LEFT JOIN cpe_types ct
                 ON ct.id = ci.cpe_type_id
+
             WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
-                AND c.is_active = true
+                AND s.is_visible = true
         )
         SELECT
             city_id,

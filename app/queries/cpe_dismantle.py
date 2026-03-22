@@ -4,9 +4,7 @@ from datetime import datetime
 from app.utils.simplepagination import SimplePagination
 
 
-def get_cpe_dismantle_pivoted(
-    schema_list: list, week_end: datetime.date, city_type: str
-):
+def get_cpe_dismantle_pivoted(schema_list: list, week_end: datetime.date):
     if not schema_list:
         # Return empty data lists immediately if no active CPE types are found
         return []
@@ -14,7 +12,7 @@ def get_cpe_dismantle_pivoted(
     case_columns = []
     sum_columns = []
 
-    params = {"week_end": week_end, "city_type": city_type}
+    params = {"week_end": week_end}
 
     for i, model in enumerate(schema_list):
         place_holder = f"cpe_{i}"
@@ -41,7 +39,8 @@ def get_cpe_dismantle_pivoted(
             WITH WEEKLY_DATA AS (
                 SELECT
                     COALESCE(c.parent_city_id, c.id) AS major_city_id,
-                    C.ID AS CITY_ID,
+                    c.id AS city_id,
+                    s.included_in_total_sum AS include_in_total,
                     mc.name AS city_name,
                     CT.NAME AS CPE_NAME,
                     CD.QUANTITY,
@@ -49,7 +48,14 @@ def get_cpe_dismantle_pivoted(
                     DT.CODE AS DISMANTLE_CODE,
                     CD.UPDATED_AT
                 FROM CITIES C
-                LEFT JOIN cities mc ON mc.id = COALESCE(c.parent_city_id, c.id)
+
+                JOIN city_visibility_settings s
+                    ON s.city_id =c.id
+                    AND s.dataset_key = 'cpe_dismantle'
+
+                LEFT JOIN cities mc 
+                    ON mc.id = COALESCE(c.parent_city_id, c.id)
+
                 LEFT JOIN CPE_DISMANTLE CD
                     ON C.ID = CD.CITY_ID
                     AND CD.WEEK_END = (
@@ -58,19 +64,28 @@ def get_cpe_dismantle_pivoted(
                         WHERE CD2.CITY_ID = C.ID
                         AND CD2.WEEK_END <= :week_end
                 )
-                LEFT JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
-                LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
-                WHERE C.TYPE = :city_type
-                    AND c.is_active = true
+                LEFT JOIN DISMANTLE_TYPES DT 
+                    ON DT.ID = CD.DISMANTLE_TYPE_ID
+
+                LEFT JOIN CPE_TYPES CT 
+                    ON CT.ID = CD.CPE_TYPE_ID
+
+                WHERE s.is_visible = true
             ),
             --subcity_counts number of subcities under major city
             subcity_counts AS (
                 SELECT
                     parent_city_id AS major_city_id,
                     COUNT(*) AS subcity_count
-                FROM cities
+                FROM cities c
+
+                JOIN city_visibility_settings s
+                    ON s.city_id =c.id
+                    AND s.dataset_key = 'cpe_dismantle'
+                    
                 WHERE parent_city_id IS NOT NULL
-                AND is_active = true
+                    AND s.is_visible = true
+
                 GROUP BY parent_city_id
             )
             SELECT
@@ -87,8 +102,10 @@ def get_cpe_dismantle_pivoted(
                     WHERE dismantle_type_id IN (2,3,4)
                 ) AS missing_updated_at
             FROM WEEKLY_DATA wd
+
             LEFT JOIN subcity_counts sc
                 ON sc.major_city_id = wd.major_city_id
+
             GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count, DISMANTLE_TYPE_ID,DISMANTLE_CODE
 
             UNION ALL
@@ -103,6 +120,7 @@ def get_cpe_dismantle_pivoted(
                 NULL AS complete_updated_at,
                 NULL AS missing_updated_at
             FROM WEEKLY_DATA
+            WHERE include_in_total = true
             GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
             ORDER BY CITY_ID, DISMANTLE_TYPE_ID NULLS LAST;
     """
@@ -154,13 +172,18 @@ def get_cpe_dismantle_subcities(
                 SELECT
                     C.ID AS CITY_ID,
                     C.NAME AS CITY_NAME,
-                    c.include_in_total,
+                    s.included_in_total_sum AS include_in_total,
                     CT.NAME AS CPE_NAME,
                     CD.QUANTITY,
                     CD.DISMANTLE_TYPE_ID,
                     DT.CODE AS DISMANTLE_CODE,
                     CD.UPDATED_AT
                 FROM CITIES C
+
+                JOIN city_visibility_settings s
+                    ON s.city_id =c.id
+                    AND s.dataset_key = 'cpe_dismantle'
+
                 LEFT JOIN CPE_DISMANTLE CD
                     ON C.ID = CD.CITY_ID
                     AND CD.WEEK_END = (
@@ -169,10 +192,14 @@ def get_cpe_dismantle_subcities(
                         WHERE CD2.CITY_ID = C.ID
                         AND CD2.WEEK_END <= :week_end
                 )
-                LEFT JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
-                LEFT JOIN CPE_TYPES CT ON CT.ID = CD.CPE_TYPE_ID
+                LEFT JOIN DISMANTLE_TYPES DT 
+                    ON DT.ID = CD.DISMANTLE_TYPE_ID
+
+                LEFT JOIN CPE_TYPES CT 
+                    ON CT.ID = CD.CPE_TYPE_ID
+
                 WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
-                    AND c.is_active = true
+                    AND s.is_visible = true
             )
             SELECT
                 CITY_ID,
@@ -200,6 +227,7 @@ def get_cpe_dismantle_subcities(
                 NULL AS complete_updated_at,
                 NULL AS missing_updated_at
             FROM WEEKLY_DATA
+            WHERE include_in_total = true
             GROUP BY DISMANTLE_TYPE_ID,DISMANTLE_CODE
             ORDER BY CITY_ID, DISMANTLE_TYPE_ID NULLS LAST;
     """

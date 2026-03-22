@@ -30,9 +30,7 @@ def get_cpe_broken_view_data():
     # Build pivoted cpe_broken records fOR schema list but only for current week
     # RETURN PER CITY, QUANITY FOR ALL CPE_TYPES AND FOR LAST WEEK
     # SQL → records (flat rows)
-    records = get_cpe_broken_pivoted(
-        schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
-    )
+    records = get_cpe_broken_pivoted(schema_list, current_week_end)
 
     # list of grouped dicts for sending to template
     records_grouped = _group_records(records, schema_list)

@@ -30,9 +30,7 @@ def get_cpe_dismantle_view_data():
     )
 
     # 1. Build pivoted records from schema list but only for current week_end
-    records = get_cpe_dismantle_pivoted(
-        schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
-    )
+    records = get_cpe_dismantle_pivoted(schema_list, current_week_end)
 
     # ROWS IN records FROM RAW SQL, LOOK LIKE THIS:
     """"
