@@ -14,30 +14,31 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body bg-light">
-            <form method="get" class="row g-3 align-items-end">
+            <form method="get" class="row g-3 align-items-start justify-content-end">
+                 <div class="col-md-4">
+                    <label class="form-label fw-bold">Skladište</label>
+                    <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
+                        <option value="">--Ukupno Sva Skladišta --</option>
+                        {% for city in cities %}
+                        <option value="{{ city.id }}" {% if city.id == selected_city.id %}selected{% endif %}>
+                            {{ city.name  }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
                  <div class="col-md-4">
                     <label class="form-label fw-bold">Pristupne tehnologije</label>
                     <select name="access_id" class="form-select shadow-sm" onchange="this.form.submit()">
                         <option value="">--Ukupno Sve tehnologije --</option>
                         {% for ac in access %}
-                        <option value="{{ ac.id }}" {% if ac.id == selected_access_id %}selected{% endif %}>
+                        <option value="{{ ac.id }}" {% if ac.id == selected_access.id %}selected{% endif %}>
                             {{ ac.name }}
                         </option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label fw-bold">Skladište</label>
-                    <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
-                        <option value="">--Ukupno Sva Skladišta --</option>
-                        {% for city in cities %}
-                        <option value="{{ city.id }}" {% if city.id == selected_city_id %}selected{% endif %}>
-                            {{ city.name  }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
+               
 
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Vremenski period</label>
@@ -83,8 +84,8 @@
     <script>
    window.chartContext = {
         mainTitle:"Ukupno stanje korisnika na pristupnoj mreži",
-        accessName: {{ selected_access_name|tojson }},
-        cityName: {{ selected_city_name|tojson }},
+        accessName: {{ (selected_access.name if selected_access else None) | tojson }},
+        cityName: {{ (selected_city.name if selected_city else None) | tojson }},
         months: {{ selected_months or "null" }},
     };
     </script>

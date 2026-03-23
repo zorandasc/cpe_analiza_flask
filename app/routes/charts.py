@@ -117,27 +117,25 @@ def access_inventory_charts():
     # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     # ---------------------------------------
-    selected_city_name = None
+    selected_city = None
     if selected_city_id:
-        selected_city_name = next(
-            (c.name for c in cities if c.id == selected_city_id), None
+        selected_city= next(
+            (c for c in cities if c.id == selected_city_id), None
         )
 
-    selected_access_name = None
+    selected_access = None
     if selected_access_id:
-        selected_access_name = next(
-            (a.name for a in access if a.id == selected_access_id), None
+        selected_access = next(
+            (a for a in access if a.id == selected_access_id), None
         )
 
     return render_template(
         "charts/access_dashboard.html",
         chart_data=chart_data,
         access=access,
-        selected_access_id=selected_access_id,
-        selected_access_name=selected_access_name,
+        selected_access=selected_access,
         cities=cities,
-        selected_city_id=selected_city_id,
-        selected_city_name=selected_city_name,
+        selected_city=selected_city,
         selected_months=selected_months,
     )
 
@@ -148,7 +146,7 @@ def access_inventory_charts():
 def cpe_inventory_charts():
     selected_city_id = request.args.get("city_id", type=int)
 
-    include_children= request.args.get("include_children") == "1"
+    include_children = request.args.get("include_children") == "1"
 
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
@@ -228,6 +226,8 @@ def cpe_inventory_charts():
 def cpe_dismantle_inventory_charts():
     selected_city_id = request.args.get("city_id", type=int)
 
+    include_children = request.args.get("include_children") == "1"
+
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
     selected_dismantle_id = request.args.get("dismantle_id", type=int)
@@ -249,23 +249,9 @@ def cpe_dismantle_inventory_charts():
     if not selected_cpe_type:
         selected_cpe_type = None
 
-    if not selected_cpe_type:
-        selected_cpe_type = None
-
     # mutual exclusivity ON BACKEND
     if selected_cpe_id:
         selected_cpe_type = None
-
-    # ---------------------------------------
-    # GET CHART DATA
-    # ---------------------------------------
-    chart_data = get_cpe_dismantle_chart_data(
-        city_id=selected_city_id,
-        cpe_id=selected_cpe_id,
-        cpe_type=selected_cpe_type,
-        dismantle_type_id=selected_dismantle_id,
-        weeks=selected_weeks,
-    )
 
     # ---------------------------------------
     # FOR LISTING IN HTML SELECT ELEMENTS
@@ -284,39 +270,49 @@ def cpe_dismantle_inventory_charts():
     # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     # ---------------------------------------
-    selected_cpe_name = None
-    selected_city_name = None
+    selected_cpe= None
+    selected_city= None
     selected_dismantle = None
 
     if selected_cpe_id:
-        selected_cpe_name = next(
-            (c["label"] for c in cpes if c["id"] == selected_cpe_id), None
+        selected_cpe= next(
+            (c for c in cpes if c["id"] == selected_cpe_id), None
         )
 
     if selected_dismantle_id:
         selected_dismantle = next(
-            (d.label for d in dismantles if d.id == selected_dismantle_id), None
+            (d for d in dismantles if d.id == selected_dismantle_id), None
         )
 
     if selected_city_id:
-        selected_city_name = next(
-            (c.name for c in cities if c.id == selected_city_id), None
+        selected_city = next(
+            (c for c in cities if c.id == selected_city_id), None
         )
+
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
+    chart_data = get_cpe_dismantle_chart_data(
+        city_id=selected_city_id,
+        include_children=include_children,
+        cpe_id=selected_cpe_id,
+        cpe_type=selected_cpe_type,
+        dismantle_type_id=selected_dismantle_id,
+        weeks=selected_weeks,
+    )
 
     return render_template(
         "charts/cpe_dismantle_dashboard.html",
         chart_data=chart_data,
         cities=cities,
+        include_children=include_children,
         cpes=cpes,
         types=cpe_types,
         dismantles=dismantles,
-        selected_cpe_id=selected_cpe_id,
-        selected_cpe_name=selected_cpe_name,
+        selected_cpe=selected_cpe,
         selected_cpe_type=selected_cpe_type,
-        selected_dismantle_id=selected_dismantle_id,
         selected_dismantle=selected_dismantle,
-        selected_city_id=selected_city_id,
-        selected_city_name=selected_city_name,
+        selected_city=selected_city,
         selected_weeks=selected_weeks,
     )
 
@@ -326,6 +322,8 @@ def cpe_dismantle_inventory_charts():
 @login_required
 def cpe_broken_inventory_charts():
     selected_city_id = request.args.get("city_id", type=int)
+
+    include_children = request.args.get("include_children") == "1"
 
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
@@ -346,22 +344,9 @@ def cpe_broken_inventory_charts():
     if not selected_cpe_type:
         selected_cpe_type = None
 
-    if not selected_cpe_type:
-        selected_cpe_type = None
-
     # mutual exclusivity ON BACKEND
     if selected_cpe_id:
         selected_cpe_type = None
-
-    # ---------------------------------------
-    # GET CHART DATA
-    # ---------------------------------------
-    chart_data = get_cpe_broken_chart_data(
-        city_id=selected_city_id,
-        cpe_id=selected_cpe_id,
-        cpe_type=selected_cpe_type,
-        weeks=selected_weeks,
-    )
 
     # ---------------------------------------
     # FOR LISTING IN HTML SELECT ELEMENTS
@@ -378,29 +363,39 @@ def cpe_broken_inventory_charts():
     # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     # ---------------------------------------
-    selected_cpe_name = None
-    selected_city_name = None
+    selected_cpe = None
+    selected_city = None
 
     if selected_cpe_id:
-        selected_cpe_name = next(
-            (c["label"] for c in cpes if c["id"] == selected_cpe_id), None
+        selected_cpe = next(
+            (c for c in cpes if c["id"] == selected_cpe_id), None
         )
 
     if selected_city_id:
-        selected_city_name = next(
-            (c.name for c in cities if c.id == selected_city_id), None
+        selected_city = next(
+            (c for c in cities if c.id == selected_city_id), None
         )
+
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
+    chart_data = get_cpe_broken_chart_data(
+        city_id=selected_city_id,
+        include_children=include_children,
+        cpe_id=selected_cpe_id,
+        cpe_type=selected_cpe_type,
+        weeks=selected_weeks,
+    )
 
     return render_template(
         "charts/cpe_broken_dashboard.html",
         chart_data=chart_data,
         cities=cities,
+        include_children=include_children,
         cpes=cpes,
         types=cpe_types,
-        selected_cpe_id=selected_cpe_id,
-        selected_cpe_name=selected_cpe_name,
+        selected_cpe=selected_cpe,
         selected_cpe_type=selected_cpe_type,
-        selected_city_id=selected_city_id,
-        selected_city_name=selected_city_name,
+        selected_city=selected_city,
         selected_weeks=selected_weeks,
     )

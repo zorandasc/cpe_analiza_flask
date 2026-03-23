@@ -58,7 +58,7 @@ def get_cpe_inventory_chart_data(
         selected_city = db.session.get(Cities, city_id)
 
         if include_children and selected_city and selected_city.parent_city_id is None:
-            # Parent WITH children
+            # Parent WITH ALL children
             city_ids = [city_id] + [
                 c.id
                 for c in db.session.query(Cities.id)
@@ -71,6 +71,7 @@ def get_cpe_inventory_chart_data(
             base = base.filter(Cities.id == city_id)
 
     else:
+        #  All cities but Without Raspoloziva oprema
         base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     if cpe_id:
@@ -274,7 +275,12 @@ def get_cpe_inventory_chart_data(
 # You only need carry-forward when your table
 # stores sparse changes instead of full state.
 def get_cpe_dismantle_chart_data(
-    city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=None
+    city_id=None,
+    cpe_id=None,
+    cpe_type=None,
+    dismantle_type_id=None,
+    weeks=None,
+    include_children=False,
 ):
 
     # ---------------------------------------
@@ -301,9 +307,22 @@ def get_cpe_dismantle_chart_data(
     )
 
     if city_id:
-        base = base.filter(Cities.id == city_id)
+        selected_city = db.session.get(Cities, city_id)
+
+        if include_children and selected_city and selected_city.parent_city_id is None:
+            # Parent CITY WITH ALL children
+            city_ids = [city_id] + [
+                c.id
+                for c in db.session.query(Cities.id)
+                .filter(Cities.parent_city_id == city_id)
+                .all()
+            ]
+            base = base.filter(CpeDismantle.city_id.in_(city_ids))
+        else:
+            # Standalone city (parent OR child)
+            base = base.filter(Cities.id == city_id)
     else:
-        # Totat sum by all cities but Without Raspoloziva oprema
+        # All cities but Without Raspoloziva oprema
         base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     if cpe_id:
@@ -448,7 +467,9 @@ def get_cpe_dismantle_chart_data(
 # cpe inventory IS EVENT/STATE-CHANGE TABLE
 # You only need carry-forward when your table
 # stores sparse changes instead of full state.
-def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
+def get_cpe_broken_chart_data(
+    city_id=None, cpe_id=None, cpe_type=None, weeks=None, include_children=False
+):
 
     # ---------------------------------------
     # 1. Base query (sparse snapshots) on some week_end there is no data
@@ -473,9 +494,22 @@ def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=No
     )
 
     if city_id:
-        base = base.filter(Cities.id == city_id)
+        selected_city = db.session.get(Cities, city_id)
+
+        if include_children and selected_city and selected_city.parent_city_id is None:
+            # Parent WITH all children
+            city_ids = [city_id] + [
+                c.id
+                for c in db.session.query(Cities.id)
+                .filter(Cities.parent_city_id == city_id)
+                .all()
+            ]
+            base = base.filter(CpeBroken.city_id.in_(city_ids))
+        else:
+            # Standalone city (parent OR child)
+            base = base.filter(Cities.id == city_id)
     else:
-        # Totat sum by all cities but Without Raspoloziva oprema
+        #  All cities but Without Raspoloziva oprema
         base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     if cpe_id:
@@ -749,7 +783,7 @@ def get_iptv_inventory_chart_data(weeks=None):
         "y_max": y_max,
     }
 
-
+# STARA VISE SE NE KORISTI>>>>>
 def get_access_inventory_chart_data1(access_id=None, city_id=None, months=None):
 
     params = {}

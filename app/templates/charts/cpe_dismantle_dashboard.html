@@ -14,17 +14,40 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body bg-light">
-            <form method="get" class="row g-3 align-items-end">
+            <form method="get" class="row g-3 align-items-strech justify-content-between">
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Skladište</label>
                     <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
                         <option value="">--Ukupno Za Sva Skladišta --</option>
-                        {% for city in cities %}
-                        <option value="{{ city.id }}" {% if city.id == selected_city_id %}selected{% endif %}>
-                            {{ city.name  }}
-                        </option>
+                         {% for city in cities if not city.parent_city_id %}
+                            <option value="{{ city.id }}"
+                            {% if city.id == selected_city.id %}selected{% endif %}>
+                            {{ city.name }}
+                            </option>
+
+                            {% for sub in cities if sub.parent_city_id == city.id %}
+                            <option value="{{ sub.id }}"
+                                {% if sub.id == selected_city.id %}selected{% endif %}>
+                                └── {{ sub.name }}
+                            </option>
+                            {% endfor %}
+
                         {% endfor %}
                     </select>
+                    <div class="form-check mt-2">
+                    <input class="form-check-input"
+                        type="checkbox"
+                        name="include_children"
+                        value="1"
+                        id="includeChildren"
+                        {% if include_children %}checked{% endif %}
+                        {% if not selected_city or selected_city.parent_city_id %}disabled{% endif %}
+                        onchange="this.form.submit()">
+
+                    <label class="form-check-label" for="includeChildren">
+                        Uključi podgradove
+                    </label>
+                </div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">CPE uređaj</label>
@@ -32,7 +55,7 @@
                     <select name="cpe_id" class="form-select shadow-sm" onchange="document.querySelector('[name=cpe_type]').value=''; this.form.submit()">
                          <option value="">-- Svi uređaji --</option>
                         {% for cpe in cpes %}
-                        <option value="{{ cpe.id }}" {% if cpe.id == selected_cpe_id %}selected{% endif %}>
+                        <option value="{{ cpe.id }}" {% if cpe.id == selected_cpe.id %}selected{% endif %}>
                             {{ cpe.label }}
                         </option>
                         {% endfor %}
@@ -43,7 +66,7 @@
                     <select name="dismantle_id" class="form-select shadow-sm" onchange="this.form.submit()">
                          <option value="">-- Svi tipovi --</option>
                         {% for dis in dismantles %}
-                        <option value="{{ dis.id }}" {% if dis.id == selected_dismantle_id %}selected{% endif %}>
+                        <option value="{{ dis.id }}" {% if dis.id == selected_dismantle.id %}selected{% endif %}>
                             {{ dis.label }}
                         </option>
                         {% endfor %}
@@ -73,7 +96,7 @@
                     </select>
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-md-2 d-flex align-items-end justify-content-end">
                     <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline-secondary w-100">
                         Poništi
                     </a>
@@ -126,11 +149,11 @@
 <script>
    window.chartContext = {
         mainTitle:"Ukupno stanje demontirane CPE opreme po tipu",
-        cpeId: {{ selected_cpe_id or "null" }},
+        cpeId: {{ selected_cpe["id"] if selected_cpe else "null" }},
         cpeType: {{ selected_cpe_type|tojson }},
-        dismantle: {{ selected_dismantle|tojson }},
-        cpeName: {{ selected_cpe_name|tojson }},
-        cityName: {{ selected_city_name|tojson }},
+        dismantle: {{ (selected_dismantle["label"] if selected_dismantle else None)|tojson }},
+        cpeName: {{ (selected_cpe["label"] if selected_cpe else None) | tojson }},
+        cityName: {{ (selected_city.name if selected_city else None) | tojson }},
         weeks: {{ selected_weeks or "null" }},
     };
     </script>
