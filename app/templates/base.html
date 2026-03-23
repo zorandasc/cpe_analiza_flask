@@ -133,6 +133,7 @@
       ☣ ☢ ☠ - TESTNO OKRUZENJE - TESTNA BAZA: mydb_test
     </div>
   {% endif %}
+</nav>
     <!-- NAVBAR -->
     <nav class="navbar navbar-expand-lg {% if not current_user.is_authenticated %}transparent {% else %}navbar-custom {%endif%} navbar-sticky">
       <div class="container-fluid">
@@ -177,7 +178,7 @@
             </li>
             <li class="nav-item">
               <a
-                class="nav-link {% if request.path == url_for('cpe_inventory.cpe_records') %}active{% endif %}"
+                class="nav-link {% if request.path.startswith('/cpe-records') %}active{% endif %}"
                 href="{{ url_for('cpe_inventory.cpe_records') }}"
                 aria-current="page"
               >
@@ -186,7 +187,7 @@
             </li>
             <li class="nav-item">
               <a
-                class="nav-link {% if request.path == url_for('cpe_dismantle_inventory.cpe_dismantle_records') %}active{% endif %}"
+                class="nav-link {% if request.path.startswith('/cpe-dismantle-records') %}active{% endif %}"
                 href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_records') }}"
                 aria-current="page"
               >
@@ -196,7 +197,7 @@
             
             <li class="nav-item">
               <a
-                class="nav-link {% if request.path == url_for('stb_inventory.stb_iptv_records') %}active{% endif %}"
+                class="nav-link {% if request.path.startswith('/stb-records') %}active{% endif %}"
                 href="{{ url_for('stb_inventory.stb_iptv_records') }}"
                 aria-current="page"
               >
@@ -205,7 +206,7 @@
             </li>
             <li class="nav-item">
               <a
-                class="nav-link {% if request.path == url_for('access_inventory.access_records') %}active{% endif %}"
+                class="nav-link {% if request.path.startswith('/access-records') %}active{% endif %}"
                 href="{{ url_for('access_inventory.access_records') }}"
                 aria-current="page"
               >
@@ -214,7 +215,7 @@
             </li>
               <li class="nav-item">
               <a
-                class="nav-link {% if request.path == url_for('charts.chart_home') %}active{% endif %}"
+                class="nav-link {% if request.path.startswith('/charts') %}active{% endif %}"
                 href="{{ url_for('charts.chart_home') }}"
                 aria-current="page"
               >
@@ -229,7 +230,7 @@
           <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item">
               <a
-                class="nav-link {% if request.path == url_for('admin.dashboard') %}active{% endif %}"
+                class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}"
                 href="{{ url_for('admin.dashboard') }}"
               >
                 Admin Panel
