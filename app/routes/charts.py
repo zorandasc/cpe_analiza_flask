@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required
 from app.utils.schemas import get_cpe_types_column_schema
-from app.models import CityTypeEnum, CpeTypeEnum
+from app.models import AccessTypes, CpeTypeEnum, DismantleTypes, StbTypes
 from app.services.charts import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
@@ -9,7 +9,7 @@ from app.services.charts import (
     get_stb_inventory_chart_data,
     get_access_inventory_chart_data,
     get_iptv_inventory_chart_data,
-    get_distinct_joined_values,
+    get_visible_cities,
 )
 
 
@@ -48,9 +48,7 @@ def stb_inventory_charts():
     # ---------------------------------------
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
-    stbs = get_distinct_joined_values(
-        base_key="stb", join_key="stb_type", base_fk="stb_type_id"
-    )
+    stbs = StbTypes.query.order_by(StbTypes.id).filter(StbTypes.is_active).all()
 
     # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
@@ -110,12 +108,10 @@ def access_inventory_charts():
     # ---------------------------------------
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
-    cities = get_distinct_joined_values(
-        base_key="access", join_key="city", base_fk="city_id"
-    )
+    cities = cities = get_visible_cities("access_inventory")
 
-    access = get_distinct_joined_values(
-        base_key="access", join_key="access_type", base_fk="access_type_id"
+    access = (
+        AccessTypes.query.order_by(AccessTypes.id).filter(AccessTypes.is_active).all()
     )
 
     # -----------------------------------
@@ -192,9 +188,7 @@ def cpe_inventory_charts():
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
     # lists of cities in cpe_inventory
-    cities = get_distinct_joined_values(
-        base_key="cpe", join_key="city", base_fk="city_id"
-    )
+    cities = get_visible_cities("cpe_inventory")
 
     # SHOW ONLY CPES THAT ARE ACTIVE IN TOTAL
     cpes = get_cpe_types_column_schema("visible_in_total", "order_in_total")
@@ -282,20 +276,9 @@ def cpe_dismantle_inventory_charts():
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
     # FOR DISMANTLE TABLE WE NEED TO QUERY ONLY IJ CITIES
-    cities = get_distinct_joined_values(
-        base_key="cpe_dis",
-        join_key="city",
-        base_fk="city_id",
-        extra_joins="""
-        LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
-        """,
-        where_clause="AND j.type=:city_type",
-        params={"city_type": CityTypeEnum.IJ.value},
-    )
+    cities = cities = get_visible_cities("cpe_dismantle")
 
-    dismantles = get_distinct_joined_values(
-        base_key="cpe_dis", join_key="dis_type", base_fk="dismantle_type_id"
-    )
+    dismantles = DismantleTypes.query.order_by(DismantleTypes.id).all()
 
     # SHOW ONLY CPES THAT ARE ACTIVE IN DISMANTLE
     cpes = get_cpe_types_column_schema("visible_in_dismantle", "order_in_dismantle")
@@ -389,16 +372,7 @@ def cpe_broken_inventory_charts():
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
     # lists of cities in cpe_inventory
-    cities = get_distinct_joined_values(
-        base_key="cpe_dis",
-        join_key="city",
-        base_fk="city_id",
-        extra_joins="""
-        LEFT JOIN cpe_types ct ON ct.id = b.cpe_type_id
-        """,
-        where_clause="AND j.type=:city_type",
-        params={"city_type": CityTypeEnum.IJ.value},
-    )
+    cities = cities = get_visible_cities("cpe_broken")
 
     # SHOW ONLY CPES THAT ARE ACTIVE IN TOTAL
     cpes = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")

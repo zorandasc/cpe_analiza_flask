@@ -12,6 +12,7 @@ from app.models import (
     CpeTypes,
     AccessTypes,
     Cities,
+    CityVisibilitySettings,
 )
 
 
@@ -42,14 +43,20 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
         )
         .join(CpeTypes, CpeTypes.id == CpeInventory.cpe_type_id)
         .join(Cities, Cities.id == CpeInventory.city_id)
+        .join(
+            CityVisibilitySettings,
+            (CityVisibilitySettings.city_id == Cities.id)
+            & (CityVisibilitySettings.dataset_key == "cpe_inventory"),
+        )
         .filter(CpeTypes.visible_in_total)  # only cpe types that are visisble
+        .filter(CityVisibilitySettings.is_visible)
     )
 
     if city_id:
         base = base.filter(Cities.id == city_id)
     else:
         # Totat sum by all cities but Without Raspoloziva oprema
-        base = base.filter(Cities.include_in_total)
+        base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     if cpe_id:
         base = base.filter(CpeInventory.cpe_type_id == cpe_id)
@@ -268,15 +275,21 @@ def get_cpe_dismantle_chart_data(
         )
         .join(CpeTypes, CpeTypes.id == CpeDismantle.cpe_type_id)
         .join(Cities, Cities.id == CpeDismantle.city_id)
+         .join(
+            CityVisibilitySettings,
+            (CityVisibilitySettings.city_id == Cities.id)
+            & (CityVisibilitySettings.dataset_key == "cpe_dismantle"),
+        )
         .join(DismantleTypes, DismantleTypes.id == CpeDismantle.dismantle_type_id)
         .filter(CpeTypes.visible_in_dismantle)
+        .filter(CityVisibilitySettings.is_visible)
     )
 
     if city_id:
         base = base.filter(Cities.id == city_id)
     else:
         # Totat sum by all cities but Without Raspoloziva oprema
-        base = base.filter(Cities.include_in_total)
+        base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     if cpe_id:
         base = base.filter(CpeDismantle.cpe_type_id == cpe_id)
@@ -435,14 +448,20 @@ def get_cpe_broken_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=No
         )
         .join(CpeTypes, CpeTypes.id == CpeBroken.cpe_type_id)
         .join(Cities, Cities.id == CpeBroken.city_id)
+        .join(
+            CityVisibilitySettings,
+            (CityVisibilitySettings.city_id == Cities.id)
+            & (CityVisibilitySettings.dataset_key == "cpe_broken"),
+        )
         .filter(CpeTypes.visible_in_broken)  # only cpe types that are visisble
+        .filter(CityVisibilitySettings.is_visible)
     )
 
     if city_id:
         base = base.filter(Cities.id == city_id)
     else:
         # Totat sum by all cities but Without Raspoloziva oprema
-        base = base.filter(Cities.include_in_total)
+        base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     if cpe_id:
         base = base.filter(CpeBroken.cpe_type_id == cpe_id)
@@ -797,13 +816,22 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
         )
         .join(AccessTypes, AccessTypes.id == AccessInventory.access_type_id)
         .join(Cities, Cities.id == AccessInventory.city_id)
+        .join(
+            CityVisibilitySettings,
+            (CityVisibilitySettings.city_id == Cities.id)
+            & (CityVisibilitySettings.dataset_key == "access_inventory"),
+        )
         .filter(AccessTypes.is_active)
+        .filter(CityVisibilitySettings.is_visible)
     )
 
     if access_id:
         base = base.filter(AccessTypes.id == access_id)
     if city_id:
         base = base.filter(Cities.id == city_id)
+    else:
+        # Totat sum by all cities but Without Raspoloziva oprema
+        base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     # ---------------------------------------
     # 2. Find min, max available month in DB from filtered data
@@ -967,92 +995,19 @@ def build_month_timeline(months, min_month, max_month):
     return timeline, start_month
 
 
-BASE_TABLES = {
-    "cpe": "cpe_inventory",
-    "cpe_dis": "cpe_dismantle",
-    "stb": "stb_inventory",
-    "access": "access_inventory",
-}
+def get_visible_cities(dataset_key):
+    return db.session.execute(
+        text("""
+            SELECT c.id, c.name
+            FROM cities c
+            
+            JOIN city_visibility_settings s
+              ON s.city_id = c.id
+             AND s.dataset_key = :dataset_key
 
-JOIN_TABLES = {
-    "city": {
-        "table": "cities",
-        "pk": "id",
-        "cols": "j.id, j.name",  # what is returnet
-        "order_by": "j.name",
-    },
-    "cpe_type": {
-        "table": "cpe_types",
-        "pk": "id",
-        "cols": "j.id, j.label",  # what is returnet
-        "order_by": "j.label",
-    },
-    "stb_type": {
-        "table": "stb_types",
-        "pk": "id",
-        "cols": "j.id, j.label",  # what is returnet
-        "order_by": "j.label",
-    },
-    "access_type": {
-        "table": "access_types",
-        "pk": "id",
-        "cols": "j.id, j.name",  # what is returnet
-        "order_by": "j.name",
-    },
-    "dis_type": {
-        "table": "dismantle_types",
-        "pk": "id",
-        "cols": "j.id, j.label",  # what is returnet
-        "order_by": "j.label",
-    },
-}
-
-
-# ONE EXAMPLE OF get_distinct_joined_values() FUNCTION ABSTRACTION:
-"""
-SELECT DISTINCT c.id, c.name
-FROM access_inventory i
-JOIN cities c ON c.id = i.city_id
-ORDER BY c.id
-"""
-"""
-SELECT DISTINCT t.id, t.label
-FROM cpe_dismantle i
-JOIN dismantle_types t ON t.id = i.dismantle_type_id
-ORDER BY t.id
-"""
-
-
-# FOR FILTERS IN CHARTS
-def get_distinct_joined_values(
-    base_key: str,
-    join_key: str,
-    base_fk: str,
-    extra_joins: str = "",
-    where_clause: str = "",
-    params: dict | None = None,
-):
-    base_table = BASE_TABLES.get(base_key)
-    join_meta = JOIN_TABLES.get(join_key)
-
-    if not base_table or not join_meta:
-        raise ValueError("Invalid base or join table")
-
-    params = params or {}
-
-    join_table = join_meta["table"]
-    join_pk = join_meta["pk"]
-    select_cols = join_meta["cols"]
-    order_by = join_meta["order_by"]
-
-    sql = f"""
-        SELECT DISTINCT {select_cols}
-        FROM {base_table} b
-        JOIN {join_table} j ON j.{join_pk}=b.{base_fk}
-        {extra_joins}
-        WHERE 1=1
-        {where_clause}
-        ORDER BY {order_by}
-    """
-
-    return db.session.execute(text(sql), params).fetchall()
+            WHERE s.is_visible = true
+            
+            ORDER BY c.id
+            """),
+        {"dataset_key": dataset_key},
+    ).fetchall()
