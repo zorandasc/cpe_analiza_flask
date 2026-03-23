@@ -41,23 +41,24 @@ def run_weekly_report_job():
 
     try:
         magic_link = generate_link_for_view_user()
+    
+        # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
+        success, message = send_email(pdf_path=pdf_path, link=magic_link)
+
+        if success:
+            # Only mark as sent if the email actually went out
+            settings.last_sent_at = datetime.now()
+            db.session.commit()
+            return message
+
+        else:
+            # Do NOT update last_sent_at.
+            # The cron job will hit this again in 10 minutes and retry.
+            return f"Failed with {message}- Will retry next cron hit"
+        
     except RuntimeError as e:
         print(str(e))
-    return
-
-    # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
-    success, message = send_email(pdf_path=pdf_path, link=magic_link)
-
-    if success:
-        # Only mark as sent if the email actually went out
-        settings.last_sent_at = datetime.now()
-        db.session.commit()
-        return message
-
-    else:
-        # Do NOT update last_sent_at.
-        # The cron job will hit this again in 10 minutes and retry.
-        return f"Failed with {message}- Will retry next cron hit"
+        return
 
 
 def generate_pdf():
@@ -73,12 +74,12 @@ def generate_pdf():
     # PULL DATA TO RENDER SUMMARY AND CHARTS
     # -------------------------------------------------
 
-    # ALL CPE TYPES FOR 5 WEEKS
+    # ALL CPE TYPES FOR 5 WEEKS AND ALL CITIES
     cpe_total = get_cpe_inventory_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, weeks=10
     )
 
-    # ALL CPE TYPES FOR 5 WEEKS
+    # ALL CPE TYPES FOR 5 WEEKS FOR RASPOLOZIVA OPREMA
     cpe_warehouse_total = get_cpe_inventory_chart_data(
         city_id=13, cpe_id=None, cpe_type=None, weeks=10
     )
