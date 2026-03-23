@@ -2775,3 +2775,16 @@ ON DELETE RESTRICT;
 or if you prefer cleanup:
 
 ON DELETE CASCADE
+
+# ----------------------------------------------
+
+You moved from:
+
+cities = data + behavior ❌
+
+to:
+
+cities = data
+city_visibility_settings = behavior ✅
+
+👉 This is clean architecture

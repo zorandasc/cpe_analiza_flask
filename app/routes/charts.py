@@ -148,6 +148,8 @@ def access_inventory_charts():
 def cpe_inventory_charts():
     selected_city_id = request.args.get("city_id", type=int)
 
+    include_children = request.args.get("include_children") == "1"
+
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
     selected_weeks = request.args.get("weeks", type=int)
@@ -179,6 +181,7 @@ def cpe_inventory_charts():
     # ---------------------------------------
     chart_data = get_cpe_inventory_chart_data(
         city_id=selected_city_id,
+        include_children=include_children,
         cpe_id=selected_cpe_id,
         cpe_type=selected_cpe_type,
         weeks=selected_weeks,
@@ -189,7 +192,6 @@ def cpe_inventory_charts():
     # ---------------------------------------
     # lists of cities in cpe_inventory that are visible
     cities = get_visible_cities("cpe_inventory")
-    
 
     # SHOW ONLY CPES THAT ARE ACTIVE IN TOTAL
     cpes = get_cpe_types_column_schema("visible_in_total", "order_in_total")
@@ -220,6 +222,7 @@ def cpe_inventory_charts():
         cpes=cpes,
         types=cpe_types,
         selected_cpe_id=selected_cpe_id,
+        include_children=include_children,
         selected_cpe_name=selected_cpe_name,
         selected_cpe_type=selected_cpe_type,
         selected_city_id=selected_city_id,

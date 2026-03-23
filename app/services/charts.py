@@ -19,7 +19,9 @@ from app.models import (
 # cpe inventory IS EVENT/STATE-CHANGE TABLE
 # You only need carry-forward when your table
 # stores sparse changes instead of full state.
-def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks=None):
+def get_cpe_inventory_chart_data(
+    city_id=None, cpe_id=None, cpe_type=None, weeks=None, include_children=False
+):
     """
     # 1. Build weekly timeline (Fridays), we want 5 last weeks
     # 2. Fetch sparse snapshot data from DB, data form db can be missing week
@@ -53,9 +55,22 @@ def get_cpe_inventory_chart_data(city_id=None, cpe_id=None, cpe_type=None, weeks
     )
 
     if city_id:
-        base = base.filter(Cities.id == city_id)
+        selected_city = db.session.get(Cities, city_id)
+
+        if include_children and selected_city and selected_city.parent_city_id is None:
+            # Parent WITH children
+            city_ids = [city_id] + [
+                c.id
+                for c in db.session.query(Cities.id)
+                .filter(Cities.parent_city_id == city_id)
+                .all()
+            ]
+            base = base.filter(CpeInventory.city_id.in_(city_ids))
+        else:
+            # Standalone city (parent OR child)
+            base = base.filter(Cities.id == city_id)
+
     else:
-        # Totat sum by all cities but Without Raspoloziva oprema
         base = base.filter(CityVisibilitySettings.included_in_total_sum)
 
     if cpe_id:
@@ -275,7 +290,7 @@ def get_cpe_dismantle_chart_data(
         )
         .join(CpeTypes, CpeTypes.id == CpeDismantle.cpe_type_id)
         .join(Cities, Cities.id == CpeDismantle.city_id)
-         .join(
+        .join(
             CityVisibilitySettings,
             (CityVisibilitySettings.city_id == Cities.id)
             & (CityVisibilitySettings.dataset_key == "cpe_dismantle"),
@@ -998,7 +1013,7 @@ def build_month_timeline(months, min_month, max_month):
 def get_visible_cities(dataset_key):
     return db.session.execute(
         text("""
-            SELECT c.id, c.name
+            SELECT c.id, c.name, c.parent_city_id
             FROM cities c
             
             JOIN city_visibility_settings s
