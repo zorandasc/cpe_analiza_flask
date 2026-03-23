@@ -5,7 +5,7 @@ from flask import render_template, current_app
 from app.extensions import db
 from app.services.magic import generate_link_for_view_user
 from app.utils.dates import get_current_week_friday
-from app.models import ReportSetting, CpeTypeEnum
+from app.models import AccessTypes, ReportSetting, CpeTypeEnum
 from app.services.email_service import send_email
 from app.services.charts import (
     get_cpe_inventory_chart_data,
@@ -101,20 +101,18 @@ def generate_pdf():
     )
 
     # ----------------------------------------------
-    # EXSTRACT FROM DATATSETS LAST 2 WEEKS AND DIFF THEM. FOR SUMMARY TABLES SECTION IN PDF REPORT
+    # EXSTRACT FROM DATATSETS LAST 2 WEEKS AND DIFF THEM. THIS IS FOR SUMMARY TABLES SECTION IN PDF REPORT
     # ------------------------------------------------
-    cpe_target_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
+    cpe_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
 
-    cpe_total_summary = extract_current_previous_diff(
-        cpe_total["datasets"], cpe_target_labels
-    )
+    cpe_total_summary = extract_current_previous_diff(cpe_total["datasets"], cpe_labels)
 
     cpe_warehouse_summary = extract_current_previous_diff(
-        cpe_warehouse_total["datasets"], cpe_target_labels
+        cpe_warehouse_total["datasets"], cpe_labels
     )
 
     cpe_dismantle_summary = extract_current_previous_diff(
-        cpe_dismantle_total["datasets"], cpe_target_labels
+        cpe_dismantle_total["datasets"], cpe_labels
     )
 
     stb_summary = extract_current_previous_diff(stb_total["datasets"], ["STB Uređaji"])
@@ -123,7 +121,15 @@ def generate_pdf():
         iptv_total["datasets"], ["IPTV korisnici"]
     )
 
-    access_summary = extract_current_previous_diff(access_total["datasets"], ["GPON", "XDSL"])
+    access_labels = (
+        db.session.execute(db.select(AccessTypes.name).filter_by(is_active=True))
+        .scalars()
+        .all()
+    )
+
+    access_summary = extract_current_previous_diff(
+        access_total["datasets"], access_labels
+    )
 
     # ADD TO DATA LIST WHICH WE WILL SEND TO TEMPLATE. Use it with dot operator: summary.cpetotal
     data["summary"] = {
@@ -133,7 +139,6 @@ def generate_pdf():
         "stb": stb_summary,
         "iptv": iptv_summary,
         "access": access_summary,
-       
     }
 
     # ----------------------------------------------
