@@ -14,7 +14,7 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body bg-light">
-            <form method="get" class="row g-3 align-items-end">
+            <form method="get" class="row g-3 align-items-start">
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Skladište</label>
                     <select name="city_id" class="form-select shadow-sm" onchange="this.form.submit()">
@@ -23,7 +23,7 @@
                         {% for city in cities if not city.parent_city_id %}
                             <option value="{{ city.id }}"
                             {% if city.id == selected_city_id %}selected{% endif %}>
-                            {{ city.name }} (Major)
+                            {{ city.name }}
                             </option>
 
                             {% for sub in cities if sub.parent_city_id == city.id %}
@@ -146,8 +146,8 @@
         cityName: {{ selected_city_name|tojson }},
         weeks: {{ selected_weeks or "null" }},
     };
-    </script>
-    {% include "charts/_chart_logic.html" %}
+</script>
+{% include "charts/_chart_logic.html" %}
 {% endblock %}
 
 {% endblock %}

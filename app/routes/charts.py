@@ -169,9 +169,6 @@ def cpe_inventory_charts():
     if not selected_cpe_type:
         selected_cpe_type = None
 
-    if not selected_cpe_type:
-        selected_cpe_type = None
-
     # mutual exclusivity ON BACKEND
     if selected_cpe_id:
         selected_cpe_type = None
@@ -219,12 +216,12 @@ def cpe_inventory_charts():
         "charts/cpe_dashboard.html",
         chart_data=chart_data,
         cities=cities,
+        include_children=include_children,
         cpes=cpes,
         types=cpe_types,
-        selected_cpe_id=selected_cpe_id,
-        include_children=include_children,
-        selected_cpe_name=selected_cpe_name,
         selected_cpe_type=selected_cpe_type,
+        selected_cpe_id=selected_cpe_id,
+        selected_cpe_name=selected_cpe_name,
         selected_city_id=selected_city_id,
         selected_city_name=selected_city_name,
         selected_weeks=selected_weeks,
