@@ -2788,3 +2788,8 @@ cities = data
 city_visibility_settings = behavior ✅
 
 👉 This is clean architecture
+
+
+ALTER TABLE cities
+DROP COLUMN IF EXISTS is_active,
+DROP COLUMN IF EXISTS include_in_total;
