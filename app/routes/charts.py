@@ -148,7 +148,7 @@ def access_inventory_charts():
 def cpe_inventory_charts():
     selected_city_id = request.args.get("city_id", type=int)
 
-    include_children = request.args.get("include_children") == "1"
+    include_children= request.args.get("include_children") == "1"
 
     selected_cpe_id = request.args.get("cpe_id", type=int)
 
@@ -174,17 +174,6 @@ def cpe_inventory_charts():
         selected_cpe_type = None
 
     # ---------------------------------------
-    # GET CHART DATA
-    # ---------------------------------------
-    chart_data = get_cpe_inventory_chart_data(
-        city_id=selected_city_id,
-        include_children=include_children,
-        cpe_id=selected_cpe_id,
-        cpe_type=selected_cpe_type,
-        weeks=selected_weeks,
-    )
-
-    # ---------------------------------------
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
     # lists of cities in cpe_inventory that are visible
@@ -199,18 +188,25 @@ def cpe_inventory_charts():
     # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     # ---------------------------------------
-    selected_cpe_name = None
-    selected_city_name = None
+    selected_cpe = None
+    selected_city = None
 
     if selected_cpe_id:
-        selected_cpe_name = next(
-            (c["label"] for c in cpes if c["id"] == selected_cpe_id), None
-        )
+        selected_cpe = next((c for c in cpes if c["id"] == selected_cpe_id), None)
 
     if selected_city_id:
-        selected_city_name = next(
-            (c.name for c in cities if c.id == selected_city_id), None
-        )
+        selected_city = next((c for c in cities if c.id == selected_city_id), None)
+
+    # ---------------------------------------
+    # GET CHART DATA
+    # ---------------------------------------
+    chart_data = get_cpe_inventory_chart_data(
+        city_id=selected_city_id,
+        include_children=include_children,
+        cpe_id=selected_cpe_id,
+        cpe_type=selected_cpe_type,
+        weeks=selected_weeks,
+    )
 
     return render_template(
         "charts/cpe_dashboard.html",
@@ -220,10 +216,8 @@ def cpe_inventory_charts():
         cpes=cpes,
         types=cpe_types,
         selected_cpe_type=selected_cpe_type,
-        selected_cpe_id=selected_cpe_id,
-        selected_cpe_name=selected_cpe_name,
-        selected_city_id=selected_city_id,
-        selected_city_name=selected_city_name,
+        selected_cpe=selected_cpe,
+        selected_city=selected_city,
         selected_weeks=selected_weeks,
     )
 
