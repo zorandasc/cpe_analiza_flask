@@ -63,17 +63,6 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-bold">Vremenski period</label>
-                    <select name="weeks" class="form-select shadow-sm" onchange="this.form.submit()">
-                        <option value="">Sve dostupno</option>
-                        {% for w in [5, 10, 20, 50] %}
-                        <option value="{{ w }}" {% if w == selected_weeks %}selected{% endif %}>
-                            Poslednjih {{ w }} sedmica
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
                  <div class="col-md-3">
                     <label class="form-label fw-bold">Tip CPE uređaja</label>
                       <!--document.querySelector('[name=cpe_id]').value='' IS FOR mutual exclusivity WITH cpe_id ON FRONTEND-->
@@ -86,6 +75,18 @@
                         {% endfor %}
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Vremenski period</label>
+                    <select name="weeks" class="form-select shadow-sm" onchange="this.form.submit()">
+                        <option value="">Sve dostupno</option>
+                        {% for w in [5, 10, 20, 50] %}
+                        <option value="{{ w }}" {% if w == selected_weeks %}selected{% endif %}>
+                            Poslednjih {{ w }} sedmica
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
                 <div class="col-md-2">
                     <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline-secondary w-100">
                         Poništi
