@@ -126,15 +126,6 @@ class Cities(db.Model):
     type: Mapped[Optional[CityTypeEnum]] = mapped_column(
         Enum(CityTypeEnum, native_enum=True, name="city_type_enum")
     )
-
-    is_active: Mapped[Optional[bool]] = mapped_column(
-        Boolean, server_default=text("true")
-    )
-
-    include_in_total: Mapped[Optional[bool]] = mapped_column(
-        Boolean, server_default=text("true")
-    )
-
     cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
         "CpeDismantle", back_populates="city"
     )

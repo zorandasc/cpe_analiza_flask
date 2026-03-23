@@ -36,8 +36,6 @@ block styles %} {{ super() }}
         <th>Ime</th>
         <th>Organizacija</th>
         <th>Tip Skladišta</th>
-        <th>Aktivno</th>
-        <th>Uključeno u ukupnoj sumi opreme</th>
         <th style="width: 160px">Akcija</th>
       </tr>
     </thead>
@@ -50,22 +48,7 @@ block styles %} {{ super() }}
           <strong>{{ city.name }}</strong>
         </td>
         <td>{{ city.parent_city.name if city.parent_city else "—" }}</td>
-        <td>{{ city.type }}</td>
-        <td>
-          {% if city.is_active %}
-            <span class="badge bg-success">Da</span>
-          {% else %}
-            <span class="badge bg-danger">Ne</span>
-          {% endif %}
-        </td>
-        <td>
-          {% if city.include_in_total  %}
-            <span class="badge bg-success">Da</span>
-          {% else %}
-            <span class="badge bg-danger">Ne</span>
-          {% endif %}
-        </td>
-        
+        <td>{{ city.type }}</td>        
         {% if admin_required() %}
         <td>
             <a
@@ -87,22 +70,7 @@ block styles %} {{ super() }}
           <td>{{ sub.id }}</td>
           <td>&nbsp;&nbsp;&nbsp;↳ {{ sub.name }}</td>
           <td>{{ sub.parent_city.name if sub.parent_city else "—" }}</td>
-          <td>{{ sub.type }}</td>
-          <td>
-            {% if sub.is_active %}
-              <span class="badge bg-success">Da</span>
-            {% else %}
-              <span class="badge bg-danger">Ne</span>
-            {% endif %}
-          </td>
-          <td>
-            {% if sub.include_in_total  %}
-              <span class="badge bg-success">Da</span>
-            {% else %}
-              <span class="badge bg-danger">Ne</span>
-            {% endif %}
-          </td>
-          
+          <td>{{ sub.type }}</td>     
           {% if admin_required() %}
           <td>
               <a

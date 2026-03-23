@@ -187,8 +187,9 @@ def cpe_inventory_charts():
     # ---------------------------------------
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
-    # lists of cities in cpe_inventory
+    # lists of cities in cpe_inventory that are visible
     cities = get_visible_cities("cpe_inventory")
+    
 
     # SHOW ONLY CPES THAT ARE ACTIVE IN TOTAL
     cpes = get_cpe_types_column_schema("visible_in_total", "order_in_total")
