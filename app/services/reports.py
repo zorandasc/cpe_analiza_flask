@@ -41,7 +41,7 @@ def run_weekly_report_job():
 
     try:
         magic_link = generate_link_for_view_user()
-    
+
         # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
         success, message = send_email(pdf_path=pdf_path, link=magic_link)
 
@@ -55,7 +55,7 @@ def run_weekly_report_job():
             # Do NOT update last_sent_at.
             # The cron job will hit this again in 10 minutes and retry.
             return f"Failed with {message}- Will retry next cron hit"
-        
+
     except RuntimeError as e:
         print(str(e))
         return
@@ -71,48 +71,50 @@ def generate_pdf():
     data = {"week": current_week_end.strftime("%d-%m-%Y"), "today": date.today()}
 
     # ----------------------------------------------
-    # PULL DATA TO RENDER SUMMARY AND CHARTS
+    # PULL DATA TO RENDER IN SUMMARY AND CHARTS SECTION OF PDF REPORT
     # -------------------------------------------------
 
-    # ALL CPE TYPES FOR 5 WEEKS AND ALL CITIES
+    # ALL CPE TYPES FOR 10 WEEKS FOR ALL CITIES NOT INCLUDING RASPOLOZIVA OPREMA
     cpe_total = get_cpe_inventory_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, weeks=10
     )
 
-    # ALL CPE TYPES FOR 5 WEEKS FOR RASPOLOZIVA OPREMA
+    # ALL CPE TYPES FOR 10 WEEKS FOR RASPOLOZIVA OPREMA
     cpe_warehouse_total = get_cpe_inventory_chart_data(
         city_id=13, cpe_id=None, cpe_type=None, weeks=10
     )
 
-    # ALL CPE TYPES FOR 5 WEEKS
+    # ALL CPE TYPES FOR CPE DISMANTLE 10 WEEKS
     cpe_dismantle_total = get_cpe_dismantle_chart_data(
         city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=10
     )
 
-    # ALL STB TYPES FOR 5 WEEKS
+    # ALL STB TYPES FOR 10 WEEKS
     stb_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=10)
 
-    # ALL DATA FOR 5 WEEKS
+    # ALL IPTV DATA FOR 10 WEEKS
     iptv_total = get_iptv_inventory_chart_data(weeks=10)
 
-    # ALL DATA FOR 5 WEEKS
-    access_total = get_access_inventory_chart_data(city_id=None, months=5)
+    # ALL ACCESS DATA FOR 5MONTHS
+    access_total = get_access_inventory_chart_data(
+        access_id=None, city_id=None, months=5
+    )
 
     # ----------------------------------------------
-    # SUMMARY SECTION (LAST 2 WEEKS) IN PDF REPORT
+    # EXSTRACT FROM DATATSETS LAST 2 WEEKS AND DIFF THEM. FOR SUMMARY TABLES SECTION IN PDF REPORT
     # ------------------------------------------------
-    target_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
+    cpe_target_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
 
     cpe_total_summary = extract_current_previous_diff(
-        cpe_total["datasets"], target_labels
+        cpe_total["datasets"], cpe_target_labels
     )
 
     cpe_warehouse_summary = extract_current_previous_diff(
-        cpe_warehouse_total["datasets"], target_labels
+        cpe_warehouse_total["datasets"], cpe_target_labels
     )
 
     cpe_dismantle_summary = extract_current_previous_diff(
-        cpe_dismantle_total["datasets"], target_labels
+        cpe_dismantle_total["datasets"], cpe_target_labels
     )
 
     stb_summary = extract_current_previous_diff(stb_total["datasets"], ["STB Uređaji"])
@@ -121,11 +123,9 @@ def generate_pdf():
         iptv_total["datasets"], ["IPTV korisnici"]
     )
 
-    access_summary = extract_current_previous_diff(
-        access_total["datasets"], ["ONT uređaji"]
-    )
+    access_summary = extract_current_previous_diff(access_total["datasets"], ["GPON", "XDSL"])
 
-    # ADD TO DATA LIST TO ADD TO PDF
+    # ADD TO DATA LIST WHICH WE WILL SEND TO TEMPLATE. Use it with dot operator: summary.cpetotal
     data["summary"] = {
         "cpetotal": cpe_total_summary,
         "cpewarehouse": cpe_warehouse_summary,
@@ -133,10 +133,11 @@ def generate_pdf():
         "stb": stb_summary,
         "iptv": iptv_summary,
         "access": access_summary,
+       
     }
 
     # ----------------------------------------------
-    # SIGNIFICANT CHANGES SECTION IN PDF REPORT
+    # FOR SIGNIFICANT CHANGES SECTION IN PDF REPORT
     # -------------------------------------------------
 
     significant_changes = []
@@ -208,7 +209,7 @@ def generate_pdf():
     data["access_chart_image"] = build_report_chart(
         chart_data=access_total,
         output_filename="access_trend.png",
-        title="Trend ukupne ONT opreme, pristupn GPON mreža (Zadnjih 5 mjeseci)",
+        title="Trend ukupne ONT/xDSL opreme, pristupn mreža (Zadnjih 5 mjeseci)",
     )
 
     # ----------------------------------------------

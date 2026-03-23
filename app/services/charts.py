@@ -783,7 +783,7 @@ def get_iptv_inventory_chart_data(weeks=None):
         "y_max": y_max,
     }
 
-# STARA VISE SE NE KORISTI>>>>>
+# <<<<<<<STARA VISE SE NE KORISTI>>>>>
 def get_access_inventory_chart_data1(access_id=None, city_id=None, months=None):
 
     params = {}
