@@ -227,7 +227,7 @@
       <span class="me-2">⬅</span> Nazad
     </a>
   </div>
-    <h2 class="text-center title">Stanje CPE opreme za dan: {{ today }}</h2>
+    <h2 class="text-center title">Stanje demontirane ispravne {% if category == "complete" %}kompletne {% else %}nekompletne {% endif %}  CPE opreme.</h2>
       <span class="info">Sedmica ažuriranja {{current_week_end}} (Petak)</span>
       {% if category == "complete" %}
         <div class="table-responsive mb-4">
