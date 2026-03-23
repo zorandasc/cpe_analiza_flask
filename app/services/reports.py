@@ -131,7 +131,8 @@ def generate_pdf():
         access_total["datasets"], access_labels
     )
 
-    # ADD TO DATA LIST WHICH WE WILL SEND TO TEMPLATE. Use it with dot operator: summary.cpetotal
+    # ADD TO DATA LIST WHICH WE WILL SEND TO TEMPLATE. 
+    # In template Use it with dot operator:npr: summary.cpetotal
     data["summary"] = {
         "cpetotal": cpe_total_summary,
         "cpewarehouse": cpe_warehouse_summary,
