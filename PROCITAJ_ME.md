@@ -2269,6 +2269,10 @@ EWS is the "internal" API that Outlook itself uses to talk to Exchange. It is av
 For m:tel, your EWS endpoint is almost certainly:
 https://webmail.mtel.ba/EWS/Exchange.asmx
 
+```bash
+curl -I https://webmail.mtel.ba/EWS/Exchange.asmx
+```
+
 Since flask_mailman only speaks SMTP, you would use a library called exchangelib. It is specifically designed for local corporate Exchange servers.
 
 If you want your Flask app to send mail exactly like your browser or Outlook app does—bypassing the blocked SMTP ports—you should use Exchange Web Services (EWS).
@@ -2799,19 +2803,21 @@ DROP COLUMN IF EXISTS include_in_total;
 
 # cascade delete city only for visibility_settings tablE
 
-U SQLALCHEMY MODELU: class CityVisibilitySettings(db.Model):
+U SQLALCHEMY MODELU: 
 
 ```sql
-city_id = mapped_column(
-    ForeignKey("cities.id", ondelete="CASCADE"),
-    nullable=False
-)
 
-city = relationship(
-    "Cities",
-    backref="visibility_settings",
-    passive_deletes=True
-)
+class CityVisibilitySettings(db.Model):
+	city_id = mapped_column(
+		ForeignKey("cities.id", ondelete="CASCADE"),
+		nullable=False
+	)
+
+	city = relationship(
+		"Cities",
+		backref="visibility_settings",
+		passive_deletes=True
+	)
 ```
 
 NA ZIVOJ BAZI:
