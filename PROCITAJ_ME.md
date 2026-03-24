@@ -2856,3 +2856,36 @@ WHERE city_id = 3
   AND cpe_type_id = 1
   AND week_end = '2026-03-13';
   ```
+
+  # OLD CARRY FORWARD LOGIC FOR CHART  SERVICES
+
+   # ---------------------------------------
+    # 4. Aggregate into chart datasets USING CARRY FORWARD
+    # ---------------------------------------
+    # koliko ima timeline toliko napravi praznih slotova
+    totals_by_type = defaultdict(lambda: [0] * len(timeline))
+
+    # FILL totals_by_type USING CARRY FORWARD
+    for city_data in state.values():
+        for type_key, week_map in city_data.items():
+            # week_map are all data from db query
+            sorted_weeks = sorted(week_map.keys())
+            last_quantity = 0
+
+            # initialize first carry-forward quantity
+            # last_quantity will be last date value that is outside
+            # of week range deffined by [start_week, max_week]
+            for w in sorted_weeks:
+                if w < start_week:
+                    last_quantity = week_map[w]
+                else:
+                    break
+
+            # for every date (w) in timeline
+            for i, w in enumerate(timeline):
+                # check if date exisist in real data week_map
+                if w in week_map:
+                    # if yes take his quantity, continue
+                    last_quantity = week_map[w]
+                # if no quantity for this timeslot is last value
+                totals_by_type[type_key][i] += last_quantity

@@ -17,8 +17,6 @@ from app.models import (
 
 
 # cpe inventory IS EVENT/STATE-CHANGE TABLE
-# You only need carry-forward when your table
-# stores sparse changes instead of full state.
 def get_cpe_inventory_chart_data(
     city_id=None, cpe_id=None, cpe_type=None, weeks=None, include_children=False
 ):
@@ -91,7 +89,7 @@ def get_cpe_inventory_chart_data(
         return {"labels": [], "datasets": []}
 
     # CONTINUOE TIMELINE OF FRIDAYS
-    timeline, start_week = build_week_timeline(weeks, min_week, max_week)
+    timeline = build_week_timeline(weeks, min_week, max_week)
 
     rows = base.all()
 
@@ -140,48 +138,28 @@ def get_cpe_inventory_chart_data(
     # 4. Aggregate into chart datasets
     # ---------------------------------------
     """
-    FOR EVERY TIME SLOT SUMED FOR EACH CITY 
-    router → [0,0,0,0,0] #one slot per week
-    modem  → [0,0,0,0,0] #one slot per week
     # defaultdict to automate the creation of lists so you don't have
     # to check if a key exists before adding data to it.
     # Using lambda: is a shorthand way of saying: "Every time you see a new key,
     # run this little function to generate the starting value.
+
+    totals_by_type: FOR EVERY CPE-TYPE MAKE len(timeline) TIME SLOTS 
+    router → [0,0,0,0,0] #one slot per week
+    modem  → [0,0,0,0,0] #one slot per week
     """
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
-    # FILL totals_by_type USING THE Logic THE CARRY FORWARD LOGIC
+    # FOR EVERY CITY
     for city_data in state.values():
-        # now we are inside one city
-        # week_map is actuall list of all data from db (weeks, quantities) for that cpe_type and city_id
-        # week_map = {2026-01-23: 100,2026-02-06: 120}
+        # FOR EVERY CPE_TYPE OF THAT CITY
         for type_key, week_map in city_data.items():
-            # sorted_weeks are also data from db query
-            sorted_weeks = sorted(week_map.keys())
-            last_quantity = 0
+            # FILL CONINUOUS TIMELINE DATES WITH QUANTITYES FROM DB
+            # FOR MISSING WEEKS FROM DB WE CAN USE LINEAR OF CARRY FORWARD LOGIC
+            series = interpolate_series(timeline, week_map, method="linear")
 
-            # initialize first carry-forward quantity
-            # VALUE FOR last_quantity will be last date value that is outside
-            # of week range deffined by [start_week, max_week]
-            for w in sorted_weeks:
-                if w < start_week:  # start_week -continuous timeline
-                    last_quantity = week_map[w]
-                else:
-                    break
-
-            # FOR FILTER WEEKS=5, i WILL GO FROM 1..5
-            for i, w in enumerate(timeline):
-                # check if date exisist in real data week_map
-                if w in week_map:
-                    # if yes take his quantity, continue
-                    # week_map[w] is quantity, w is date
-                    last_quantity = week_map[w]
-                # if no quantity for this timeslot is last value
-                totals_by_type[type_key][i] += last_quantity
-
-    # totals_by_type give us summary per cities for all cpe_types:
-    # router → [180, 180, 200, 200, ...]
-    # modem  → [50, 50, 50, 50, ...]
+            for i, val in enumerate(series):
+                # router → [0,0,0,0,0] # ONE SLOT PER WEEK SUMED FOR EACH CITY
+                totals_by_type[type_key][i] += val
 
     # ---------------------------------------
     # 4.5 Dynamic Y-axis scaling (ALL datasets)
@@ -271,8 +249,6 @@ def get_cpe_inventory_chart_data(
 
 
 # cpe dismantle IS EVENT/STATE-CHANGE TABLE
-# You only need carry-forward when your table
-# stores sparse changes instead of full state.
 def get_cpe_dismantle_chart_data(
     city_id=None,
     cpe_id=None,
@@ -344,7 +320,7 @@ def get_cpe_dismantle_chart_data(
         return {"labels": [], "datasets": []}
 
     # CONTINUOE TIMELINE OF FRIDAYS
-    timeline, start_week = build_week_timeline(weeks, min_week, max_week)
+    timeline = build_week_timeline(weeks, min_week, max_week)
 
     rows = base.all()
 
@@ -367,30 +343,17 @@ def get_cpe_dismantle_chart_data(
     # koliko ima timeline toliko napravi praznih slotova
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
-    # FILL totals_by_type USING CARRY FORWARD
+    # FOR EVERY CITY
     for city_data in state.values():
+        # FOR EVERY CPE_TYPE OF THAT CITY
         for type_key, week_map in city_data.items():
-            # week_map are all data from db query
-            sorted_weeks = sorted(week_map.keys())
-            last_quantity = 0
+            # FILL CONINUOUS TIMELINE DATES WITH QUANTITYES FROM DB
+            # FOR MISSING WEEKS FROM DB WE CAN USE LINEAR OF CARRY FORWARD LOGIC
+            series = interpolate_series(timeline, week_map, method="linear")
 
-            # initialize first carry-forward quantity
-            # last_quantity will be last date value that is outside
-            # of week range deffined by [start_week, max_week]
-            for w in sorted_weeks:
-                if w < start_week:
-                    last_quantity = week_map[w]
-                else:
-                    break
-
-            # for every date (w) in timeline
-            for i, w in enumerate(timeline):
-                # check if date exisist in real data week_map
-                if w in week_map:
-                    # if yes take his quantity, continue
-                    last_quantity = week_map[w]
-                # if no quantity for this timeslot is last value
-                totals_by_type[type_key][i] += last_quantity
+            for i, val in enumerate(series):
+                # router → [0,0,0,0,0] # ONE SLOT PER WEEK SUMED FOR EACH CITY
+                totals_by_type[type_key][i] += val
 
     # ---------------------------------------
     # 4.5 Dynamic Y-axis scaling (ALL datasets)
@@ -464,8 +427,6 @@ def get_cpe_dismantle_chart_data(
 
 
 # cpe inventory IS EVENT/STATE-CHANGE TABLE
-# You only need carry-forward when your table
-# stores sparse changes instead of full state.
 def get_cpe_broken_chart_data(
     city_id=None, cpe_id=None, cpe_type=None, weeks=None, include_children=False
 ):
@@ -528,7 +489,7 @@ def get_cpe_broken_chart_data(
         return {"labels": [], "datasets": []}
 
     # CONTINUOE TIMELINE OF FRIDAYS
-    timeline, start_week = build_week_timeline(weeks, min_week, max_week)
+    timeline = build_week_timeline(weeks, min_week, max_week)
 
     rows = base.all()
 
@@ -551,34 +512,17 @@ def get_cpe_broken_chart_data(
 
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
-    # FILL totals_by_type USING THE Logic THE CARRY FORWARD LOGIC
+    # FOR EVERY CITY
     for city_data in state.values():
-        # now we are inside one city
-        # week_map is actuall list of data from db (weeks, quantities) for that cpe_type and city_id
-        # week_map = {2026-01-23: 100,2026-02-06: 120}
+        # FOR EVERY CPE_TYPE OF THAT CITY
         for type_key, week_map in city_data.items():
-            # week_map are all data from db query
-            sorted_weeks = sorted(week_map.keys())
-            last_quantity = 0
+            # FILL CONINUOUS TIMELINE DATES WITH QUANTITYES FROM DB
+            # FOR MISSING WEEKS FROM DB WE CAN USE LINEAR OF CARRY FORWARD LOGIC
+            series = interpolate_series(timeline, week_map, method="linear")
 
-            # initialize first carry-forward quantity
-            # last_quantity will be last date value that is outside
-            # of week range deffined by [start_week, max_week]
-            for w in sorted_weeks:
-                if w < start_week:
-                    last_quantity = week_map[w]
-                else:
-                    break
-
-            # FOR FILTER WEEKS=5, i WILL GO FROM 1..5
-            for i, w in enumerate(timeline):
-                # check if date exisist in real data week_map
-                if w in week_map:
-                    # week_map[w] is quantity, w is date
-                    # if yes take his quantity, continue
-                    last_quantity = week_map[w]
-                # if no quantity for this timeslot is last value
-                totals_by_type[type_key][i] += last_quantity
+            for i, val in enumerate(series):
+                # router → [0,0,0,0,0] # ONE SLOT PER WEEK SUMED FOR EACH CITY
+                totals_by_type[type_key][i] += val
 
     # ---------------------------------------
     # 4.5 Dynamic Y-axis scaling (ALL datasets)
@@ -653,9 +597,6 @@ def get_cpe_broken_chart_data(
     }
 
 
-# IN HERE I DONT USE CARRY FORWARD LOGIC IN PYTHON.
-# WHY? BECAUSE IF THERE IS NO WEEK SQL WILL JUST CONNECT ACROS EXSISTING WEEKS
-# stb inventory IS SNAPSHOT TABLE, UPDATE IS HAPPENING ACROSS ALL STBS
 def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
 
     params = {}
@@ -724,7 +665,6 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
     }
 
 
-# iptv users charts (Snapshot tables)
 def get_iptv_inventory_chart_data(weeks=None):
     params = {}
     if weeks:
@@ -783,73 +723,6 @@ def get_iptv_inventory_chart_data(weeks=None):
     }
 
 
-# <<<<<<<STARA VISE SE NE KORISTI>>>>>
-def get_access_inventory_chart_data1(access_id=None, city_id=None, months=None):
-
-    params = {}
-
-    where = ""
-    if city_id:
-        where = "AND city_id= :city_id"
-        params["city_id"] = city_id
-
-    if months:
-        sql = f"""
-            WITH last_month AS (
-                SELECT DISTINCT month_end
-                FROM access_inventory 
-                WHERE 1=1 {where}
-                ORDER BY month_end DESC
-                LIMIT :months
-            )
-            SELECT i.month_end, SUM(i.quantity) AS total
-            FROM access_inventory i
-            JOIN last_month m ON m.month_end=i.month_end
-            WHERE 1=1 {where}
-            GROUP BY i.month_end
-            ORDER BY i.month_end
-        """
-        params["months"] = months
-    else:
-        sql = f"""
-            SELECT month_end, SUM(quantity) AS total
-            FROM access_inventory
-            WHERE 1=1 {where}
-            GROUP BY month_end
-            ORDER BY month_end
-        """
-
-    rows = db.session.execute(text(sql), params).fetchall()
-
-    labels = [r.month_end.strftime("%d-%m-%Y") for r in rows]
-    data = [r.total for r in rows]
-
-    # ---------------------------------------
-    # 4.5 Dynamic Y-axis scaling (ALL datasets)
-    # ---------------------------------------
-
-    if data:
-        y_min = min(data)
-        y_max = max(data)
-
-        padding = (y_max - y_min) * 0.1
-
-        if padding == 0:
-            padding = 1
-
-        y_min -= padding
-        y_max += padding
-    else:
-        y_min, y_max = 0, 1
-
-    return {
-        "labels": labels,
-        "datasets": [{"label": "ONT uređaji", "data": data}],
-        "y_min": y_min,
-        "y_max": y_max,
-    }
-
-
 def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
 
     # ---------------------------------------
@@ -893,7 +766,7 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
         return {"labels": [], "datasets": []}
 
     # BUILD CONTINUOUS TIMELINE OF MONTHS
-    timeline, start_month = build_month_timeline(months, min_month, max_month)
+    timeline = build_month_timeline(months, min_month, max_month)
 
     rows = base.all()
 
@@ -915,26 +788,17 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     # ---------------------------------------
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
+    # FOR EVERY CITY
     for city_data in state.values():
-        for type_name, month_map in city_data.items():
-            # month_map are all data from db query
-            sorted_months = sorted(month_map.keys())
-            last_quantity = 0
+        # FOR EVERY CPE_TYPE OF THAT CITY
+        for type_key, week_map in city_data.items():
+            # FILL CONINUOUS TIMELINE DATES WITH QUANTITYES FROM DB
+            # FOR MISSING WEEKS FROM DB WE CAN USE LINEAR OF CARRY FORWARD LOGIC
+            series = interpolate_series(timeline, week_map, method="linear")
 
-            # initialize first carry-forward quantity
-            for m in sorted_months:
-                if m < start_month:
-                    # last_quantity will be last date value that is outside
-                    # of month range deffined by [start_month, max_month]
-                    last_quantity = month_map[m]
-                else:
-                    break
-
-            # carry forward
-            for i, m in enumerate(timeline):
-                if m in month_map:
-                    last_quantity = month_map[m]
-                totals_by_type[type_name][i] += last_quantity
+            for i, val in enumerate(series):
+                # router → [0,0,0,0,0] # ONE SLOT PER WEEK SUMED FOR EACH CITY
+                totals_by_type[type_key][i] += val
 
     # ---------------------------------------
     # 4.5 Dynamic Y-axis scaling (ALL datasets)
@@ -1007,7 +871,7 @@ def build_week_timeline(weeks, min_week, max_week):
         timeline.append(current_week)
         current_week += timedelta(days=7)
 
-    return timeline, start_week
+    return timeline
 
 
 def build_month_timeline(months, min_month, max_month):
@@ -1041,7 +905,7 @@ def build_month_timeline(months, min_month, max_month):
         # Move to the last day of the next month in one clean step
         current = current + relativedelta(months=1, day=31)
 
-    return timeline, start_month
+    return timeline
 
 
 def get_visible_cities(dataset_key):
@@ -1060,3 +924,47 @@ def get_visible_cities(dataset_key):
             """),
         {"dataset_key": dataset_key},
     ).fetchall()
+
+
+# LINEAR AND CARRY FORWARD APROXIMATION OF MISSING DATA
+def interpolate_series(timeline, week_map, method="locf"):
+
+    # timeline - continouse timeline
+    # week_map - data/weeks from db
+    # week_map is actuall list of all data from db (weeks, quantities) for that cpe_type and city_id
+    # week_map = {2026-01-23: 100, 2026-02-06: 120}
+    # linear - y=y1​+(x2​−x1​)(x−x1​)​(y2​−y1​)
+
+    sorted_weeks = sorted(week_map.keys())
+    result = []
+
+    for w in timeline:
+        if w in week_map:
+            result.append(week_map[w])
+            # IF ALL DATA IN TIMELINE AND IN DB THAT IS IT, FINISH
+            continue
+
+        # IF QUNTIY MISSING ON SOME WEEKS IN DB THAN APROXIMATE
+        if method == "locf":  # CARRY FORWARD
+            prev = next((pw for pw in reversed(sorted_weeks) if pw < w), None)
+            result.append(week_map[prev] if prev else 0)
+
+        elif method == "linear":  # LINEAR
+            prev = next((pw for pw in reversed(sorted_weeks) if pw < w), None)
+            next_ = next((nw for nw in sorted_weeks if nw > w), None)
+
+            if prev and next_:
+                y1 = week_map[prev]
+                y2 = week_map[next_]
+
+                ratio = (w - prev).days / (next_ - prev).days
+                result.append(int(round(y1 + ratio * (y2 - y1))))
+
+            elif prev:
+                result.append(week_map[prev])
+            elif next_:
+                result.append(week_map[next_])
+            else:
+                result.append(0)
+
+    return result
