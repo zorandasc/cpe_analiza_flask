@@ -918,6 +918,13 @@ def cities_visibility_update():
     ).first()
 
     # 3. Change boolean fields for city_id/dataset_key in db
+    if not setting:
+        setting = CityVisibilitySettings(
+            city_id=city_id,
+            dataset_key=dataset_key
+        )
+        db.session.add(setting)
+
     setattr(setting, field, value)
 
     db.session.commit()

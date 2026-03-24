@@ -386,10 +386,10 @@ FROM
 
 	-- INSERT INTO CITIES VISIBILITIES-------------
 
-	INSERT INTO city_visibility_settings (city_id, table_type, is_visible, included_in_total_sum)
+	INSERT INTO city_visibility_settings (city_id, dataset_key, is_visible, included_in_total_sum)
 SELECT 
     c.id, 
-    tt.table_type, 
+    dk.dataset_key, 
     true, 
     true
 FROM cities c
@@ -399,4 +399,4 @@ CROSS JOIN (
         ('cpe_dismantle'), 
         ('cpe_broken'), 
         ('access_inventory')
-) AS tt(table_type);
+) AS dk(dataset_key);
