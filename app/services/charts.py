@@ -99,7 +99,6 @@ def get_cpe_inventory_chart_data(
     # (3, datetime.date(2026, 1, 9), 7, <CpeTypeEnum.ONT: 'ONT'>, 7)
     # (3, datetime.date(2026, 1, 9), 8, <CpeTypeEnum.ONT: 'ONT'>, 444)
     # for city_id=13, week=5, cpe_type='ONt':
-    # print(row, "\n"): 10 rows, 5 for access nokia 5 for huawei
     if not rows:
         return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
 

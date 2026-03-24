@@ -170,9 +170,6 @@ def get_stb_records_history(page: int, per_page: int):
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_stb_types()
 
-    for s in schema_list:
-        print(s, "/n")
-
     # paginated_records is iterable SimplePagination object
     records = get_stb_inventory_history(
         schema_list=schema_list, page=page, per_page=per_page

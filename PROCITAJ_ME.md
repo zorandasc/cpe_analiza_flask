@@ -2793,3 +2793,44 @@ city_visibility_settings = behavior ✅
 ALTER TABLE cities
 DROP COLUMN IF EXISTS is_active,
 DROP COLUMN IF EXISTS include_in_total;
+
+
+# -------------------------------------------------
+
+# cascade delete city only for visibility_settings tablE
+
+U SQLALCHEMY MODELU: class CityVisibilitySettings(db.Model):
+
+```sql
+city_id = mapped_column(
+    ForeignKey("cities.id", ondelete="CASCADE"),
+    nullable=False
+)
+
+city = relationship(
+    "Cities",
+    backref="visibility_settings",
+    passive_deletes=True
+)
+```
+
+NA ZIVOJ BAZI:
+
+ALTER TABLE city_visibility_settings
+DROP CONSTRAINT city_visibility_settings_city_id_fkey;
+
+ALTER TABLE city_visibility_settings
+ADD CONSTRAINT city_visibility_settings_city_id_fkey
+FOREIGN KEY (city_id)
+REFERENCES cities(id)
+ON DELETE CASCADE;
+
+cities
+  ↓ (CASCADE only here)
+city_visibility_settings
+
+cities
+  ↓ (RESTRICT)
+cpe_inventory
+cpe_dismantle
+access_inventory

@@ -1385,8 +1385,6 @@ def access_types():
         return redirect(url_for("admin.dashboard"))
 
     all_access = AccessTypes.query.order_by(AccessTypes.id).all()
-    for a in all_access:
-        print(a, "/n")
 
     return render_template("admin/access_types.html", all_access=all_access)
 
