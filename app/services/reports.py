@@ -10,6 +10,7 @@ from app.services.email_service import send_email
 from app.services.charts import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
+    get_cpe_broken_chart_data,
     get_stb_inventory_chart_data,
     get_iptv_inventory_chart_data,
     get_access_inventory_chart_data,
@@ -89,6 +90,11 @@ def generate_pdf():
         city_id=None, cpe_id=None, cpe_type=None, dismantle_type_id=None, weeks=10
     )
 
+    # ALL CPE TYPES FOR CPE BROKEN 10 WEEKS
+    cpe_broken_total = get_cpe_broken_chart_data(
+        city_id=None, cpe_id=None, cpe_type=None, weeks=10
+    )
+
     # ALL STB TYPES FOR 10 WEEKS
     stb_total = get_stb_inventory_chart_data(stb_type_id=None, weeks=10)
 
@@ -101,7 +107,8 @@ def generate_pdf():
     )
 
     # ----------------------------------------------
-    # EXSTRACT FROM DATATSETS LAST 2 WEEKS AND DIFF THEM. THIS IS FOR SUMMARY TABLES SECTION IN PDF REPORT
+    # EXSTRACT FROM DATATSETS LAST 2 WEEKS AND DIFF THEM.
+    # THIS IS FOR SUMMARY TABLES SECTION IN PDF REPORT
     # ------------------------------------------------
     cpe_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
 
@@ -113,6 +120,10 @@ def generate_pdf():
 
     cpe_dismantle_summary = extract_current_previous_diff(
         cpe_dismantle_total["datasets"], cpe_labels
+    )
+
+    cpe_broken_summary = extract_current_previous_diff(
+        cpe_broken_total["datasets"], cpe_labels
     )
 
     stb_summary = extract_current_previous_diff(stb_total["datasets"], ["STB Uređaji"])
@@ -131,12 +142,13 @@ def generate_pdf():
         access_total["datasets"], access_labels
     )
 
-    # ADD TO DATA LIST WHICH WE WILL SEND TO TEMPLATE. 
+    # ADD TO DATA LIST WHICH WE WILL SEND TO TEMPLATE.
     # In template Use it with dot operator:npr: summary.cpetotal
     data["summary"] = {
         "cpetotal": cpe_total_summary,
         "cpewarehouse": cpe_warehouse_summary,
         "cpedismantle": cpe_dismantle_summary,
+        "cpebroken": cpe_broken_summary,
         "stb": stb_summary,
         "iptv": iptv_summary,
         "access": access_summary,
@@ -194,7 +206,14 @@ def generate_pdf():
     data["cpe_dismantle_chart_image"] = build_report_chart(
         chart_data=cpe_dismantle_total,
         output_filename="cpe_dismantle_trend.png",
-        title="Trend ukupne demontirane CPE opreme po tipu (Zadnjih 10 sedmica)",
+        title="Trend ukupne demontirane ispravne opreme po tipu (Zadnjih 10 sedmica)",
+    )
+
+        # "cpe_broken_chart_image": "static/reports/charts/cpe_broken_trend.png",
+    data["cpe_broken_chart_image"] = build_report_chart(
+        chart_data=cpe_broken_total,
+        output_filename="cpe_broken_trend.png",
+        title="Trend ukupne demontirane neispravne opreme po tipu (Zadnjih 10 sedmica)",
     )
 
     # "stb_chart_image"": "static/reports/charts/stb_chart_image"",

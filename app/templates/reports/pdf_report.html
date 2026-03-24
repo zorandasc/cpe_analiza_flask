@@ -94,7 +94,7 @@
       <table class="summary-table">
         <thead>
           <tr>
-            <th>Tip CPE ispravna oprema demontaža</th>
+            <th>Tip CPE opreme demontaža ispravna</th>
             <th>Prošla sedmica</th>
             <th>Ova sedmica</th>
             <th>Promjena</th>
@@ -102,6 +102,29 @@
         </thead>
         <tbody>
           {% for label, vals in summary.cpedismantle.items() %}
+          <tr>
+            <td>{{label}}</td>
+            <td>{{ vals.previous }}</td>
+            <td>{{ vals.current }}</td>
+            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
+              {{ vals.difference }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+       <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Tip CPE opreme demontaža neispravna</th>
+            <th>Prošla sedmica</th>
+            <th>Ova sedmica</th>
+            <th>Promjena</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for label, vals in summary.cpebroken.items() %}
           <tr>
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
@@ -200,9 +223,13 @@
         src="{{ cpe_dismantle_chart_image }}"
         alt="CPE Dismantle Trend Chart"
       />
+       <img
+        src="{{ cpe_broken_chart_image }}"
+        alt="CPE Broken Trend Chart"
+      />
       <img src="{{ stb_chart_image }}" alt="STB Trend Chart" />
       <img src="{{ iptv_chart_image }}" alt="IPTV Trend Chart" />
-      <img src="{{ access_chart_image }}" alt="ONT Trend Chart" />
+      <img src="{{ access_chart_image }}" alt="GPON/xDSL Trend Chart" />
     </section>
   </body>
 </html>
