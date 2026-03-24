@@ -153,18 +153,18 @@ def get_cpe_inventory_chart_data(
     # FILL totals_by_type USING THE Logic THE CARRY FORWARD LOGIC
     for city_data in state.values():
         # now we are inside one city
-        # week_map is actuall list of data from db (weeks, quantities) for that cpe_type and city_id
+        # week_map is actuall list of all data from db (weeks, quantities) for that cpe_type and city_id
         # week_map = {2026-01-23: 100,2026-02-06: 120}
         for type_key, week_map in city_data.items():
-            # week_map are all data from db query
+            # sorted_weeks are also data from db query
             sorted_weeks = sorted(week_map.keys())
             last_quantity = 0
 
             # initialize first carry-forward quantity
-            # last_quantity will be last date value that is outside
+            # VALUE FOR last_quantity will be last date value that is outside
             # of week range deffined by [start_week, max_week]
             for w in sorted_weeks:
-                if w < start_week:
+                if w < start_week:  # start_week -continuous timeline
                     last_quantity = week_map[w]
                 else:
                     break
@@ -781,6 +781,7 @@ def get_iptv_inventory_chart_data(weeks=None):
         "y_min": y_min,
         "y_max": y_max,
     }
+
 
 # <<<<<<<STARA VISE SE NE KORISTI>>>>>
 def get_access_inventory_chart_data1(access_id=None, city_id=None, months=None):

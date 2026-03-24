@@ -2840,3 +2840,19 @@ cities
 cpe_inventory
 cpe_dismantle
 access_inventory
+
+
+# ----UPDATE AND DELETE SQL STATEMENT--------------------
+
+```SQL
+UPDATE cpe_inventory
+SET quantity = 150
+WHERE city_id = 3
+  AND cpe_type_id = 1
+  AND week_end = '2026-03-20';
+
+DELETE FROM cpe_inventory
+WHERE city_id = 3
+  AND cpe_type_id = 1
+  AND week_end = '2026-03-13';
+  ```
