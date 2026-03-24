@@ -664,34 +664,31 @@ def get_stb_inventory_chart_data(stb_type_id=None, weeks=None):
 
 
 def get_iptv_inventory_chart_data(weeks=None):
-    params = {}
-    if weeks:
-        sql = """
-            WITH last_week AS (
-            SELECT DISTINCT week_end
-            FROM iptv_users 
-            ORDER BY week_end DESC
-            LIMIT :weeks
-            )
-            SELECT i.week_end, SUM(i.total_users) AS total
-            FROM iptv_users i
-            JOIN last_week w ON w.week_end=i.week_end
-            GROUP BY i.week_end
-            ORDER BY i.week_end
-        """
-        params["weeks"] = weeks
-    else:
-        sql = """
+
+    sql = """
             SELECT week_end, SUM(total_users) AS total
             FROM iptv_users
             GROUP BY week_end
             ORDER BY week_end
         """
 
-    rows = db.session.execute(text(sql), params).fetchall()
+    rows = db.session.execute(text(sql)).fetchall()
 
-    labels = [r.week_end.strftime("%d-%m-%Y") for r in rows]
-    data = [r.total for r in rows]
+    week_map = {r.week_end: r.total for r in rows}
+
+    min_week = min(week_map.keys())
+    max_week = max(week_map.keys())
+
+    timeline = build_week_timeline(weeks, min_week, max_week)
+
+    series = interpolate_series(
+        timeline,
+        week_map,
+        method="linear",
+    )
+
+    labels = [w.strftime("%d-%m-%Y") for w in timeline]
+    data = [s for s in series]
 
     # ---------------------------------------
     # 4.5 Dynamic Y-axis scaling (ALL datasets)
