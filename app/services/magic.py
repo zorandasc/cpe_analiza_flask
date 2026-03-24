@@ -1,6 +1,6 @@
 from itsdangerous import URLSafeTimedSerializer
 from itsdangerous import BadSignature, SignatureExpired
-from flask import current_app, url_for
+from flask import current_app
 
 from app.models import UserRole, Users
 
