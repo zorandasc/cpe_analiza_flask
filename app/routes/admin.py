@@ -42,6 +42,7 @@ from app.models import (
     ReportSetting,
     ReportRecipients,
     CityVisibilitySettings,
+    user_cities,
 )
 
 
@@ -836,24 +837,28 @@ def delete_city(id):
 
     city = Cities.query.get_or_404(id)
 
-    cpe_count = len(city.cpe_inventory)
-    cpe_dismantle_count = len(city.cpe_dismantle)
-    access_count = len(city.access_inventory)
-    users_count = len(city.users)
-    subcities_count = len(city.sub_cities)
+    cpe_count = db.session.query(CpeInventory.id).filter_by(city_id=city.id).first()
+    cpe_dismantle_count =db.session.query(CpeDismantle.id).filter_by(city_id=city.id).first()
+    access_count = db.session.query(AccessInventory.id).filter_by(city_id=city.id).first()
+    users_count = db.session.query(user_cities).filter_by(city_id=city.id).first()
+    subcities_count = db.session.query(Cities.id).filter_by(parent_city_id=city.id).first()
+    
+    errors = []
 
     # PROTECT CITY DELETE: block if related rows exist
-    if (
-        cpe_count > 0
-        or cpe_dismantle_count > 0
-        or access_count > 0
-        or users_count > 0
-        or subcities_count > 0
-    ):
-        flash(
-            "Nemože biti brisano! Skladište ima aktivne unose ili podskladišta. Možete ga onemogućit.",
-            "danger",
-        )
+    if cpe_count:
+        errors.append("Skladište ima aktivne unose u inventaru ukupne CPE opreme.")
+    if cpe_dismantle_count:
+        errors.append("Skladište ima aktivne unose u inventaru demontirane CPE opreme.")
+    if access_count:
+        errors.append("Skladište ima aktivne unose u inventaru pristupne tehnologije.")
+    if users_count:
+        errors.append("Skladište ima aktivne unose u korisnicima.")
+    if subcities_count:
+        errors.append("Skladište ima podgradove.")
+
+    if errors:
+        flash(f"Skladište nemože biti obrisano jer: {', '.join(errors)}.", "danger")
         return redirect(url_for("admin.cities"))
 
     flash("Skladište obrisano!", "success")
@@ -919,10 +924,7 @@ def cities_visibility_update():
 
     # 3. Change boolean fields for city_id/dataset_key in db
     if not setting:
-        setting = CityVisibilitySettings(
-            city_id=city_id,
-            dataset_key=dataset_key
-        )
+        setting = CityVisibilitySettings(city_id=city_id, dataset_key=dataset_key)
         db.session.add(setting)
 
     setattr(setting, field, value)

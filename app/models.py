@@ -147,6 +147,10 @@ class Cities(db.Model):
     # relationship to self
     parent_city = relationship("Cities", remote_side=[id], backref="sub_cities")
 
+    visibility_settings = relationship(
+        "CityVisibilitySettings", back_populates="city", passive_deletes=True
+    )
+
 
 class CityVisibilitySettings(db.Model):
     __tablename__ = "city_visibility_settings"
@@ -161,8 +165,8 @@ class CityVisibilitySettings(db.Model):
     dataset_key = mapped_column(String(100), nullable=False)
     is_visible = mapped_column(Boolean, server_default=text("true"))
     included_in_total_sum = mapped_column(Boolean, server_default=text("true"))
-    # cascade delete city only for visibility_settings table
-    city = relationship("Cities", backref="visibility_settings", passive_deletes=True)
+
+    city = relationship("Cities", back_populates="visibility_settings")
 
 
 class CpeTypes(db.Model):
