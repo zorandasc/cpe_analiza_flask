@@ -1335,12 +1335,14 @@ def delete_stb_type(id):
 
     stb = StbTypes.query.get_or_404(id)
 
-    stb_count = len(stb.stb_inventory)
+    stb_in_inventory = (
+        db.session.query(StbInventory.id).filter_by(stb_type_id=stb.id).first()
+    )
 
-    # PROTECT CITY DELETE: block if related rows exist
-    if stb_count > 0:
+    # PROTECT stb DELETE: block if related rows exist
+    if stb_in_inventory:
         flash(
-            "Nemože biti brisano! STB ima aktivan unose. Možete ga onemogućit.",
+            "STB nemože biti obrisan, ima aktivne unose u inventaru STB opreme. Možete ga onemogućit.",
             "danger",
         )
         return redirect(url_for("admin.stb_types"))
@@ -1489,12 +1491,14 @@ def delete_access_types(id):
 
     access = AccessTypes.query.get_or_404(id)
 
-    access_count = len(access.access_inventory)
+    access_count = (
+        db.session.query(AccessInventory.id).filter_by(access_type_id=access.id).first()
+    )
 
     # PROTECT CITY DELETE: block if related rows exist
-    if access_count > 0:
+    if access_count:
         flash(
-            "Nemože biti brisano! Pristupna ima aktivne unose. Možete ju onemogućiti.",
+            "Nemože biti brisano! Pristupna tehnologija ima aktivne unose. Možete ju onemogućiti.",
             "danger",
         )
         return redirect(url_for("admin.access_types"))
