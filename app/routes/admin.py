@@ -837,22 +837,35 @@ def delete_city(id):
 
     city = Cities.query.get_or_404(id)
 
-    cpe_count = db.session.query(CpeInventory.id).filter_by(city_id=city.id).first()
-    cpe_dismantle_count =db.session.query(CpeDismantle.id).filter_by(city_id=city.id).first()
-    access_count = db.session.query(AccessInventory.id).filter_by(city_id=city.id).first()
-    users_count = db.session.query(user_cities).filter_by(city_id=city.id).first()
-    subcities_count = db.session.query(Cities.id).filter_by(parent_city_id=city.id).first()
-    
+    city_cpe_count = (
+        db.session.query(CpeInventory.id).filter_by(city_id=city.id).first()
+    )
+    city_dismantle_count = (
+        db.session.query(CpeDismantle.id).filter_by(city_id=city.id).first()
+    )
+    city_broken_count = (
+        db.session.query(CpeBroken.id).filter_by(city_id=city.id).first()
+    )
+    city_access_count = (
+        db.session.query(AccessInventory.id).filter_by(city_id=city.id).first()
+    )
+    city_users_count = db.session.query(user_cities).filter_by(city_id=city.id).first()
+    subcities_count = (
+        db.session.query(Cities.id).filter_by(parent_city_id=city.id).first()
+    )
+
     errors = []
 
     # PROTECT CITY DELETE: block if related rows exist
-    if cpe_count:
+    if city_cpe_count:
         errors.append("Skladište ima aktivne unose u inventaru ukupne CPE opreme.")
-    if cpe_dismantle_count:
+    if city_dismantle_count:
         errors.append("Skladište ima aktivne unose u inventaru demontirane CPE opreme.")
-    if access_count:
+    if city_broken_count:
+        errors.append("Skladište ima aktivne unose u inventaru neispravne CPE opreme.")
+    if city_access_count:
         errors.append("Skladište ima aktivne unose u inventaru pristupne tehnologije.")
-    if users_count:
+    if city_users_count:
         errors.append("Skladište ima aktivne unose u korisnicima.")
     if subcities_count:
         errors.append("Skladište ima podgradove.")
@@ -1207,15 +1220,28 @@ def delete_cpe_type(id):
 
     cpe = CpeTypes.query.get_or_404(id)
 
-    cpe_count = len(cpe.cpe_inventory)
-    cpe_dismantle_count = len(cpe.cpe_dismantle)
+    cpe_total_count = (
+        db.session.query(CpeInventory.id).filter_by(cpe_type_id=cpe.id).first()
+    )
+    cpe_dismantle_count = (
+        db.session.query(CpeDismantle.id).filter_by(cpe_type_id=cpe.id).first()
+    )
+    cpe_broken_count = (
+        db.session.query(CpeBroken.id).filter_by(cpe_type_id=cpe.id).first()
+    )
+
+    errors = []
 
     # PROTECT CPE DELETE: block if related rows exist
-    if cpe_count > 0 or cpe_dismantle_count > 0:
-        flash(
-            "Nemože biti brisano! CPE ima aktivan unose. Možete ga onemogućit.",
-            "danger",
-        )
+    if cpe_total_count:
+        errors.append("CPE ima aktivne unose u inventaru ukupne CPE opreme.")
+    if cpe_dismantle_count:
+        errors.append("CPE ima aktivne unose u inventaru demontirane CPE opreme.")
+    if cpe_broken_count:
+        errors.append("CPE ima aktivne unose u inventaru neispravne CPE opreme.")
+
+    if errors:
+        flash(f"CPE nemože biti obrisan jer: {', '.join(errors)}.", "danger")
         return redirect(url_for("admin.cpe_types"))
 
     flash("CPE uređaj obrisan!", "success")
