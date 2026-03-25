@@ -119,20 +119,20 @@ def get_access_inventory_history(
         case_columns.append(
             f"""
             COALESCE(
-                SUM(CASE WHEN c.name = :{place_holder} THEN ai.quantity END),
+                SUM(CASE WHEN c.id = :{place_holder} THEN ai.quantity END),
                 0
-            ) AS "{city["name"]}"
+            ) AS "{city.name}"
             """
         )
         # this will fill params object with: city_1= city[1], cpe_2=city[2],..
-        params[place_holder] = city["name"]
+        params[place_holder] = city.id
 
     # We need a separate query to get the total count for pagination
     COUNT_QUERY = text(
         """SELECT 
                 COUNT(DISTINCT MONTH_END) 
             FROM access_inventory 
-            WHERE id = :access_type_id
+            WHERE access_type_id = :access_type_id
         """
     )
 
@@ -141,10 +141,11 @@ def get_access_inventory_history(
     # main query
     SQL_QUERY = f"""
         SELECT
-            WEEK_END,
+            month_end,
             {", ".join(case_columns)}
         FROM access_inventory ai
         LEFT JOIN cities c ON c.id=ai.city_id
+        WHERE ai.access_type_id = :access_type_id
         GROUP BY ai.month_end
         ORDER BY ai.month_end DESC
         LIMIT :limit

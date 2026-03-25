@@ -161,7 +161,6 @@ def get_stb_inventory_history(schema_list: list, page: int, per_page: int):
             {", ".join(case_columns)}
         FROM stb_inventory si
         LEFT JOIN stb_types st ON st.id=si.stb_type_id
-        WHERE id = :access_type_id
         GROUP BY si.WEEK_END
         ORDER BY si.week_end DESC
         LIMIT :limit
