@@ -709,7 +709,7 @@
           <button 
             type="button" 
             class="btn btn-custom-save" 
-            onclick="submitDismantleUpdate('completeModal')"
+            onclick="submitUpdate('completeModal', '/cpe-dismantle-records/update')"
           >
             <span class="text-white fw-bold fs-4">
                 <svg
@@ -846,7 +846,7 @@
           <button 
             type="button" 
             class="btn btn-custom-save" 
-            onclick="submitDismantleUpdate('partialModal')">
+            onclick="submitUpdate('partialModal', '/cpe-dismantle-records/update')">
             <span class="text-white fw-bold fs-4">
                 <svg
                 fill="#ffffff"
@@ -957,7 +957,7 @@
           <button 
             type="button" 
             class="btn btn-custom-save" 
-            onclick="submitBrokenUpdate('brokenModal')"
+            onclick="submitUpdate('brokenModal', '/cpe-broken-records/update')"
           >
             <span class="text-white fw-bold fs-4">
                 <svg
@@ -1011,231 +1011,121 @@
 </div>
 
 <script>
-  //######################################
-  //    THIS IS FOR SENDING DATA FROM BUTTON TO MODAL, DISPLAY DATA IN FORM
-  //######################################
-
-  //ATTACH LISTENER TO completeModal MODAL
-  document
-    .getElementById("completeModal")
-    .addEventListener("show.bs.modal", function (event) {
-      
-     // the Edit button that triggered modal and that carry the data
-      const btn = event.relatedTarget; 
-
-       // Static field updates
-      this.querySelector("#modal-id").value = btn.getAttribute("data-id");
-      this.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
-      this.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
-
-      //GET DINAMIC CPE DATA
-      const cpeData = JSON.parse(btn.dataset.payload);
-
-      //FILL THE QUANTITYES
-      fillDismantleModal(this, cpeData);
-    });
  
-    //ATTACH LISTENER TO partialModal MODAL
-  document
-    .getElementById("partialModal")
-    .addEventListener("show.bs.modal", function (event) {
-      // the Edit button that triggered modal and that carry the data
-      const btn = event.relatedTarget; 
-
-      // Static field updates
-      this.querySelector("#modal-id").value = btn.getAttribute("data-id");
-      this.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
-      this.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
-
-      const cpeData = JSON.parse(btn.dataset.payload);
-
-      fillDismantleModal(this, cpeData);
-    });
-
-    //ATTACH LISTENER TO brokenModal MODAL
-  document
-    .getElementById("brokenModal")
-    .addEventListener("show.bs.modal", function (event) {
-      
-     // the Edit button that triggered modal and that carry the data
-      const btn = event.relatedTarget; 
-
-       // Static field updates
-      this.querySelector("#modal-id").value = btn.getAttribute("data-id");
-      this.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
-      this.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
-
-      //GET DINAMIC CPE DATA
-      const cpeData = JSON.parse(btn.dataset.payload);
-
-
-      //FILL THE QUANTITYES
-      this.querySelectorAll("[data-cpe]").forEach(input=>{
-          //CPE NAME VEC IMAMO NA INPUT-IMA
-          const cpeName=input.dataset.cpe;
-      
-          //QUANTITIES DOBIJAMO OD EDIT BUTTONA
-          input.value=cpeData?.[cpeName]?.quantity ?? 0;
-    })  
-    });
-    
-    
-    
-    //##############################################
-    //    THIS IS FOR SENDING UPDATED DATA FROM MODAL TO BACKEND
-    //##############################################
-    /* WE WANT DATA TO SEND TO LOOK LIKE THIS
-    [{
-    "city_id": 3,
-    "city":"Banja Luka"
-    "updates": [{"cpe_type_id": 1,"dismantle_type_id": 1,"quantity": 120},
-    {"cpe_type_id": 1,"dismantle_type_id": 2,"quantity": 15},
-    {"cpe_type_id": 3,"dismantle_type_id": 3,"quantity": 8}
-    ]}*/
-
-  function fillDismantleModal(modal, payload){
-      //Find the corresponding input fields in the modal and fill it with json data
-      modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
-          //CPE NAME AND DAMAGE CODE VEC IMAMO NA INPUT-IMA
-          const cpeName=input.dataset.cpe;
-          const damageKey =input.dataset.damage
-
-          //QUANTITIES AND DISMANTLE TYPE ID DOBIJAMO OD EDIT BUTTONA
-          input.value =payload?.[cpeName]?.damages?.[damageKey]?.quantity ?? 0;
-          input.dataset.dismantleTypeId=payload?.[cpeName]?.damages?.[damageKey]?.dismantle_type_id;
-
-    })
-  }
+  // --- HELPERS ---
 
   //Read CSRF token in JavaScript
-  function getCsrfToken() {
-    return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+  const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+  // Helper to get the current tab hash and apply it to the URL
+  // Keep tab opened after reload of page
+  function preserveTab() {
+    const activeTabButton = document.querySelector('#customColorTab .nav-link.active');
+    if (activeTabButton) {
+      window.location.hash = activeTabButton.getAttribute('data-bs-target');
+    }
   }
 
-  async function submitDismantleUpdate(modalId){
-    const modal=document.getElementById(modalId)
-    //THIS IS FOR name ATTRIBUTTE ON INPUT
-    const cityId=modal.querySelector("#modal-city-id").value
-    const city=modal.querySelector("#modal-city").value
+  //######################################
+  //THIS IS FOR SENDING DATA FROM BUTTON TO MODAL, DISPLAY DATA IN FORM
+  //######################################
+  // Listen to ALL modals at once by targeting a shared class or the document
+  document.addEventListener("show.bs.modal", function (event) {
+    const modal = event.target;
+    const btn = event.relatedTarget;
+    if (!btn) return; // Exit if not triggered by a button
 
-    const updates=[]
+    // Shared static field updates
+    modal.querySelector("#modal-id").value = btn.getAttribute("data-id");
+    modal.querySelector("#modal-city-id").value = btn.getAttribute("data-city-id");
+    modal.querySelector("#modal-city").value = btn.getAttribute("data-city-name");
 
-    //QUERY BY CSS CLASS ALL INPUTS IN MODAL
-    modal.querySelectorAll(".input-cpe-count").forEach(input=>{
+    //1. Get values from btn
+    const cpeData = JSON.parse(btn.dataset.payload || '{}');
+
+    //2. Fill the opened modal input with values from btn attributes
+    // Logic branching based on modal ID
+    if (modal.id === 'brokenModal') {
+      modal.querySelectorAll("[data-cpe]").forEach(input => {
+        const cpeName = input.dataset.cpe;
+        input.value = cpeData?.[cpeName]?.quantity ?? 0;
+      });
+    } else {
+      // Handles completeModal and partialModal
+      fillDismantleModal(modal, cpeData);
+    }
+  });
+  
+  function fillDismantleModal(modal, payload) {
+    modal.querySelectorAll("[data-cpe][data-damage]").forEach(input => {
+      const cpeName = input.dataset.cpe;
+      const damageKey = input.dataset.damage;
+      const data = payload?.[cpeName]?.damages?.[damageKey];
+      
+      input.value = data?.quantity ?? 0;
+      input.dataset.dismantleTypeId = data?.dismantle_type_id || '';
+    });
+  }
     
-      updates.push({
-        cpe_type_id: Number(input.dataset.cpetypeid),
-        dismantle_type_id: Number(input.dataset.dismantleTypeId),
-        quantity: Number(input.value) || 0
-      })
-    })
+  //##############################################
+  //    THIS IS FOR SENDING UPDATED DATA FROM MODAL TO BACKEND
+  //##############################################
+  /* WE WANT DATA TO SEND TO LOOK LIKE THIS
+  [{
+    "city_id": 3,
+    "city":"Banja Luka"
+    "updates": [
+    {"cpe_type_id": 1,"dismantle_type_id": 1,"quantity": 120},
+    {"cpe_type_id": 1,"dismantle_type_id": 2,"quantity": 15},
+    {"cpe_type_id": 3,"dismantle_type_id": 3,"quantity": 8}
+  ]}*/
+  async function submitUpdate(modalId, endpoint) {
+    const modal = document.getElementById(modalId);
+    const updates = [];
 
-    const res=await fetch("/cpe-dismantle-records/update", {
-      method:'POST',
-      headers:{
+    modal.querySelectorAll(".input-cpe-count").forEach(input => {
+      const entry = {
+        cpe_type_id: Number(input.dataset.cpetypeid),
+        quantity: Number(input.value) || 0
+      };
+      // Only add dismantle_type_id if it exists (for dismantle records)
+      if (input.dataset.dismantleTypeId) {
+        entry.dismantle_type_id = Number(input.dataset.dismantleTypeId);
+      }
+      updates.push(entry);
+    });
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
         "Content-Type": "application/json",
         "X-CSRFToken": getCsrfToken()
       },
       body: JSON.stringify({
-        "city_id": cityId,
-        "city":city,
-        "updates":updates
+        "city_id": modal.querySelector("#modal-city-id").value,
+        "city": modal.querySelector("#modal-city").value,
+        "updates": updates
       })
-     })
+    });
 
-     //CLOSE MODAL AND RELOAD PAGE
     if (res.ok) {
-      // 1. Find the button that is currently active in your specific tab list
-      const activeTabButton = document.querySelector('#customColorTab .nav-link.active');
-      
-      if (activeTabButton) {
-          // 2. Get the value of data-bs-target (e.g., "#damage")
-          const tabTarget = activeTabButton.getAttribute('data-bs-target');
-          
-          // 3. Set the URL hash so the page knows which tab to open after reload
-          window.location.hash = tabTarget;
-      }
-
-      // 4. Close modal and reload
-      const modalEl = document.getElementById(modalId);
-      bootstrap.Modal.getInstance(modalEl).hide();
-      
-      location.reload(); 
+      preserveTab(); // OPEN TAB ON JSON UPDATE
+      bootstrap.Modal.getInstance(modal).hide();
+      location.reload();
     }
   }
-
-  async function submitBrokenUpdate(modalId){
-    const modal=document.getElementById(modalId)
-    //THIS IS FOR name ATTRIBUTTE ON MODAL INPUT
-    const cityId=modal.querySelector("#modal-city-id").value
-    const city=modal.querySelector("#modal-city").value
-
-    const updates=[]
-
-    //QUERY BY CSS CLASS ALL INPUTS IN MODAL
-     modal.querySelectorAll(".input-cpe-count").forEach(input=>{
-    
-      updates.push({
-        cpe_type_id: Number(input.dataset.cpetypeid),
-        quantity: Number(input.value) || 0
-      })
-     })
-
-     const res=await fetch("/cpe-broken-records/update", {
-      method:'POST',
-      headers:{
-        "Content-Type": "application/json",
-         "X-CSRFToken": getCsrfToken()
-      },
-      body: JSON.stringify({
-        "city_id": cityId,
-        "city":city,
-        "updates":updates
-      })
-     })
-
-    //CLOSE MODAL AND RELOAD PAGE
-    if (res.ok) {
-      // 1. Find the button that is currently active in your specific tab list
-      const activeTabButton = document.querySelector('#customColorTab .nav-link.active');
-      
-      if (activeTabButton) {
-          // 2. Get the value of data-bs-target (e.g., "#damage")
-          const tabTarget = activeTabButton.getAttribute('data-bs-target');
-          
-          // 3. Set the URL hash so the page knows which tab to open after reload
-          window.location.hash = tabTarget;
-      }
-
-      // 4. Close modal and reload
-      const modalEl = document.getElementById(modalId);
-      bootstrap.Modal.getInstance(modalEl).hide();
-      
-      location.reload(); 
-    }
-  }
-
-</script>
-
-
-
-<script>
-//for return from back button to opened tab
-document.addEventListener("DOMContentLoaded", function() {
-    // Get the hash from the URL (e.g., #complete)
-    var hash = window.location.hash;
-    
+  
+  // --- AUTO-OPEN TAB ON LOAD ---
+  document.addEventListener("DOMContentLoaded", function() {
+    const hash = window.location.hash;
     if (hash) {
-        // Find the tab trigger that matches the hash
-        var triggerEl = document.querySelector('button[data-bs-target="' + hash + '"]');
-        
-        if (triggerEl) {
-            // Use Bootstrap's Tab constructor to show it
-            var tab = new bootstrap.Tab(triggerEl);
-            tab.show();
-        }
+      const triggerEl = document.querySelector(`button[data-bs-target="${hash}"]`);
+      if (triggerEl) {
+        new bootstrap.Tab(triggerEl).show();
+      }
     }
-});
+  });
+ 
 </script>
 {% endblock %}
 
