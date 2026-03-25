@@ -1052,22 +1052,6 @@
       fillDismantleModal(this, cpeData);
     });
 
-  function fillDismantleModal(modal, payload){
-      //Find the corresponding input fields in the modal and fill it with json data
-      modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
-          //CPE NAME AND DAMAGE CODE VEC IMAMO NA INPUT-IMA
-          const cpeName=input.dataset.cpe;
-          const damageKey =input.dataset.damage
-
-          //QUANTITIES AND DISMANTLE TYPE ID DOBIJAMO OD EDIT BUTTONA
-          input.value =payload?.[cpeName]?.damages?.[damageKey]?.quantity ?? 0;
-          input.dataset.dismantleTypeId=payload?.[cpeName]?.damages?.[damageKey]?.dismantle_type_id;
-
-    })
-  }
-
-
-
     //ATTACH LISTENER TO brokenModal MODAL
   document
     .getElementById("brokenModal")
@@ -1094,25 +1078,36 @@
           input.value=cpeData?.[cpeName]?.quantity ?? 0;
     })  
     });
+    
+    
+    
     //##############################################
     //    THIS IS FOR SENDING UPDATED DATA FROM MODAL TO BACKEND
     //##############################################
     /* WE WANT DATA TO SEND TO LOOK LIKE THIS
-    {
+    [{
     "city_id": 3,
     "city":"Banja Luka"
-    "updates": [
-      {"cpe_type_id": 1,
-        "dismantle_type_id": 1,
-        "quantity": 120},
-      {"cpe_type_id": 1,
-        "dismantle_type_id": 2,
-        "quantity": 15},
-      {"cpe_type_id": 3,
-        "dismantle_type_id": 3,
-        "quantity": 8}]}*/
+    "updates": [{"cpe_type_id": 1,"dismantle_type_id": 1,"quantity": 120},
+    {"cpe_type_id": 1,"dismantle_type_id": 2,"quantity": 15},
+    {"cpe_type_id": 3,"dismantle_type_id": 3,"quantity": 8}
+    ]}*/
 
-    //Read CSRF token in JavaScript
+  function fillDismantleModal(modal, payload){
+      //Find the corresponding input fields in the modal and fill it with json data
+      modal.querySelectorAll("[data-cpe][data-damage]").forEach(input=>{
+          //CPE NAME AND DAMAGE CODE VEC IMAMO NA INPUT-IMA
+          const cpeName=input.dataset.cpe;
+          const damageKey =input.dataset.damage
+
+          //QUANTITIES AND DISMANTLE TYPE ID DOBIJAMO OD EDIT BUTTONA
+          input.value =payload?.[cpeName]?.damages?.[damageKey]?.quantity ?? 0;
+          input.dataset.dismantleTypeId=payload?.[cpeName]?.damages?.[damageKey]?.dismantle_type_id;
+
+    })
+  }
+
+  //Read CSRF token in JavaScript
   function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]').getAttribute("content");
   }
@@ -1194,7 +1189,6 @@
     }
   }
 
-  
 </script>
 
 
