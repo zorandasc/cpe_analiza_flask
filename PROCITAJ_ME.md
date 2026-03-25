@@ -2691,8 +2691,6 @@ docker ps
 ```sh
 docker exec <container> pg_dump -U <user> -F c -d <db_name> > test_backup.dump
 
-
-docker exec 4a6de36c2105 pg_dump -U postgres -F c -d mydb > test_backup.dump
 ```
 
 4. Restore from docker container:
@@ -2726,6 +2724,16 @@ docker stop 740d60fedd12
 docker start 740d60fedd12
 ```
 
+# ----------- FINAL BACKUP AND RESTORE INTO HOST FOLDER -----------------
+
+```Bash
+docker exec -i 4a6de36c2105 pg_dump -U postgres -F c -d mydb > mydb_backup.dump
+
+docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb < mydb_backup.dump
+
+docker stop 4a6de36c2105
+docker start 4a6de36c2105
+```
 # ----------------------.env file-------------
 
 env_file:
