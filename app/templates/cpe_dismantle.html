@@ -1144,10 +1144,23 @@
      })
 
      //CLOSE MODAL AND RELOAD PAGE
-     if (res.ok) {
+    if (res.ok) {
+      // 1. Find the button that is currently active in your specific tab list
+      const activeTabButton = document.querySelector('#customColorTab .nav-link.active');
+      
+      if (activeTabButton) {
+          // 2. Get the value of data-bs-target (e.g., "#damage")
+          const tabTarget = activeTabButton.getAttribute('data-bs-target');
+          
+          // 3. Set the URL hash so the page knows which tab to open after reload
+          window.location.hash = tabTarget;
+      }
+
+      // 4. Close modal and reload
       const modalEl = document.getElementById(modalId);
       bootstrap.Modal.getInstance(modalEl).hide();
-      location.reload();
+      
+      location.reload(); 
     }
   }
 
@@ -1181,11 +1194,24 @@
       })
      })
 
-     //CLOSE MODAL AND RELOAD PAGE
-     if (res.ok) {
+    //CLOSE MODAL AND RELOAD PAGE
+    if (res.ok) {
+      // 1. Find the button that is currently active in your specific tab list
+      const activeTabButton = document.querySelector('#customColorTab .nav-link.active');
+      
+      if (activeTabButton) {
+          // 2. Get the value of data-bs-target (e.g., "#damage")
+          const tabTarget = activeTabButton.getAttribute('data-bs-target');
+          
+          // 3. Set the URL hash so the page knows which tab to open after reload
+          window.location.hash = tabTarget;
+      }
+
+      // 4. Close modal and reload
       const modalEl = document.getElementById(modalId);
       bootstrap.Modal.getInstance(modalEl).hide();
-      location.reload();
+      
+      location.reload(); 
     }
   }
 
