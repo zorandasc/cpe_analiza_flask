@@ -16,6 +16,7 @@ from io import BytesIO
 from app.services.access_inventory import (
     get_access_records_view_data,
     update_recent_access_inventory,
+    get_access_records_history,
     get_access_records_excel_export,
     parce_excel_segments,
     save_imported_segments_to_db,
@@ -41,6 +42,29 @@ def update_access_inventory():
     success, message = update_recent_access_inventory(request.form)
     flash(message, "success" if success else "danger")
     return redirect(url_for("access_inventory.access_records"))
+
+
+@access_inventory_bp.route("/history/<int:id>")
+@login_required
+def access_records_history(id):
+    page = request.args.get("page", 1, int)
+
+    per_page = 20
+
+    access_type, records, schema_list, error = get_access_records_history(
+        access_type_id=id, page=page, per_page=per_page
+    )
+
+    if error:
+        flash(error, "danger")
+        return redirect(url_for("main.home"))
+
+    return render_template(
+        "access_records_history.html",
+        records=records,
+        schema=schema_list,
+        access_type=access_type,
+    )
 
 
 @access_inventory_bp.route("/export/access-records.xlsx/<int:id>")

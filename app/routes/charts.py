@@ -108,7 +108,7 @@ def access_inventory_charts():
     # ---------------------------------------
     # FOR LISTING IN HTML SELECT ELEMENTS
     # ---------------------------------------
-    cities = cities = get_visible_cities("access_inventory")
+    cities = get_visible_cities("access_inventory")
 
     access = (
         AccessTypes.query.order_by(AccessTypes.id).filter(AccessTypes.is_active).all()

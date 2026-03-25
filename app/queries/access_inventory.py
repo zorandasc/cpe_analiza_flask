@@ -1,5 +1,6 @@
 from sqlalchemy import text
 from app.extensions import db
+from app.utils.simplepagination import SimplePagination
 
 
 def get_last_4_months():
@@ -89,3 +90,75 @@ def get_access_inventory_pivoted(months: list, access_type_id):
     rows = db.session.execute(text(SQL), params)
 
     return [row._asdict() for row in rows.all()]
+
+
+def get_access_inventory_history(
+    access_type_id: int, schema_list: list, page: int, per_page: int
+):
+    """
+    Retrieves the historical records for a specific access_type_id pivoted by City.
+    This query handles pagination internally based on the unique WEEK_END timestamp.
+    """
+    if not schema_list:
+        # Return empty data lists immediately if no active CPE types are found
+        return []
+
+    # Calculate offset
+    offset = (page - 1) * per_page
+
+    params = {
+        "access_type_id": access_type_id,
+        "limit": per_page,
+        "offset": offset,
+    }
+
+    case_columns = []
+
+    for i, city in enumerate(schema_list):
+        place_holder = f"city_{i}"
+        case_columns.append(
+            f"""
+            COALESCE(
+                SUM(CASE WHEN c.name = :{place_holder} THEN ai.quantity END),
+                0
+            ) AS "{city["name"]}"
+            """
+        )
+        # this will fill params object with: city_1= city[1], cpe_2=city[2],..
+        params[place_holder] = city["name"]
+
+    # We need a separate query to get the total count for pagination
+    COUNT_QUERY = text(
+        """SELECT 
+                COUNT(DISTINCT MONTH_END) 
+            FROM access_inventory 
+            WHERE id = :access_type_id
+        """
+    )
+
+    total_count = db.session.execute(COUNT_QUERY, params=params).scalar()
+
+    # main query
+    SQL_QUERY = f"""
+        SELECT
+            WEEK_END,
+            {", ".join(case_columns)}
+        FROM access_inventory ai
+        LEFT JOIN cities c ON c.id=ai.city_id
+        GROUP BY ai.month_end
+        ORDER BY ai.month_end DESC
+        LIMIT :limit
+        OFFSET :offset
+    """
+
+    result = db.session.execute(text(SQL_QUERY), params)
+
+    # pivoted_data is now list
+    pivoted_data = [row._asdict() for row in result.all()]
+
+    # paginate is iterable SimplePagination object
+    paginate = SimplePagination(
+        page=page, per_page=per_page, total=total_count, items=pivoted_data
+    )
+
+    return paginate

@@ -137,9 +137,6 @@ def stb_records_history():
 
     records, schema_list, error = get_stb_records_history(page, per_page)
 
-    for r in records.items:
-        print(r,"\n")
-
     if error:
         flash(error, "danger")
         return redirect(url_for("main.home"))

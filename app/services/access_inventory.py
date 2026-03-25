@@ -3,12 +3,14 @@ from datetime import datetime
 from sqlalchemy import text
 from app.extensions import db
 from app.models import AccessTypes
+from app.services.charts import get_visible_cities
 from app.utils.dates import get_previous_month_end
 from openpyxl import load_workbook
 from app.utils.permissions import ftth_view_required
 from app.queries.access_inventory import (
     get_last_4_months,
     get_access_inventory_pivoted,
+    get_access_inventory_history,
 )
 
 
@@ -126,6 +128,30 @@ def update_recent_access_inventory(form_data):
         db.session.rollback()
         print(e)
         return False, "Greška prilikom čuvanja podataka."
+
+
+def get_access_records_history(
+    access_type_id: int,
+    page: int,
+    per_page: int,
+):
+    access_type = AccessTypes.query.get(access_type_id)
+
+    if not access_type:
+        return None, None, None, "Pristupna ne postoji."
+
+    # get_visible_cities() imported from charts services
+    # List of cities visible in access_ivnetory table
+    schema_list = get_visible_cities("access_inventory")
+
+    records = get_access_inventory_history(
+        access_type_id=access_type.id,
+        schema_list=schema_list,
+        page=page,
+        per_page=per_page,
+    )
+
+    return access_type, records, schema_list, None
 
 
 def get_access_records_excel_export(id):
@@ -316,7 +342,6 @@ def save_imported_segments_to_db(payload, target_date=None):
     try:
         # Loop through each access type (gpon, then xdsl)
         for type_key, segments in payload.items():
-        
             access_type_id = type_mapping.get(type_key)
 
             if not access_type_id:
@@ -349,9 +374,9 @@ def save_imported_segments_to_db(payload, target_date=None):
 
         db.session.commit()
         return (
-                True,
-                f"Uspješno ažurirano {total_inserted} zapisa za {month_to_save}.",
-            )
+            True,
+            f"Uspješno ažurirano {total_inserted} zapisa za {month_to_save}.",
+        )
 
     except Exception as e:
         db.session.rollback()
