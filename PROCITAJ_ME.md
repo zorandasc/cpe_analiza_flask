@@ -2763,7 +2763,7 @@ DB_NAME in the container = mydb_test (overrides .env)
 
 # yep — this is one of those classic “ghost data” bugs that can eat hours 😄
 
-# Clean up your current data
+# Clean up your current data - OBRISI GDIJE NEMA GRADA
 
 ```sql
 DELETE FROM cpe_inventory
@@ -2865,47 +2865,99 @@ WHERE city_id = 3
   AND week_end = '2026-03-13';
   ```
 
-  # OLD CARRY FORWARD LOGIC FOR CHART  SERVICES
+# ----------- COMPLEXITY OF CPE_DISMANTLE QUERY------------------------------
 
-   # ---------------------------------------
-    # 4. Aggregate into chart datasets USING CARRY FORWARD
-    # ---------------------------------------
-    # koliko ima timeline toliko napravi praznih slotova
-    totals_by_type = defaultdict(lambda: [0] * len(timeline))
-
-    # FILL totals_by_type USING CARRY FORWARD
-    for city_data in state.values():
-        for type_key, week_map in city_data.items():
-            # week_map are all data from db query
-            sorted_weeks = sorted(week_map.keys())
-            last_quantity = 0
-
-            # initialize first carry-forward quantity
-            # last_quantity will be last date value that is outside
-            # of week range deffined by [start_week, max_week]
-            for w in sorted_weeks:
-                if w < start_week:
-                    last_quantity = week_map[w]
-                else:
-                    break
-
-            # for every date (w) in timeline
-            for i, w in enumerate(timeline):
-                # check if date exisist in real data week_map
-                if w in week_map:
-                    # if yes take his quantity, continue
-                    last_quantity = week_map[w]
-                # if no quantity for this timeslot is last value
-                totals_by_type[type_key][i] += last_quantity
+You’re absolutely right — the query became complex because the logic is complex (hierarchy + “latest value” + “this week status” + conditional aggregation).
 
 # ------------INDEX--------------------------------------------------
-CPE DISMANTLE
+HOW TO SEE INDEXSES IN TABLE:
+```SQL
+SELECT
+    tablename,
+    indexname,
+    indexdef
+FROM pg_indexes
+WHERE schemaname = 'public'
+ORDER BY tablename;
 
-CREATE INDEX idx_cpe_dismantle_city_type_created
-ON cpe_dismantle (city_id, dismantle_type_id, created_at DESC);
 
-CREATE INDEX idx_cpe_dismantle_updated_at
-ON cpe_dismantle (updated_at);
+SELECT *
+FROM pg_indexes
+WHERE tablename = 'cpe_inventory';
+```
 
+# CPE DISMANTLE INDEX
+
+```SQL
+
+-- 🔥 critical
+CREATE INDEX idx_cpe_dismantle_lookup 
+ON cpe_dismantle (
+    city_id,
+    cpe_type_id,
+    dismantle_type_id,
+    week_end DESC
+);
+
+-- 🔥 weekly aggregation
+CREATE INDEX idx_cpe_dismantle_week 
+ON cpe_dismantle (week_end, city_id, dismantle_type_id);
+
+-- 🟡 optional (keep only if chart is slow)
+CREATE INDEX idx_cpe_dismantle_chart 
+ON cpe_dismantle (city_id, week_end, cpe_type_id);
+```
+
+# cpe_inventory
+
+```sql
+
+
+CREATE INDEX idx_cpe_inventory_lookup 
+ON cpe_inventory (
+    city_id,
+    cpe_type_id,
+    week_end DESC
+);
+
+```
+
+# cpe_broken
+
+```sql
+
+
+CREATE INDEX idx_cpe_broken_lookup 
+ON cpe_broken (
+    city_id,
+    cpe_type_id,
+    week_end DESC
+);
+
+```
+
+
+# CITIES INDEX
+
+
+```SQL
 CREATE INDEX idx_cities_parent
 ON cities (parent_city_id);
+```
+
+
+# city_visibility_settings
+
+```SQL
+CREATE INDEX idx_city_visibility_main 
+ON city_visibility_settings (city_id, dataset_key);
+```
+
+# cpe_types
+
+```SQL
+
+CREATE INDEX idx_cpe_types_visible 
+ON cpe_types (visible_in_dismantle);
+
+```

@@ -62,11 +62,13 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
                 ON c.id = ci.city_id
                 --Use the latest available record whose week_end is ≤ current business Friday
                 --Give me the latest week if we are in new week which doesnot have data yet
-                AND ci.week_end =(
-                    SELECT MAX(ci2.week_end)
-                    FROM cpe_inventory ci2
-                    WHERE ci2.city_id=c.id
-                    AND ci2.week_end <= :week_end
+                AND ci.week_end = (
+                    SELECT week_end
+                    FROM cpe_inventory
+                    WHERE city_id = c.id
+                    AND week_end <= :week_end
+                    ORDER BY week_end DESC
+                    LIMIT 1
                 )
 
             LEFT JOIN cpe_types ct
