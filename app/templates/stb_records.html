@@ -145,7 +145,7 @@ styles %} {{ super() }}
         <tr>
           <th>STB Uređaji</th>
           {% for week in weeks %}
-          <th>{{ week.label}}</th>
+          <th class="text-center">{{ week.label}}</th>
           {% endfor %}
         </tr>
       </thead>
@@ -154,7 +154,7 @@ styles %} {{ super() }}
         <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
           <td>{{r.label}}</td>
           {% for week in weeks%}
-          <td>{{r['dates'][week.key]['quantity']}}</td>
+          <td class="text-center">{{r['dates'][week.key]['quantity']}}</td>
           {% endfor %}
         </tr>
         {% endfor %}
@@ -183,7 +183,7 @@ styles %} {{ super() }}
       <tr>
         <th></th>
         {% for row in iptv_users %}
-        <th>{{ row['week_end'].strftime('%d-%m-%Y') }}</th>
+        <th class="text-center">{{ row['week_end'].strftime('%d-%m-%Y') }}</th>
         {% endfor %}
       </tr>
     </thead>
@@ -191,7 +191,7 @@ styles %} {{ super() }}
       <tr>
         <td class="fw-bold total-iptv">Ukupan broj IPTV korisnika</td>
         {% for row in iptv_users%}
-        <td>{{row['total_users']}}</td>
+        <td class="text-center">{{row['total_users']}}</td>
         {% endfor %}
       </tr>
     </tbody>

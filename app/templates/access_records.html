@@ -140,7 +140,7 @@ styles %} {{ super() }}
       <tr>
         <th>Izvršna jedinica</th>
         {% for month in months %}
-        <th>{{ month.label}}</th>
+        <th class="text-center">{{ month.label}}</th>
         {% endfor %}
       </tr>
     </thead>
@@ -149,7 +149,7 @@ styles %} {{ super() }}
       <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
         <td>{{r.name}}</td>
         {% for month in months %}
-        <td>
+        <td class="text-center">
           {% if r['dates'][month.key]['quantity'] is none %} - {% else %}
           {{r['dates'][month.key]['quantity']}} {% endif %}
         </td>

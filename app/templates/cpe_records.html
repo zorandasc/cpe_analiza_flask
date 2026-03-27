@@ -251,7 +251,7 @@
                   {% endif %}
               </td>
               {% for item in schema %}
-              <td>{{ r.cpe[item.name]['quantity'] }}</td>
+              <td class="text-center">{{ r.cpe[item.name]['quantity'] }}</td>
               {% endfor %}
               
               <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
