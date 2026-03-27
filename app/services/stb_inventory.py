@@ -1,6 +1,7 @@
 # Business logic + write operations
 from sqlalchemy import text
 from app.extensions import db
+from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday
 from app.utils.permissions import iptv_view_required
 from app.queries.stb_inventory import (
@@ -81,7 +82,14 @@ def update_recent_stb_inventory(form_data):
                     "quantity": quantity,
                 },
             )
-
+        log_user_action(
+            action="upsert",
+            table_name="stb_inventory",
+            details={
+                "count": len(form_data),
+                "week_end": str(current_week_end),
+            },
+        )
         db.session.commit()
         return True, f"Novo stanje za {current_week_end} uspješno sačuvano!"
 
@@ -111,6 +119,16 @@ def update_iptv_users_count(form_data):
                 "total_users": qty,
             },
         )
+
+        log_user_action(
+            action="upsert",
+            table_name="iptv_users",
+            details={
+                "total_users": qty,
+                "week_end": str(current_week_end),
+            },
+        )
+        
         db.session.commit()
         return (
             True,

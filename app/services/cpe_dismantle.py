@@ -2,6 +2,7 @@
 from sqlalchemy import text
 from app.extensions import db
 from app.models import Cities, CityTypeEnum
+from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday, get_passed_saturday
 from app.utils.permissions import can_access_city
 from datetime import date
@@ -102,33 +103,44 @@ def update_cpe_dismantle(data):
     # -----------------------------------------
     # Temporal Snapshot with Partial Mutation
     # ------------------------------------------
+    try:
+        for u in updates:
+            if u["quantity"] is None:
+                continue
 
-    for u in updates:
-        if u["quantity"] is None:
-            continue
+            stmt = text("""
+                        INSERT INTO cpe_dismantle (
+                            city_id, cpe_type_id, dismantle_type_id, week_end, quantity,updated_at,created_at 
+                        ) 
+                        VALUES (:city_id, :cpe_type_id, :dismantle_type_id, :week_end, :quantity, now(),now())
+                        ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
+                        DO UPDATE SET 
+                            quantity = EXCLUDED.quantity,
+                            updated_at = now()
+                    """)
 
-        stmt = text("""
-                    INSERT INTO cpe_dismantle (
-                        city_id, cpe_type_id, dismantle_type_id, week_end, quantity,updated_at,created_at 
-                    ) 
-                    VALUES (:city_id, :cpe_type_id, :dismantle_type_id, :week_end, :quantity, now(),now())
-                    ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
-                    DO UPDATE SET 
-                        quantity = EXCLUDED.quantity,
-                        updated_at = now()
-                """)
-
-        db.session.execute(
-            stmt,
-            {
-                "city_id": city_id,
-                "cpe_type_id": u["cpe_type_id"],
-                "dismantle_type_id": u["dismantle_type_id"],
-                "week_end": week_end,
-                "quantity": u["quantity"],
+            db.session.execute(
+                stmt,
+                {
+                    "city_id": city_id,
+                    "cpe_type_id": u["cpe_type_id"],
+                    "dismantle_type_id": u["dismantle_type_id"],
+                    "week_end": week_end,
+                    "quantity": u["quantity"],
+                },
+            )
+    
+        log_user_action(
+            action="upsert",
+            table_name="cpe_dismantle",
+            record_id=city_id,
+            details={
+                "count": len(updates),
+                "week_end": str(week_end),
+                "city": city_name,
             },
         )
-    try:
+        
         db.session.commit()
         return True, f"Novo stanje za skladište {city_name} uspješno sačuvano!"
     except Exception as e:

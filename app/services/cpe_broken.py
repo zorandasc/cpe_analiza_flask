@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy import text
 from app.extensions import db
 from app.models import Cities, CityTypeEnum
+from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday, get_passed_saturday
 from app.utils.permissions import can_access_city
 from app.utils.schemas import get_cpe_types_column_schema
@@ -97,35 +98,45 @@ def update_cpe_broken(data):
     # We insert a new record for FOR ONE CITY_ID AND EVERY CPE type
     # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
     # UPDATE QUANTITY IF EXSIST
-    for u in updates:
-        stmt = text("""
-            INSERT INTO cpe_broken ( 
-                        city_id,
-                        cpe_type_id,
-                        week_end,
-                        quantity,
-                        updated_at
-                    )
-                    VALUES (:city_id,
-                            :cpe_type_id,
-                            :week_end,
-                            :quantity,
-                            NOW()
-                            )
-                    ON CONFLICT (city_id, cpe_type_id, week_end)
-                    DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
-                    """)
+    try:
+        for u in updates:
+            stmt = text("""
+                INSERT INTO cpe_broken ( 
+                            city_id,
+                            cpe_type_id,
+                            week_end,
+                            quantity,
+                            updated_at
+                        )
+                        VALUES (:city_id,
+                                :cpe_type_id,
+                                :week_end,
+                                :quantity,
+                                NOW()
+                                )
+                        ON CONFLICT (city_id, cpe_type_id, week_end)
+                        DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
+                        """)
 
-        db.session.execute(
-            stmt,
-            {
-                "city_id": city_id,
-                "cpe_type_id": u["cpe_type_id"],
-                "week_end": current_week_end,
-                "quantity": u["quantity"],
+            db.session.execute(
+                stmt,
+                {
+                    "city_id": city_id,
+                    "cpe_type_id": u["cpe_type_id"],
+                    "week_end": current_week_end,
+                    "quantity": u["quantity"],
+                },
+            )
+        log_user_action(
+            action="upsert",
+            table_name="cpe_broken",
+            record_id=city_id,
+            details={
+                "count": len(updates),
+                "week_end": str(current_week_end),
+                "city": city_name,
             },
         )
-    try:
         db.session.commit()
         return True, f"Novo stanje za skladište {city_name} uspješno sačuvano!"
     except Exception as e:

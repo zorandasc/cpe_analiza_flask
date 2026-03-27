@@ -3,6 +3,7 @@ from datetime import date
 from sqlalchemy import text
 from app.extensions import db
 from app.models import Cities
+from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday, get_passed_saturday
 from app.utils.permissions import can_access_city
 from app.utils.schemas import get_cpe_types_column_schema
@@ -100,9 +101,10 @@ def update_cpe_records(data):
     # We insert a new record for FOR ONE CITY_ID AND EVERY CPE type
     # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
     # UPDATE QUANTITY IF EXSIST
-    for u in updates:
-        stmt = text("""
-            INSERT INTO cpe_inventory ( 
+    try:
+        for u in updates:
+            stmt = text("""
+                INSERT INTO cpe_inventory ( 
                         city_id,
                         cpe_type_id,
                         week_end,
@@ -119,16 +121,27 @@ def update_cpe_records(data):
                     DO UPDATE SET quantity = EXCLUDED.quantity, updated_at = NOW();
                     """)
 
-        db.session.execute(
-            stmt,
-            {
-                "city_id": city_id,
-                "cpe_type_id": u["cpe_type_id"],
-                "week_end": current_week_end,
-                "quantity": u["quantity"],
+            db.session.execute(
+                stmt,
+                {
+                    "city_id": city_id,
+                    "cpe_type_id": u["cpe_type_id"],
+                    "week_end": current_week_end,
+                    "quantity": u["quantity"],
+                },
+            )
+
+        log_user_action(
+            action="upsert",
+            table_name="cpe_inventory",
+            record_id=city_id,
+            details={
+                "count": len(updates),
+                "week_end": str(current_week_end),
+                "city": city_name,
             },
         )
-    try:
+
         db.session.commit()
         return True, f"Novo stanje za skladište {city_name} uspješno sačuvano!"
     except Exception as e:
@@ -215,7 +228,9 @@ def _group_records(records, schema_list):
             grouped[cid] = {
                 "city_id": row["city_id"],
                 "city_name": row["city_name"],
-                "subcity_count": row.get("subcity_count", 0) if cid is not None else None,
+                "subcity_count": row.get("subcity_count", 0)
+                if cid is not None
+                else None,
                 "max_updated_at": row["max_updated_at"],
                 "cpe": {
                     cpe["name"]: {

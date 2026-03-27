@@ -4,6 +4,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.models import AccessTypes
 from app.services.charts import get_visible_cities
+from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_previous_month_end
 from openpyxl import load_workbook
 from app.utils.permissions import ftth_view_required
@@ -114,6 +115,17 @@ def update_recent_access_inventory(form_data):
                     "quantity": quantity,
                 },
             )
+
+        log_user_action(
+            action="upsert",
+            table_name="access_inventory",
+            record_id=access_type_id,
+            details={
+                "count": len(form_data),
+                "month_end": str(previous_month_end),
+                "type": access_type.name,
+            },
+        )
 
         # PostgreSQL loves batching UPSERTs in a single transaction.
         # UPSERT = “UPDATE or INSERT”.

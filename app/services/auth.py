@@ -1,4 +1,4 @@
-from flask import session
+from flask import session, request
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import (
     login_user,
@@ -9,6 +9,7 @@ from app.extensions import db
 from app.models import (
     Users,
 )
+from app.services.user_activity_log import log_user_action
 
 
 def login_to_app(form_data):
@@ -24,6 +25,14 @@ def login_to_app(form_data):
         # Flask only respects expiration if the session is permanent.
         session.permanent = True
 
+        log_user_action(
+            "login",
+            user_id=user.id,
+            details={"username": user.username,"ip": request.remote_addr}
+        )
+
+        db.session.commit()
+
         return True, f"Dobrodošli, {username}"
 
     return False, "Invalid credentials"
@@ -31,9 +40,18 @@ def login_to_app(form_data):
 
 def logout_from_app():
     if current_user.is_authenticated:
-        username_to_flash = current_user.username
+        user_id = current_user.id
+        username = current_user.username
+        
+        log_user_action(
+            "logout",
+            user_id=user_id,
+            details={"username": username}
+        )
+
         logout_user()
-        return True, f"Doviđenja, {username_to_flash}"
+        db.session.commit()
+        return True, f"Doviđenja, {username}"
     return False, "Niste prijavljeni"
 
 
