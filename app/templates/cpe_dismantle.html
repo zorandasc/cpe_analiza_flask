@@ -304,7 +304,7 @@
               <td class="text-center"> {{ r.cpe[item.name]['damages']['comp']['quantity'] }}</td>
               {% endfor %}
               
-              <td class="{% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+              <td class="text-center {% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
                 {% if r.complete_updated_at %}
                   {{ r.complete_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
                 {% endif %}
@@ -439,7 +439,7 @@
               {% endif %}
               {% endfor %}
               
-              <td class="group-start {% if r.missing_updated_at %}{% if r.missing_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+              <td class="group-start text-center {% if r.missing_updated_at %}{% if r.missing_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
                 {% if r.missing_updated_at %}
                   {{ r.missing_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
                 {% endif %}
@@ -564,7 +564,7 @@
               <td class="text-center">{{ r.cpe[item.name]['quantity'] }}</td>
               {% endfor %}
               
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+              <td class="text-center {% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
                 {% if r.max_updated_at %}
                 {{ r.max_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
                 {% endif %}
