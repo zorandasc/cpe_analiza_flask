@@ -237,9 +237,9 @@
               </a>
             </li>
             <li class="nav-item">
-              <span class="nav-link navbar-username">
+              <a href="{{ url_for('auth.change_password') }}" class="nav-link navbar-username">
                 👤 {{ current_user.username }}
-              </span>
+              </a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
