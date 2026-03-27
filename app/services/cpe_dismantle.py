@@ -103,20 +103,15 @@ def update_cpe_dismantle(data):
     # Temporal Snapshot with Partial Mutation
     # ------------------------------------------
 
-    # 1. this function will always ensure existance of city_id/week_end
-    ensure_snapshot(city_id, week_end)
-
-    # 2: Apply updates
-    # so ON CONFLICT in UPSERT will always happend
     for u in updates:
         if u["quantity"] is None:
             continue
 
         stmt = text("""
                     INSERT INTO cpe_dismantle (
-                        city_id, cpe_type_id, dismantle_type_id, week_end, quantity 
-                        ) 
-                    VALUES (:city_id, :cpe_type_id, :dismantle_type_id, :week_end, :quantity)
+                        city_id, cpe_type_id, dismantle_type_id, week_end, quantity,updated_at,created_at 
+                    ) 
+                    VALUES (:city_id, :cpe_type_id, :dismantle_type_id, :week_end, :quantity, now(),now())
                     ON CONFLICT (city_id, cpe_type_id, dismantle_type_id, week_end)
                     DO UPDATE SET 
                         quantity = EXCLUDED.quantity,
@@ -316,85 +311,6 @@ def _group_records(records, schema_list):
 
     return list(grouped.values())
 
-
-# Temporal Snapshot with Partial Mutation
-def ensure_snapshot(city_id, week_end):
-    """
-    # WHY ensure_snapshot()? BECAUSE WE HAVE PARTIAL UPDATE POSSIBILITY
-    # AND WE IN CPE_DISMANTLE ROUTE HOME DEMAND TO RETURN FOR ONE WEEK ALL DISMANTLE_TYPES
-    # IF WE MAKE PARTIAL UPDATED FOR NEW WEEK, WE WILL GET NULL FOR OTHER
-    # SO FOR NEW WEEK_END/city_id WE COPY OLD UNUPDATE DATA
-    """
-
-    # 1. CHECK IS THERE ANY PRIOR DATA
-    last_week = db.session.execute(
-        text("""
-        SELECT MAX(week_end)
-        FROM cpe_dismantle
-        WHERE city_id = :city_id AND week_end < :week_end
-    """),
-        {"city_id": city_id, "week_end": week_end},
-    ).scalar()
-
-    if last_week is None:
-        # 2. IF NOT (FIRST UPDATE FOR CITY) INICIALIZE WITH ALL ZERO QUANTITY
-        # WHICH WILL BE UPDATE ON UPSERT WITH REAL DATA
-        db.session.execute(
-            text("""
-            INSERT INTO cpe_dismantle (
-                    city_id, cpe_type_id, dismantle_type_id, week_end, quantity, updated_at
-                )
-            SELECT
-                :city_id,
-                ct.id,
-                dt.id,
-                :week_end,
-                0,
-                now()
-            FROM cpe_types ct
-            CROSS JOIN dismantle_types dt
-            ON CONFLICT DO NOTHING
-                                
-        """),
-            {"city_id": city_id, "week_end": week_end},
-        )
-        return
-    # IF THERE IS PRIOR DATA
-    # 3. CHECK IF CITY_ID/WEEK_END COMBINATION ALREADY EXISTS FOR THIS WEEK
-    exists = db.session.execute(
-        text("""
-                SELECT 1 FROM cpe_dismantle
-                WHERE city_id = :city_id AND week_end = :week_end
-                LIMIT 1
-            """),
-        {"city_id": city_id, "week_end": week_end},
-    ).scalar()
-
-    if exists:
-        # 3. IF YES RETURN
-        return
-
-    # IF NO COPY FROM PREVIOUS WEEK
-    # 4. IF NO COPY DATA FROM LAST WEEK_END TO THIS WEEK_END
-    # clone previous week row: week_end < :week_end
-    db.session.execute(
-        text("""
-            INSERT INTO cpe_dismantle (
-                city_id, cpe_type_id, dismantle_type_id, week_end, quantity, updated_at
-            )
-            SELECT
-                city_id, cpe_type_id, dismantle_type_id, :week_end, quantity, updated_at
-            FROM cpe_dismantle
-            WHERE city_id = :city_id
-                AND week_end = (
-                SELECT MAX(week_end)
-                FROM cpe_dismantle
-                WHERE city_id = :city_id
-                    AND week_end < :week_end
-                )
-            """),
-        {"city_id": city_id, "week_end": week_end},
-    )
 
 
 def _group_history_records(records, schema_list):

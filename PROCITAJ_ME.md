@@ -2897,3 +2897,15 @@ WHERE city_id = 3
                     last_quantity = week_map[w]
                 # if no quantity for this timeslot is last value
                 totals_by_type[type_key][i] += last_quantity
+
+# ------------INDEX--------------------------------------------------
+CPE DISMANTLE
+
+CREATE INDEX idx_cpe_dismantle_city_type_created
+ON cpe_dismantle (city_id, dismantle_type_id, created_at DESC);
+
+CREATE INDEX idx_cpe_dismantle_updated_at
+ON cpe_dismantle (updated_at);
+
+CREATE INDEX idx_cities_parent
+ON cities (parent_city_id);
