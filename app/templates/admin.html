@@ -47,7 +47,7 @@ block styles %} {{ super() }}
     padding-left: 25px;
   }
 
-  .sidebar .active,.sidebar .report, .sidebar  .user_activty {
+  .sidebar .active,.sidebar .report, .sidebar  .user_activty, .sidebar .main_list {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
     color: white;
     margin: 2rem auto;
@@ -68,6 +68,10 @@ block styles %} {{ super() }}
 
   .sidebar  .user_activty{
     background-image: linear-gradient(to right, #5a3f37, #2c7744);
+  }
+
+  .sidebar .main_list{
+    background-image: linear-gradient(to right, #0099f7, #f11712);
   }
 
   .sidebar::-webkit-scrollbar {
@@ -247,7 +251,7 @@ block styles %} {{ super() }}
     </a>
    </div>
   
-    <a href="#meadle" class="btn btn-light active"
+    <a href="#meadle" class="btn btn-light main_list"
       >Glavne Liste
       <img
         src="{{ url_for('static', filename='database.png') }}"
