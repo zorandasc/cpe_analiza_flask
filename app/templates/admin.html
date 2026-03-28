@@ -47,7 +47,7 @@ block styles %} {{ super() }}
     padding-left: 25px;
   }
 
-  .sidebar .active {
+  .sidebar .active,.sidebar .report, .sidebar  .user_activty {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
     color: white;
     margin: 2rem auto;
@@ -60,18 +60,14 @@ block styles %} {{ super() }}
   }
 
   .sidebar .report {
-    margin: 2rem auto;
-    width: 200px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    
-  background: #ff9966; /* fallback for old browsers */
-  background: -webkit-linear-gradient(to right, #ff9966, #ff5e62); /* Chrome 10-25, Safari 5.1-6 */
-  background: linear-gradient(to right, #ff9966, #ff5e62);
-  color: whitesmoke;
+    background: #ff9966; /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #ff9966, #ff5e62); /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #ff9966, #ff5e62);
+    color: whitesmoke;
+  }
+
+  .sidebar  .user_activty{
+    background-image: linear-gradient(to right, #5a3f37, #2c7744);
   }
 
   .sidebar::-webkit-scrollbar {
@@ -241,7 +237,7 @@ block styles %} {{ super() }}
     </div>
    
     <div>
-    <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-light active"
+    <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-light user_activty"
       >Aktivnosti korisnika
       <img
         src="{{ url_for('static', filename='diagram.png') }}"

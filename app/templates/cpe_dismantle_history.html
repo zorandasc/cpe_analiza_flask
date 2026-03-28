@@ -285,6 +285,9 @@ styles %} {{ super() }}
         {% endif %}
       </ul>
     </nav>
+    <div class="mb-2 text-muted">
+        Showing {{ records.items|length }} of {{ records.total }} logs
+    </div>
     <table class="table table-hover align-middle table-striped shadow  table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>

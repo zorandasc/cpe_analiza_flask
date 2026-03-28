@@ -140,12 +140,12 @@ styles %} {{ super() }}
 <div class=" py-2">
   <div class="table-responsive">
     <div class="d-flex justify-content-between align-items-center">
-   <button
-      onclick="history.back()"
+   <a
+      href="{{ url_for('cpe_inventory.cpe_records')}}"
       class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
     >
       <span class="me-2">⬅</span> Nazad
-    </button>
+    </a>
   </div>
     <h1 class="mb-4 text-center">Istorija CPE opreme za {{ city.name }}</h1>
     <nav>
@@ -179,6 +179,9 @@ styles %} {{ super() }}
         {% endif %}
       </ul>
     </nav>
+    <div class="mb-2 text-muted">
+        Showing {{ records.items|length }} of {{ records.total }} logs
+    </div>
     <table class="table table-hover table-striped shadow align-middle table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
