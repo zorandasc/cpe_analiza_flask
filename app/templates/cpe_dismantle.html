@@ -1086,11 +1086,13 @@
     modal.querySelectorAll(".input-cpe-count").forEach(input => {
       const entry = {
         cpe_type_id: Number(input.dataset.cpetypeid),
+        cpe_name: String(input.dataset.cpe),
         quantity: Number(input.value) || 0
       };
       // Only add dismantle_type_id if it exists (for dismantle records)
       if (input.dataset.dismantleTypeId) {
         entry.dismantle_type_id = Number(input.dataset.dismantleTypeId);
+        entry.dismantle_type = String(input.dataset.damage);
       }
       updates.push(entry);
     });
