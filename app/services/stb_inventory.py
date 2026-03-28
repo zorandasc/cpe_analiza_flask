@@ -83,7 +83,7 @@ def update_recent_stb_inventory(form_data):
                 },
             )
         log_user_action(
-            action="upsert",
+            action="update",
             table_name="stb_inventory",
             details={
                 "count": len(form_data),
@@ -121,7 +121,7 @@ def update_iptv_users_count(form_data):
         )
 
         log_user_action(
-            action="upsert",
+            action="update",
             table_name="iptv_users",
             details={
                 "total_users": qty,

@@ -128,7 +128,7 @@ def update_cpe_broken(data):
                 },
             )
         log_user_action(
-            action="upsert",
+            action="update",
             table_name="cpe_broken",
             record_id=city_id,
             details={

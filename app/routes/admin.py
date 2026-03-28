@@ -37,6 +37,7 @@ from app.models import (
     StbInventory,
     StbTypes,
     IptvUsers,
+    UserActivity,
     UserRole,
     Users,
     ReportSetting,
@@ -1605,3 +1606,55 @@ def send_weekly_report():
     flash(f"Status: {message}", "success" if success else "danger")
 
     return redirect(url_for("admin.report_settings"))
+
+
+###########################################################
+# ---------------ROUTES FOR USER ACTIVITY--------------------------
+############################################################
+
+
+@admin_bp.route("/activity")
+@login_required
+def activity_logs():
+    query = UserActivity.query.join(Users)
+
+    # Filters
+    user_id = request.args.get("user_id")
+    action = request.args.get("action")
+    table_name = request.args.get("table_name")
+    date_from = request.args.get("date_from")
+    date_to = request.args.get("date_to")
+    page = request.args.get("page", 1, type=int)
+
+    if user_id:
+        query = query.filter(UserActivity.user_id == int(user_id))
+
+    if action:
+        query = query.filter(UserActivity.action == action)
+
+    if table_name:
+        query = query.filter(UserActivity.table_name == table_name)
+
+    if date_from:
+        date_from = datetime.strptime(date_from, "%Y-%m-%d")
+        query = query.filter(UserActivity.timestamp >= date_from)
+
+    if date_to:
+        date_to = datetime.strptime(date_to, "%Y-%m-%d")
+        query = query.filter(UserActivity.timestamp <= date_to)
+
+    logs = query.order_by(UserActivity.timestamp.desc()).paginate(
+        page=page, per_page=50, error_out=False
+    )
+
+    users = Users.query.order_by(Users.username).all()
+
+    # ovo je za paginacione linkove u template
+    # da ne bi srukali svaki argument u svaki paginacioni link
+    # izbacujemo page jer njega unutar template saljemo odvojeno u odnosu na bunch
+    args = request.args.to_dict()
+    args.pop("page", None)
+
+    return render_template(
+        "admin/activity.html", logs=logs, users=users, pagination_args=args
+    )

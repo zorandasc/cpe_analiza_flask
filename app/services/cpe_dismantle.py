@@ -131,7 +131,7 @@ def update_cpe_dismantle(data):
             )
     
         log_user_action(
-            action="upsert",
+            action="update",
             table_name="cpe_dismantle",
             record_id=city_id,
             details={

@@ -117,7 +117,7 @@ def update_recent_access_inventory(form_data):
             )
 
         log_user_action(
-            action="upsert",
+            action="update",
             table_name="access_inventory",
             record_id=access_type_id,
             details={

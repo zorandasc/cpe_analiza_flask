@@ -132,7 +132,7 @@ def update_cpe_records(data):
             )
 
         log_user_action(
-            action="upsert",
+            action="update",
             table_name="cpe_inventory",
             record_id=city_id,
             details={

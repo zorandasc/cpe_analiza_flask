@@ -498,6 +498,8 @@ class UserActivity(db.Model):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    user = relationship("Users", backref="activities")
+
 
 # DDL (Data Definition Language) listener in SQLAlchemy.
 # SQLAlchemy needs to "create" the custom type in the database
