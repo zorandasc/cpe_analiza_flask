@@ -6,7 +6,6 @@ from app.models import UserActivity
 def log_user_action(
     action: str,
     table_name: str = None,
-    record_id: int = None,
     details=None,
     user_id: int = None,
 ):
@@ -23,7 +22,6 @@ def log_user_action(
         user_id=user_id,
         action=action,
         table_name=table_name,
-        record_id=record_id,
         details=details,
     )
 
