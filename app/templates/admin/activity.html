@@ -16,6 +16,7 @@
         max-height: 400px;
         white-space: pre-wrap;
         word-break: break-word;
+        color: rgb(234, 255, 127);
     }
 
     .filter{
@@ -195,7 +196,7 @@
                                     </button>
 
                                     <div id="details-{{ log.id }}" class="collapse mt-2">
-                                        <pre class="bg-dark text-warning p-2 rounded border">
+                                        <pre class="bg-dark  p-2 rounded border">
                                             {{ log.details | tojson(indent=2) }}
                                         </pre>
                                     </div>
