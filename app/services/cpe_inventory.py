@@ -134,7 +134,6 @@ def update_cpe_records(data):
         log_user_action(
             action="update",
             table_name="CPE Oprema",
-            record_id=city_id,
             details={
                 "Sedmica": str(current_week_end),
                 "Skladiste": city_name,

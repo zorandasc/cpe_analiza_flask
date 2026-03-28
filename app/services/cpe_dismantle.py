@@ -132,12 +132,11 @@ def update_cpe_dismantle(data):
     
         log_user_action(
             action="update",
-            table_name="cpe_dismantle",
-            record_id=city_id,
+            table_name="CPE Demontirana",
             details={
-                "count": len(updates),
-                "week_end": str(week_end),
-                "city": city_name,
+                "Sedmica": str(week_end),
+                "Skladiste": city_name,
+                "Unosi": updates,
             },
         )
         

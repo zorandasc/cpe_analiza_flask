@@ -1,6 +1,7 @@
 # Business logic + write operations
 from sqlalchemy import text
 from app.extensions import db
+from app.models import StbTypes
 from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday
 from app.utils.permissions import iptv_view_required
@@ -53,8 +54,12 @@ def get_stb_iptv_records_view_data():
 def update_recent_stb_inventory(form_data):
     if not iptv_view_required():
         return False, "Niste autorizovani."
-     
+
     current_week_end = get_current_week_friday()
+
+    # For logging in activity
+    stb_types = {s.id: s.label for s in StbTypes.query.all()}
+    updates_log = []
 
     try:
         for key, value in form_data.items():
@@ -82,12 +87,19 @@ def update_recent_stb_inventory(form_data):
                     "quantity": quantity,
                 },
             )
+            updates_log.append(
+                {
+                    "stb_type_id": stb_type_id,
+                    "stb_label": stb_types.get(stb_type_id, "Unknown"),
+                    "quantity": quantity,
+                }
+            )
         log_user_action(
             action="update",
-            table_name="stb_inventory",
+            table_name="STB Oprema",
             details={
-                "count": len(form_data),
-                "week_end": str(current_week_end),
+                "Sedmica": str(current_week_end),
+                "Unosi": updates_log,
             },
         )
         db.session.commit()
@@ -122,13 +134,14 @@ def update_iptv_users_count(form_data):
 
         log_user_action(
             action="update",
-            table_name="iptv_users",
+            table_name="IPTV Korisnici",
             details={
-                "total_users": qty,
-                "week_end": str(current_week_end),
+                "Sedmica": str(current_week_end),
+                "Broj korisnika": qty,
+                
             },
         )
-        
+
         db.session.commit()
         return (
             True,

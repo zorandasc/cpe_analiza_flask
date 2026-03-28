@@ -12,7 +12,8 @@
     pre {
         margin: 0;
         font-size: 0.8rem;
-        max-width: 300px;
+        max-width: 500px;
+        max-height: 400px;
         white-space: pre-wrap;
         word-break: break-word;
     }
@@ -20,7 +21,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div >
     <div class="d-flex justify-content-between align-items-center">
         <a
                     href="{{ url_for('admin.dashboard') }}"
