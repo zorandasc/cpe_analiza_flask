@@ -487,12 +487,7 @@ class UserActivity(db.Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     action: Mapped[str] = mapped_column(String(100))
-    table_name: Mapped[str] = mapped_column(
-        String(50), nullable=True
-    )  # e.g., 'cpe_inventory'
-    record_id: Mapped[int] = mapped_column(
-        Integer, nullable=True
-    )  # which row was affected
+    table_name: Mapped[str] = mapped_column(String(50), nullable=True)
     details: Mapped[dict] = mapped_column(JSON, nullable=True)
     timestamp: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

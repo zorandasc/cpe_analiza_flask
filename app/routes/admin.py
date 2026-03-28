@@ -1655,6 +1655,21 @@ def activity_logs():
     args = request.args.to_dict()
     args.pop("page", None)
 
+    tables = [
+        "CPE Oprema",
+        "CPE Demontirana",
+        "CPE Neispravna",
+        "Pristupne tehnologije",
+        "STB Oprema",
+        "IPTV Korisnici",
+    ]
+    actions = ["login", "logout", "update"]
+
     return render_template(
-        "admin/activity.html", logs=logs, users=users, pagination_args=args
+        "admin/activity.html",
+        logs=logs,
+        users=users,
+        tables=tables,
+        actions=actions,
+        pagination_args=args,
     )

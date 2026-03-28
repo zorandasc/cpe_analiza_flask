@@ -49,7 +49,7 @@
                     <select name="user_id" class="form-select">
                         <option value="">Svi</option>
                         {% for u in users %}
-                            <option value="{{ u.id }}">{{ u.username }}</option>
+                            <option value="{{ u.id }}" {% if u.id == (pagination_args.get("user_id") | int) %}selected{% endif %}>{{ u.username }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -58,9 +58,9 @@
                     <label class="form-label">Akcija</label>
                     <select name="action" class="form-select">
                         <option value="">Sve</option>
-                        <option value="login">Login</option>
-                        <option value="logout">Logout</option>
-                        <option value="update_inventory">Update</option>
+                        {% for a in actions %}
+                        <option value="{{ a }}" {% if pagination_args.get("action") == a %}selected{% endif %}>{{a}}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
@@ -68,30 +68,30 @@
                     <label class="form-label">Tabela</label>
                     <select name="table_name" class="form-select">
                         <option value="">Sve</option>
-                        <option value="cpe_inventory">CPE oprema</option>
-                        <option value="cpe_dismantle">CPE demontaža</option>
-                        <option value="cpe_broken">CPE neispravna</option>
-                        <option value="access_inventory">FTTH mreže</option>
-                        <option value="stb_inventory">STB oprema</option>
-                        <option value="iptv_users">IPTV korisnici</option>
+                        {% for t in tables %}
+                        <option value="{{ t }}" {% if pagination_args.get("table_name") == t %}selected{% endif %}>{{t}}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Od</label>
-                    <input type="date" name="date_from" class="form-control">
+                    <input type="date" name="date_from" class="form-control"  value="{{ pagination_args.get('date_from', '') }}">
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label">Do</label>
-                    <input type="date" name="date_to" class="form-control">
+                    <input type="date" name="date_to" class="form-control"  value="{{ pagination_args.get('date_to', '') }}">
                 </div>
 
                 <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary filter">
+                    <button type="submit" class="btn btn-primary filter" >
                         🔍 Filtriraj
                     </button>
                 </div>
+                <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-outline-secondary">
+                    Reset
+                </a>
             </form>
         </div>
     </div>
@@ -152,7 +152,6 @@
                             <th>Korisnik</th>
                             <th>Akcija</th>
                             <th>Tabela</th>
-                            <th>ID</th>
                             <th>Detalji</th>
                         </tr>
                     </thead>
@@ -184,8 +183,6 @@
                             </td>
 
                             <td>{{ log.table_name or "-" }}</td>
-
-                            <td>{{ log.record_id or "-" }}</td>
 
                             <td>
                                 {% if log.details %}
