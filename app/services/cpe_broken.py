@@ -129,12 +129,12 @@ def update_cpe_broken(data):
             )
         log_user_action(
             action="update",
-            table_name="cpe_broken",
+            table_name="CPE Neispravna",
             record_id=city_id,
             details={
-                "count": len(updates),
-                "week_end": str(current_week_end),
-                "city": city_name,
+                "Sedmica": str(current_week_end),
+                "Skladiste": city_name,
+                "Unosi": updates,
             },
         )
         db.session.commit()
