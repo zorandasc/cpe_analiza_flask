@@ -129,7 +129,7 @@ def update_cpe_dismantle(data):
                     "quantity": u["quantity"],
                 },
             )
-    
+
         log_user_action(
             action="update",
             table_name="CPE Demontirana",
@@ -139,7 +139,7 @@ def update_cpe_dismantle(data):
                 "Unosi": updates,
             },
         )
-        
+
         db.session.commit()
         return True, f"Novo stanje za skladište {city_name} uspješno sačuvano!"
     except Exception as e:
@@ -323,10 +323,13 @@ def _group_records(records, schema_list):
     return list(grouped.values())
 
 
-
+# Because each row is of:
+# one week + one damage type + all CPE columns
+# we need to group → into one week object whick holds all damages + all CPE columns
+# (comp row + nd row + na row + ndia row)
 def _group_history_records(records, schema_list):
     """
-    FOR EASY VIEW REPRESENTATION:
+    FOR EASY VIEW REPRESENTATION WE WANT OUR DATA TO LOOK LIKE THIS:
 
     {week: week_end1, cpe:[{cpe_type_id:1, "damages":{"comp":100,"nd":200, "na":300,"ndia":400}}, {cpe_type_id:2, "damages":{...}]},
 
@@ -336,10 +339,13 @@ def _group_history_records(records, schema_list):
     grouped = {}
 
     for row in records:
+        # get week_end value form sql row
         week = row["week_end"]
 
         if week not in grouped:
+            # forms group object by week (Each object is row in jinja table)
             grouped[week] = {
+                # get week_end value form sql row
                 "week": row["week_end"],
                 "cpe": {
                     cpe["name"]: {
@@ -354,18 +360,20 @@ def _group_history_records(records, schema_list):
                     for cpe in schema_list
                 },
             }
+        # get damage key form sql row
+        damage_key = row.get("dismantle_code")
 
-        # IF ADDING NEW CITY "dismantle_code WILL BE NULL
-        # If dismantle_code is None, it means it's an empty city row from the LEFT JOIN
-        if row.get("dismantle_code"):
-            for cpe in schema_list:
-                qty = row.get(cpe["name"], 0)
+        if damage_key:
+            damage_key = damage_key.lower()
 
-                damage_key = row["dismantle_code"]
+            for cpe_name in grouped[week]["cpe"]:
+                # id damage key in formed group object
+                if damage_key in grouped[week]["cpe"][cpe_name]["damages"]:
+                    # than take value from sql row
+                    qty = row.get(cpe_name, 0)
 
-                if damage_key is not None:
-                    damage_key = damage_key.lower()
-                    grouped[week]["cpe"][cpe["name"]]["damages"][damage_key][
+                    # and put it inside group object for that week
+                    grouped[week]["cpe"][cpe_name]["damages"][damage_key][
                         "quantity"
                     ] = qty
 

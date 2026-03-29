@@ -2968,6 +2968,13 @@ ON cpe_types (visible_in_dismantle);
 CREATE INDEX idx_user_activity_timestamp
 ON user_activity (timestamp);
 ```
+# INDEX FOR CPE_DISMANTLE HISTORY
+
+```SQL
+CREATE INDEX idx_cpe_dismantle_history
+ON cpe_dismantle(city_id, dismantle_type_id, week_end DESC);
+```
+# --------------------------------------------------------------------------------------
 
 # CRON JOB FOR EVERY DAY TO CLEAN USERACTIVITY TABLE. LOGS OLDER THAN 4 MONTHS
 
@@ -2977,3 +2984,4 @@ ON user_activity (timestamp);
 psql -U your_user -d your_db \
 -c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '4 months';"
 ```
+

@@ -35,7 +35,6 @@ def get_cpe_dismantle_pivoted(schema_list: list, week_end: datetime.date):
         )
         params[place_holder] = model["name"]
 
-   
     SQL_QUERY = f"""
         WITH latest_data AS (
             SELECT
@@ -377,16 +376,10 @@ def get_cpe_dismantle_city_history(
     # We need a separate query to get the total count for pagination
     count_query = text(
         f"""
-            SELECT COUNT(*) FROM (
-                SELECT 
-                    cd.week_end, 
-                    dt.code
-                FROM cpe_dismantle cd
-                JOIN dismantle_types dt ON dt.id = cd.dismantle_type_id
-                WHERE {city_filter}
-                    AND cd.dismantle_type_id IN :d_list
-                GROUP BY cd.week_end, dt.code
-            ) t
+            SELECT COUNT(DISTINCT cd.week_end)
+            FROM cpe_dismantle cd
+            WHERE {city_filter}
+            AND cd.dismantle_type_id IN :d_list
         """
     )
 
@@ -429,22 +422,34 @@ def get_cpe_dismantle_city_history(
         params[place_holder] = model["id"]
 
     SQL_QUERY = f"""
+        -- 1. Get paginated weeks (LIMIT, OFFSET)
+        WITH weeks AS (
+            SELECT DISTINCT cd.week_end
+            FROM cpe_dismantle cd
+            WHERE {city_filter}
+            AND cd.dismantle_type_id IN :d_list
+            ORDER BY cd.week_end DESC
+            LIMIT :limit OFFSET :offset
+        )
+        -- 2. Fetch full data only for those paginated weeks
         SELECT
-            WEEK_END,
-            DT.CODE AS DISMANTLE_CODE,
+            cd.week_end,
+            dt.code AS dismantle_code,
             {", ".join(case_columns)}
         FROM cpe_dismantle cd
-        JOIN DISMANTLE_TYPES DT ON DT.ID = CD.DISMANTLE_TYPE_ID
-        LEFT JOIN cpe_types ct ON ct.id=cd.cpe_type_id
+        JOIN weeks w ON w.week_end = cd.week_end
+        JOIN dismantle_types dt ON dt.id = cd.dismantle_type_id
+        LEFT JOIN cpe_types ct ON ct.id = cd.cpe_type_id
         WHERE {city_filter}
-            AND dismantle_type_id IN :d_list
-        GROUP BY cd.WEEK_END,DT.CODE
+        AND cd.dismantle_type_id IN :d_list
+        GROUP BY cd.week_end, dt.code
         ORDER BY cd.week_end DESC
-        LIMIT :limit
-        OFFSET :offset
     """
 
-    # this when all the params will be injected
+    # Because SQL already does:
+    # GROUP BY week_end, dismantle_code
+    # Each row represents:
+    # one week + one damage type + all CPE columns
     result = db.session.execute(text(SQL_QUERY), params)
 
     # pivoted_data is now list
