@@ -3031,6 +3031,11 @@ ALTER TABLE stb_types ADD CONSTRAINT uq_stb_types_external_id UNIQUE (external_i
 0 4 * * * docker exec -i my_flask_container python -m flask sync-with-iptv
 ```
 
+Test manually
+```bash
+docker exec -it my_flask_container flask sync-stb
+```
+
 3. ADD SCRIPT IN "cli/sync_iptv.py WITH FLASK CLI DECORATOR
 
 4. ADD SYSTEM USER: username="system" with id=0 FOR LOGINIG
