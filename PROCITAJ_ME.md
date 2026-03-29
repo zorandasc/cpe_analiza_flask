@@ -2961,3 +2961,19 @@ CREATE INDEX idx_cpe_types_visible
 ON cpe_types (visible_in_dismantle);
 
 ```
+
+# User activity table:
+
+```sql
+CREATE INDEX idx_user_activity_timestamp
+ON user_activity (timestamp);
+```
+
+# CRON JOB FOR EVERY DAY TO CLEAN USERACTIVITY TABLE. LOGS OLDER THAN 4 MONTHS
+
+# 2 (Hour): At 2 AM 
+```bash
+0 2 * * * docker exec -i your_postgres_container \
+psql -U your_user -d your_db \
+-c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '4 months';"
+```
