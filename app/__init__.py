@@ -7,12 +7,14 @@ from app.routes import register_routes
 from app.cli.create_admin_cli import create_initial_admin
 from app.cli.create_db_tables_cli import create_initial_db
 from app.cli.create_report_settings_cli import create_initial_report
+from app.cli.sync_with_iptv_platform import sync_stb_and_iptv
 from app.utils.permissions import (
     can_access_city,
     admin_required,
     iptv_view_required,
     ftth_view_required,
 )
+
 
 
 def create_app():
@@ -53,6 +55,7 @@ def create_app():
     app.cli.add_command(create_initial_db)
     app.cli.add_command(create_initial_admin)
     app.cli.add_command(create_initial_report)
+    app.cli.add_command(sync_stb_and_iptv)
 
     # Register routes
     register_routes(app)

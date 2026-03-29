@@ -2984,4 +2984,54 @@ ON cpe_dismantle(city_id, dismantle_type_id, week_end DESC);
 psql -U your_user -d your_db \
 -c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '4 months';"
 ```
+# ---------------------------------------------------------------------------------------
+# Grouping in cpe_dismantle history
+
+Because your SQL query already does:
+
+```sql
+GROUP BY week_end, dismantle_code
+```
+Each row represents:
+
+👉 one week + one damage type + all CPE columns
+
+So grouping in flask just merges:
+
+(comp row + nd row + na row + ndia row) → into one week object. 
+
+week_end+(comp row + nd row + na row + ndia row)+ all CPE columns -> ONE ROW IN CPE_DISMANTLE JINJA TABLE
+
+# -------SYNC SCRIPT FOR IPTV PLATFORM-------------------------------------
+
+IPTV PLATFORM  is External service = Source of Truth and only gives current snapshot
+
+Cron → Sync script/service → External API → DB
+
+1. ADD SQL COLUMN ON STB_TYPES:
+
+stb_types:
+- external_id (unique, nullable)
+
+```python
+external_id: Mapped[int] = mapped_column(Integer, nullable=True, unique=True)
+```
+
+```sql
+ALTER TABLE stb_types ADD COLUMN external_id INTEGER;
+ALTER TABLE stb_types ADD CONSTRAINT uq_stb_types_external_id UNIQUE (external_id);
+```
+
+2. ADD CRON JOB
+
+```bash
+0 * * * * cd /your/app && flask sync-stb
+```
+```bash
+0 4 * * * docker exec -i my_flask_container python -m flask sync-with-iptv
+```
+
+3. ADD SCRIPT IN "cli/sync_iptv.py WITH FLASK CLI DECORATOR
+
+4. ADD SYSTEM USER: username="system" with id=0 FOR LOGINIG
 

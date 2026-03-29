@@ -240,10 +240,11 @@ class StbTypes(db.Model):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
+    label: Mapped[Optional[str]] = mapped_column(String(200))
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true")
     )
-    label: Mapped[Optional[str]] = mapped_column(String(200))
+    external_id: Mapped[int] = mapped_column(Integer, nullable=True, unique=True)
 
     stb_inventory: Mapped[list["StbInventory"]] = relationship(
         "StbInventory", back_populates="stb_type"
