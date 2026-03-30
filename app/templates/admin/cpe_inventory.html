@@ -24,6 +24,10 @@ styles %} {{ super() }}
     background: linear-gradient(to right, #4568dc, #b06ab3);
     color: white;
   }
+  .btn-custom-new{
+    background-image: linear-gradient(25deg,#d64c7f,#ee4758 50%);
+    border: whitesmoke;
+  }
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
   }
@@ -90,7 +94,10 @@ styles %} {{ super() }}
   <div style="width: 95px;" class="d-none d-md-block"></div>
 </div>
 
- 
+ <div class="d-flex align-items-center justify-content-end">
+ <a href="{{ url_for('admin.add_city') }}" class="btn btn-primary my-3 btn-custom-new"
+      >Novi unos</a>
+ </div>
  
 
   <div class="table-responsive">
@@ -199,5 +206,107 @@ styles %} {{ super() }}
       </tbody>
     </table>
   </div>
+
+
+  <div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-xxl">
+    <div class="modal-content">
+      <form method="POST">
+        <div class="modal-header custom-modal-header">
+          <h5 class="modal-title">
+            Dodaj novi unos za CPE opremu
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="modal-id" name="record_id" />
+          <input type="hidden" name="city_id" id="modal-city-id" />
+
+           <div class="row mb-4 border-bottom pb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">SKLADIŠTE</label>
+              <input class="form-control" id="modal-city" name="city" readonly />
+            </div>
+          </div>
+
+          <div class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"> 
+            {% for item in schema %}
+            <div
+            style="--header-color: {{ item.header_color }}"
+              class="col-auto me-2 d-flex flex-column justify-content-between custom-modal-label"
+              
+            >
+              <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
+    
+              <input
+                class="form-control input-cpe-count"
+                data-cpe="{{item.name}}" 
+                data-cpeTypeId="{{item.id}}"
+                type="number"
+                min="0"
+              />
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-custom-save" 
+            onclick="submitUpdate('editModal')">
+            <span class="text-white fw-bold fs-4">
+              <svg
+                fill="#ffffff"
+                height="20px"
+                width="20px"
+                version="1.1"
+                id="Layer_1"
+                xmlns="http://www.w3.org/2000/svg"
+                xmlns:xlink="http://www.w3.org/1999/xlink"
+                viewBox="0 0 512 512"
+                xml:space="preserve"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  <g>
+                    <g>
+                      <g>
+                        <path
+                          d="M128,170.667h256c4.719,0,8.533-3.823,8.533-8.533V42.667c0-4.71-3.814-8.533-8.533-8.533 c-4.719,0-8.533,3.823-8.533,8.533V153.6H136.533V17.067h110.933c4.719,0,8.533-3.823,8.533-8.533S252.186,0,247.467,0H128 c-4.719,0-8.533,3.823-8.533,8.533v153.6C119.467,166.844,123.281,170.667,128,170.667z"
+                        ></path>
+                        <path
+                          d="M384,494.933H42.667c-14.114,0-25.6-11.486-25.6-25.6V42.667c0-14.114,11.486-25.6,25.6-25.6h51.2 c4.719,0,8.533-3.823,8.533-8.533S98.586,0,93.867,0h-51.2C19.14,0,0,19.14,0,42.667v426.667C0,492.86,19.14,512,42.667,512H384 c4.719,0,8.533-3.823,8.533-8.533S388.719,494.933,384,494.933z"
+                        ></path>
+                        <path
+                          d="M509.5,87.834L424.166,2.5c-1.596-1.604-3.763-2.5-6.033-2.5h-68.975c-4.719,0-8.533,3.823-8.533,8.533 c0,1.203,0.256,2.338,0.708,3.379v107.554h-51.2v-102.4h25.6c4.719,0,8.533-3.823,8.533-8.533S320.452,0,315.733,0H281.6 c-4.719,0-8.533,3.823-8.533,8.533V128c0,4.71,3.814,8.533,8.533,8.533h68.267c4.719,0,8.533-3.823,8.533-8.533V17.067h56.201 l80.333,80.333v371.934c0,14.114-11.486,25.6-25.6,25.6h-42.667V281.6c0-4.71-3.814-8.533-8.533-8.533H93.867 c-4.719,0-8.533,3.823-8.533,8.533v187.733c0,4.71,3.814,8.533,8.533,8.533c4.719,0,8.533-3.823,8.533-8.533v-179.2h307.2 v213.333c0,4.71,3.814,8.533,8.533,8.533h51.2C492.86,512,512,492.86,512,469.333V93.867C512,91.605,511.104,89.429,509.5,87.834 z"
+                        ></path>
+                        <path
+                          d="M179.2,426.667h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,426.667,179.2,426.667z"
+                        ></path>
+                        <path
+                          d="M179.2,375.467h153.6c4.719,0,8.533-3.823,8.533-8.533s-3.814-8.533-8.533-8.533H179.2c-4.719,0-8.533,3.823-8.533,8.533 S174.481,375.467,179.2,375.467z"
+                        ></path>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </svg>
+            </span>
+            Sačuvaj
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 </div>
 {% endblock %}
