@@ -3040,3 +3040,6 @@ docker exec -it my_flask_container flask sync-stb
 
 4. ADD SYSTEM USER: username="system" with id=0 FOR LOGINIG
 
+```sql
+insert into users (id, username, password_hash,role ) values(0, 'system','', 'user_iptv' )
+```

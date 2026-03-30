@@ -30,7 +30,7 @@ def get_stb_inventory_pivoted(weeks: list):
     for idx, w in enumerate(weeks):
         place_holder = f"w{idx}"  # THIS IS JUST PLACEHOLDERS w0,w1,w2,w3
         pivot_cols.append(
-            f'MAX(CASE WHEN i.week_end=:{place_holder} THEN i.quantity END) AS "{w}"'
+            f'COALESCE(MAX(CASE WHEN i.week_end=:{place_holder} THEN i.quantity END),0) AS"{w}"'
         )
         params[place_holder] = w
 
@@ -41,19 +41,19 @@ def get_stb_inventory_pivoted(weeks: list):
     SQL = f"""
         WITH weekly_data AS(SELECT
             t.id,
-            t.label,
+            t.name,
             {", ".join(pivot_cols)},
             max(i.updated_at) AS last_updated
         FROM stb_types t
         LEFT JOIN stb_inventory i
             ON t.id=i.stb_type_id
         WHERE t.is_active=TRUE
-        GROUP BY t.id, t.label
+        GROUP BY t.id, t.name
         ),
         final_data AS (
             SELECT
                 id,
-                label,
+                name,
                 {", ".join([f'"{w}"' for w in weeks])},
                 last_updated
             FROM weekly_data
@@ -62,7 +62,7 @@ def get_stb_inventory_pivoted(weeks: list):
 
             SELECT
                 NULL AS id,
-                'UKUPNO' AS label,
+                'UKUPNO' AS name,
                 {", ".join([f'COALESCE(SUM("{w}"),0)' for w in weeks])},
                 NULL AS last_updated
             FROM weekly_data
@@ -70,8 +70,8 @@ def get_stb_inventory_pivoted(weeks: list):
         SELECT * 
         FROM final_data
         ORDER BY
-            CASE WHEN label = 'UKUPNO' THEN 1 ELSE 0 END,
-            label; 
+            CASE WHEN name = 'UKUPNO' THEN 1 ELSE 0 END,
+            id; 
     """
 
     rows = db.session.execute(text(SQL), params)

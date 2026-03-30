@@ -486,7 +486,7 @@ class UserActivity(db.Model):
     __tablename__ = "user_activity"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     action: Mapped[str] = mapped_column(String(100))
     table_name: Mapped[str] = mapped_column(String(50), nullable=True)
     details: Mapped[dict] = mapped_column(JSON, nullable=True)

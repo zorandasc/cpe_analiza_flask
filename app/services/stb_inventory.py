@@ -46,9 +46,16 @@ def get_stb_iptv_records_view_data():
     return {
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "weeks": weeks,
+        "last_update": _get_last_stb_update(),
         "records": records_grouped,
         "iptv_users": iptv_users,
     }
+
+
+def _get_last_stb_update():
+    row = db.session.execute(text("SELECT MAX(updated_at) FROM stb_inventory")).first()
+
+    return row[0]
 
 
 def update_recent_stb_inventory(form_data):
@@ -138,7 +145,6 @@ def update_iptv_users_count(form_data):
             details={
                 "Sedmica": str(current_week_end),
                 "Broj korisnika": qty,
-                
             },
         )
 
@@ -221,7 +227,7 @@ def _group_records(records, week_keys):
         if stbid not in grouped:
             grouped[stbid] = {
                 "id": stbid,
-                "label": row["label"],
+                "name": row["name"],
                 "last_updated": row["last_updated"],
                 "is_total": stbid == TOTAL_KEY,
                 "dates": {week: {"quantity": 0} for week in week_keys},

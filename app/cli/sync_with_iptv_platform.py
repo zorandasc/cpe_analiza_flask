@@ -15,11 +15,13 @@ def sync_stb_and_iptv():
     try:
         sync_stb_types_and_inventory()
     except Exception as e:
+        db.session.rollback()
         print("STB sync failed:", e)
 
     try:
         sync_iptv_users()
     except Exception as e:
+        db.session.rollback()
         print("IPTV users sync failed:", e)
 
 
@@ -27,31 +29,43 @@ def sync_stb_types_and_inventory():
     response = requests.get("http://10.152.0.17:8090/api/device-models")
     data = response.json()
 
-    # preload existing types
+    # preload existing types FROM DB
     types_map = {t.external_id: t for t in StbTypes.query.all()}
 
     # 1. THIS IS USE FOR REMOVAL OF STB IF ANY
     external_ids = set()
 
-    # 1. SYNC STB TYPES
-    for ext_type in data["types"]:
-        ext_id = ext_type["id"]
+    # 1. SYNC STB TYPES BETWEEN DB AND FROM IPTV/API
+    for item in data["data"]:
+        ext_id = int(item["id"])
         external_ids.add(ext_id)
+
+        name = item["model"]
+        label = f"{item['model']} {item['manufacturer']} "
 
         stb_type = types_map.get(ext_id)
 
+        # If in db there is no external_id
         if not stb_type:
-            stb_type = StbTypes(
-                external_id=ext_id,
-                name=ext_type["name"],
-                label=ext_type.get("label"),
-                is_active=True,
-            )
-            db.session.add(stb_type)
-        else:
-            stb_type.name = ext_type["name"]
-            stb_type.label = ext_type.get("label")
-            stb_type.is_active = True
+            # fallback: match by name
+            stb_type = StbTypes.query.filter_by(name=name).first()
+
+            if stb_type:
+                # if it has by name update external_id
+                stb_type.external_id = ext_id
+            else:
+                # if  there is no by id or name insert into db as new
+                stb_type = StbTypes(
+                    external_id=ext_id,
+                    name=name,
+                    label=label,
+                    is_active=True,
+                )
+                db.session.add(stb_type)
+
+        stb_type.name = name
+        stb_type.label = label
+        stb_type.is_active = True
 
     db.session.commit()  # ensure IDs exist
 
@@ -71,8 +85,11 @@ def sync_stb_types_and_inventory():
 
     types_map = {t.external_id: t for t in StbTypes.query.all()}
 
-    for item in data["inventory"]:
-        stb_type = types_map.get(item["type_id"])
+    for item in data["data"]:
+        ext_id = int(item["id"])
+        quantity = int(item["total_count"])
+
+        stb_type = types_map.get(ext_id)
 
         if not stb_type:
             continue
@@ -89,14 +106,14 @@ def sync_stb_types_and_inventory():
             {
                 "stb_id": stb_type.id,
                 "week_end": current_week_end,
-                "quantity": item["quantity"],
+                "quantity": quantity,
             },
         )
         updates_log.append(
             {
                 "stb_type_id": stb_type.id,
-                "stb_label": stb_type.label,
-                "quantity": item["quantity"],
+                "stb_name": stb_type.name,
+                "quantity": quantity,
             }
         )
 
@@ -120,6 +137,8 @@ def sync_iptv_users():
     # If external system is source of truth → its time is also source of truth
     ## week_end = parse_api_date(data["week_end"])
 
+    total_users = int(data["data"])
+
     db.session.execute(
         text("""
         INSERT INTO iptv_users (total_users, week_end)
@@ -130,7 +149,7 @@ def sync_iptv_users():
             updated_at = NOW();
     """),
         {
-            "total_users": data["total"],
+            "total_users": total_users,
             "week_end": current_week_end,
         },
     )
@@ -140,7 +159,7 @@ def sync_iptv_users():
         table_name="IPTV Korisnici",
         details={
             "Sedmica": str(current_week_end),
-            "Broj korisnika": data["total"],
+            "Broj korisnika": total_users,
         },
         user_id=0,
     )
