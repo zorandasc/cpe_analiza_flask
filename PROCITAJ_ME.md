@@ -2980,8 +2980,8 @@ ON cpe_dismantle(city_id, dismantle_type_id, week_end DESC);
 
 # 2 (Hour): At 2 AM 
 ```bash
-0 2 * * * docker exec -i your_postgres_container \
-psql -U your_user -d your_db \
+0 2 * * * docker exec -i 4a6de36c2105 \
+psql -U postgres -d mydb \
 -c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '4 months';"
 ```
 # ---------------------------------------------------------------------------------------
@@ -3024,14 +3024,18 @@ ALTER TABLE stb_types ADD CONSTRAINT uq_stb_types_external_id UNIQUE (external_i
 
 2. ADD CRON JOB
 
-
+RUN AT 4AM
 ```bash
-0 4 * * * docker exec -i my_flask_container python -m flask sync-with-iptv
+0 4 * * * docker exec -i cpe-analiza-flask-1 python -m flask sync-with-iptv
+```
+EVERY HOUR
+```SQL
+0 * * * * docker exec -i cpe-analiza-flask-1 python -m flask sync-with-iptv
 ```
 
 Test manually
 ```bash
-docker exec -it my_flask_container flask sync-stb
+docker exec -it cpe-analiza-flask-1 flask sync-with-iptv
 ```
 
 3. ADD SCRIPT IN "cli/sync_iptv.py WITH FLASK CLI DECORATOR
@@ -3040,4 +3044,20 @@ docker exec -it my_flask_container flask sync-stb
 
 ```sql
 insert into users (id, username, password_hash,role ) values(0, 'system','', 'user_iptv' )
+```
+
+# ------------------------------------------------------------------------------
+
+# CRONTAB
+
+```bash
+crontab -l
+
+EDITOR=nano crontab -e
+
+CTRL-O
+ENTER
+CTRL-X
+
+crontab -l
 ```
