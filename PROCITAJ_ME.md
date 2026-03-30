@@ -3024,9 +3024,7 @@ ALTER TABLE stb_types ADD CONSTRAINT uq_stb_types_external_id UNIQUE (external_i
 
 2. ADD CRON JOB
 
-```bash
-0 * * * * cd /your/app && flask sync-stb
-```
+
 ```bash
 0 4 * * * docker exec -i my_flask_container python -m flask sync-with-iptv
 ```

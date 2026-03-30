@@ -167,7 +167,7 @@ class CityVisibilitySettings(db.Model):
     is_visible = mapped_column(Boolean, server_default=text("true"))
     included_in_total_sum = mapped_column(Boolean, server_default=text("true"))
 
-    city = relationship("Cities", back_populates="visibility_settings")
+    city = relationship("Cities", back_populates="visibility_settings",passive_deletes=True)
 
 
 class CpeTypes(db.Model):
@@ -494,7 +494,7 @@ class UserActivity(db.Model):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    user = relationship("Users", backref="activities")
+    user = relationship("Users", backref="activities",passive_deletes=True)
 
 
 # DDL (Data Definition Language) listener in SQLAlchemy.
