@@ -2,28 +2,39 @@
 styles %} {{ super() }}
 <style>
     /* Sticky logic */
-  .table-responsive {
-    overflow: visible !important;
+.table-responsive {
+    overflow-x: auto;          /* Enable horizontal scroll */
+    overflow-y: auto;          /* Enable vertical scroll for sticky header */
+    
+    /* 1. Set height for roughly 20 rows + header */
+    /* You can use 70vh (70% of screen) or a fixed pixel value */
+    max-height: 650px; 
+    
+    /* 2. Standard cleanup */
+    width: 100%;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #dee2e6; /* Adds a nice boundary */
 }
-  /* Modern table header */
-  .table-custom-head th {
-    background-color: #d4e2db !important;
-    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
-    color: #000; /* black text */
-    font-weight: 400;
-    text-align: center;
-    vertical-align: middle;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    font-size: 14px;
-    position: sticky;
-    top: 60px; 
-    z-index: 1020; 
-    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
 
-     /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
-    background-color: var(--header-color, #f2f2f2);
-  }
+.table {
+    width: 100%;
+    margin-bottom: 0;          /* Remove bottom margin to avoid double scroll */
+    
+    /* 3. Force horizontal scroll if you have many columns */
+    /* If 1000px is still cramped, increase this to 1400px */
+    min-width: 1200px; 
+    border-collapse: separate; /* Required for some browsers to respect sticky borders */
+    border-spacing: 0;
+}
+
+.table-custom-head th {
+    position: sticky;
+    top: 0;                    /* Sticks to the top of the .table-responsive div */
+    z-index: 1020;
+    background-color: #d4e2db !important; /* Must be solid color */
+    box-shadow: inset 0 -1px 0 #919394;   /* Keeps the bottom border visible while sticking */
+}
 
   /* Remove border radius from inner th cells to avoid overlapping */
   .table-custom-head th:first-child {
@@ -140,8 +151,7 @@ styles %} {{ super() }}
 </style>
 {% endblock %} {% block content%}
 <div class=" py-2">
-  <div class="table-responsive">
-    <div class="d-flex justify-content-between align-items-center">
+  <div class="d-flex justify-content-between align-items-center">
   <a
       href="{{ url_for('stb_inventory.stb_iptv_records')}}"
     class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
@@ -149,47 +159,51 @@ styles %} {{ super() }}
     <span class="me-2">⬅</span> Nazad
   </a>
   </div>
-    <h1 class="mb-4 text-center">Istorija STB opreme</h1>
+  <h1 class="mb-4 text-center">Istorija STB opreme</h1>
+  <div class="d-flex justify-content-between align-items-end">
     <nav>
-      <ul class="pagination">
-        {% if records.has_prev %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('stb_inventory.stb_records_history', page=records.prev_num) }}"
-            >Previus</a
-          >
-        </li>
-        {% endif %} {% for p in records.iter_pages() %} {% if p %}
-        <li class="page-item {% if p == records.page %}active{% endif %}">
-          <a
-            class="page-link"
-            href="{{ url_for('stb_inventory.stb_records_history', page=p) }}"
-            >{{ p }}</a
-          >
-        </li>
-        {% else%}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif%} {% endfor %} {% if records.has_next %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('stb_inventory.stb_records_history', page=records.next_num) }}"
-            >Next</a
-          >
-        </li>
-        {% endif %}
-      </ul>
+        <ul class="pagination">
+          {% if records.has_prev %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('stb_inventory.stb_records_history', page=records.prev_num) }}"
+              >Previus</a
+            >
+          </li>
+          {% endif %} {% for p in records.iter_pages() %} {% if p %}
+          <li class="page-item {% if p == records.page %}active{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('stb_inventory.stb_records_history', page=p) }}"
+              >{{ p }}</a
+            >
+          </li>
+          {% else%}
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+          {% endif%} {% endfor %} {% if records.has_next %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('stb_inventory.stb_records_history', page=records.next_num) }}"
+              >Next</a
+            >
+          </li>
+          {% endif %}
+        </ul>
     </nav>
-     <div class="mb-2 text-muted">
-        Showing {{ records.items|length }} of {{ records.total }} logs
+    <div class="mb-2 text-muted">
+          Showing {{ records.items|length }} of {{ records.total }} logs
     </div>
-    <table class="table table-hover table-striped shadow align-middle table-sm table-emph-h-border">
+  </div>
+  <div class="table-responsive">
+    
+    <table class="table table-hover table-striped shadow align-middle table-sm table-emph-h-border w-100">
       <thead class="table-custom-head">
         <tr>
           <th class="azur-column">SEDMICA</th>
           {% if schema %} {% for item in schema %}
-            <th  style="">{{item.label}}</th>
+            <th  style="">{{item.name}}</th>
           {% endfor %} {% endif %}
         </tr>
       </thead>

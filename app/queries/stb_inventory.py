@@ -1,18 +1,7 @@
+import re
 from sqlalchemy import text
 from app.extensions import db
 from app.utils.simplepagination import SimplePagination
-
-
-def get_last_4_weeks():
-    SQL = """ 
-        SELECT DISTINCT week_end
-        FROM stb_inventory
-        ORDER BY week_end DESC
-        LIMIT 4
-    """
-    rows = db.session.execute(text(SQL))
-
-    return [row[0] for row in rows.all()]  # LIST OF DATES
 
 
 def get_stb_inventory_pivoted(weeks: list):
@@ -79,48 +68,6 @@ def get_stb_inventory_pivoted(weeks: list):
     return [row._asdict() for row in rows.all()]
 
 
-def get_iptv_users():
-    SQL_QUERY_IPTV_USERS = """
-            SELECT
-               total_users,
-               week_end,
-               updated_at
-            FROM
-                IPTV_USERS
-            ORDER BY
-                WEEK_END DESC
-            LIMIT
-                4
-    """
-
-    iptv_users_rows = db.session.execute(text(SQL_QUERY_IPTV_USERS)).fetchall()
-
-    iptv_users = [row._asdict() for row in iptv_users_rows]
-
-    iptv_users.reverse()
-
-    return iptv_users
-
-
-def get_stb_types():
-    SQL_QUERY = """
-            SELECT
-               id,
-               name,
-               label
-            FROM stb_types
-            WHERE is_active = true
-            ORDER BY
-                id
-    """
-
-    stb_types_rows = db.session.execute(text(SQL_QUERY)).fetchall()
-
-    stb_types = [row._asdict() for row in stb_types_rows]
-
-    return stb_types
-
-
 def get_stb_inventory_history(schema_list: list, page: int, per_page: int):
     """
     Retrieves the historical records pivoted by STB type.
@@ -145,15 +92,20 @@ def get_stb_inventory_history(schema_list: list, page: int, per_page: int):
 
     case_columns = []
 
-    for model in schema_list:
+    params = {
+        "limit": per_page,
+        "offset": offset,
+    }
+
+    for i, model in enumerate(schema_list):
+        # This prevents SQL injection by using parameterized queries.
+        place_holder = f"stb_{i}"
+        safe_name = safe_sql_identifier(model["name"])
+
         case_columns.append(
-            f"""
-            COALESCE(
-                SUM(CASE WHEN st.name = '{model["name"]}' THEN si.quantity END),
-                0
-            ) AS "{model["name"]}"
-            """
+            f'COALESCE(SUM(CASE WHEN st.id = :{place_holder} THEN si.quantity END),0) AS  "{safe_name}"'
         )
+        params[place_holder] = model["id"]
 
     SQL_QUERY = f"""
         SELECT
@@ -167,11 +119,6 @@ def get_stb_inventory_history(schema_list: list, page: int, per_page: int):
         OFFSET :offset
     """
 
-    params = {
-        "limit": per_page,
-        "offset": offset,
-    }
-
     result = db.session.execute(text(SQL_QUERY), params)
 
     # pivoted_data is now list
@@ -183,3 +130,69 @@ def get_stb_inventory_history(schema_list: list, page: int, per_page: int):
     )
 
     return paginate
+
+
+def get_iptv_users():
+    SQL_QUERY_IPTV_USERS = """
+            SELECT
+               total_users,
+               week_end,
+               updated_at
+            FROM
+                IPTV_USERS
+            ORDER BY
+                WEEK_END DESC
+            LIMIT
+                4
+    """
+
+    iptv_users_rows = db.session.execute(text(SQL_QUERY_IPTV_USERS)).fetchall()
+
+    iptv_users = [row._asdict() for row in iptv_users_rows]
+
+    iptv_users.reverse()
+
+    return iptv_users
+
+
+#############################
+# HELPERS
+###############################
+
+
+def get_last_4_weeks():
+    SQL = """ 
+        SELECT DISTINCT week_end
+        FROM stb_inventory
+        ORDER BY week_end DESC
+        LIMIT 4
+    """
+    rows = db.session.execute(text(SQL))
+
+    return [row[0] for row in rows.all()]  # LIST OF DATES
+
+
+def get_stb_types():
+    SQL_QUERY = """
+            SELECT
+               id,
+               name,
+               label
+            FROM stb_types
+            WHERE is_active = true
+            ORDER BY
+                id
+    """
+
+    stb_types_rows = db.session.execute(text(SQL_QUERY)).fetchall()
+
+    stb_types = [row._asdict() for row in stb_types_rows]
+
+    return stb_types
+
+
+# You need a safe column name, not raw API string.
+def safe_sql_identifier(name: str) -> str:
+    # Replace everything except letters/numbers/_ with _
+    cleaned = re.sub(r"[^a-zA-Z0-9_]", "_", name)
+    return cleaned[:50]  # optional length limit

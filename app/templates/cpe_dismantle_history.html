@@ -67,6 +67,7 @@ styles %} {{ super() }}
     border-spacing: 1px 1px !important;
   }
 
+  
   .table-custom-head th {
     color: #000;
     font-weight: 400;
@@ -75,14 +76,16 @@ styles %} {{ super() }}
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 14px;
+   
+      /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
+    background-color: var(--header-color, #f2f2f2);
+  }
 
-    position: sticky;
+  thead{
+     position: sticky;
     top: 60px; 
     z-index: 1020; 
     box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1);
-
-     /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
-    background-color: var(--header-color, #f2f2f2);
   }
 
   /* Remove border radius from inner th cells to avoid overlapping */
@@ -250,44 +253,47 @@ styles %} {{ super() }}
     </a>
   </div>
   {% if category == "complete" %}
-  <div class="table-responsive">
     <h1 class="mb-4 text-center">
       Istorija demontirane kompletne CPE opreme za {{ city.name }}
     </h1>
-    <nav>
-      <ul class="pagination">
-        {% if records.has_prev %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=city.id,category=category, page=records.prev_num) }}"
-            >Previus</a
-          >
-        </li>
-        {% endif %} {% for p in records.iter_pages() %} {% if p %}
-        <li class="page-item {% if p == records.page %}active{% endif %}">
-          <a
-            class="page-link"
-            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=p) }}"
-            >{{ p }}</a
-          >
-        </li>
-        {% else%}
-        <li class="page-item disabled"><span class="page-link">...</span></li>
-        {% endif%} {% endfor %} {% if records.has_next %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=records.next_num) }}"
-            >Next</a
-          >
-        </li>
-        {% endif %}
-      </ul>
-    </nav>
-    <div class="mb-2 text-muted">
-        Showing {{ records.items|length }} of {{ records.total }} logs
+    <div class="d-flex justify-content-between align-items-end">
+      <nav>
+        <ul class="pagination">
+          {% if records.has_prev %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history', id=city.id,category=category, page=records.prev_num) }}"
+              >Previus</a
+            >
+          </li>
+          {% endif %} {% for p in records.iter_pages() %} {% if p %}
+          <li class="page-item {% if p == records.page %}active{% endif %}">
+            <a
+              class="page-link"
+              href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=p) }}"
+              >{{ p }}</a
+            >
+          </li>
+          {% else%}
+          <li class="page-item disabled"><span class="page-link">...</span></li>
+          {% endif%} {% endfor %} {% if records.has_next %}
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_city_history',id=city.id,category=category, page=records.next_num) }}"
+              >Next</a
+            >
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      <div class="mb-2 text-muted">
+          Showing {{ records.items|length }} of {{ records.total }} logs
+      </div>
     </div>
+  <div class="table-responsive">
+    
     <table class="table table-hover align-middle table-striped shadow  table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
@@ -321,10 +327,10 @@ styles %} {{ super() }}
     </table>
   </div>
   {% else %}
-  <div class="table-responsive">
-    <h1 class="mb-4 text-center">
+  <h1 class="mb-4 text-center">
       Istorija demontirane nekompletne CPE opreme za {{ city.name }}
     </h1>
+    <div class="d-flex justify-content-between align-items-end">
     <nav>
       <ul class="pagination">
         {% if records.has_prev %}
@@ -359,6 +365,9 @@ styles %} {{ super() }}
      <div class="mb-2 text-muted">
         Showing {{ records.items|length }} of {{ records.total }} logs
     </div>
+    </div>
+  <div class="table-responsive">
+    
     <table class="table table-hover align-middle table-striped shadow  table-sm table-emph-h-border">
       <thead class="table-custom-head">
         <tr>
