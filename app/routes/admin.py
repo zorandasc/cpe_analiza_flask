@@ -10,6 +10,7 @@ from flask import (
     url_for,
 )
 from flask_login import login_required, current_user
+from sqlalchemy.dialects.postgresql import insert
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import selectinload
 from app.extensions import db
@@ -115,6 +116,9 @@ def cpe_inventory():
     )
 
     cities = Cities.query.order_by(Cities.id).all()
+    cpe_types = (
+        CpeTypes.query.filter_by(visible_in_total=True).order_by(CpeTypes.id).all()
+    )
 
     return render_template(
         "admin/cpe_inventory.html",
@@ -124,43 +128,66 @@ def cpe_inventory():
         sort_by=sort_by,
         direction=direction,
         cities=cities,
+        cpe_types=cpe_types,
         week_end=week_end,
         city_id=city_id,
     )
 
 
-@admin_bp.route("/cpe_inventory/update/<int:id>", methods=["POST"])
+@admin_bp.route("/cpe_inventory/upsert", methods=["POST"])
 @login_required
-def update_cpe_inventory(id):
+def upsert_cpe_inventory():
     if not admin_required():
         return redirect(url_for("admin.cpe_inventory"))
 
-    table_row = CpeInventory.query.get_or_404(id)
+    city_id = request.form.get("city_id")
+    week_end = request.form.get("week_end")
 
-    quantity = request.form.get("quantity", type=int)
+    cpe_types = (
+        CpeTypes.query.filter_by(visible_in_total=True).order_by(CpeTypes.id).all()
+    )
 
-    if quantity is None:
-        flash("Neispravna količina.", "danger")
-        return redirect(url_for("admin.cpe_inventory"))
+    for cpe in cpe_types:
+        # Get the quantity for this specific type from the form
+        qty = request.form.get(f"cpe_{cpe.id}", 0, type=int)
 
-    table_row.quantity = quantity
-    table_row.updated_at = datetime.now()
-
-    try:
-        db.session.commit()
-        flash("CPE stanje uspješno izmijenjeno!", "success")
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Greška prilikom izmjene: {e}", "danger")
-        return redirect(url_for("admin.cpe_inventory"))
-
-    return redirect(
-        url_for(
-            "admin.cpe_inventory",
-            week_end=request.args.get("week_end"),
-            city_id=request.args.get("city_id"),
+        # SQLALCHEMY Upsert Logic
+        stmt = insert(CpeInventory).values(
+            city_id=city_id, week_end=week_end, cpe_type_id=cpe.id, quantity=qty
         )
+
+        upsert_stmt = stmt.on_conflict_do_update(
+            constraint="uq_city_cpe_week",
+            set_={"quantity": qty, "updated_at": db.func.now()},
+        )
+
+        db.session.execute(upsert_stmt)
+
+    db.session.commit()
+    flash(f"Uspješno ažurirano stanje za grad i datum {week_end}", "success")
+    return redirect(url_for("admin.cpe_inventory"))
+
+
+@admin_bp.route("/cpe_values_for")
+@login_required
+def get_existing_cpe_values_for_city_week_end():
+    city_id = request.args.get("city_id", type=int)
+    week_end = request.args.get("week_end", type=str)
+
+    # Fetch existing records for this combo
+    records = CpeInventory.query.filter_by(city_id=city_id, week_end=week_end).all()
+
+    if not records:
+        return jsonify({"exists": False})
+
+    # Create a dictionary of {cpe_type_id: quantity}
+    values_dict = {r.cpe_type_id: r.quantity for r in records}
+
+    return jsonify(
+        {
+            "exists": True,
+            "values": values_dict,
+        }
     )
 
 
