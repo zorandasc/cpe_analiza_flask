@@ -3,17 +3,17 @@ styles %} {{ super() }}
 <style>
   /* Modern table header */
   .table-custom-head th {
-    /* background: linear-gradient(145deg, #acd4f7, #8ec8f7); gradient */
-    color: #000; /* black text */
+    color: #000;
     font-weight: 600;
     vertical-align: middle;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 16px;
   }
- .btn-custom-save {
-   background: linear-gradient(to bottom, #14d120 0%, #1f5222 100%);
-    color: white;
+
+   .btn-custom-save {
+   background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
+    color: rgb(48, 46, 46)!important;
   }
 
   .btn-custom-filter{
@@ -22,59 +22,37 @@ styles %} {{ super() }}
     background: linear-gradient(to right, #4568dc, #b06ab3);
     color: white;
   }
-  .custom-modal-header {
-    background: linear-gradient(to right, #7bc6cc, #be93c5);
+  .btn-custom-new{
+    background-image: linear-gradient(to right, #0099f7, #f11712);
+    border: whitesmoke;
   }
-
-  .plus-icon-bg {
-    color: white;
-    background-color: #0d6efd; /* Bootstrap primary */
-    padding: 4px 6px;
-    border-radius: 50%;
-    font-size: 18px;
-  }
-
+ 
   .active .page-link {
     background-color: #8ec8f7 !important;
   }
 
-  /* Custom class for an extra-extra large modal */
-  .modal-xxl {
-    /* Set the max-width of the entire modal dialog.
-       90% of the viewport width is generally a safe large size. */
-    --bs-modal-width: 90vw;
-    /* The modal-dialog will take up 90% of the screen width */
-    max-width: var(--bs-modal-width);
+  .modal-content{
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
-  /* Optional: Ensure the content (modal-content) also respects this width */
-  .modal-xxl .modal-content {
-    width: 100%;
-  }
+ .table>:not(caption)>*>* {
+  background: none;
+ }
 
-  .input-cpe-count {
-    /* Set a specific maximum width for the small number fields */
-    max-width: 80px;
-    /* Ensures they don't stretch beyond this point */
-    margin: 0 auto;
-  }
-  .cpe-label-wrap {
-    /* Set max width slightly wider than the input (80px) to accommodate text */
-    max-width: 90px;
-    /* Allows the text to flow to the next line */
-    white-space: normal;
-    text-align: center;
-  }
+ .modal-body{
+  padding-bottom: 0;
+ }
 
-  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
-  .table-emph-h-border td {
-    /* Set the border style for all sides first */
-    border: 1px solid #919394;
-
-    /* Override the top/bottom borders to be thicker */
-    border-top-width: 3px !important;
-    border-bottom-width: 3px !important;
-  }
+.text-danger{
+    --bs-text-opacity: 1;
+    color: rgb(233 6 27) !important;
+    font-size: 16px;
+}
 </style>
 {% endblock %} {% block content%}
 <div class=" py-4">
@@ -83,10 +61,13 @@ styles %} {{ super() }}
     <span class="me-2">⬅</span> Nazad
   </a>
   <h2 class="mb-0">Unosi demontirane CPE opreme</h2>
-  <div style="width: 95px;" class="d-none d-md-block"></div>
-</div>
-  <div class="table-responsive">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+   <div class="d-flex align-items-center justify-content-end">
+      <button type="button" class="btn btn-primary btn-custom-new" data-bs-toggle="modal" data-bs-target="#upsertModal">
+        Novi unos / Ažuriraj
+    </button>
+ </div>
+  </div>
+  <div class="d-flex justify-content-between align-items-center mb-3">
       <nav>
         <ul class="pagination mb-0">
           {% if pagination.has_prev %}
@@ -136,10 +117,10 @@ styles %} {{ super() }}
               <button type="submit" class="btn btn-primary btn-custom-filter">Filter</button>
           </div>
       </form>
-    </div>
-    <table
-      class="table table-bordered table-striped table-hover align-middle shadow-lg table-sm"
-    >
+  </div>
+  <div class="table-responsive">
+    
+    <table class="table table-bordered table-striped table-hover align-middle shadow-lg table-sm">
       <thead class="table-custom-head">
         <tr>
           <td>
@@ -183,13 +164,7 @@ styles %} {{ super() }}
           <td>{{ r.id }}</td>
           <td>{{ r.city.name }}</td>
           <td>{{ r.cpe_type.label }}</td>
-          <td>
-            <form method="post" action="{{ url_for('admin.update_cpe_dismantle_inventory',week_end=week_end, city_id=city_id, id=r.id) }}" class="d-flex justify-content-between align-items-center">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <input type="number" name="quantity" value="{{r.quantity}}" min=0 class="form-control form-control-sm" style="width: 80px;">
-               {% if admin_required() %}<button class="btn btn-sm btn-success btn-custom-save">Save</button> {% endif %}
-            </form>
-          </td>
+          <td>{{r.quantity}}</td>
           <td>{{ r.dismantle_type.label }}</td>
           <td>{{ r.week_end.strftime('%d-%m-%Y') }}</td>
           <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
