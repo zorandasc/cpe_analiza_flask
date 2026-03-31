@@ -151,9 +151,14 @@ block styles %} {{ super() }}
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
-    background: white;
     height: 140px;
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
   /* NEW/Restored style for smaller cards (for the bottom row - list management) */
@@ -163,9 +168,14 @@ block styles %} {{ super() }}
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
-    background: white;
     height: 130px; /* Smaller height for administrative items */
     overflow: hidden;
+    background: rgba(255, 255, 255, 0.45);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
   .dashboard-card::before,
