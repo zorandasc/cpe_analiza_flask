@@ -426,7 +426,7 @@ def upsert_cpe_broken():
 # COMMON FOR ALL 3 CPE TABLES
 @admin_bp.route("/get_cpe_values/<table_type>")
 @login_required
-def get_existing_cpe_values_for_city_week_end(table_type):
+def get_cpe_values_for_city_week(table_type):
     city_id = request.args.get("city_id", type=int)
     week_end = request.args.get("week_end", type=str)
 

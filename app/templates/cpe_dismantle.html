@@ -804,10 +804,14 @@
             </div>
 
             <div class="col-md-2">
+             {% if item.has_adapter %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Adapter</span>
                 <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-damage="na" type="number" min="0" />
               </div>
+                {% else %}
+              <div class="text-start text-muted small">—</div>
+              {% endif %}
             </div>
 
             <div class="col-md-2">
@@ -822,7 +826,7 @@
             </div>
 
             <div class="col-md-2">
-              {% if item.has_remote %}
+              {% if item.has_remote and item.has_adapter %}
               <div class="input-group">
                 <span class="input-group-text d-md-none">Both</span>
                 <input 
