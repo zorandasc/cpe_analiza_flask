@@ -172,7 +172,7 @@ styles %} {{ super() }}
 
   <div class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="upsertModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-    <form id="upsertForm" action="{{ url_for('admin.upsert_cpe_inventory') }}" method="POST" class="modal-content">
+    <form id="upsertForm" action="{{ url_for('admin.upsert_cpe_broken') }}" method="POST" class="modal-content">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="modal-header bg-primary btn-custom-new text-white">
         <h5 class="modal-title" id="upsertModalLabel">Unos / Ažuriranje Stanja</h5>
