@@ -33,7 +33,7 @@ styles %} {{ super() }}
   }
 
   .modal-content{
-    background: rgba(255, 255, 255, 0.45);
+    background: rgba(255, 255, 255, 0.55);
     border-radius: 16px;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(5px);
@@ -65,14 +65,12 @@ styles %} {{ super() }}
   <h2 class="mb-0">Unosi CPE Stanja</h2>
 
    <div class="d-flex align-items-center justify-content-end">
-  <button type="button" class="btn btn-primary btn-custom-new" data-bs-toggle="modal" data-bs-target="#upsertModal">
-    Novi unos / Ažuriraj
-</button>
+      <button type="button" class="btn btn-primary btn-custom-new" data-bs-toggle="modal" data-bs-target="#upsertModal">
+        Novi unos / Ažuriraj
+    </button>
  </div>
 </div>
 
-
- 
  <div class="d-flex justify-content-between align-items-center mb-3">
       <nav>
           <ul class="pagination mb-0">
@@ -258,7 +256,7 @@ function checkExistingData() {
     if (cityId && weekEnd) {
         spinner.classList.remove('d-none');
         
-        fetch(`/admin/cpe_values_for?city_id=${cityId}&week_end=${weekEnd}`)
+        fetch(`/admin/get_cpe_values/inventory?city_id=${cityId}&week_end=${weekEnd}`)
             .then(response => response.json())
             .then(data => {
                 // Reset all to 0 first
