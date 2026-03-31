@@ -14,7 +14,7 @@ styles %} {{ super() }}
 
    .btn-custom-save {
    background-image: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%);
-    color: rgb(48, 46, 46);
+    color: rgb(48, 46, 46)!important;
   }
 
   .btn-custom-filter{
@@ -49,7 +49,11 @@ styles %} {{ super() }}
   padding-bottom: 0;
  }
 
-  
+.text-danger{
+    --bs-text-opacity: 1;
+    color: rgb(233 6 27) !important;
+    font-size: 16px;
+}
 </style>
 {% endblock %} {% block content%}
 <div class=" py-4">
@@ -191,7 +195,10 @@ styles %} {{ super() }}
           </div>
           <div class="col-md-6">
             <label class="form-label fw-bold">Kraj Sedmice</label>
-            <input type="date" name="week_end" id="modal_week_end" class="form-control" required onchange="checkExistingData()">
+            <input type="date" name="week_end" id="modal_week_end" class="form-control" required onchange="validateFriday(this); checkExistingData();">
+            <div id="friday_error" class="text-danger small d-none">
+              Datum mora biti Petak!
+            </div>
           </div>
         </div>
 
@@ -272,5 +279,26 @@ function checkExistingData() {
             });
     }
 }
+
+
+function validateFriday(input) {
+    const dateValue = new Date(input.value);
+    const day = dateValue.getUTCDay(); 
+    const errorDiv = document.getElementById('friday_error');
+    const submitBtn = document.querySelector('#upsertForm button[type="submit"]');
+
+    if (day !== 5) {
+        errorDiv.classList.remove('d-none');
+        input.classList.add('is-invalid');
+        submitBtn.disabled = true; // Prevent submission of invalid date
+    } else {
+        errorDiv.classList.add('d-none');
+        input.classList.remove('is-invalid');
+        submitBtn.disabled = false;
+    }
+}
+
+
+
 </script>
 {% endblock %}

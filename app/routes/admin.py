@@ -141,7 +141,23 @@ def upsert_cpe_inventory():
         return redirect(url_for("admin.cpe_inventory"))
 
     city_id = request.form.get("city_id")
+
+    city = Cities.query.get(city_id)
+    if not city:
+        flash("Greška: Skladište ne postoji.", "danger")
+        return redirect(url_for("admin.cpe_inventory"))
+
     week_end = request.form.get("week_end")
+
+    # 1. Validate Friday in Python
+    try:
+        date_obj = datetime.strptime(week_end, "%Y-%m-%d")
+        if date_obj.weekday() != 4:  # Python: Monday=0, Friday=4
+            flash("Greška: Datum mora biti petak!", "danger")
+            return redirect(url_for("admin.cpe_inventory"))
+    except ValueError:
+        flash("Neispravan format datuma.", "danger")
+        return redirect(url_for("admin.cpe_inventory"))
 
     cpe_types = (
         CpeTypes.query.filter_by(visible_in_total=True).order_by(CpeTypes.id).all()
@@ -164,7 +180,12 @@ def upsert_cpe_inventory():
         db.session.execute(upsert_stmt)
 
     db.session.commit()
-    flash(f"Uspješno ažurirano stanje za grad i datum {week_end}", "success")
+
+    formatted_date = date_obj.strftime("%d.%m.%Y")
+    flash(
+        f"Uspješno ažurirano stanje za: **{city.name}** (Sedmica: {formatted_date})",
+        "success",
+    )
     return redirect(url_for("admin.cpe_inventory"))
 
 
