@@ -168,11 +168,141 @@ styles %} {{ super() }}
           <td>{{ r.dismantle_type.label }}</td>
           <td>{{ r.week_end.strftime('%d-%m-%Y') }}</td>
           <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
-          <td>{{ r.updated_at.strftime('%d-%m-%Y %H:%M:%S')}}</td>
+          <td>{{ r.updated_at.strftime('%d-%m-%Y %H:%M:%S') if r.updated_at else 'N/A'}}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+
+   <div class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="upsertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <form id="upsertForm" action="{{ url_for('admin.upsert_cpe_dismantle') }}" method="POST" class="modal-content">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header bg-primary btn-custom-new text-white">
+          <h5 class="modal-title" id="upsertModalLabel">Unos / Ažuriranje Stanja</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Skladište</label>
+              <select name="city_id" id="modal_city_id" class="form-select" required onchange="checkExistingData()">
+                <option value="" selected disabled>Odaberi...</option>
+                {% for city in cities %}
+                <option value="{{ city.id }}">{{ city.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Kraj Sedmice (Petak)</label>
+              <input type="date" name="week_end" id="modal_week_end" class="form-control" required onchange="validateFriday(this); checkExistingData();">
+              <div id="friday_error" class="text-danger small d-none">
+                Datum mora biti Petak!
+              </div>
+            </div>
+          </div>
+
+          <div id="loadingSpinner" class="text-center d-none">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p>Provjera postojećih podataka...</p>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Tip Opreme</th>
+                   {% for dismantle in dismantle_types %}
+                    <th>{{dismantle["label"]}}</th>
+                   {% endfor %}
+                </tr>
+              </thead>
+              <tbody>
+                {% for type in cpe_types %}
+                <tr>
+                  <td>{{ type.label }}</td>
+                   {% for dismantle in dismantle_types %}
+                    <td>
+                      <input  type="number"
+                              name="cpe_{{type.id}}_{{ dismantle.id }}"
+                              id="cpe_{{type.id}}_{{ dismantle.id }}"
+                              class="form-control cpe-input"
+                              value="0"
+                              min="0"
+                              required>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+          <button type="submit" class="btn btn-success btn-custom-save">Sačuvaj Promjene</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
+
+
+<script>
+//CHECK IF CITY/WEEK_END COMBINATION ALREADY EXISIT
+//IF YES FILL WITH THAT VALUES
+//IF NO FILL WITH ALL ZERO
+function checkExistingData() {
+    const cityId = document.getElementById('modal_city_id').value;
+    const weekEnd = document.getElementById('modal_week_end').value;
+    const inputs = document.querySelectorAll('.cpe-input');
+    const spinner = document.getElementById('loadingSpinner');
+    
+
+    // Only fetch if both fields are filled
+    if (cityId && weekEnd) {
+        spinner.classList.remove('d-none');
+        
+        fetch(`/admin/get_cpe_dismantle_values?city_id=${cityId}&week_end=${weekEnd}`)
+            .then(response => response.json())
+            .then(data => {
+                // Reset all to 0 first
+                inputs.forEach(input => input.value = 0);
+                
+                // Fill with existing data if found
+                if (data.exists) {
+                    for (const [inputName, quantity] of Object.entries(data.values)) {
+                        const input = document.getElementsByName(inputName)[0];
+                        if (input) input.value = quantity;
+                    }
+                }
+                spinner.classList.add('d-none');
+            })
+            .catch(err => {
+                console.error("Greška pri preuzimanju podataka:", err);
+                spinner.classList.add('d-none');
+            });
+    }
+}
+
+
+function validateFriday(input) {
+    const dateValue = new Date(input.value);
+    const day = dateValue.getUTCDay(); 
+    const errorDiv = document.getElementById('friday_error');
+    const submitBtn = document.querySelector('#upsertForm button[type="submit"]');
+
+    if (day !== 5) {
+        errorDiv.classList.remove('d-none');
+        input.classList.add('is-invalid');
+        submitBtn.disabled = true; // Prevent submission of invalid date
+    } else {
+        errorDiv.classList.add('d-none');
+        input.classList.remove('is-invalid');
+        submitBtn.disabled = false;
+    }
+}
+
+</script>
 {% endblock %}

@@ -173,72 +173,72 @@ styles %} {{ super() }}
 
 
   <div class="modal fade" id="upsertModal" tabindex="-1" aria-labelledby="upsertModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <form id="upsertForm" action="{{ url_for('admin.upsert_cpe_inventory') }}" method="POST" class="modal-content">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="modal-header bg-primary btn-custom-new text-white">
-        <h5 class="modal-title" id="upsertModalLabel">Unos / Ažuriranje Stanja</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row mb-4">
-          <div class="col-md-6">
-            <label class="form-label fw-bold">Skladište</label>
-            <select name="city_id" id="modal_city_id" class="form-select" required onchange="checkExistingData()">
-              <option value="" selected disabled>Odaberi...</option>
-              {% for city in cities %}
-              <option value="{{ city.id }}">{{ city.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label fw-bold">Kraj Sedmice (Petak)</label>
-            <input type="date" name="week_end" id="modal_week_end" class="form-control" required onchange="validateFriday(this); checkExistingData();">
-            <div id="friday_error" class="text-danger small d-none">
-              Datum mora biti Petak!
+    <div class="modal-dialog modal-lg">
+      <form id="upsertForm" action="{{ url_for('admin.upsert_cpe_inventory') }}" method="POST" class="modal-content">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="modal-header bg-primary btn-custom-new text-white">
+          <h5 class="modal-title" id="upsertModalLabel">Unos / Ažuriranje Stanja</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Skladište</label>
+              <select name="city_id" id="modal_city_id" class="form-select" required onchange="checkExistingData()">
+                <option value="" selected disabled>Odaberi...</option>
+                {% for city in cities %}
+                <option value="{{ city.id }}">{{ city.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Kraj Sedmice (Petak)</label>
+              <input type="date" name="week_end" id="modal_week_end" class="form-control" required onchange="validateFriday(this); checkExistingData();">
+              <div id="friday_error" class="text-danger small d-none">
+                Datum mora biti Petak!
+              </div>
             </div>
           </div>
-        </div>
 
-        <div id="loadingSpinner" class="text-center d-none">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p>Provjera postojećih podataka...</p>
-        </div>
+          <div id="loadingSpinner" class="text-center d-none">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p>Provjera postojećih podataka...</p>
+          </div>
 
-        <div class="table-responsive">
-          <table class="table table-sm align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>Tip Opreme</th>
-                <th style="width: 150px;">Količina</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for type in cpe_types %}
-              <tr>
-                <td>{{ type.label }}</td>
-                <td>
-                  <input  type="number"
-                          name="cpe_{{type.id}}"
-                          id="cpe_{{type.id}}"
-                          class="form-control cpe-input"
-                          value="0"
-                          min="0"
-                          required>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Tip Opreme</th>
+                  <th style="width: 150px;">Količina</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for type in cpe_types %}
+                <tr>
+                  <td>{{ type.label }}</td>
+                  <td>
+                    <input  type="number"
+                            name="cpe_{{type.id}}"
+                            id="cpe_{{type.id}}"
+                            class="form-control cpe-input"
+                            value="0"
+                            min="0"
+                            required>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
-        <button type="submit" class="btn btn-success btn-custom-save">Sačuvaj Promjene</button>
-      </div>
-    </form>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+          <button type="submit" class="btn btn-success btn-custom-save">Sačuvaj Promjene</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 </div>
 <script>
 
@@ -256,7 +256,7 @@ function checkExistingData() {
     if (cityId && weekEnd) {
         spinner.classList.remove('d-none');
         
-        fetch(`/admin/get_cpe_values/inventory?city_id=${cityId}&week_end=${weekEnd}`)
+        fetch(`/admin/get_cpe_values?city_id=${cityId}&week_end=${weekEnd}`)
             .then(response => response.json())
             .then(data => {
                 // Reset all to 0 first

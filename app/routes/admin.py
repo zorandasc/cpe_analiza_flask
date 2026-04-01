@@ -189,6 +189,30 @@ def upsert_cpe_inventory():
     return redirect(url_for("admin.cpe_inventory"))
 
 
+# Fill the modal with values for city/week_end combination
+@admin_bp.route("/get_cpe_inventory_values")
+@login_required
+def get_cpe_inventory_for_city_week():
+    city_id = request.args.get("city_id", type=int)
+    week_end = request.args.get("week_end", type=str)
+
+    # Fetch existing records for this combo
+    records = CpeInventory.query.filter_by(city_id=city_id, week_end=week_end).all()
+
+    if not records:
+        return jsonify({"exists": False})
+
+    # Create a dictionary of {cpe_type_id: quantity}
+    values_dict = {r.cpe_type_id: r.quantity for r in records}
+
+    return jsonify(
+        {
+            "exists": True,
+            "values": values_dict,
+        }
+    )
+
+
 # ------------------------------------------------------------
 
 
@@ -244,11 +268,13 @@ def cpe_dismantle():
     )
 
     # THIS IS DATA FOR SELECTION IN CITY FILTER
-    cities = (
-        Cities.query.filter(Cities.type == CityTypeEnum.IJ.value)
-        .order_by(Cities.id)
-        .all()
+    cities = Cities.query.order_by(Cities.id).order_by(Cities.id).all()
+
+    cpe_types = (
+        CpeTypes.query.filter_by(visible_in_dismantle=True).order_by(CpeTypes.id).all()
     )
+
+    dismantle_types = DismantleTypes.query.order_by(DismantleTypes.id).all()
 
     return render_template(
         "admin/cpe_dismantle.html",
@@ -257,43 +283,104 @@ def cpe_dismantle():
         sort_by=sort_by,
         direction=direction,
         cities=cities,
+        cpe_types=cpe_types,
+        dismantle_types=dismantle_types,
         week_end=week_end,
         city_id=city_id,
     )
 
 
-@admin_bp.route("/cpe_dismantle_inventory/update/<int:id>", methods=["POST"])
+@admin_bp.route("/cpe_dismantle/upsert", methods=["POST"])
 @login_required
-def update_cpe_dismantle_inventory(id):
+def upsert_cpe_dismantle():
     if not admin_required():
         return redirect(url_for("admin.cpe_dismantle"))
 
-    table_row = CpeDismantle.query.get_or_404(id)
+    city_id = request.form.get("city_id")
 
-    quantity = request.form.get("quantity", type=int)
-
-    if quantity is None:
-        flash("Neispravna količina.", "danger")
+    city = Cities.query.get(city_id)
+    if not city:
+        flash("Greška: Skladište ne postoji.", "danger")
         return redirect(url_for("admin.cpe_dismantle"))
 
-    table_row.quantity = quantity
-    table_row.updated_at = datetime.now()
+    week_end = request.form.get("week_end")
 
+    # 1. Validate Friday in Python
     try:
-        db.session.commit()
-        flash("Stanje CPE demontaža uspješno izmijenjeno!", "success")
-
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Greška prilikom izmjene: {e}", "danger")
+        date_obj = datetime.strptime(week_end, "%Y-%m-%d")
+        if date_obj.weekday() != 4:  # Python: Monday=0, Friday=4
+            flash("Greška: Datum mora biti petak!", "danger")
+            return redirect(url_for("admin.cpe_dismantle"))
+    except ValueError:
+        flash("Neispravan format datuma.", "danger")
         return redirect(url_for("admin.cpe_dismantle"))
 
-    return redirect(
-        url_for(
-            "admin.cpe_dismantle",
-            week_end=request.args.get("week_end"),
-            city_id=request.args.get("city_id"),
-        )
+    cpe_types = (
+        CpeTypes.query.filter_by(visible_in_dismantle=True).order_by(CpeTypes.id).all()
+    )
+
+    dismantle_types = DismantleTypes.query.order_by(DismantleTypes.id).all()
+
+    for cpe in cpe_types:
+        for d_type in dismantle_types:
+            # Look for the specific coordinate in form data
+            # Formiraj ime na backednu field_name
+            field_name = f"cpe_{cpe.id}_{d_type.id}"
+
+            # To ime mora da odgovara name u input html elementu u request sa frontenda
+            # da bi dobili kvantitet sa frontenda koji je korisnik izabrao
+            qty = request.form.get(field_name, 0, type=int)
+
+            # SQLALCHEMY Upsert Logic
+            stmt = insert(CpeDismantle).values(
+                city_id=city_id,
+                week_end=week_end,
+                cpe_type_id=cpe.id,
+                dismantle_type_id=d_type.id,
+                quantity=qty,
+                updated_at=db.func.now()
+            )
+
+            upsert_stmt = stmt.on_conflict_do_update(
+                constraint="uq_city_cpe_dismantle_week",
+                set_={"quantity": qty, "updated_at": db.func.now()},
+            )
+
+            db.session.execute(upsert_stmt)
+
+    db.session.commit()
+
+    formatted_date = date_obj.strftime("%d.%m.%Y")
+    flash(
+        f"Uspješno ažurirano stanje za: **{city.name}** (Sedmica: {formatted_date})",
+        "success",
+    )
+    return redirect(url_for("admin.cpe_dismantle"))
+
+
+# Fill the modal with values for city/week_end combination
+@admin_bp.route("/get_cpe_dismantle_values")
+@login_required
+def get_cpe_dismantle_for_city_week():
+    city_id = request.args.get("city_id", type=int)
+    week_end = request.args.get("week_end", type=str)
+
+    # Fetch existing records for this combo
+    records = CpeDismantle.query.filter_by(city_id=city_id, week_end=week_end).all()
+
+    if not records:
+        return jsonify({"exists": False})
+
+    # Create a dictionary of {"cpe_type_id_dismantle_type_id": quantity}
+    values_dict = {
+        f"cpe_{r.cpe_type_id}_{r.dismantle_type_id}": r.quantity for r in records
+    }
+
+    return jsonify(
+        {
+            "exists": True,
+            "values": values_dict,
+        }
     )
 
 
@@ -423,22 +510,15 @@ def upsert_cpe_broken():
     return redirect(url_for("admin.cpe_broken"))
 
 
-# COMMON FOR ALL 3 CPE TABLES
-@admin_bp.route("/get_cpe_values/<table_type>")
+# Fill the modal with values for city/week_end combination
+@admin_bp.route("/get_cpe_broken_values")
 @login_required
-def get_cpe_values_for_city_week(table_type):
+def get_cpe_broken_for_city_week():
     city_id = request.args.get("city_id", type=int)
     week_end = request.args.get("week_end", type=str)
 
-    model_map = {"inventory": CpeInventory, "broken": CpeBroken}
-
-    TargetModel = model_map.get(table_type)
-
-    if not TargetModel:
-        return jsonify({"error": "Invalid table type"}), 400
-
     # Fetch existing records for this combo
-    records = TargetModel.query.filter_by(city_id=city_id, week_end=week_end).all()
+    records = CpeBroken.query.filter_by(city_id=city_id, week_end=week_end).all()
 
     if not records:
         return jsonify({"exists": False})
@@ -634,7 +714,9 @@ def update_iptv_users_inventory(id):
     )
 
 
-# ------------------------------------------------------------------------
+###########################################################
+# ---------------ROUTES FOR MAIN ACCESS TABLES-------------------------
+############################################################
 
 
 @admin_bp.route("/access_inventory")
