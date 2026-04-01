@@ -367,7 +367,7 @@
       <form method="POST">
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-            Dodaj novo stanje CPE opreme za datum: {{ today }}
+            Dodaj novo stanje CPE opreme
           </h5>
           <button
             type="button"
@@ -380,21 +380,21 @@
           <input type="hidden" name="city_id" id="modal-city-id" />
 
            <div class="row mb-4 border-bottom pb-3">
-            <div class="col-md-4">
-              <label class="form-label fw-bold">SKLADIŠTE</label>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Skladište</label>
               <input class="form-control" id="modal-city" name="city" readonly />
             </div>
+             <div class="col-md-6">
+              <label class="form-label fw-bold">Sedmica ažuriranja (Petak)</label>
+              <input name="week_end" id="modal_week_end" class="form-control" value={{current_week_end}} readonly>
+              </div>
           </div>
 
           <div class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"> 
             {% for item in schema %}
-            <div
-            style="--header-color: {{ item.header_color }}"
-              class="col-auto me-2 d-flex flex-column justify-content-between custom-modal-label"
-              
-            >
+            <div style="--header-color: {{ item.header_color }}"
+              class="col-auto me-2 d-flex flex-column justify-content-between custom-modal-label">
               <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
-    
               <input
                 class="form-control input-cpe-count"
                 data-cpe="{{item.name}}" 

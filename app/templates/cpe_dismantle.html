@@ -660,7 +660,7 @@
       <form method="POST" >
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-            Novo stanje demontirane kompletne TO za: {{current_week_end}}
+            Novo stanje demontirane kompletne TO
           </h5>
           <button
             type="button"
@@ -674,10 +674,14 @@
           <input type="hidden" name="city_id" id="modal-city-id" />
 
           <div class="row mb-4 border-bottom pb-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label fw-bold">SKLADIŠTE</label>
               <input class="form-control" id="modal-city" name="city" readonly />
             </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Sedmica ažuriranja (Petak)</label>
+              <input name="week_end" id="modal_week_end" class="form-control" value={{current_week_end}} readonly>
+              </div>
           </div>
 
           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
@@ -766,7 +770,7 @@
       <form method="POST">
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-            Novo stanje demontirane nekompletne TO za: {{current_week_end}}
+            Novo stanje demontirane nekompletne TO
           </h5>
           <button
             type="button"
@@ -780,10 +784,14 @@
           <input type="hidden" name="city_id" id="modal-city-id" />
 
           <div class="row mb-4 border-bottom pb-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label fw-bold">SKLADIŠTE</label>
               <input class="form-control" id="modal-city" name="city" readonly />
             </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Sedmica ažuriranja (Petak)</label>
+              <input name="week_end" id="modal_week_end" class="form-control" value={{current_week_end}} readonly>
+              </div>
           </div>
 
           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
@@ -906,7 +914,7 @@
       <form method="POST" >
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-            Novo stanje demontirane neispravne TO za: {{current_week_end}}
+            Novo stanje demontirane neispravne TO
           </h5>
           <button
             type="button"
@@ -920,10 +928,14 @@
           <input type="hidden" name="city_id" id="modal-city-id" />
 
           <div class="row mb-4 border-bottom pb-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label fw-bold">SKLADIŠTE</label>
               <input class="form-control" id="modal-city" name="city" readonly />
             </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Sedmica ažuriranja (Petak)</label>
+              <input name="week_end" id="modal_week_end" class="form-control" value={{current_week_end}} readonly>
+              </div>
           </div>
 
           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
