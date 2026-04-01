@@ -40,7 +40,7 @@
     background: linear-gradient(to right, #be93c5, #7bc6cc);
   }
 
-     .info {
+  .info {
     display: block;
     font-size: 18px;
     font-weight: 500;
@@ -50,13 +50,8 @@
     color: rgba(0, 0, 0, 0.4);
     text-align: center;
   }
-
-  /* Sticky logic */
-  .table-responsive {
-    overflow: visible !important;
-}
  
-  .my-custom-table {
+   .my-custom-table {
   border-collapse: separate !important;
   border-spacing:1px 1px !important;
 }
@@ -69,16 +64,14 @@
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     font-size: 14px;
+  }
     /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY TABLE HEADER*/
+  .table-custom-head th {
     background-color: var(--header-color, #f2f2f2);
-
-    /* Sticky logic */
-    position: sticky;
-    top: 60px; 
-    z-index: 1020; 
-    /*box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset;*/
+    /*max-width: 120px;*/
   }
 
+  /* Remove border radius from inner th cells to avoid overlapping */
   .table-custom-head th:first-child {
     border-top-left-radius: 8px;
   }
@@ -90,11 +83,66 @@
     text-align: center;
     background-color: #d7dce2 !important;
   }
-  
-  .azur-column {
-   background-color: #d7dce2 !important;
-    max-width: 90px;
+
+  .azurira-column {
+    background-color: #d7dce2 !important;
+    max-width: 120px;
+    width: 100px;
   }
+
+
+ .table tr.red-row,
+  .table tr.red-row td {
+    color: #ee1831;
+  }
+
+  .table tr.green-row,
+  .table tr.green-row td {
+    color: #111 ;
+  }
+  .red-bcg {
+    background-color: #ffe0e4 !important;
+   
+  }
+
+  .green-bcg {
+    background-color: #def7eb !important;
+  }
+
+  .table tr.total-row,
+  .table tr.total-row td {
+    background-color: #e4eef7 !important;
+  }
+
+  .azur-row-red{
+    color: rgb(234, 114, 114)!important;
+    font-size: 13px;
+  }
+
+   .azur-row-green{
+    color: #65776e!important;
+    font-size: 13px;
+  }
+
+  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
+  .table-emph-h-border td {
+    /* Set the border style for all sides first */
+    border: 1px solid #919394;
+
+    /* Override the top/bottom borders to be thicker */
+    border-top-width: 1px !important;
+    border-bottom-width: 1px !important;
+  }
+
+  .table-emph-h-border th.group-start,
+.table-emph-h-border td.group-start {
+  border-left: 3px solid #495057;
+}
+
+.table-emph-h-border th.group-end,
+.table-emph-h-border td.group-end {
+  border-right: 3px solid #495057;
+}
 
   .btn-custom-save {
     background: linear-gradient(to right, #be93c5, #7bc6cc);
@@ -105,6 +153,7 @@
     background: linear-gradient(to right, #ada996, #f2f2f2, #dbdbdb, #eaeaea);
     color: whitesmoke;
     box-shadow: 1px 1px 2px rgb(0, 0, 0);
+
   }
 
   .btn-custom-stb-add {
@@ -117,10 +166,9 @@
   .custom-modal-header {
     background: linear-gradient(to right, #7bc6cc, #be93c5);
   }
-  /*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY MODAL LABEL*/
-  .custom-modal-label{
+/*--header-color IS CSS VARIABLE, WHICH VALUES ARE DEFINED IN EVERY MODAL LABEL*/
+    .custom-modal-label{
     background-color: var(--header-color, #f2f2f2);
-     padding-bottom: 1rem;
   }
 
   .plus-icon-bg {
@@ -135,8 +183,7 @@
     background-color: #8ec8f7 !important;
   }
 
- 
-.modal-content{
+ .modal-content{
     background: rgba(255, 255, 255, 0.55);
     border-radius: 16px;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
@@ -146,10 +193,11 @@
   }
 
   .modal-dialog {
-  max-width: fit-content;
+  
   margin-left: auto;
   margin-right: auto;
 }
+
   .input-cpe-count {
     /* Set a specific maximum width for the small number fields */
     max-width: 80px;
@@ -163,61 +211,44 @@
     white-space: normal;
     text-align: center;
   }
-  .table tr.red-row,
-  .table tr.red-row td {
-    /*background-color: #fae5e8 !important;*/
-    color: #ee1831;
+ 
+:root {
+    --nav-bg-color: linear-gradient(to right, #be93c5, #7bc6cc);; /* Change this to your custom color */
+    --nav-text-color: rgba(255, 255, 255, 0.7);
+    --nav-hover-bg: rgba(255, 255, 255, 0.1);
   }
 
-  .table tr.green-row,
-  .table tr.green-row td {
-    /*background-color: #def7eb !important;*/
-    color: #111 ;
-  }
-  .red-bcg {
-    background-color: #fae5e8 !important;
-   
+  /* The main "Navbar" background */
+  .custom-navbar-wrapper {
+    background: var(--nav-bg-color);
+    padding: 0.5rem 1rem 0 1rem;
+    border-radius: 0.5rem 0.5rem 0 0;
   }
 
-  .green-bcg {
-    background-color: #def7eb !important;
+  .custom-nav-navbar .nav-link {
+    color: var(--nav-text-color);
+    border: none;
+    transition: all 0.2s ease;
   }
 
-  .table tr.total-row,
-  .table tr.total-row td {
-    background-color: #e4eef7 !important;
-    height: 40px;
+  .custom-nav-navbar .nav-link:hover {
+    color: #fff;
+    background: var(--nav-hover-bg);
   }
 
-  .table tr.ras-row,
-  .table tr.ras-row td {
-    color: rgb(201, 40, 11) !important;
-    height: 50px;
+  /* The magic: Making the white card "swallow" the active tab */
+  .custom-nav-navbar .nav-link.active {
+    color: var(--nav-bg-color) !important; /* Text matches the nav for contrast */
+    background-color: #fff !important;
+    border-radius: 0.5rem 0.5rem 0 0;
+    font-weight: 600;
   }
 
-    .azur-row-red{
-    color: rgb(234, 114, 114)!important;
-  
-    font-size: 13px;
+  .tab-card-opened {
+    border: 1px solid #dee2e6;
+    border-top: none; /* Removes the line between tab and card */
+    margin-top: -1px; 
   }
-
-   .azur-row-green{
-    color: #65776e!important;
-    
-    font-size: 13px;
-  }
-
-  /* 1. Emphasize the Horizontal Borders (Top and Bottom of TD/TH) */
-
-  .table-emph-h-border td {
-    /* Set the border style for all sides first */
-    border: 1px solid #919394;
-
-    /* Override the top/bottom borders to be thicker */
-    border-top-width: 1px !important;
-    border-bottom-width: 1px !important;
-  }
-
 </style>
 {% endblock %} {% block content%}
 <div class="py-2">
@@ -338,13 +369,15 @@
 
 <!-- MODAL OPENED BY EDIT BUTTON-->
 <!-- Inputs inside modal have ids like modal-CPE-,-->
+
+
 <div class="modal fade modal-lg" id="editModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-xxl">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <form method="POST">
+      <form method="POST" >
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-             Novo stanje demontirane neispravne TO
+            Novo stanje demontirane neispravne TO
           </h5>
           <button
             type="button"
@@ -352,11 +385,12 @@
             data-bs-dismiss="modal"
           ></button>
         </div>
+
         <div class="modal-body">
           <input type="hidden" id="modal-id" name="record_id" />
           <input type="hidden" name="city_id" id="modal-city-id" />
 
-           <div class="row mb-4 border-bottom pb-3">
+          <div class="row mb-4 border-bottom pb-3">
             <div class="col-md-6">
               <label class="form-label fw-bold">SKLADIŠTE</label>
               <input class="form-control" id="modal-city" name="city" readonly />
@@ -367,33 +401,42 @@
               </div>
           </div>
 
-          <div class="d-flex flex-row flex-nowrap overflow-auto p-3 align-items-stretch"> 
-            {% for item in schema %}
-            <div
-            style="--header-color: {{ item.header_color }}"
-              class="col-auto me-2 d-flex flex-column justify-content-between custom-modal-label"
-              
-            >
-              <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
-    
-              <input
-                class="form-control input-cpe-count"
-                data-cpe="{{item.name}}" 
-                data-cpeTypeId="{{item.id}}"
-                type="number"
-                min="0"
-              />
-            </div>
-            {% endfor %}
+          <div class="row fw-bold text-center mb-2 d-none d-md-flex">
+            <div class="col-md-6 text-start">Terminalna Oprema</div>
+            <div class="col-md-6 text-start">Neispravna</div>
           </div>
+
+          {% for item in schema %}
+          <div class="row mb-2 align-items-center border-bottom  ">
+            
+            <div style="--header-color: {{ item.header_color }}" class="col-md-6 custom-modal-label">
+              <label class=" fw-bold p-2">{{item.label}}</label>
+            </div>
+
+            <div class="col-md-6">
+              <div class="input-group">
+                <span class="input-group-text d-md-none">Neispravna</span>
+                <input
+                  class="form-control input-cpe-count"
+                  data-cpe="{{item.name}}" 
+                  data-cpeTypeId="{{item.id}}"
+                  type="number"
+                  min="0"
+              />
+              </div>
+            </div>
+          </div>
+          {% endfor %}
         </div>
+
         <div class="modal-footer">
           <button 
             type="button" 
             class="btn btn-custom-save" 
-            onclick="submitUpdate('editModal')">
+            onclick="submitUpdate('editModal')"
+          >
             <span class="text-white fw-bold fs-4">
-              <svg
+                <svg
                 fill="#ffffff"
                 height="20px"
                 width="20px"
@@ -442,7 +485,6 @@
     </div>
   </div>
 </div>
-
 
 <script>
   //######################################
