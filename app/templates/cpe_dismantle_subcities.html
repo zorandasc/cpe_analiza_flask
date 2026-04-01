@@ -134,19 +134,20 @@
     background-color: #8ec8f7 !important;
   }
 
-  /* Custom class for an extra-extra large modal */
-  .modal-xxl {
-    /* Set the max-width of the entire modal dialog.
-       90% of the viewport width is generally a safe large size. */
-    --bs-modal-width: 90vw;
-    /* The modal-dialog will take up 90% of the screen width */
-    max-width: var(--bs-modal-width);
+  .modal-content{
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
-  /* Optional: Ensure the content (modal-content) also respects this width */
-  .modal-xxl .modal-content {
-    width: 100%;
-  }
+  .modal-dialog {
+  max-width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
 
   .input-cpe-count {
     /* Set a specific maximum width for the small number fields */
@@ -442,12 +443,12 @@
 
 <!-- MODAL OPENED BY EDIT BUTTON-->
 <div class="modal fade" id="completeModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered ">
     <div class="modal-content">
       <form method="POST" >
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-            Novo stanje demontirane kompletne TO za sedmicu ažuriranja: {{current_week_end}}
+            Novo stanje demontirane kompletne TO za: {{current_week_end}}
           </h5>
           <button
             type="button"
@@ -547,12 +548,12 @@
 </div>
 
 <div class="modal fade" id="partialModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered ">
     <div class="modal-content">
       <form method="POST">
         <div class="modal-header custom-modal-header">
           <h5 class="modal-title">
-            Novo stanje demontirane nekompletne TO za sedmicu ažuriranj: {{current_week_end}}
+            Novo stanje demontirane nekompletne TO za: {{current_week_end}}
           </h5>
           <button
             type="button"
