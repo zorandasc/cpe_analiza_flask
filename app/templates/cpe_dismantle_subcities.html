@@ -144,7 +144,6 @@
   }
 
   .modal-dialog {
-  max-width: fit-content;
   margin-left: auto;
   margin-right: auto;
 }
@@ -442,7 +441,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <!-- MODAL OPENED BY EDIT BUTTON-->
-<div class="modal fade" id="completeModal" tabindex="-1">
+<div class="modal fade modal-lg" id="completeModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered ">
     <div class="modal-content">
       <form method="POST" >
@@ -551,7 +550,7 @@
   </div>
 </div>
 
-<div class="modal fade" id="partialModal" tabindex="-1">
+<div class="modal fade modal-lg" id="partialModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered ">
     <div class="modal-content">
       <form method="POST">
