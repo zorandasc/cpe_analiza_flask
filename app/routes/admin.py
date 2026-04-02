@@ -1519,26 +1519,10 @@ def delete_stb_type(id):
 ###########################################################
 # ---------------ROUTES FOR STBMAPPING CRUD--------------------------
 ############################################################
-@admin_bp.route("/stb-mapping", methods=["GET", "POST"])
+@admin_bp.route("/stb-mapping", methods=["GET"])
 @login_required
 def stb_mapping():
-    if request.method == "POST":
-        for key, value in request.form.items():
-            if key.startswith("map_"):
-                external_id = int(key.replace("map_", ""))
-                stb_type_id = int(value) if value else None
 
-                mapping = STBExternalMap.query.filter_by(
-                    external_id=external_id
-                ).first()
-
-                if mapping:
-                    mapping.stb_type_id = stb_type_id
-
-        db.session.commit()
-        flash("Mappings updated successfully", "success")
-        return redirect(url_for("admin.stb_mapping"))
-    
     mappings = STBExternalMap.query.order_by(STBExternalMap.external_id).all()
 
     stb_types = StbTypes.query.filter_by(is_active=True).order_by(StbTypes.name).all()
@@ -1548,6 +1532,33 @@ def stb_mapping():
         mappings=mappings,
         stb_types=stb_types,
     )
+
+
+@admin_bp.route("/new-stb-mapping", methods=["POST"])
+@login_required
+def new_stb_mapping():
+    if not admin_required():
+        return redirect(url_for("admin.stb_mapping"))
+
+    ext_id = int(request.form.get("external_id"))
+    ext_name = request.form.get("new_external_name", "")
+    stb_type_id = request.form.get("stb_type_id")
+
+    exists = STBExternalMap.query.filter_by(external_id=ext_id).first()
+
+    if exists:
+        flash("Eksterni ID već mapiran!", "danger")
+        return redirect(url_for("admin.stb_mapping"))
+
+    mapping = STBExternalMap(
+        external_id=ext_id,
+        external_name=ext_name,
+        stb_type_id=int(stb_type_id) if stb_type_id else None,
+    )
+    db.session.add(mapping)
+    db.session.commit()
+    flash("Novo mapiranje dodano.", "success")
+    return redirect(url_for("admin.stb_mapping"))
 
 
 ###########################################################

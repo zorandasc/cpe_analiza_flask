@@ -9,6 +9,9 @@ CREATE EXTENSION IF NOT EXISTS tablefunc;
 --cities_id_seq to that maximum value
 SELECT setval('cities_id_seq', (SELECT MAX(id) FROM cities));
 
+DELETE FROM stb_inventory
+WHERE stb_type_id NOT IN (SELECT id FROM stb_types);
+
 -- FOR CITIES--------------
 INSERT INTO
 	CITIES (ID, NAME, TYPE)

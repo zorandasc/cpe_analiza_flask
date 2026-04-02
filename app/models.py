@@ -250,7 +250,7 @@ class StbTypes(db.Model):
         "StbInventory", back_populates="stb_type"
     )
     external_mappings: Mapped[list["STBExternalMap"]] = relationship(
-        "STBExternalMap", back_populates="stb_type"
+        "STBExternalMap", back_populates="stb_type", passive_deletes=True
     )
 
 
