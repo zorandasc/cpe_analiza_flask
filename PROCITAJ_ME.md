@@ -2664,7 +2664,7 @@ group by city_id
 3️⃣ Major city history
 group by week_end
 
-# --------------------------------------------
+# ----------------------------------------------------------------------------------------------
 
 # DOCKER VOLUMEN PGDATA
 
@@ -2723,17 +2723,24 @@ docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb_test < mydb_backup.du
 docker stop 740d60fedd12
 docker start 740d60fedd12
 ```
-
-# ----------- FINAL BACKUP AND RESTORE INTO HOST FOLDER -----------------
+# ---------------------------------------------------------------------------------------------------------
+# ----------- FINAL BACKUP -----------------
 
 ```Bash
 docker exec -i 4a6de36c2105 pg_dump -U postgres -F c -d mydb > mydb_backup.dump
-
-docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb < mydb_backup.dump
-
-docker stop 4a6de36c2105
-docker start 4a6de36c2105
 ```
+
+# ----------- FINAL RESTORE -----------------
+ mydb must be empty
+```Bash
+docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb < mydb_backup.dump
+```
+
+# ----------- FINAL BACKUP INTO REMOTE PC DESKTOP -----------------
+```Bash
+scp root@10.198.3.92:/home/CPE-ANALIZA/mydb_backup1.dump .
+```
+
 # ----------------------.env file-------------
 
 env_file:
@@ -3004,13 +3011,20 @@ week_end+(comp row + nd row + na row + ndia row)+ all CPE columns -> ONE ROW IN 
 
 # -------SYNC SCRIPT FOR IPTV PLATFORM-------------------------------------
 
-IPTV PLATFORM  is External service = Source of Truth and only gives current snapshot
 
-Cron → Sync script/service → External API → DB
+IPTV PLATFORM  is External service =  only gives current snapshot
 
-1. ADD NEW MODEL STBExternalMap
+Cron → FLASK Sync script/service → External API → DB
 
-2. ADD CRON JOB
+1. ADD NEW SQLALCHEMY MODEL STBExternalMap
+
+2. EXTERNAL API
+# http://10.152.0.17:8090/
+# http://10.152.0.17:8090/api/device-models
+# http://10.152.0.17:8090/api/total-users
+
+
+3. ADD CRON JOB
 
 RUN AT 4AM
 ```bash
