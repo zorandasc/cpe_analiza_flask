@@ -35,6 +35,7 @@ from app.models import (
     DismantleTypes,
     AccessInventory,
     AccessTypes,
+    STBExternalMap,
     StbInventory,
     StbTypes,
     IptvUsers,
@@ -338,7 +339,7 @@ def upsert_cpe_dismantle():
                 cpe_type_id=cpe.id,
                 dismantle_type_id=d_type.id,
                 quantity=qty,
-                updated_at=db.func.now()
+                updated_at=db.func.now(),
             )
 
             upsert_stmt = stmt.on_conflict_do_update(
@@ -1513,6 +1514,40 @@ def delete_stb_type(id):
     db.session.delete(stb)
     db.session.commit()
     return redirect(url_for("admin.stb_types"))
+
+
+###########################################################
+# ---------------ROUTES FOR STBMAPPING CRUD--------------------------
+############################################################
+@admin_bp.route("/stb-mapping", methods=["GET", "POST"])
+@login_required
+def stb_mapping():
+    if request.method == "POST":
+        for key, value in request.form.items():
+            if key.startswith("map_"):
+                external_id = int(key.replace("map_", ""))
+                stb_type_id = int(value) if value else None
+
+                mapping = STBExternalMap.query.filter_by(
+                    external_id=external_id
+                ).first()
+
+                if mapping:
+                    mapping.stb_type_id = stb_type_id
+
+        db.session.commit()
+        flash("Mappings updated successfully", "success")
+        return redirect(url_for("admin.stb_mapping"))
+    
+    mappings = STBExternalMap.query.order_by(STBExternalMap.external_id).all()
+
+    stb_types = StbTypes.query.filter_by(is_active=True).order_by(StbTypes.name).all()
+
+    return render_template(
+        "admin/stb_mapping.html",
+        mappings=mappings,
+        stb_types=stb_types,
+    )
 
 
 ###########################################################

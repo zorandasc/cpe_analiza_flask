@@ -1,4 +1,18 @@
-{% extends "base.html" %} {% block title %}CPE Analzia | STB oprema{% endblock %} {% block content
+{% extends "base.html" %} {% block title %}CPE Analzia | STB oprema{% endblock %}{%
+block styles %} {{ super() }}
+<style>
+  thead {
+    position: sticky;
+    top: 60px;
+    z-index: 1020;
+    box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.6);
+  }
+  .btn-visibilty{
+    background-image: linear-gradient(to right, #ff6e7f, #bfe9ff);
+    
+  }
+</style>
+{% endblock %} {% block content
 %}
 <div class=" py-4">
 <div class="d-flex align-items-center justify-content-between">
@@ -12,9 +26,10 @@
 <div class="d-flex justify-content-end align-items-center mb-2">
 
   {% if admin_required() %}
-  <a href="{{ url_for('admin.add_stb_type') }}" class="btn btn-primary my-3"
-    >Dodaj STB model</a
-  >
+  <a href="{{ url_for('admin.stb_mapping') }}" class="btn btn-light btn-visibilty my-3 mx-3">Mapiranje STB API modela</a>
+
+  <a href="{{ url_for('admin.add_stb_type') }}" class="btn btn-primary my-3">Dodaj STB model</a>
+  
    {%endif%}
   </div>
   {% if error %}

@@ -1,4 +1,5 @@
-{% extends "base.html" %} {% block title %}CPE Analzia | Skladišta{% endblock %}{%
+{% extends "base.html" %} {% block title %}CPE Analzia | Skladišta{% endblock %}
+{%
 block styles %} {{ super() }}
 <style>
   thead {
@@ -6,6 +7,10 @@ block styles %} {{ super() }}
     top: 60px;
     z-index: 1020;
     box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.6);
+  }
+  .btn-visibilty{
+    background-image: linear-gradient(to right, #ff6e7f, #bfe9ff);
+    
   }
 </style>
 {% endblock %} {% block content
@@ -23,7 +28,7 @@ block styles %} {{ super() }}
   </div>
   <div class="d-flex justify-content-end align-items-center mb-2">
     {% if ( current_user.role== 'admin') %}
-    <a href="{{ url_for('admin.cities_visibility') }}" class="btn btn-warning my-3 mx-3"
+    <a href="{{ url_for('admin.cities_visibility') }}" class="btn btn-light btn-visibilty my-3 mx-3"
       >Podešavanja vidljivosti skladišta i IJ</a>
     <a href="{{ url_for('admin.add_city') }}" class="btn btn-primary my-3"
       >Dodaj Novo Skladište</a>
