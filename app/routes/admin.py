@@ -10,6 +10,7 @@ from flask import (
     url_for,
 )
 from flask_login import login_required, current_user
+import requests
 from sqlalchemy.dialects.postgresql import insert
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import selectinload
@@ -1517,7 +1518,7 @@ def delete_stb_type(id):
 
 
 ###########################################################
-# ---------------ROUTES FOR STBMAPPING CRUD--------------------------
+# ---------------ROUTES FOR STB-MAPPING CRUD--------------------------
 ############################################################
 @admin_bp.route("/stb-mapping", methods=["GET"])
 @login_required
@@ -1534,7 +1535,7 @@ def stb_mapping():
     )
 
 
-@admin_bp.route("/new-stb-mapping", methods=["POST"])
+@admin_bp.route("/stb-mapping/new", methods=["POST"])
 @login_required
 def new_stb_mapping():
     if not admin_required():
@@ -1559,6 +1560,27 @@ def new_stb_mapping():
     db.session.commit()
     flash("Novo mapiranje dodano.", "success")
     return redirect(url_for("admin.stb_mapping"))
+
+
+@admin_bp.route("/stb-mapping/api-preview", methods=["POST"])
+@login_required
+def stb_mapping_api_preview():
+    
+    response = requests.get("http://10.152.0.17:8090/api/device-models")
+    data = response.json()
+
+    result = []
+
+    for item in data["data"]:
+        result.append(
+            {
+                "id": int(item["id"]),
+                "name": item["model"],
+                "qty": int(item["total_count"]),
+            }
+        )
+
+    return jsonify(result)
 
 
 ###########################################################

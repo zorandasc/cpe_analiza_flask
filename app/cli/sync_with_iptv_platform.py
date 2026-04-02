@@ -1,11 +1,10 @@
 from collections import defaultdict
-import re
 import click
 from flask.cli import with_appcontext
 import requests
 from sqlalchemy import text
 from app.extensions import db
-from app.models import STBExternalMap, StbTypes
+from app.models import STBExternalMap
 from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday
 
@@ -32,51 +31,6 @@ def sync_stb_types_and_inventory():
     response = requests.get("http://10.152.0.17:8090/api/device-models")
     data = response.json()
 
-    ######################################
-    # 1. SYNC STB TYPES BETWEEN DB AND IPTV-API
-    ######################################
-    # preload mappings
-    mappings = {m.external_id: m for m in STBExternalMap.query.all()}
-
-    for item in data["data"]:
-        ext_id = int(item["id"])
-        name = item["model"]
-        label = f"{item['model']} {item['manufacturer']}"
-
-        # FIND MAPPING OBJECT
-        mapping = mappings.get(ext_id)
-
-        if not mapping:
-            # sanitaze name
-            safe_name = normalize_name(name)
-
-            # if no mapping check exsist stb
-            existing = StbTypes.query.filter_by(name=safe_name).first()
-
-            if existing:
-                # if no mapping but exsist stb with that same name
-                # just updat emapping
-                stb = existing
-            else:
-                # if no stb with that name create new stb
-                stb = StbTypes(
-                    name=safe_name,
-                    label=label,
-                    is_active=True,
-                )
-            db.session.add(stb)
-            db.session.flush()
-            # create new mapping
-            mapping = STBExternalMap(
-                external_id=ext_id, stb_type_id=stb.id, external_name=name
-            )
-            db.session.add(mapping)
-
-    db.session.commit()
-
-    ######################################
-    # 2. UPSERT INTO STB INVENTORY
-    ######################################
     current_week_end = get_current_week_friday()
 
     # preload mappings
@@ -174,10 +128,3 @@ def sync_iptv_users():
     )
 
     db.session.commit()
-
-
-# You need a safe column name, not raw API string.
-def normalize_name(name: str) -> str:
-    name = re.sub(r'--\[\s*".*?"\s*\]', "", name)
-    name = re.sub(r"[^a-zA-Z0-9_\- ]", "", name)
-    return name.strip()
