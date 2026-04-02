@@ -3008,19 +3008,7 @@ IPTV PLATFORM  is External service = Source of Truth and only gives current snap
 
 Cron → Sync script/service → External API → DB
 
-1. ADD SQL COLUMN ON STB_TYPES:
-
-stb_types:
-- external_id (unique, nullable)
-
-```python
-external_id: Mapped[int] = mapped_column(Integer, nullable=True, unique=True)
-```
-
-```sql
-ALTER TABLE stb_types ADD COLUMN external_id INTEGER;
-ALTER TABLE stb_types ADD CONSTRAINT uq_stb_types_external_id UNIQUE (external_id);
-```
+1. ADD NEW MODEL STBExternalMap
 
 2. ADD CRON JOB
 

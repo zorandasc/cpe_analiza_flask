@@ -167,7 +167,9 @@ class CityVisibilitySettings(db.Model):
     is_visible = mapped_column(Boolean, server_default=text("true"))
     included_in_total_sum = mapped_column(Boolean, server_default=text("true"))
 
-    city = relationship("Cities", back_populates="visibility_settings",passive_deletes=True)
+    city = relationship(
+        "Cities", back_populates="visibility_settings", passive_deletes=True
+    )
 
 
 class CpeTypes(db.Model):
@@ -244,10 +246,26 @@ class StbTypes(db.Model):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true")
     )
-    external_id: Mapped[int] = mapped_column(Integer, nullable=True, unique=True)
-
     stb_inventory: Mapped[list["StbInventory"]] = relationship(
         "StbInventory", back_populates="stb_type"
+    )
+    external_mappings: Mapped[list["STBExternalMap"]] = relationship(
+        "STBExternalMap", back_populates="stb_type"
+    )
+
+
+class STBExternalMap(db.Model):
+    __tablename__ = "stb_external_map"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    stb_type_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("stb_types.id", ondelete="CASCADE"), nullable=False
+    )
+    external_id: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
+    external_name: Mapped[str] = mapped_column(String(100), nullable=True)
+
+    stb_type: Mapped[Optional["StbTypes"]] = relationship(
+        "StbTypes", back_populates="external_mappings", passive_deletes=True
     )
 
 
@@ -486,7 +504,9 @@ class UserActivity(db.Model):
     __tablename__ = "user_activity"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     action: Mapped[str] = mapped_column(String(100))
     table_name: Mapped[str] = mapped_column(String(50), nullable=True)
     details: Mapped[dict] = mapped_column(JSON, nullable=True)
@@ -494,7 +514,7 @@ class UserActivity(db.Model):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    user = relationship("Users", backref="activities",passive_deletes=True)
+    user = relationship("Users", backref="activities", passive_deletes=True)
 
 
 # DDL (Data Definition Language) listener in SQLAlchemy.

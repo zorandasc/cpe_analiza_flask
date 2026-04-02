@@ -1,4 +1,3 @@
-import re
 from sqlalchemy import text
 from app.extensions import db
 from app.utils.simplepagination import SimplePagination
@@ -100,10 +99,8 @@ def get_stb_inventory_history(schema_list: list, page: int, per_page: int):
     for i, model in enumerate(schema_list):
         # This prevents SQL injection by using parameterized queries.
         place_holder = f"stb_{i}"
-        safe_name = safe_sql_identifier(model["name"])
-
         case_columns.append(
-            f'COALESCE(SUM(CASE WHEN st.id = :{place_holder} THEN si.quantity END),0) AS  "{safe_name}"'
+            f'COALESCE(SUM(CASE WHEN st.id = :{place_holder} THEN si.quantity END),0) AS  "{model["name"]}"'
         )
         params[place_holder] = model["id"]
 
@@ -189,10 +186,3 @@ def get_stb_types():
     stb_types = [row._asdict() for row in stb_types_rows]
 
     return stb_types
-
-
-# You need a safe column name, not raw API string.
-def safe_sql_identifier(name: str) -> str:
-    # Replace everything except letters/numbers/_ with _
-    cleaned = re.sub(r"[^a-zA-Z0-9_]", "_", name)
-    return cleaned[:50]  # optional length limit

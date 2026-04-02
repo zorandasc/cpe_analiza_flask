@@ -1,9 +1,12 @@
+from collections import defaultdict
+import re
+
 import click
 from flask.cli import with_appcontext
 import requests
 from sqlalchemy import text
 from app.extensions import db
-from app.models import StbTypes
+from app.models import STBExternalMap, StbTypes
 from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday
 
@@ -26,74 +29,81 @@ def sync_stb_and_iptv():
 
 
 def sync_stb_types_and_inventory():
+
     response = requests.get("http://10.152.0.17:8090/api/device-models")
     data = response.json()
 
-    # preload existing types FROM DB
-    types_map = {t.external_id: t for t in StbTypes.query.all()}
+    ######################################
+    # 1. SYNC STB TYPES BETWEEN DB AND IPTV-API
+    ######################################
+    # preload mappings
+    mappings = {m.external_id: m for m in STBExternalMap.query.all()}
 
-    # 1. THIS IS USE FOR REMOVAL OF STB IF ANY
-    external_ids = set()
-
-    # 1. SYNC STB TYPES BETWEEN DB AND FROM IPTV/API
     for item in data["data"]:
         ext_id = int(item["id"])
-        external_ids.add(ext_id)
-
         name = item["model"]
-        label = f"{item['model']} {item['manufacturer']} "
+        label = f"{item['model']} {item['manufacturer']}"
 
-        stb_type = types_map.get(ext_id)
+        # FIND MAPPING OBJECT
+        mapping = mappings.get(ext_id)
 
-        # If in db there is no external_id
-        if not stb_type:
-            # fallback: match by name
-            stb_type = StbTypes.query.filter_by(name=name).first()
+        if not mapping:
+            # sanitaze name
+            safe_name = normalize_name(name)
 
-            if stb_type:
-                # if it has by name update external_id
-                stb_type.external_id = ext_id
+            # if no mapping check exsist stb
+            existing = StbTypes.query.filter_by(name=safe_name).first()
+
+            if existing:
+                # if no mapping but exsist stb with that same name
+                # just updat emapping
+                stb = existing
             else:
-                # if  there is no by id or name insert into db as new
-                stb_type = StbTypes(
-                    external_id=ext_id,
-                    name=name,
+                # if no stb with that name create new stb
+                stb = StbTypes(
+                    name=safe_name,
                     label=label,
                     is_active=True,
                 )
-                db.session.add(stb_type)
-
-        stb_type.name = name
-        stb_type.label = label
-        stb_type.is_active = True
-
-    db.session.commit()  # ensure IDs exist
-
-    # 2. DEACTIVATE REMOVED TYPES
-    for stb in StbTypes.query.all():
-        if stb.external_id not in external_ids:
-            stb.is_active = False
+            db.session.add(stb)
+            db.session.flush()
+            # create new mapping
+            mapping = STBExternalMap(
+                external_id=ext_id, stb_type_id=stb.id, external_name=name
+            )
+            db.session.add(mapping)
 
     db.session.commit()
 
-    # 3. AFTER StbTypes UPDATE UPSERT INVENTORY SNAPSHOT
-    # If external system is source of truth → its time is also source of truth
-    # week_end = parse_api_date(data["week_end"])
+    ######################################
+    # 2. UPSERT INTO STB INVENTORY
+    ######################################
     current_week_end = get_current_week_friday()
+
+    # preload mappings
+    mappings = {m.external_id: m for m in STBExternalMap.query.all()}
 
     updates_log = []
 
-    types_map = {t.external_id: t for t in StbTypes.query.all()}
+    aggregated = defaultdict(int)
 
     for item in data["data"]:
         ext_id = int(item["id"])
         quantity = int(item["total_count"])
 
-        stb_type = types_map.get(ext_id)
+        # FIND MAPPING OBJECT
+        mapping = mappings.get(ext_id)
 
-        if not stb_type:
+        if not mapping:
             continue
 
+        # FROM MAPPING OBJECT FIND STB FROM STB_TYPES
+        stb = mapping.stb_type
+
+        # AGREGATE QUANTITTES FOR THAT STB_TYPE
+        aggregated[mapping.stb_type_id] += quantity
+
+    for stb_type_id, quantity in aggregated.items():
         db.session.execute(
             text("""
                     INSERT INTO stb_inventory (stb_type_id, week_end, quantity)
@@ -104,15 +114,15 @@ def sync_stb_types_and_inventory():
                         updated_at = NOW();
                 """),
             {
-                "stb_id": stb_type.id,
+                "stb_id": stb_type_id,
                 "week_end": current_week_end,
                 "quantity": quantity,
             },
         )
         updates_log.append(
             {
-                "stb_type_id": stb_type.id,
-                "stb_name": stb_type.name,
+                "stb_type_id": stb_type_id,
+                "stb_name": stb.name,
                 "quantity": quantity,
             }
         )
@@ -165,3 +175,10 @@ def sync_iptv_users():
     )
 
     db.session.commit()
+
+
+# You need a safe column name, not raw API string.
+def normalize_name(name: str) -> str:
+    name = re.sub(r'--\[\s*".*?"\s*\]', "", name)
+    name = re.sub(r"[^a-zA-Z0-9_\- ]", "", name)
+    return name.strip()
