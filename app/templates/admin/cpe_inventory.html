@@ -256,7 +256,7 @@ function checkExistingData() {
     if (cityId && weekEnd) {
         spinner.classList.remove('d-none');
         
-        fetch(`/admin/get_cpe_values?city_id=${cityId}&week_end=${weekEnd}`)
+        fetch(`/admin/get_cpe_inventory_values?city_id=${cityId}&week_end=${weekEnd}`)
             .then(response => response.json())
             .then(data => {
                 // Reset all to 0 first
