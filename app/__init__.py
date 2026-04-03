@@ -13,8 +13,8 @@ from app.utils.permissions import (
     admin_required,
     iptv_view_required,
     ftth_view_required,
+    view_required,
 )
-
 
 
 def create_app():
@@ -31,7 +31,6 @@ def create_app():
     # all POST, PUT, PATCH, DELETE requests are protected
     # If token is missing or invalid → Flask returns 400 Bad Request.
     csrf = CSRFProtect(app)
-
 
     # Initialize SQLAlchemy with the app
     db.init_app(app)
@@ -68,6 +67,7 @@ def create_app():
             admin_required=admin_required,
             iptv_required=iptv_view_required,
             ftth_required=ftth_view_required,
+            view_required=view_required,
         )
 
     return app

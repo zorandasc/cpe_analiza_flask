@@ -20,7 +20,7 @@ from app.extensions import db
 from app.services.email_service import send_email
 from app.services.magic import generate_link_for_view_user
 from app.services.reports import generate_pdf
-from app.utils.permissions import view_required, admin_required
+from app.utils.permissions import admin_view_required, admin_required
 from app.services.admin import update_cpe_type
 from app.services.access_inventory import (
     parce_excel_segments,
@@ -1764,7 +1764,7 @@ def delete_access_types(id):
 @admin_bp.route("/reports/settings", methods=["GET", "POST"])
 @login_required  # AUTENTIFICATION
 def report_settings():
-    if not view_required():  # AUTHORIZATION
+    if not admin_view_required():  # AUTHORIZATION
         return redirect(url_for("admin.report_settings"))
     # ReportSettin should only have one row
     settings = ReportSetting.query.first()
@@ -1819,7 +1819,7 @@ def report_remove_recipient(id):
 @admin_bp.route("/reports/download")
 @login_required
 def download_weekly_report():
-    if not view_required():
+    if not admin_view_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.report_settings"))
     pdf_path = generate_pdf()
