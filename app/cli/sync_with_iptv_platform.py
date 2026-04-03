@@ -1,5 +1,6 @@
 from collections import defaultdict
 import click
+from flask import current_app
 from flask.cli import with_appcontext
 import requests
 from sqlalchemy import text
@@ -28,7 +29,9 @@ def sync_stb_and_iptv():
 
 def sync_stb_types_and_inventory():
 
-    response = requests.get("http://10.152.0.17:8090/api/device-models")
+    REMOTE_STB_API = current_app.config["REMOTE_STB_API"]
+
+    response = requests.get(REMOTE_STB_API)
     data = response.json()
 
     current_week_end = get_current_week_friday()
@@ -93,7 +96,10 @@ def sync_stb_types_and_inventory():
 
 
 def sync_iptv_users():
-    response = requests.get("http://10.152.0.17:8090/api/total-users")
+    
+    REMOTE_IPTV_USER_API = current_app.config["REMOTE_IPTV_USER_API"]
+
+    response = requests.get(REMOTE_IPTV_USER_API)
     data = response.json()
 
     current_week_end = get_current_week_friday()

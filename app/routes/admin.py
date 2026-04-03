@@ -1,6 +1,8 @@
 from datetime import datetime
+import re
 from flask import (
     Blueprint,
+    current_app,
     flash,
     jsonify,
     redirect,
@@ -1542,7 +1544,7 @@ def new_stb_mapping():
         return redirect(url_for("admin.stb_mapping"))
 
     ext_id = int(request.form.get("external_id"))
-    ext_name = request.form.get("new_external_name", "")
+    ext_name = request.form.get("external_name")
     stb_type_id = request.form.get("stb_type_id")
 
     exists = STBExternalMap.query.filter_by(external_id=ext_id).first()
@@ -1562,11 +1564,13 @@ def new_stb_mapping():
     return redirect(url_for("admin.stb_mapping"))
 
 
-@admin_bp.route("/stb-mapping/api-preview", methods=["POST"])
-@login_required
+# RETRIEVE STB FROM REMOTE API JUST FOR INFORM
+@admin_bp.route("/stb-mapping/api-preview")
 def stb_mapping_api_preview():
-    
-    response = requests.get("http://10.152.0.17:8090/api/device-models")
+
+    REMOTE_STB_API = current_app.config["REMOTE_STB_API"]
+
+    response = requests.get(REMOTE_STB_API)
     data = response.json()
 
     result = []
@@ -1575,12 +1579,25 @@ def stb_mapping_api_preview():
         result.append(
             {
                 "id": int(item["id"]),
-                "name": item["model"],
+                "name": re.sub(r"[^a-zA-Z0-9_]", "_", item["model"]),
                 "qty": int(item["total_count"]),
             }
         )
 
     return jsonify(result)
+
+
+@admin_bp.route("/stb-mapping/remove/<int:id>")
+def remove_stb_mapping(id):
+    if not admin_required():
+        return redirect(url_for("admin.stb_mapping"))
+
+    mapp = STBExternalMap.query.get_or_404(id)
+
+    flash("Mapiranje obrisan0!", "success")
+    db.session.delete(mapp)
+    db.session.commit()
+    return redirect(url_for("admin.stb_mapping"))
 
 
 ###########################################################

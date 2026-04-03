@@ -20,7 +20,7 @@
     <span class="me-2">⬅</span> Nazad
   </a>
     <h2>Mapiranje eksterne STB opreme</h2>
-     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newModal">
+     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addMappingModal">
         Novi unos
     </button>
 </div>
@@ -31,6 +31,7 @@
         <th>STB Ime</th>
         <th>Eksterni STB ID</th>
         <th>Eksterni STB Ime</th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -40,17 +41,30 @@
         <td>{{ m.stb_type.name }}</td>
         <td>{{ m.external_id }}</td>
         <td>{{ m.external_name }}</td>
+        <td>
+           <a
+            href="{{ url_for('admin.remove_stb_mapping', id=m.id) }}"
+            class="btn btn-sm btn-light"
+            onclick="return confirm('Obriši mapiranje?')"
+          >❌</a
+        >
+        </td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
   <div class="d-flex flex-row-reverse">
     <button id="load-api" class="btn btn-light btn-remote">
-      🔄 Load Remote STBs
+      <span id="btnText">Dobavi udaljene STBs</span>
+      <span id="btnSpinner" style="display: none;" class="spinner-border spinner-border-sm"></span>
     </button>
   </div>
+
+  <!--WILL BE POPULATED BY JS-->
   <div id="api-results" style="margin-top:20px;"></div>
-  <div class="modal fade" id="newModal" tabindex="-1" aria-labelledby="newModalLabel" aria-hidden="true">
+
+  <!--MODAL FOR INSERTION OF NEW MAPPING-->
+  <div class="modal fade" id="addMappingModal" tabindex="-1" aria-labelledby="addMappingModal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <form id="newForm" action="{{ url_for('admin.new_stb_mapping') }}" method="POST" class="modal-content">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -62,8 +76,9 @@
 
           <!-- STB Type -->
           <div class="mb-3">
-            <label>STB Ime</label>
+            <label>STB Uređaj</label>
             <select name="stb_type_id" class="form-control" required>
+             <option value="" selected disabled>Odaberi...</option>
               {% for stb in stb_types %}
                 <option value="{{ stb.id }}">
                   {{ stb.label or stb.name }}
@@ -74,7 +89,7 @@
            <!-- External ID -->
           <div class="mb-3">
             <label>Eksterni ID</label>
-            <input type="number" name="external_id" class="form-control" required>
+            <input type="number" name="external_id" class="form-control" min="0" required>
           </div>
 
           <!-- External Name -->
@@ -92,6 +107,70 @@
       </form>
     </div>
   </div>
-
 </div>
+
+<script>
+  //GET THE JSON DATAT FROM AP ROUTE AND CREATE TABLE IN HTML
+  //WITH BACKED IN DATA
+  document.getElementById("load-api").addEventListener("click", async()=>{
+      
+      const btnText = document.getElementById('btnText');
+      const spinner = document.getElementById('btnSpinner');
+
+      // Prevent multiple clicks
+      this.disabled=true;
+
+      // Change appearance
+      btnText.innerText = "Dobavljanje u toku...";
+      spinner.style.display = "inline-block";
+      
+      const res = await fetch("/admin/stb-mapping/api-preview");
+      const data = await res.json();
+
+      btnText.innerText = "Dobavi udaljene STBs";
+      spinner.style.display = "none";
+
+      let html=`
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>External ID</th>
+              <th>Name</th>
+              <th>Qty</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+       data.forEach(item=>{
+        html +=`
+           <tr>
+                <td>${item.id}</td>
+                <td>${item.name}</td>
+                <td>${item.qty}</td>
+                <td>
+                  <button class="btn btn-sm btn-primary"
+                    onclick="fillModal(${item.id}, '${item.name}')">
+                    Koristi
+                  </button>
+                </td>
+            </tr>               
+        `
+      })
+      html += "</tbody></table>";
+
+      //ATTACH  DINAMICALLY FORMED HTML TABLE FILLED WITH DATA TO api-results DIV ELEMENT
+      document.getElementById("api-results").innerHTML = html;
+    })
+
+  
+    function fillModal(id, name) {
+      document.querySelector("input[name='external_id']").value = id;
+      document.querySelector("input[name='external_name']").value = name;
+      
+      const modal = new bootstrap.Modal(document.getElementById('addMappingModal'));
+      modal.show();
+    }
+
+</script>
 {% endblock %}
