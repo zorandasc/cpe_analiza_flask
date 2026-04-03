@@ -49,7 +49,7 @@
                     <select name="user_id" class="form-select">
                         <option value="">Svi</option>
                         {% for u in users %}
-                            <option value="{{ u.id }}" {% if u.id == (pagination_args.get("user_id") | int) %}selected{% endif %}>{{ u.username }}</option>
+                            <option value="{{ u.id }}" {% if (u.id | string) == pagination_args.get("user_id")%}selected{% endif %}>{{ u.username }}</option>
                         {% endfor %}
                     </select>
                 </div>
