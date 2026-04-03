@@ -110,7 +110,7 @@ def update_recent_stb_inventory(form_data):
             },
         )
         db.session.commit()
-        return True, f"Novo stanje za {current_week_end} uspješno sačuvano!"
+        return True, f"Novo stanje STB inventara za: {current_week_end}, uspješno sačuvano!"
 
     except Exception as e:
         db.session.rollback()
@@ -151,7 +151,7 @@ def update_iptv_users_count(form_data):
         db.session.commit()
         return (
             True,
-            f"Novo stanje za {current_week_end} uspješno sačuvano!",
+            f"Novo stanje IPTV korisnika za: {current_week_end}, uspješno sačuvano!",
         )
 
     except Exception as e:

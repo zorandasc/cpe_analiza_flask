@@ -24,7 +24,7 @@ def run_weekly_report_job():
     if not settings or not settings.enabled:
         return "Disabled"
 
-    now = datetime.now()
+    now = datetime.datetime.now(datetime.timezone.utc)
 
     # now.weekday() ide od 0
     if now.weekday() + 1 != settings.send_day:
@@ -48,7 +48,7 @@ def run_weekly_report_job():
 
         if success:
             # Only mark as sent if the email actually went out
-            settings.last_sent_at = datetime.now()
+            settings.last_sent_at = datetime.datetime.now(datetime.timezone.utc)
             db.session.commit()
             return message
 
