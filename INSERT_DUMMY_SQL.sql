@@ -423,7 +423,7 @@ CROSS JOIN dismantle_types dt
 CROSS JOIN (
     -- Generates exactly 5 years of Fridays
     SELECT generate_series(
-        '2021-01-01'::date, -- Start: First Friday of 2021
+        '2015-01-02'::date, -- Start: First Friday of 2021
         '2025-12-26'::date, -- End: Last Friday of 2025
         '7 days'::interval
     )::date as week_friday

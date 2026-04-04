@@ -63,6 +63,7 @@ def get_cpe_dismantle_pivoted(schema_list: list, week_end: datetime.date):
                 rd.quantity,
                 rd.updated_at AS last_updated_at
             FROM cities c
+
             JOIN city_visibility_settings s 
                 ON s.city_id = c.id AND s.dataset_key = 'cpe_dismantle'
 
@@ -200,20 +201,29 @@ def get_cpe_dismantle_subcities(
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        WITH latest_data AS (
+         -- ✅ FASTEST WAY TO GET LATEST ROW PER GROUP (The Latest Filter) -CTE
+        WITH ranked_dismantle AS (
+            SELECT DISTINCT ON (city_id, cpe_type_id, dismantle_type_id)
+                city_id,
+                cpe_type_id,
+                dismantle_type_id,
+                quantity,
+                updated_at
+            FROM cpe_dismantle
+            WHERE week_end <= :week_end
+            ORDER BY city_id, cpe_type_id, dismantle_type_id, week_end DESC
+        ),
+        latest_data AS (
             SELECT
                 c.id AS city_id,
                 c.name AS city_name,
                 s.included_in_total_sum AS include_in_total,
-
-                cd_last.cpe_type_id,
+                rd.cpe_type_id,
                 ct.name AS cpe_name,
-
-                cd_last.dismantle_type_id,
+                rd.dismantle_type_id,
                 dt.code AS dismantle_code,
-
-                cd_last.quantity,
-                cd_last.updated_at AS last_updated_at
+                rd.quantity,
+                rd.updated_at AS last_updated_at
 
             FROM cities c
 
@@ -221,23 +231,15 @@ def get_cpe_dismantle_subcities(
                 ON s.city_id = c.id
                 AND s.dataset_key = 'cpe_dismantle'
 
-            -- ✅ LAST KNOWN VALUE
-            LEFT JOIN cpe_dismantle cd_last
-                ON cd_last.city_id = c.id
-                AND cd_last.week_end = (
-                    SELECT MAX(cd2.week_end)
-                    FROM cpe_dismantle cd2
-                    WHERE cd2.city_id = c.id
-                    AND cd2.cpe_type_id = cd_last.cpe_type_id
-                    AND cd2.dismantle_type_id = cd_last.dismantle_type_id
-                    AND cd2.week_end <= :week_end
-                )
+             -- Join against our pre-filtered 'latest' records -(Join with CTE)
+            LEFT JOIN ranked_dismantle rd 
+                ON rd.city_id = c.id
 
             LEFT JOIN dismantle_types dt
-                ON dt.id = cd_last.dismantle_type_id
+                ON dt.id = rd.dismantle_type_id
 
             LEFT JOIN cpe_types ct
-                ON ct.id = cd_last.cpe_type_id
+                ON ct.id = rd.cpe_type_id
 
             WHERE (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
             AND s.is_visible = true

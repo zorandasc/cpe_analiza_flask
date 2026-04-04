@@ -2898,6 +2898,11 @@ this_week_updates,"The ""Status Checker."" It looks only at the current week_end
 
 subcity_counts,"The ""Hierarchy Map."" It counts how many sub-cities belong to a major city.",Completely independent of the 195k dismantle rows; very fast.
 
+# WHY PIVOTING?
+Instead of having a row for every CPE type (which would make your Jinja template loop forever), we use CASE statements to "flip" the data horizontally.
+
+Pivoting: We turn quantity where cpe_name = 'Router' into a column named "Router".
+
 # ------------INDEX--------------------------------------------------
 HOW TO SEE INDEXSES IN TABLE:
 ```SQL
@@ -2931,6 +2936,8 @@ ON cpe_dismantle (
 -- 🔥 weekly aggregation
 CREATE INDEX idx_cpe_dismantle_week 
 ON cpe_dismantle (week_end, city_id, dismantle_type_id);
+
+CREATE INDEX idx_cpe_dismantle_week_end ON cpe_dismantle (week_end);
 
 -- 🟡 optional (keep only if chart is slow)
 CREATE INDEX idx_cpe_dismantle_chart 
