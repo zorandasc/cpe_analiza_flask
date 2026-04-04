@@ -430,3 +430,26 @@ CROSS JOIN (
 ) gs
 ON CONFLICT ON CONSTRAINT uq_city_cpe_dismantle_week 
 DO NOTHING;
+
+-------cpe inventpry 1MIL rows---------------
+
+INSERT INTO cpe_inventory (city_id, cpe_type_id, quantity, week_end)
+SELECT 
+    c.id, 
+    ct.id, 
+    -- Generates a random quantity between 1 and 150
+    floor(random() * 150 + 1)::int, 
+    gs.week_friday
+FROM 
+    cities c
+CROSS JOIN cpe_types ct
+CROSS JOIN (
+    -- Generates exactly 5 years of Fridays
+    SELECT generate_series(
+        '2000-01-07'::date, -- Start: First Friday of 2021
+        '2025-12-26'::date, -- End: Last Friday of 2025
+        '7 days'::interval
+    )::date as week_friday
+) gs
+ON CONFLICT ON CONSTRAINT uq_city_cpe_week 
+DO NOTHING;

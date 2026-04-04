@@ -2887,10 +2887,15 @@ UNION ALL,Adds the 'UKUPNO' (Total) row.,Low
 
 AFTER OPTIMIZATION:
 
-Station (CTE),Purpose,Why it’s efficient
+1.WITH ranked_dismantle AS (...) – Common Table Expression (CTE)
+
 ranked_dismantle,"The ""Latest Filter."" It ignores the 5-year history and only keeps the ""current"" state for each CPE.",Uses the index to ignore 99% of the 195k rows immediately.
+So, for each combination of (city_id, cpe_type_id, dismantle_type_id), you get the most recent row before or on :week_end.
+
 latest_data,"The ""Enrichment Center."" It attaches City names, CPE names, and Visibility settings to those latest rows.",Joins are performed on a significantly smaller subset of data.
+
 this_week_updates,"The ""Status Checker."" It looks only at the current week_end to see if a user actually typed in data this week.",Aggregates only a tiny slice of the table (one specific date).
+
 subcity_counts,"The ""Hierarchy Map."" It counts how many sub-cities belong to a major city.",Completely independent of the 195k dismantle rows; very fast.
 
 # ------------INDEX--------------------------------------------------
