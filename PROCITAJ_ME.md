@@ -2876,6 +2876,23 @@ WHERE city_id = 3
 
 You’re absolutely right — the query became complex because the logic is complex (hierarchy + “latest value” + “this week status” + conditional aggregation).
 
+Understanding the Query Flow
+Your query is essentially performing a "Pivot-on-the-fly." Here is how the data flows and where it gets stuc
+
+Stage,What happens,Performance Cost
+latest_data,Finds the most recent data point for every city.,High (due to the MAX subquery)
+this_week_updates,Checks if data was touched this specific week.,Medium (requires index on week_end)
+Main Result,Groups and Pivots (the CASE columns).,Low (mostly CPU work in Python/Postgres)
+UNION ALL,Adds the 'UKUPNO' (Total) row.,Low
+
+AFTER OPTIMIZATION:
+
+Station (CTE),Purpose,Why it’s efficient
+ranked_dismantle,"The ""Latest Filter."" It ignores the 5-year history and only keeps the ""current"" state for each CPE.",Uses the index to ignore 99% of the 195k rows immediately.
+latest_data,"The ""Enrichment Center."" It attaches City names, CPE names, and Visibility settings to those latest rows.",Joins are performed on a significantly smaller subset of data.
+this_week_updates,"The ""Status Checker."" It looks only at the current week_end to see if a user actually typed in data this week.",Aggregates only a tiny slice of the table (one specific date).
+subcity_counts,"The ""Hierarchy Map."" It counts how many sub-cities belong to a major city.",Completely independent of the 195k dismantle rows; very fast.
+
 # ------------INDEX--------------------------------------------------
 HOW TO SEE INDEXSES IN TABLE:
 ```SQL

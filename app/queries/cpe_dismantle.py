@@ -36,49 +36,43 @@ def get_cpe_dismantle_pivoted(schema_list: list, week_end: datetime.date):
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        WITH latest_data AS (
+        WITH ranked_dismantle AS (
+            -- ✅ FASTEST WAY TO GET LATEST ROW PER GROUP
+            SELECT DISTINCT ON (city_id, cpe_type_id, dismantle_type_id)
+                city_id,
+                cpe_type_id,
+                dismantle_type_id,
+                quantity,
+                updated_at
+            FROM cpe_dismantle
+            WHERE week_end <= :week_end
+            ORDER BY city_id, cpe_type_id, dismantle_type_id, week_end DESC
+        ),
+
+        latest_data AS (
             SELECT
                 c.id AS city_id,
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
                 mc.name AS city_name,
                 s.included_in_total_sum AS include_in_total,
-
-                cd_last.cpe_type_id,
+                rd.cpe_type_id,
                 ct.name AS cpe_name,
-
-                cd_last.dismantle_type_id,
+                rd.dismantle_type_id,
                 dt.code AS dismantle_code,
-
-                cd_last.quantity,
-                cd_last.updated_at AS last_updated_at
-
+                rd.quantity,
+                rd.updated_at AS last_updated_at
             FROM cities c
-
-            JOIN city_visibility_settings s
-                ON s.city_id = c.id
-                AND s.dataset_key = 'cpe_dismantle'
-
-            LEFT JOIN cities mc
+            JOIN city_visibility_settings s 
+                ON s.city_id = c.id AND s.dataset_key = 'cpe_dismantle'
+            LEFT JOIN cities mc 
                 ON mc.id = COALESCE(c.parent_city_id, c.id)
-
-            -- ✅ LAST KNOWN VALUE (for display)
-            LEFT JOIN cpe_dismantle cd_last
-                ON cd_last.city_id = c.id
-                AND cd_last.week_end = (
-                    SELECT MAX(cd2.week_end)
-                    FROM cpe_dismantle cd2
-                    WHERE cd2.city_id = c.id
-                    AND cd2.cpe_type_id = cd_last.cpe_type_id
-                    AND cd2.dismantle_type_id = cd_last.dismantle_type_id
-                    AND cd2.week_end <= :week_end
-                )
-
-            LEFT JOIN dismantle_types dt
-                ON dt.id = cd_last.dismantle_type_id
-
-            LEFT JOIN cpe_types ct
-                ON ct.id = cd_last.cpe_type_id
-
+            -- Join against our pre-filtered 'latest' records
+            LEFT JOIN ranked_dismantle rd 
+                ON rd.city_id = c.id
+            LEFT JOIN dismantle_types dt 
+                ON dt.id = rd.dismantle_type_id
+            LEFT JOIN cpe_types ct 
+                ON ct.id = rd.cpe_type_id
             WHERE s.is_visible = true
         ),
 
@@ -99,14 +93,9 @@ def get_cpe_dismantle_pivoted(schema_list: list, week_end: datetime.date):
                 parent_city_id AS major_city_id,
                 COUNT(*) AS subcity_count
             FROM cities c
-
-            JOIN city_visibility_settings s
-                ON s.city_id = c.id
-                AND s.dataset_key = 'cpe_dismantle'
-
-            WHERE parent_city_id IS NOT NULL
-            AND s.is_visible = true
-
+            JOIN city_visibility_settings s 
+                ON s.city_id = c.id AND s.dataset_key = 'cpe_dismantle'
+            WHERE parent_city_id IS NOT NULL AND s.is_visible = true
             GROUP BY parent_city_id
         )
 
@@ -115,53 +104,25 @@ def get_cpe_dismantle_pivoted(schema_list: list, week_end: datetime.date):
             ld.major_city_id AS city_id,
             ld.city_name,
             COALESCE(sc.subcity_count, 0) AS subcity_count,
-
             ld.dismantle_type_id,
             ld.dismantle_code,
-
             {", ".join(case_columns)},
-
-            -- ✅ COMPLETE (type = 1 → ALL subcities must be updated)
             CASE 
-                -- We are comparing: updated subcities (for that type) vs total subcities
-                WHEN COUNT(DISTINCT ld.city_id) FILTER (
-                    WHERE ld.dismantle_type_id = 1
-                    AND tw.updated_at IS NOT NULL
-                ) = COUNT(DISTINCT ld.city_id)
-                THEN MAX(tw.updated_at) FILTER (
-                    WHERE ld.dismantle_type_id = 1
-                )
+                WHEN COUNT(DISTINCT ld.city_id) FILTER (WHERE ld.dismantle_type_id = 1 AND tw.updated_at IS NOT NULL) = COUNT(DISTINCT ld.city_id)
+                THEN MAX(tw.updated_at) FILTER (WHERE ld.dismantle_type_id = 1)
                 ELSE NULL
             END AS complete_updated_at,
-
-            -- ✅ MISSING (types 2,3,4 → ALL subcities must be updated)
             CASE 
-                 -- We are comparing: updated subcities (for that type) vs total subcities
-                WHEN COUNT(DISTINCT ld.city_id) FILTER (
-                    WHERE ld.dismantle_type_id IN (2,3,4)
-                    AND tw.updated_at IS NOT NULL
-                ) = COUNT(DISTINCT ld.city_id)
-                THEN MAX(tw.updated_at) FILTER (
-                    WHERE ld.dismantle_type_id IN (2,3,4)
-                )
+                WHEN COUNT(DISTINCT ld.city_id) FILTER (WHERE ld.dismantle_type_id IN (2,3,4) AND tw.updated_at IS NOT NULL) = COUNT(DISTINCT ld.city_id)
+                THEN MAX(tw.updated_at) FILTER (WHERE ld.dismantle_type_id IN (2,3,4))
                 ELSE NULL
             END AS missing_updated_at
-
         FROM latest_data ld
-
-        LEFT JOIN this_week_updates tw
-            ON tw.city_id = ld.city_id
-            AND tw.dismantle_type_id = ld.dismantle_type_id
-
-        LEFT JOIN subcity_counts sc
+        LEFT JOIN this_week_updates tw 
+            ON tw.city_id = ld.city_id AND tw.dismantle_type_id = ld.dismantle_type_id
+        LEFT JOIN subcity_counts sc 
             ON sc.major_city_id = ld.major_city_id
-
-        GROUP BY
-            ld.major_city_id,
-            ld.city_name,
-            sc.subcity_count,
-            ld.dismantle_type_id,
-            ld.dismantle_code
+        GROUP BY ld.major_city_id, ld.city_name, sc.subcity_count, ld.dismantle_type_id, ld.dismantle_code
 
         UNION ALL
 
@@ -170,23 +131,16 @@ def get_cpe_dismantle_pivoted(schema_list: list, week_end: datetime.date):
             NULL AS city_id,
             'UKUPNO' AS city_name,
             NULL AS subcity_count,
-
             dismantle_type_id,
             dismantle_code,
-
             {", ".join(sum_columns)},
-
             NULL AS complete_updated_at,
             NULL AS missing_updated_at
-
         FROM latest_data
         WHERE include_in_total = true
-
         GROUP BY dismantle_type_id, dismantle_code
-
         ORDER BY city_id, dismantle_type_id NULLS LAST;
     """
-
     result = db.session.execute(text(SQL_QUERY), params)
 
     return [row._asdict() for row in result.all()]

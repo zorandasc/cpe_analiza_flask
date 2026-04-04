@@ -288,7 +288,12 @@
           <tbody>
             {% for r in dismantle %}
             <tr class="{% if not r.city_id %}fw-bold total-row{% endif %}">
-              <td class="{% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
+              <td class="text-center 
+                {% if r.complete_updated_at %}
+                    {{ 'green-bcg' if r.complete_updated_at.date() >= saturday else 'red-bcg' }}
+                {% else %}
+                    red-bcg
+                {% endif %}">
                 {{ r.city_name }}
                 {% if r.subcity_count and r.subcity_count > 0 %}
                     <span class="badge bg-info">({{ r.subcity_count }})</span>
@@ -299,7 +304,12 @@
               <td class="text-center"> {{ r.cpe[item.name]['damages']['comp']['quantity'] }}</td>
               {% endfor %}
               
-              <td class="text-center {% if r.complete_updated_at %}{% if r.complete_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+              <td class="text-center 
+                {% if r.complete_updated_at %}
+                    {{ 'azur-row-green' if r.complete_updated_at.date() >= saturday else 'azur-row-red' }}
+                {% else %}
+                    azur-row-red
+                {% endif %}">
                 {% if r.complete_updated_at %}
                   {{ r.complete_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
                 {% endif %}
@@ -416,7 +426,12 @@
           <tbody>
             {% for r in dismantle %}
             <tr class="{% if not r.city_id %}fw-bold total-row{% endif %}">
-              <td class="group-start {% if r.missing_updated_at %}{% if r.missing_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
+              <td class="group-start 
+                {% if r.missing_updated_at %}
+                    {{ 'green-bcg' if r.missing_updated_at.date() >= saturday else 'red-bcg' }}
+                {% else %}
+                    red-bcg
+                {% endif %}">
                 {{ r.city_name }}
                 {% if r.subcity_count and r.subcity_count > 0 %}
                     <span class="badge bg-info">({{ r.subcity_count }})</span>
@@ -434,7 +449,12 @@
               {% endif %}
               {% endfor %}
               
-              <td class="group-start text-center {% if r.missing_updated_at %}{% if r.missing_updated_at.date()< saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+              <td class="group-start text-center 
+                {% if r.missing_updated_at %}
+                    {{ 'azur-row-green' if r.missing_updated_at.date() >= saturday else 'azur-row-red' }}
+                {% else %}
+                    azur-row-red
+                {% endif %}">
                 {% if r.missing_updated_at %}
                   {{ r.missing_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
                 {% endif %}
