@@ -2903,6 +2903,12 @@ Instead of having a row for every CPE type (which would make your Jinja template
 
 Pivoting: We turn quantity where cpe_name = 'Router' into a column named "Router".
 
+1. The Python "Pivot" Logic
+Your SQL query returns a "long" format (one row per city per dismantle type). 
+
+2. Flask Grouping
+Your _group_records function transforms this into a "deep" JSON-like structure that your Jinja template can easily iterate over.
+
 # ------------INDEX--------------------------------------------------
 HOW TO SEE INDEXSES IN TABLE:
 ```SQL
