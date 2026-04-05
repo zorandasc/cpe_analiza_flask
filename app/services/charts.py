@@ -770,7 +770,17 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     # BUILD CONTINUOUS TIMELINE OF MONTHS
     timeline = build_month_timeline(months, min_month, max_month)
 
-    rows = base.all()
+     # 1. SQL: Group by City and Week
+    base_agg = base.with_entities(
+        AccessInventory.city_id,
+        AccessInventory.month_end,
+        AccessTypes.name.label("type_key"),
+        func.sum(AccessInventory.quantity).label("total_qty"),
+    ).group_by(AccessInventory.city_id, AccessInventory.month_end, AccessTypes.name)
+
+    # EVERY ROW IS (city_id, month_end, acces_types, sum(qty))
+    # ROW IN ROWS- THERE MAY BE MISSING WEEK_ENDS:
+    rows = base_agg.all()
 
     if not rows:
         return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
@@ -782,8 +792,8 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     state = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 
     # fill the state
-    for city_id, month_end, type_id, type_name, qty in rows:
-        state[city_id][type_name][month_end] += qty
+    for city_id_, month_end, type_key, qty in rows:
+        state[city_id_][type_key][month_end] = qty
 
     # ---------------------------------------
     # 4. Aggregate into chart datasets USING CARRY FORWARD
@@ -791,15 +801,11 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
     # FOR EVERY CITY
-    for city_data in state.values():
-        # FOR EVERY CPE_TYPE OF THAT CITY
-        for type_key, week_map in city_data.items():
-            # FILL CONINUOUS TIMELINE DATES WITH QUANTITYES FROM DB
-            # FOR MISSING WEEKS FROM DB WE CAN USE LINEAR OF CARRY FORWARD LOGIC
-            series = interpolate_series(timeline, week_map, method="linear")
-
+    for city_id, city_data in state.items():
+        for type_key, month_map in city_data.items():
+            # This keeps the 'Line' steady for each city individually
+            series = interpolate_series(timeline, month_map, method="linear")
             for i, val in enumerate(series):
-                # router → [0,0,0,0,0] # ONE SLOT PER WEEK SUMED FOR EACH CITY
                 totals_by_type[type_key][i] += val
 
     # ---------------------------------------
