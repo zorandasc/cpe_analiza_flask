@@ -322,7 +322,15 @@ def get_cpe_dismantle_chart_data(
     # CONTINUOE TIMELINE OF FRIDAYS
     timeline = build_week_timeline(weeks, min_week, max_week)
 
-    rows = base.all()
+    # 1. SQL: Group by City and Week
+    base_agg = base.with_entities(
+        CpeDismantle.city_id,
+        CpeDismantle.week_end,
+        CpeTypes.type.label("type_key"),
+        func.sum(CpeDismantle.quantity).label("total_qty"),
+    ).group_by(CpeDismantle.city_id, CpeDismantle.week_end, CpeTypes.type)
+
+    rows = base_agg.all()
 
     if not rows:
         return {"labels": [w.strftime("%d-%m-%Y") for w in timeline], "datasets": []}
@@ -330,29 +338,23 @@ def get_cpe_dismantle_chart_data(
     # ---------------------------------------
     # 3. Rebuild weekly state per city/type, group data
     # --------------------------------------
-    # create empty state
+    # 2. Python: Create the state, but ONLY for the cities that have data
     state = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-
-    # fill the state
-    for city_id_, week_end, cpe_type_id_, type_key, qty in rows:
-        state[city_id_][type_key][week_end] += qty
+    for city_id_, week_end, type_key, qty in rows:
+        state[city_id_][type_key][week_end] = qty
 
     # ---------------------------------------
     # 4. Aggregate into chart datasets USING CARRY FORWARD
     # ---------------------------------------
-    # koliko ima timeline toliko napravi praznih slotova
+    # 3. Aggregate into chart totals
     totals_by_type = defaultdict(lambda: [0] * len(timeline))
 
     # FOR EVERY CITY
-    for city_data in state.values():
-        # FOR EVERY CPE_TYPE OF THAT CITY
+    for city_id, city_data in state.items():
         for type_key, week_map in city_data.items():
-            # FILL CONINUOUS TIMELINE DATES WITH QUANTITYES FROM DB
-            # FOR MISSING WEEKS FROM DB WE CAN USE LINEAR OF CARRY FORWARD LOGIC
+            # This keeps the 'Line' steady for each city individually
             series = interpolate_series(timeline, week_map, method="linear")
-
             for i, val in enumerate(series):
-                # router → [0,0,0,0,0] # ONE SLOT PER WEEK SUMED FOR EACH CITY
                 totals_by_type[type_key][i] += val
 
     # ---------------------------------------
