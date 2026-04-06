@@ -36,15 +36,26 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        WITH weekly_data AS (
+        WITH ranked_inventory AS (
+        -- ✅ Efficiently get the latest inventory record per city/cpe type
+        SELECT DISTINCT ON (city_id, cpe_type_id)
+            city_id,
+            cpe_type_id,
+            quantity,
+            updated_at
+        FROM cpe_inventory
+        WHERE week_end <= :week_end
+        ORDER BY city_id, cpe_type_id, week_end DESC
+        ),
+        weekly_data AS (
             SELECT
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
                 c.id   AS city_id,
                 mc.name AS city_name,
                 s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
-                ci.quantity AS quantity,
-                ci.updated_at AS updated_at
+                ri.quantity AS quantity,
+                ri.updated_at AS updated_at
             FROM cities c
 
             JOIN city_visibility_settings s
@@ -54,18 +65,12 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
             LEFT JOIN cities mc 
                 ON mc.id = COALESCE(c.parent_city_id, c.id)
 
-            LEFT JOIN cpe_broken ci
-                ON c.id = ci.city_id
-                --Use the latest available record whose week_end is ≤ current business Friday
-                --Give me the latest week if we are in new week which doesnot have data yet
-                AND ci.week_end =(
-                    SELECT MAX(ci2.week_end)
-                    FROM cpe_broken ci2
-                    WHERE ci2.city_id=c.id
-                    AND ci2.week_end <= :week_end
-                )
+            -- ✅ Use the pre-filtered CTE instead of a correlated subquery
+            LEFT JOIN ranked_inventory ri
+                ON c.id = ri.city_id
+
             LEFT JOIN cpe_types ct
-                ON ct.id = ci.cpe_type_id
+                ON ct.id = ri.cpe_type_id
 
             WHERE s.is_visible = true
         ),
@@ -156,32 +161,37 @@ def get_cpe_broken_subcities(
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        WITH weekly_data AS (
+        WITH ranked_inventory AS (
+        -- ✅ Efficiently get the latest inventory record per city/cpe type
+        SELECT DISTINCT ON (city_id, cpe_type_id)
+            city_id,
+            cpe_type_id,
+            quantity,
+            updated_at
+        FROM cpe_inventory
+        WHERE week_end <= :week_end
+        ORDER BY city_id, cpe_type_id, week_end DESC
+        ),
+        weekly_data AS (
             SELECT
                 c.id   AS city_id,
                 c.name AS city_name,
                 s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
-                ci.quantity AS quantity,
-                ci.updated_at AS updated_at
+                ri.quantity AS quantity,
+                ri.updated_at AS updated_at
             FROM cities c
 
             JOIN city_visibility_settings s
                 ON s.city_id =c.id
                 AND s.dataset_key = 'cpe_broken'
 
-            LEFT JOIN cpe_broken ci
-                ON c.id = ci.city_id
-                --Use the latest available record whose week_end is ≤ current business Friday
-                --Give me the latest week if we are in new week which doesnot have data yet
-                AND ci.week_end =(
-                    SELECT MAX(ci2.week_end)
-                    FROM cpe_broken ci2
-                    WHERE ci2.city_id=c.id
-                    AND ci2.week_end <= :week_end
-                )
+            -- ✅ Use the pre-filtered CTE instead of a correlated subquery
+            LEFT JOIN ranked_inventory ri
+                ON c.id = ri.city_id
+
             LEFT JOIN cpe_types ct
-                ON ct.id = ci.cpe_type_id
+                ON ct.id = ri.cpe_type_id
 
             WHERE  (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
                 AND s.is_visible = true
