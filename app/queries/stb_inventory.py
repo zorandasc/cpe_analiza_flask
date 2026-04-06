@@ -29,19 +29,19 @@ def get_stb_inventory_pivoted(weeks: list):
     SQL = f"""
         WITH weekly_data AS(SELECT
             t.id,
-            t.name,
+            t.label,
             {", ".join(pivot_cols)},
             max(i.updated_at) AS last_updated
         FROM stb_types t
         LEFT JOIN stb_inventory i
             ON t.id=i.stb_type_id
         WHERE t.is_active=TRUE
-        GROUP BY t.id, t.name
+        GROUP BY t.id, t.label
         ),
         final_data AS (
             SELECT
                 id,
-                name,
+                label,
                 {", ".join([f'"{w}"' for w in weeks])},
                 last_updated
             FROM weekly_data
@@ -50,7 +50,7 @@ def get_stb_inventory_pivoted(weeks: list):
 
             SELECT
                 NULL AS id,
-                'UKUPNO' AS name,
+                'UKUPNO' AS label,
                 {", ".join([f'COALESCE(SUM("{w}"),0)' for w in weeks])},
                 NULL AS last_updated
             FROM weekly_data
@@ -58,7 +58,7 @@ def get_stb_inventory_pivoted(weeks: list):
         SELECT * 
         FROM final_data
         ORDER BY
-            CASE WHEN name = 'UKUPNO' THEN 1 ELSE 0 END,
+            CASE WHEN label = 'UKUPNO' THEN 1 ELSE 0 END,
             id; 
     """
 

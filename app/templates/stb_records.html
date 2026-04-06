@@ -165,7 +165,7 @@ styles %} {{ super() }}
       <tbody>
         {% for r in records%}
         <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
-          <td>{{r.name}}</td>
+          <td>{{r.label}}</td>
           {% for week in weeks%}
           <td class="text-center">{{r['dates'][week.key]['quantity']}}</td>
           {% endfor %}
@@ -238,7 +238,7 @@ styles %} {{ super() }}
         <div class="modal-body">
           {% for r in records %} {% if not r.is_total %}
           <div class="d-flex mb-2">
-            <div class="cpe-label-wrap">{{r.name }}</div>
+            <div class="cpe-label-wrap">{{r.label }}</div>
             <input
               class="form-control input-cpe-count"
               name="{{ r.id }}"

@@ -227,7 +227,7 @@ def _group_records(records, week_keys):
         if stbid not in grouped:
             grouped[stbid] = {
                 "id": stbid,
-                "name": row["name"],
+                "label": row["label"],
                 "last_updated": row["last_updated"],
                 "is_total": stbid == TOTAL_KEY,
                 "dates": {week: {"quantity": 0} for week in week_keys},
