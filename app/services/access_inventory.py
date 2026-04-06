@@ -12,6 +12,7 @@ from app.queries.access_inventory import (
     get_last_4_months,
     get_access_inventory_pivoted,
     get_access_inventory_history,
+    get_months_for_access_type,
 )
 
 
@@ -21,16 +22,6 @@ TOTAL_KEY = "__TOTAL__"
 def get_access_records_view_data():
     # calculate current month date
     previous_month_end = get_previous_month_end()
-
-    # label → presentation used only in the table header
-    # key → internal identifier (used in SQL + structure of html table)
-    # w.isoformat()='YYYY-MM-DD'
-    months = [
-        {"key": m.isoformat(), "label": m.strftime("%d-%m-%Y")}
-        for m in sorted(get_last_4_months())
-    ]
-
-    month_keys = [m["key"] for m in months]
 
     access_types = (
         AccessTypes.query.filter_by(is_active=True).order_by(AccessTypes.id).all()
@@ -43,6 +34,18 @@ def get_access_records_view_data():
     # But if one day: 20 access type
     # then Single query grouped by (city_id, access_type_id).
     for at in access_types:
+        months_raw = get_months_for_access_type(at.id)
+
+        # label → presentation used only in the table header
+        # key → internal identifier (used in SQL + structure of html table)
+        # w.isoformat()='YYYY-MM-DD'
+        months = [
+            {"key": m.isoformat(), "label": m.strftime("%d-%m-%Y")}
+            for m in sorted(months_raw)
+        ]
+
+        month_keys = [m["key"] for m in months]
+
         # get the pivoted data from db for every access_type_id
         records = get_access_inventory_pivoted(months=month_keys, access_type_id=at.id)
 
@@ -54,13 +57,13 @@ def get_access_records_view_data():
 
         # group data for view
         grouped_data[at.name] = {
+            "months": months,
             "rows": _group_records(records, month_keys),
             "last_updated": last_updated,
         }
 
     return {
         "previous_month_end": previous_month_end,
-        "months": months,
         "access_types": access_types,
         "records": grouped_data,
     }
@@ -134,7 +137,7 @@ def update_recent_access_inventory(form_data):
             details={
                 "Mjesec": str(previous_month_end),
                 "Tip pristupne tehnologije": access_type.name,
-                "Unosi":updates_log
+                "Unosi": updates_log,
             },
         )
 

@@ -202,7 +202,7 @@ styles %} {{ super() }}
             <thead class="table-primary">
               <tr>
                 <th>Izvršna jedinica</th>
-                {% for month in months %}
+                {% for month in records[at.name].months %}
                 <th class="text-center">{{ month.label}}</th>
                 {% endfor %}
               </tr>
@@ -211,7 +211,7 @@ styles %} {{ super() }}
               {% for r in records[at.name].rows%}
               <tr class="{% if r.is_total %}table-success fw-bold{% endif %}">
                 <td>{{r.name}}</td>
-                {% for month in months %}
+                {% for month in records[at.name].months %}
                 <td class="text-center">
                   {% if r['dates'][month.key]['quantity'] is none %} - {% else %}
                   {{r['dates'][month.key]['quantity']}} {% endif %}
@@ -253,11 +253,12 @@ styles %} {{ super() }}
                     {% for r in records[at.name].rows %} {% if not r.is_total %}
                     <div class="d-flex mb-2">
                       <div class="cpe-label-wrap">{{r.name}}</div>
+                      <!--MODAL OPEN WITH VALUES FROM MOST RESCENT ELEMENT IN MONTH LIST: records[at.name].months[-1].key-->
                       <input
                         class="form-control input-cpe-count"
                         name="{{ r.id }}"
                         type="number"
-                        value="{{ r['dates'][months[-1].key]['quantity']}}"
+                        value="{{ r.dates[records[at.name].months[-1].key]['quantity']}}"
                         min="0"
                       />
                     </div>

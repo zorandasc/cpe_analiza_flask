@@ -3,18 +3,6 @@ from app.extensions import db
 from app.utils.simplepagination import SimplePagination
 
 
-def get_last_4_months():
-    SQL = """ 
-        SELECT DISTINCT month_end
-        FROM access_inventory
-        ORDER BY month_end DESC
-        LIMIT 4
-    """
-    rows = db.session.execute(text(SQL))
-
-    return [row[0] for row in rows.all()]  # LIST OF DATES
-
-
 def get_access_inventory_pivoted(months: list, access_type_id):
     if not months:
         # Return empty data lists immediately if no active CPE types are found
@@ -163,3 +151,30 @@ def get_access_inventory_history(
     )
 
     return paginate
+
+
+def get_last_4_months():
+    SQL = """ 
+        SELECT DISTINCT month_end
+        FROM access_inventory
+        ORDER BY month_end DESC
+        LIMIT 4
+    """
+    rows = db.session.execute(text(SQL))
+
+    return [row[0] for row in rows.all()]  # LIST OF DATES
+
+
+def get_months_for_access_type(access_type_id, limit=4):
+    rows = db.session.execute(
+        text("""
+            SELECT DISTINCT month_end
+            FROM access_inventory
+            WHERE access_type_id = :id
+            ORDER BY month_end DESC
+            LIMIT :limit
+        """),
+        {"id": access_type_id, "limit": limit},
+    ).fetchall()
+
+    return [r[0] for r in rows]
