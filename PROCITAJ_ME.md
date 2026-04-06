@@ -3016,6 +3016,17 @@ ON user_activity (timestamp);
 CREATE INDEX idx_cpe_dismantle_history
 ON cpe_dismantle(city_id, dismantle_type_id, week_end DESC);
 ```
+
+# access_inventory
+
+```SQL
+CREATE INDEX idx_access_inventory_lookup
+ON access_inventory (access_type_id, city_id, month_end);
+
+CREATE INDEX idx_access_inventory_updated
+ON access_inventory (updated_at);
+```
+
 # --------------------------------------------------------------------------------------
 
 # CRON JOB FOR EVERY DAY TO CLEAN USERACTIVITY TABLE. LOGS OLDER THAN 4 MONTHS
