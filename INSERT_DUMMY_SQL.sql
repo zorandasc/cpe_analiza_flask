@@ -433,13 +433,15 @@ DO NOTHING;
 
 -------cpe inventpry 1MIL rows---------------
 
-INSERT INTO cpe_inventory (city_id, cpe_type_id, quantity, week_end)
+INSERT INTO cpe_inventory (city_id, cpe_type_id, quantity, week_end, updated_at, created_at)
 SELECT 
     c.id, 
     ct.id, 
     -- Generates a random quantity between 1 and 150
     floor(random() * 150 + 1)::int, 
-    gs.week_friday
+    gs.week_friday,
+     gs.week_friday,
+      gs.week_friday
 FROM 
     cities c
 CROSS JOIN cpe_types ct

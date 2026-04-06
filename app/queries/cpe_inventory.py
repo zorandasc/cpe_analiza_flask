@@ -40,83 +40,81 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        WITH weekly_data AS (
-            SELECT
-                COALESCE(c.parent_city_id, c.id) AS major_city_id,
-                c.id AS city_id,
-                mc.name AS city_name,
-                s.included_in_total_sum AS include_in_total,
-                ct.name AS cpe_name,
-                ci.quantity AS quantity,
-                ci.updated_at AS updated_at
-            FROM cities c
-
-            JOIN city_visibility_settings s
-                ON s.city_id =c.id
-                AND s.dataset_key = 'cpe_inventory'
-
-            LEFT JOIN cities mc 
-                ON mc.id = COALESCE(c.parent_city_id, c.id)
-
-            LEFT JOIN cpe_inventory ci
-                ON c.id = ci.city_id
-                --Use the latest available record whose week_end is ≤ current business Friday
-                --Give me the latest week if we are in new week which doesnot have data yet
-                AND ci.week_end = (
-                    SELECT week_end
-                    FROM cpe_inventory
-                    WHERE city_id = c.id
-                    AND week_end <= :week_end
-                    ORDER BY week_end DESC
-                    LIMIT 1
-                )
-
-            LEFT JOIN cpe_types ct
-                ON ct.id = ci.cpe_type_id
-
-            WHERE s.is_visible = true
+        WITH ranked_inventory AS (
+        -- ✅ Efficiently get the latest inventory record per city/cpe type
+        SELECT DISTINCT ON (city_id, cpe_type_id)
+            city_id,
+            cpe_type_id,
+            quantity,
+            updated_at
+        FROM cpe_inventory
+        WHERE week_end <= :week_end
+        ORDER BY city_id, cpe_type_id, week_end DESC
         ),
-        --subcity_counts number of subcities under major city
-        subcity_counts AS (
-            SELECT
-                parent_city_id AS major_city_id,
-                COUNT(*) AS subcity_count
-            FROM cities c
-
-            JOIN city_visibility_settings s
-                ON s.city_id = c.id
-                AND s.dataset_key = 'cpe_inventory'
-
-            WHERE parent_city_id IS NOT NULL
-                AND s.is_visible = true
-
-            GROUP BY parent_city_id
-        )
+    
+    weekly_data AS (
         SELECT
-            wd.major_city_id AS city_id,
-            wd.city_name,
-            COALESCE(sc.subcity_count,0) AS subcity_count,
-            {", ".join(case_columns)},
-            MIN(updated_at) AS max_updated_at
-        FROM weekly_data wd
+            COALESCE(c.parent_city_id, c.id) AS major_city_id,
+            c.id AS city_id,
+            mc.name AS city_name,
+            s.included_in_total_sum AS include_in_total,
+            ct.name AS cpe_name,
+            ri.quantity AS quantity,
+            ri.updated_at AS updated_at
+        FROM cities c
 
-        LEFT JOIN subcity_counts sc
-            ON sc.major_city_id = wd.major_city_id
-            
-        GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count
+        JOIN city_visibility_settings s
+            ON s.city_id = c.id
+            AND s.dataset_key = 'cpe_inventory'
 
-        UNION ALL
+        LEFT JOIN cities mc 
+            ON mc.id = COALESCE(c.parent_city_id, c.id)
 
+        -- ✅ Use the pre-filtered CTE instead of a correlated subquery
+        LEFT JOIN ranked_inventory ri
+            ON c.id = ri.city_id
+
+        LEFT JOIN cpe_types ct
+            ON ct.id = ri.cpe_type_id
+
+        WHERE s.is_visible = true
+    ),
+    
+    subcity_counts AS (
         SELECT
-            NULL,
-            'UKUPNO',
-            NULL,
-            {", ".join(sum_columns)},
-            NULL
-        FROM weekly_data
-        WHERE include_in_total = true
+            parent_city_id AS major_city_id,
+            COUNT(*) AS subcity_count
+        FROM cities c
+        JOIN city_visibility_settings s
+            ON s.city_id = c.id
+            AND s.dataset_key = 'cpe_inventory'
+        WHERE parent_city_id IS NOT NULL AND s.is_visible = true
+        GROUP BY parent_city_id
+    )
+    
+    SELECT
+        wd.major_city_id AS city_id,
+        wd.city_name,
+        COALESCE(sc.subcity_count, 0) AS subcity_count,
+        {", ".join(case_columns)},
+        MIN(updated_at) AS max_updated_at
+    FROM weekly_data wd
+    
+    LEFT JOIN subcity_counts sc
+        ON sc.major_city_id = wd.major_city_id
+    GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count
 
-        ORDER BY city_id NULLS LAST;
+    UNION ALL
+
+    SELECT
+        NULL,
+        'UKUPNO',
+        NULL,
+        {", ".join(sum_columns)},
+        NULL
+    FROM weekly_data
+    WHERE include_in_total = true
+    ORDER BY city_id NULLS LAST;
     """
 
     result = db.session.execute(text(SQL_QUERY), params)
@@ -248,32 +246,37 @@ def get_cpe_inventory_subcities(
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        WITH weekly_data AS (
+     WITH ranked_inventory AS (
+        -- ✅ Efficiently get the latest inventory record per city/cpe type
+        SELECT DISTINCT ON (city_id, cpe_type_id)
+            city_id,
+            cpe_type_id,
+            quantity,
+            updated_at
+        FROM cpe_inventory
+        WHERE week_end <= :week_end
+        ORDER BY city_id, cpe_type_id, week_end DESC
+        ),
+        weekly_data AS (
             SELECT
                 c.id   AS city_id,
                 c.name AS city_name,
                 s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
-                ci.quantity AS quantity,
-                ci.updated_at AS updated_at
+                ri.quantity AS quantity,
+                ri.updated_at AS updated_at
             FROM cities c
 
             JOIN city_visibility_settings s
                 ON s.city_id =c.id
                 AND s.dataset_key = 'cpe_inventory'
 
-            LEFT JOIN cpe_inventory ci
-                ON c.id = ci.city_id
-                --Use the latest available record whose week_end is ≤ current business Friday
-                --Give me the latest week if we are in new week which doesnot have data yet
-                AND ci.week_end =(
-                    SELECT MAX(ci2.week_end)
-                    FROM cpe_inventory ci2
-                    WHERE ci2.city_id=c.id
-                    AND ci2.week_end <= :week_end
-                )
+            -- ✅ Use the pre-filtered CTE instead of a correlated subquery
+            LEFT JOIN ranked_inventory ri
+                ON c.id = ri.city_id
+
             LEFT JOIN cpe_types ct
-                ON ct.id = ci.cpe_type_id
+                    ON ct.id = ri.cpe_type_id
 
             WHERE (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
                 AND s.is_visible = true
