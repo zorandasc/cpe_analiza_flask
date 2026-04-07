@@ -43,7 +43,7 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
             cpe_type_id,
             quantity,
             updated_at
-        FROM cpe_inventory
+        FROM cpe_broken
         WHERE week_end <= :week_end
         ORDER BY city_id, cpe_type_id, week_end DESC
         ),

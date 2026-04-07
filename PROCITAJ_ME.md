@@ -3027,6 +3027,13 @@ CREATE INDEX idx_access_inventory_updated
 ON access_inventory (updated_at);
 ```
 
+# stb_inventory
+```SQL
+CREATE INDEX idx_stb_inventory_lookup
+ON stb_inventory (stb_type_id, week_end);
+```
+
+
 # --------------------------------------------------------------------------------------
 
 # CRON JOB FOR EVERY DAY TO CLEAN USERACTIVITY TABLE. LOGS OLDER THAN 4 MONTHS
@@ -3133,4 +3140,8 @@ it convert internal utc data in db to Belgrade timzone
 ```yml
 command: ["postgres", "-c", "timezone=Europe/Belgrade"]
 
+```
+
+```bash
+docker exec -it fdb4475de1cb psql -U postgres -d mydb -c "ALTER DATABASE mydb SET timezone TO 'Europe/Belgrade';"
 ```
