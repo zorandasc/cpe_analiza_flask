@@ -45,9 +45,11 @@ def cpe_dismantle_records():
 @cpe_dismantle_bp.route("/subcities/<int:id>")
 @login_required
 def cpe_dismantle_subcities(id):
-    data = get_cpe_dismantle_subcities_view(major_city_id=id)
 
+    # Receiving from cpe_dismantle.html
     category = request.args.get("category", "complete")
+
+    data = get_cpe_dismantle_subcities_view(major_city_id=id, group_name=category)
 
     return render_template("cpe_dismantle_subcities.html", **data, category=category)
 
@@ -81,6 +83,7 @@ def cpe_dismantle_city_history(id, category):
         category=category,
         schema=schema_list,
         city=city,
+        scope=scope,
     )
 
 

@@ -18,10 +18,6 @@ def get_cpe_dismantle_view_data():
     # to display today date on title
     today = date.today()
 
-    # SATURDAY of this week
-    # to mark row (red) if updated_at less than
-    saturday = get_passed_saturday()
-
     # date of friday in week
     current_week_end = get_current_week_friday()
 
@@ -31,34 +27,26 @@ def get_cpe_dismantle_view_data():
     )
 
     # 1. Build pivoted records from schema list but only for current week_end
-    records = get_cpe_dismantle_pivoted(schema_list, current_week_end)
+    complete_records = get_cpe_dismantle_pivoted(
+        schema_list, current_week_end, group_name="complete"
+    )
 
-    # ROWS IN records FROM RAW SQL, LOOK LIKE THIS:
-    """"
-    [{'city_id': 3, 'city_name': 'IJ Banja Luka', 'dismantle_type_id': 1, 
-    'dismantle_code':COMP, 'IADS': 148, 'VIP4205_VIP4302_1113': 345,...,
-    'complete_updated_at': datetime.datetime(2025, 12, 26, 0, 0),
-    'missing_updated_at':datetime.datetime(2025, 12, 26, 0, 0)}...]
-    """
-
-    records_grouped = _group_records(records, schema_list)
+    missing_records = get_cpe_dismantle_pivoted(
+        schema_list, current_week_end, group_name="missing"
+    )
 
     return {
         "today": today.strftime("%d-%m-%Y"),
-        "saturday": saturday,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
-        "dismantle": records_grouped,
+        "complete_data": _group_records(complete_records, schema_list),
+        "missing_data": _group_records(missing_records, schema_list),
     }
 
 
-def get_cpe_dismantle_subcities_view(major_city_id: int):
+def get_cpe_dismantle_subcities_view(major_city_id: int, group_name: str):
     # to display today date on title
     today = date.today()
-
-    # SATURDAY of this week
-    # to mark row (red) if updated_at less than
-    saturday = get_passed_saturday()
 
     # date of friday in week
     current_week_end = get_current_week_friday()
@@ -69,13 +57,14 @@ def get_cpe_dismantle_subcities_view(major_city_id: int):
     )
 
     # 1. Build pivoted records from schema list but only for current week_end
-    records = get_cpe_dismantle_subcities(schema_list, current_week_end, major_city_id)
+    records = get_cpe_dismantle_subcities(
+        schema_list, current_week_end, major_city_id, group_name
+    )
 
     records_grouped = _group_records(records, schema_list)
 
     return {
         "today": today.strftime("%d-%m-%Y"),
-        "saturday": saturday,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "dismantle": records_grouped,
@@ -91,23 +80,23 @@ def update_cpe_dismantle(data):
     if not can_access_city(city_id):
         return False, "Niste autorizovani."
 
+    week_end = get_current_week_friday()
+
     city_name = data["city"]
+
+    group_name = data["group_name"]
 
     updates = data["updates"]
 
     if not updates:
         return False, "Neispravan payload."
 
-    week_end = get_current_week_friday()
-
-    # -----------------------------------------
-    # Temporal Snapshot with Partial Mutation
-    # ------------------------------------------
     try:
         for u in updates:
             if u["quantity"] is None:
                 continue
 
+            # 1. UPDATE THE MAIN TABLE (Quantities)
             stmt = text("""
                         INSERT INTO cpe_dismantle (
                             city_id, cpe_type_id, dismantle_type_id, week_end, quantity,updated_at,created_at 
@@ -129,6 +118,18 @@ def update_cpe_dismantle(data):
                     "quantity": u["quantity"],
                 },
             )
+        # 2. UPDATE THE HELPER TABLE (Turns the dashboard row GREEN)
+        helper_stmt = text("""
+            INSERT INTO dismantle_city_week_update (city_id, week_end, group_name, updated_at)
+            VALUES (:city_id, :week_end, :group_name, now())
+            ON CONFLICT (city_id, week_end, group_name)
+            DO UPDATE SET updated_at = now()
+        """)
+
+        db.session.execute(
+            helper_stmt,
+            {"city_id": city_id, "week_end": week_end, "group_name": group_name},
+        )
 
         log_user_action(
             action="update",
@@ -163,7 +164,7 @@ def get_cpe_dismantle_history(
     match category:
         case "complete":
             list_of_dismantles = [1]
-        case "damage":
+        case "missing":
             list_of_dismantles = [2, 3, 4]
         case _:
             return None, None, None, None, "No Category"
@@ -235,11 +236,11 @@ def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "mi
 
         for cpe in schema_list:
             if mode == "complete":
-                row.append(city["cpe"][cpe["name"]]["damages"]["comp"]["quantity"])
+                row.append(city["cpe"][cpe["name"]]["missing"]["comp"]["quantity"])
             else:
                 subcols = get_missing_subcolumns(cpe)
                 for code, _ in subcols:
-                    row.append(city["cpe"][cpe["name"]]["damages"][code]["quantity"])
+                    row.append(city["cpe"][cpe["name"]]["missing"][code]["quantity"])
 
         updated_at = (
             city["complete_updated_at"]
@@ -267,73 +268,38 @@ def _group_records(records, schema_list):
 
         if cid not in grouped:
             grouped[cid] = {
-                "city_id": row["city_id"],
+                "city_id": cid,
                 "city_name": row["city_name"],
-                "subcity_count": row.get("subcity_count", 0)
-                if cid is not None
-                else None,
-                "complete_updated_at": row["complete_updated_at"],
-                "missing_updated_at": row["missing_updated_at"],
-                "cpe": {
-                    cpe["name"]: {
-                        "cpe_type_id": cpe["id"],
-                        "damages": {
-                            "comp": {"quantity": 0, "dismantle_type_id": 1},
-                            "nd": {"quantity": 0, "dismantle_type_id": 2},
-                            "na": {"quantity": 0, "dismantle_type_id": 3},
-                            "ndia": {"quantity": 0, "dismantle_type_id": 4},
-                        },
-                    }
-                    for cpe in schema_list
-                },
+                "subcity_count": row.get("subcity_count"),
+                "updated_at": row["updated_at"],
+                "is_stale": row["updated_at"] is None
+                or row["updated_at"].date() < get_passed_saturday(),
+                "data": {},  # key will be dismantle_code (e.g., 'COMP', 'ND')
             }
-        else:
-            city = grouped[cid]
 
-            # Never overwrite timestamps once initialized
-            # Always take the MAX defensively in Python
-            # Update timestamps using max() while looping, just like SQL does.
-            if row["complete_updated_at"]:
-                city["complete_updated_at"] = max(
-                    filter(
-                        None, [city["complete_updated_at"], row["complete_updated_at"]]
-                    )
-                )
+        # SQL gives us pivoted columns based on schema_list
+        # We store the quantities mapped to the dismantle code
+        d_code = row["dismantle_code"].lower() if row["dismantle_code"] else "unknown"
 
-            if row["missing_updated_at"]:
-                city["missing_updated_at"] = max(
-                    filter(
-                        None, [city["missing_updated_at"], row["missing_updated_at"]]
-                    )
-                )
-
-        # IF ADDING NEW CITY "dismantle_code WILL BE NULL
-        # If dismantle_code is None, it means it's an empty city row from the LEFT JOIN
-        if row.get("dismantle_code"):
-            for cpe in schema_list:
-                qty = row.get(cpe["name"], 0)
-
-                grouped[cid]["cpe"][cpe["name"]]["damages"][
-                    row["dismantle_code"].lower()
-                ] = {
-                    "quantity": qty,
-                    "dismantle_type_id": row["dismantle_type_id"],
-                }
+        grouped[cid]["data"][d_code] = {
+            "dismantle_type_id": row["dismantle_type_id"],
+            "quantities": {cpe["name"]: row.get(cpe["name"], 0) for cpe in schema_list},
+        }
 
     return list(grouped.values())
 
 
 # Because each row is of:
-# one week + one damage type + all CPE columns
-# we need to group → into one week object whick holds all damages + all CPE columns
+# one week + one missing type + all CPE columns
+# we need to group → into one week object whick holds all missing + all CPE columns
 # (comp row + nd row + na row + ndia row)
 def _group_history_records(records, schema_list):
     """
     FOR EASY VIEW REPRESENTATION WE WANT OUR DATA TO LOOK LIKE THIS:
 
-    {week: week_end1, cpe:[{cpe_type_id:1, "damages":{"comp":100,"nd":200, "na":300,"ndia":400}}, {cpe_type_id:2, "damages":{...}]},
+    {week: week_end1, cpe:[{cpe_type_id:1, "missing":{"comp":100,"nd":200, "na":300,"ndia":400}}, {cpe_type_id:2, "missing":{...}]},
 
-    {week: week_end2, cpe:[{cpe_type_id:1, "damages":{"comp":100,"nd":200, "na":300,"ndia":400}}, {cpe_type_id:2, "damages":{...}]},
+    {week: week_end2, cpe:[{cpe_type_id:1, "missing":{"comp":100,"nd":200, "na":300,"ndia":400}}, {cpe_type_id:2, "missing":{...}]},
 
     """
     grouped = {}
@@ -350,7 +316,7 @@ def _group_history_records(records, schema_list):
                 "cpe": {
                     cpe["name"]: {
                         "cpe_type_id": cpe["id"],
-                        "damages": {
+                        "missing": {
                             "comp": {"quantity": 0},
                             "nd": {"quantity": 0},
                             "na": {"quantity": 0},
@@ -360,20 +326,20 @@ def _group_history_records(records, schema_list):
                     for cpe in schema_list
                 },
             }
-        # get damage key form sql row
-        damage_key = row.get("dismantle_code")
+        # get missing key form sql row
+        missing_key = row.get("dismantle_code")
 
-        if damage_key:
-            damage_key = damage_key.lower()
+        if missing_key:
+            missing_key = missing_key.lower()
 
             for cpe_name in grouped[week]["cpe"]:
-                # id damage key in formed group object
-                if damage_key in grouped[week]["cpe"][cpe_name]["damages"]:
+                # id missing key in formed group object
+                if missing_key in grouped[week]["cpe"][cpe_name]["missing"]:
                     # than take value from sql row
                     qty = row.get(cpe_name, 0)
 
                     # and put it inside group object for that week
-                    grouped[week]["cpe"][cpe_name]["damages"][damage_key][
+                    grouped[week]["cpe"][cpe_name]["missing"][missing_key][
                         "quantity"
                     ] = qty
 

@@ -245,12 +245,19 @@ styles %} {{ super() }}
 {% endblock %} {% block content%}
 <div class=" py-2">
   <div class="d-flex justify-content-between align-items-center">
-     <a
-      href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_records', _anchor=category) }}"
-      class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
-    >
+    {% if scope == "major" %}
+      <a
+        href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_records', _anchor=category) }}"
+        class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
+      >
+        <span class="me-2">⬅</span> Nazad
+      </a>
+    {% else %}
+     <a href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_subcities', id=city.parent_city_id, category=category) }}"
+       class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
       <span class="me-2">⬅</span> Nazad
     </a>
+    {% endif %}
   </div>
   {% if category == "complete" %}
     <h1 class="mb-4 text-center">
@@ -317,7 +324,7 @@ styles %} {{ super() }}
           </td>
           {% for item in schema %}
           <td class="group-start text-center">
-            {{ r.cpe[item.name]['damages']['comp']['quantity'] }}
+            {{ r.cpe[item.name]['missing']['comp']['quantity'] }}
           </td>
 
           {% endfor %}
@@ -410,14 +417,14 @@ styles %} {{ super() }}
           </td>
           {% for item in schema %}
           <td class="group-start text-center">
-            {{ r.cpe[item.name]['damages']['na']['quantity'] }}
+            {{ r.cpe[item.name]['missing']['na']['quantity'] }}
           </td>
           {% if item.has_remote %}
           <td class="text-center">
-            {{r.cpe[item.name]['damages']['nd']['quantity'] }}
+            {{r.cpe[item.name]['missing']['nd']['quantity'] }}
           </td>
           <td class="group-end text-center">
-            {{ r.cpe[item.name]['damages']['ndia']['quantity'] }}
+            {{ r.cpe[item.name]['missing']['ndia']['quantity'] }}
           </td>
           {% endif %} {% endfor %}
         </tr>

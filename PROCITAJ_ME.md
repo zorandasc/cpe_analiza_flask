@@ -3145,3 +3145,8 @@ command: ["postgres", "-c", "timezone=Europe/Belgrade"]
 ```bash
 docker exec -it fdb4475de1cb psql -U postgres -d mydb -c "ALTER DATABASE mydb SET timezone TO 'Europe/Belgrade';"
 ```
+
+# -------------------------------------------------
+ADDED HELPER TABLE FOR CPE DISMANTE tablename='dismantle_city_week_update',
+
+The "Helper Table" pattern is a standard architectural choice called a Materialized View (Manually Managed) or a Status Ledger. It decouples your raw data (cpe_dismantle) from your reporting logic (city_week_update).

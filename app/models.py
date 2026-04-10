@@ -330,6 +330,38 @@ class CpeDismantle(db.Model):
     dismantle_type = relationship("DismantleTypes", back_populates="cpe_dismantle")
 
 
+# Helper table to keep track of dismantle groups update inside CpeDismantle table
+# Status Ledger. It decouples your raw data (cpe_dismantle) from your
+# reporting logic (city_week_update).
+class DismantleCityWeekUpdate(db.Model):
+    __tablename__ = "dismantle_city_week_update"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "city_id", "week_end", "group_name", name="uq_city_week_group"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), nullable=False)
+
+    week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
+
+    group_name: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # values: 'complete', 'missing'
+
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        server_onupdate=func.now(),  # ✅ important
+        nullable=False,
+    )
+
+    city = relationship("Cities")
+
+
 class CpeBroken(db.Model):
     __tablename__ = "cpe_broken"
     __table_args__ = (
