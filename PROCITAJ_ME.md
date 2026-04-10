@@ -2723,7 +2723,9 @@ docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb_test < mydb_backup.du
 docker stop 740d60fedd12
 docker start 740d60fedd12
 ```
+
 # ---------------------------------------------------------------------------------------------------------
+
 # ----------- FINAL BACKUP -----------------
 
 ```Bash
@@ -2731,12 +2733,15 @@ docker exec -i 4a6de36c2105 pg_dump -U postgres -F c -d mydb > mydb_backup.dump
 ```
 
 # ----------- FINAL RESTORE -----------------
- mydb must be empty
+
+mydb must be empty
+
 ```Bash
 docker exec -i 4a6de36c2105 pg_restore -U postgres -d mydb < mydb_backup.dump
 ```
 
 # ----------- FINAL BACKUP INTO REMOTE PC DESKTOP -----------------
+
 ```Bash
 scp root@10.198.3.92:/home/CPE-ANALIZA/mydb_backup1.dump .
 ```
@@ -2777,6 +2782,7 @@ DELETE FROM cpe_inventory
 WHERE city_id NOT IN (SELECT id FROM cities);
 
 ```
+
 The real fix (important)
 
 You should enforce this at database level, not just app level.
@@ -2808,17 +2814,15 @@ city_visibility_settings = behavior ✅
 
 👉 This is clean architecture
 
-
 ALTER TABLE cities
 DROP COLUMN IF EXISTS is_active,
 DROP COLUMN IF EXISTS include_in_total;
-
 
 # -------------------------------------------------
 
 # cascade delete city only for visibility_settings tablE
 
-U SQLALCHEMY MODELU: 
+U SQLALCHEMY MODELU:
 
 ```sql
 
@@ -2847,15 +2851,14 @@ REFERENCES cities(id)
 ON DELETE CASCADE;
 
 cities
-  ↓ (CASCADE only here)
+↓ (CASCADE only here)
 city_visibility_settings
 
 cities
-  ↓ (RESTRICT)
+↓ (RESTRICT)
 cpe_inventory
 cpe_dismantle
 access_inventory
-
 
 # ----UPDATE AND DELETE SQL STATEMENT--------------------
 
@@ -2870,7 +2873,7 @@ DELETE FROM cpe_inventory
 WHERE city_id = 3
   AND cpe_type_id = 1
   AND week_end = '2026-03-13';
-  ```
+```
 
 # ----------- COMPLEXITY OF CPE_DISMANTLE QUERY------------------------------
 
@@ -2899,18 +2902,21 @@ this_week_updates,"The ""Status Checker."" It looks only at the current week_end
 subcity_counts,"The ""Hierarchy Map."" It counts how many sub-cities belong to a major city.",Completely independent of the 195k dismantle rows; very fast.
 
 # WHY PIVOTING?
+
 Instead of having a row for every CPE type (which would make your Jinja template loop forever), we use CASE statements to "flip" the data horizontally.
 
 Pivoting: We turn quantity where cpe_name = 'Router' into a column named "Router".
 
 1. The Python "Pivot" Logic
-Your SQL query returns a "long" format (one row per city per dismantle type). 
+   Your SQL query returns a "long" format (one row per city per dismantle type).
 
 2. Flask Grouping
-Your _group_records function transforms this into a "deep" JSON-like structure that your Jinja template can easily iterate over.
+   Your \_group_records function transforms this into a "deep" JSON-like structure that your Jinja template can easily iterate over.
 
 # ------------INDEX--------------------------------------------------
+
 HOW TO SEE INDEXSES IN TABLE:
+
 ```SQL
 SELECT
     tablename,
@@ -2931,7 +2937,7 @@ WHERE tablename = 'cpe_inventory';
 ```SQL
 
 -- 🔥 critical
-CREATE INDEX idx_cpe_dismantle_lookup 
+CREATE INDEX idx_cpe_dismantle_lookup
 ON cpe_dismantle (
     city_id,
     cpe_type_id,
@@ -2940,13 +2946,13 @@ ON cpe_dismantle (
 );
 
 -- 🔥 weekly aggregation
-CREATE INDEX idx_cpe_dismantle_week 
+CREATE INDEX idx_cpe_dismantle_week
 ON cpe_dismantle (week_end, city_id, dismantle_type_id);
 
 CREATE INDEX idx_cpe_dismantle_week_end ON cpe_dismantle (week_end);
 
 -- 🟡 optional (keep only if chart is slow)
-CREATE INDEX idx_cpe_dismantle_chart 
+CREATE INDEX idx_cpe_dismantle_chart
 ON cpe_dismantle (city_id, week_end, cpe_type_id);
 ```
 
@@ -2955,7 +2961,7 @@ ON cpe_dismantle (city_id, week_end, cpe_type_id);
 ```sql
 
 
-CREATE INDEX idx_cpe_inventory_lookup 
+CREATE INDEX idx_cpe_inventory_lookup
 ON cpe_inventory (
     city_id,
     cpe_type_id,
@@ -2969,7 +2975,7 @@ ON cpe_inventory (
 ```sql
 
 
-CREATE INDEX idx_cpe_broken_lookup 
+CREATE INDEX idx_cpe_broken_lookup
 ON cpe_broken (
     city_id,
     cpe_type_id,
@@ -2978,20 +2984,17 @@ ON cpe_broken (
 
 ```
 
-
 # CITIES INDEX
-
 
 ```SQL
 CREATE INDEX idx_cities_parent
 ON cities (parent_city_id);
 ```
 
-
 # city_visibility_settings
 
 ```SQL
-CREATE INDEX idx_city_visibility_main 
+CREATE INDEX idx_city_visibility_main
 ON city_visibility_settings (city_id, dataset_key);
 ```
 
@@ -2999,7 +3002,7 @@ ON city_visibility_settings (city_id, dataset_key);
 
 ```SQL
 
-CREATE INDEX idx_cpe_types_visible 
+CREATE INDEX idx_cpe_types_visible
 ON cpe_types (visible_in_dismantle);
 
 ```
@@ -3010,6 +3013,7 @@ ON cpe_types (visible_in_dismantle);
 CREATE INDEX idx_user_activity_timestamp
 ON user_activity (timestamp);
 ```
+
 # INDEX FOR CPE_DISMANTLE HISTORY
 
 ```SQL
@@ -3028,23 +3032,26 @@ ON access_inventory (updated_at);
 ```
 
 # stb_inventory
+
 ```SQL
 CREATE INDEX idx_stb_inventory_lookup
 ON stb_inventory (stb_type_id, week_end);
 ```
 
-
 # --------------------------------------------------------------------------------------
 
 # CRON JOB FOR EVERY DAY TO CLEAN USERACTIVITY TABLE. LOGS OLDER THAN 4 MONTHS
 
-# 2 (Hour): At 2 AM 
+# 2 (Hour): At 2 AM
+
 ```bash
 0 2 * * * docker exec -i 4a6de36c2105 \
 psql -U postgres -d mydb \
 -c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '4 months';"
 ```
+
 # ---------------------------------------------------------------------------------------
+
 # Grouping in cpe_dismantle history
 
 Because your SQL query already does:
@@ -3052,43 +3059,49 @@ Because your SQL query already does:
 ```sql
 GROUP BY week_end, dismantle_code
 ```
+
 Each row represents:
 
 👉 one week + one damage type + all CPE columns
 
 So grouping in flask just merges:
 
-(comp row + nd row + na row + ndia row) → into one week object. 
+(comp row + nd row + na row + ndia row) → into one week object.
 
 week_end+(comp row + nd row + na row + ndia row)+ all CPE columns -> ONE ROW IN CPE_DISMANTLE JINJA TABLE
 
 # -------SYNC SCRIPT FOR IPTV PLATFORM-------------------------------------
 
-
-IPTV PLATFORM  is External service =  only gives current snapshot
+IPTV PLATFORM is External service = only gives current snapshot
 
 Cron → FLASK Sync script/service → External API → DB
 
 1. ADD NEW SQLALCHEMY MODEL STBExternalMap
 
 2. EXTERNAL API
-# http://10.152.0.17:8090/
-# http://10.152.0.17:8090/api/device-models
-# http://10.152.0.17:8090/api/total-users
 
+# http://10.152.0.17:8090/
+
+# http://10.152.0.17:8090/api/device-models
+
+# http://10.152.0.17:8090/api/total-users
 
 3. ADD CRON JOB
 
 RUN AT 4AM
+
 ```bash
 0 4 * * * docker exec -i cpe-analiza-flask-1 python -m flask sync-with-iptv
 ```
+
 EVERY HOUR
+
 ```SQL
 0 * * * * docker exec -i cpe-analiza-flask-1 python -m flask sync-with-iptv
 ```
 
 Test manually
+
 ```bash
 docker exec -it cpe-analiza-flask-1 flask sync-with-iptv
 ```
@@ -3120,12 +3133,11 @@ crontab -l
 # -------------------------------timezone------------
 
 # DateTime(timezone=True),
-TIMESTAMP WITH TIME ZONE (timestamptz) — Postgres stores everything as UTC internally and converts on read. In this case, store UTC from Flask, Postgres handles the rest. ✅ Recommended.
 
+TIMESTAMP WITH TIME ZONE (timestamptz) — Postgres stores everything as UTC internally and converts on read. In this case, store UTC from Flask, Postgres handles the rest. ✅ Recommended.
 
 DateTime(timezone=True) maps to timestamptz in Postgres, and func.now() runs on the Postgres side — so it uses whatever timezone Postgres is configured with (Belgrade in your case).
 Since you're using server_default=func.now(), the timestamp is generated by Postgres, not Flask, so Flask's TZ setting doesn't even matter for these columns. Postgres writes the time, stores it as UTC internally, and returns it timezone-aware.
-
 
 The flow is:
 Flask → stores UTC → Postgres (stores UTC internally) → displays in Belgrade time
@@ -3137,9 +3149,9 @@ Your users see Belgrade time when you convert on the way out with .astimezone(Zo
 
 in docoker compose, this command is only on reading postgres db:
 it convert internal utc data in db to Belgrade timzone
+
 ```yml
 command: ["postgres", "-c", "timezone=Europe/Belgrade"]
-
 ```
 
 ```bash
@@ -3147,6 +3159,29 @@ docker exec -it fdb4475de1cb psql -U postgres -d mydb -c "ALTER DATABASE mydb SE
 ```
 
 # -------------------------------------------------
+
 ADDED HELPER TABLE FOR CPE DISMANTE tablename='dismantle_city_week_update',
 
 The "Helper Table" pattern is a standard architectural choice called a Materialized View (Manually Managed) or a Status Ledger. It decouples your raw data (cpe_dismantle) from your reporting logic (city_week_update).
+
+# cross join inisde cpe_dismantle
+
+Why this works:
+Logical Flow: By CROSS JOIN-ing dismantle_types and cpe_types first, you create a grid of every possible combination.
+
+No more NULL filtering: Since dt.id and ct.id come from the CROSS JOIN (which always exists), your LEFT JOIN rd can fail (return NULL) without breaking the whole row.
+
+New Cities: A new city will pass the visibility check, get paired with all dt and ct types via the CROSS JOIN, find no rd data, and correctly show 0 for all quantities.
+
+Method,What happens to a New City?,Template Result
+Current (LEFT JOIN),Row is filtered out by WHERE dt.group_name.,The city is invisible.
+CROSS JOIN,Row is kept; quantity becomes 0.,The city appears with 0s under every model.
+
+# CHANGE FORM LEFT JOIN TO CROSS JOIN:
+
+Step,|"Your Current ""Data-First"" Join",|"The ""Structure-First"" (Cross Join)"
+Visibility|,City passes (Visible = True),|City passes (Visible = True)
+Types|,Waits for data to tell it which type it is.|,Forces the city to have a 'complete' or 'missing' slot immediately.
+Data Join,|Tries to find a match (Finds nothing).|,Tries to find a match (Finds nothing).
+WHERE Filter,|Checks NULL == 'complete' (False).|,Already filtered during the Join.
+Result,|CITY HIDDEN,|CITY SHOWN (with 0s)

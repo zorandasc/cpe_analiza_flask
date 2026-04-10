@@ -49,42 +49,49 @@ def get_cpe_dismantle_pivoted(
 
         -- The Enrichment Center -CTE
         filtered_data AS (
-            SELECT
-                c.id AS city_id,
-                COALESCE(c.parent_city_id, c.id) AS major_city_id,
-                mc.name AS city_name,
-                s.included_in_total_sum AS include_in_total,
+                SELECT
+                    c.id AS city_id,
+                    COALESCE(c.parent_city_id, c.id) AS major_city_id,
+                    mc.name AS city_name,
+                    s.included_in_total_sum AS include_in_total,
+                    
+                    -- Use dt and ct IDs (the "skeleton") rather than rd IDs (the "data")
+                    ct.id AS cpe_type_id,
+                    ct.name AS cpe_name,
+                    dt.id AS dismantle_type_id,
+                    dt.code AS dismantle_code,
+                    
+                    COALESCE(rd.quantity, 0) AS quantity
 
-                rd.cpe_type_id,
-                ct.name AS cpe_name,
+                FROM cities c
 
-                dt.id AS dismantle_type_id,
-                dt.code AS dismantle_code,
-                dt.group_name, -- This is the column in your dismantle_types table
+                -- 1. CITY Visibility Filter
+                JOIN city_visibility_settings s 
+                    ON s.city_id = c.id AND s.dataset_key = 'cpe_dismantle'
+                
+                -- 2. Skeleton: Every visible city x every type in this group
+                -- This enable new city to appear in query
+                CROSS JOIN (
+                    SELECT id, code 
+                    FROM dismantle_types 
+                    WHERE group_name = :group_name -- <--- THE CONNECTION POINT BETWEEN PASSED group_name AND DISMANTLE COLUMN group_name
+                ) dt
 
-                COALESCE(rd.quantity, 0) AS quantity
+                -- 3. Skeleton: Every city x every CPE type (ensures columns exist)
+                CROSS JOIN cpe_types ct
 
-            FROM cities c
-        
-            JOIN city_visibility_settings s 
-                ON s.city_id = c.id AND s.dataset_key = 'cpe_dismantle'
+                -- 4. Get Parent City Name
+                LEFT JOIN cities mc 
+                    ON mc.id = COALESCE(c.parent_city_id, c.id)
 
-            LEFT JOIN cities mc 
-                ON mc.id = COALESCE(c.parent_city_id, c.id)
+                -- 5. Data: Fill the skeleton where data exists
+                LEFT JOIN ranked_dismantle rd 
+                    ON rd.city_id = c.id 
+                    AND rd.dismantle_type_id = dt.id
+                    AND rd.cpe_type_id = ct.id
 
-        
-            -- Join against our pre-filtered 'latest' records -(Join with CTE)
-            LEFT JOIN ranked_dismantle rd 
-                ON rd.city_id = c.id
-
-            LEFT JOIN dismantle_types dt 
-                ON dt.id = rd.dismantle_type_id
-
-            LEFT JOIN cpe_types ct 
-                ON ct.id = rd.cpe_type_id
-
-            WHERE s.is_visible = true AND dt.group_name = :group_name -- <--- THE CONNECTION POINT BETWEEN PASSED group_name AND COLUMN group_name
-        ),
+                WHERE s.is_visible = true 
+            ),
 
         -- ✅ CITY/WEEK_END/GROUP STATUS -CTE
         -- carry-forward updated_at
@@ -220,18 +227,25 @@ def get_cpe_dismantle_subcities(
             JOIN city_visibility_settings s
                 ON s.city_id = c.id AND s.dataset_key = 'cpe_dismantle'
 
+            -- 2. Skeleton: Every visible city x every type in this group
+            -- This enable new city to appear in query
+            CROSS JOIN (
+                SELECT id, code 
+                FROM dismantle_types 
+                WHERE group_name = :group_name -- <--- THE CONNECTION POINT BETWEEN PASSED group_name AND DISMANTLE COLUMN group_name
+            ) dt
+
+            -- 3. Skeleton: Every city x every CPE type (ensures columns exist)
+            CROSS JOIN cpe_types ct
+
+            -- 5. Data: Fill the skeleton where data exists
             LEFT JOIN ranked_dismantle rd 
-                ON rd.city_id = c.id
-
-            LEFT JOIN dismantle_types dt
-                ON dt.id = rd.dismantle_type_id
-
-            LEFT JOIN cpe_types ct 
-                ON ct.id = rd.cpe_type_id
+                ON rd.city_id = c.id 
+                AND rd.dismantle_type_id = dt.id
+                AND rd.cpe_type_id = ct.id
 
             WHERE (c.id = :major_city_id OR c.parent_city_id = :major_city_id)
               AND s.is_visible = true
-              AND dt.group_name = :group_name
         ),
 
         -- ✅ Pull updated status from helper table
