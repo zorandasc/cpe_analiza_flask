@@ -124,6 +124,7 @@ def get_cpe_dismantle_pivoted(
             fd.dismantle_code,
             {", ".join(case_columns)},
             -- Parent shows oldest update of its sub-entities
+            -- This CASE is protection of null values for parrent group
             CASE 
                 -- If the count of rows is greater than the count of actual timestamps, 
                 -- it means at least one subcity is NULL. Force the whole thing to NULL.
