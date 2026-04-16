@@ -1126,7 +1126,8 @@ def users():
     # WHY selectinload?
     # BECAUSE USERS AND CITIES ARE N0W MANY-TO-MANY RELATION
     # IF WE DO THIS users = Users.query.order_by(Users.id).all()
-    # WE ARE GENERATING N+1 PROBLEM
+    # CITIES ARE Later (lazy load cities) WE ARE GENERATING 1+N PROBLEM
+    # WITH selectinload PRELOAD cities, ONLY 2 QUERY USERS AND CITIES
     users = Users.query.options(selectinload(Users.cities)).order_by(Users.id).all()
 
     return render_template("admin/users.html", users=users)

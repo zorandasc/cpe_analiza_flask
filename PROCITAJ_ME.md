@@ -2238,3 +2238,34 @@ Types|,Waits for data to tell it which type it is.|,Forces the city to have a 'c
 Data Join,|Tries to find a match (Finds nothing).|,Tries to find a match (Finds nothing).
 WHERE Filter,|Checks NULL == 'complete' (False).|,Already filtered during the Join.
 Result,|CITY HIDDEN,|CITY SHOWN (with 0s)
+
+# -------------------------------------------------------------------------------------------------
+
+# MODIFY ON LIVE USER ACTIVITY TABLE SO THAT DELETATION OF USER MAKE USER_ID=NULL
+
+```SQL
+ALTER TABLE user_activity
+ALTER COLUMN user_id DROP NOT NULL;
+
+-- 2. Remove the old CASCADE constraint
+ALTER TABLE user_activity
+DROP CONSTRAINT user_activity_user_id_fkey;
+
+-- 3. Add the new SET NULL constraint
+ALTER TABLE user_activity
+ADD CONSTRAINT user_activity_user_id_fkey
+FOREIGN KEY (user_id)
+REFERENCES users(id)
+ON DELETE SET NULL;
+```
+
+# IN MODAL
+
+```PYTHON
+user_id: Mapped[int] = mapped_column(
+ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+)
+
+# SQLAlchemy will now set user_id to None when the user is deleted
+user = relationship("Users", backref="activities")
+```

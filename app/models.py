@@ -59,6 +59,7 @@ class UserRole(str, enum.Enum):
     USER_CPE = "user_cpe"
     USER_IPTV = "user_iptv"
     USER_FTTH = "user_ftth"
+    USER_DTH = "user_dth"
     VIEW = "view"
 
     def __str__(self):
@@ -101,6 +102,9 @@ class Users(db.Model, UserMixin):
         # Default must match the Enum value
         server_default=text("'user_cpe'"),
     )
+    # These column des not exist in PGadmin or sql table
+    # In SQLAlchemy, the relationship() function is a high-level abstraction
+    # SQLAlchemy behind the scenes runs a SQL query to join users with user_cities and cities
     cities: Mapped[list["Cities"]] = relationship(
         "Cities", secondary=user_cities, back_populates="users"
     )
@@ -157,6 +161,9 @@ class Cities(db.Model):
     access_inventory: Mapped[list["AccessInventory"]] = relationship(
         "AccessInventory", back_populates="city"
     )
+    # These column des not exist in PGadmin or sql table
+    # In SQLAlchemy, the relationship() function is a high-level abstraction
+    # SQLAlchemy behind the scenes runs a SQL query to join users with user_cities and cities
     users: Mapped[list["Users"]] = relationship(
         "Users",
         secondary=user_cities,
