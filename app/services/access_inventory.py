@@ -253,17 +253,24 @@ def parce_excel_segments(file_storage):
     min_column_index = 15
     max_column_index = 17
 
+    # isjecak orginalnog excela sa row 2 i colonama od 15-17
     for row in sheet.iter_rows(
         min_row=starting_row, max_col=max_column_index, min_col=min_column_index
     ):
+        # Prve celije u isjecku, shorthend of [row, column]
         cell_15 = row[0]
         cell_17 = row[2]
 
+        # granica celije
         border = cell_15.border  # Assuming borders are consistent across the row
+
+        # vrijednosti celije
         val_15 = cell_15.value if isinstance(cell_15.value, (int, float)) else 0
         val_17 = cell_17.value if isinstance(cell_17.value, (int, float)) else 0
 
         # 1. STOP & CAPTURE: Grand Total Detection
+        # Provijera da li smo stigli do kraja excela
+        # Finalna celija ukupno u orginalomo excel sadrzi i gornju i donju granicu
         if border.top.style == "medium" and border.bottom.style == "medium":
             grand_total_from_file_15 = val_15
             grand_total_from_file_17 = val_17
@@ -272,6 +279,7 @@ def parce_excel_segments(file_storage):
             break
 
         # 2. TRIGGER TOP BORDER: New Group Starts (Top Style)
+        # Prvi grad/ segment detektovan zavsrsi
         if border.top.style == "medium":
             if subtotal_15 > 0 or subtotal_17 > 0:
                 summaries_col_15.append(subtotal_15)
@@ -280,6 +288,7 @@ def parce_excel_segments(file_storage):
             subtotal_17 = val_17
 
         # 3. TRIGGER BOTTOM BORDER: Current Group Ends (Bottom Style)
+        # Prvi grad/ segment detektovan zavsrsi ali ukljuci u sumu vrijednost te celije
         elif border.bottom.style == "medium":
             subtotal_15 += val_15
             subtotal_17 += val_17
@@ -289,7 +298,7 @@ def parce_excel_segments(file_storage):
             subtotal_15 = 0
             subtotal_17 = 0
 
-        # 4. NORMAL: Regular accumulation
+        # 4. NORMALNA celija: Nastavi akomulaciju
         else:
             subtotal_15 += val_15
             subtotal_17 += val_17

@@ -18,17 +18,23 @@
 
 # pip install psycopg2-binary - POSTGRE DRIVER
 
-# -------RUN LOCAL DEVELOPENT APP IN GIT BASH------------
+# -------RUN LOCAL DEVELOPENT APP USING GIT BASH------------
 
 # set DB_HOST=localhost
 
-# docker compose -f docker-compose.dev.yml up -d
-
 THIS RUN POSTGRES AND PGADMIN ON LOCAL DOCKER
 
-# python app.py
+# docker compose -f docker-compose.dev.yml up -d
+
+# dockerizuje only postgres and pgadmin
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
 
 THIS RUN FLASK APP LOCALO ON PC
+
+# python app.py
 
 # localhost:5000 (Flask)
 
@@ -45,6 +51,68 @@ THIS RUN FLASK APP LOCALO ON PC
 # Connect to your PostgreSQL server
 
 # Right-click Servers → Register → Server
+
+# --------------------------------------------------------------------------------------------------
+
+# problem with pip in windows AND HOLOW VENV
+
+Activate: source .venv/Scripts/activate
+
+# Install: python -m pip install <package-name>
+
+python -m pip install -r requirements.txt
+
+Update Requirements: It is best practice to immediately update your file so your project stays reproducible:
+
+Bash
+python -m pip freeze > requirements.txt
+
+Why avoid just pip install?
+On Windows, pip is often an independent .exe file. Sometimes, your terminal might activate the virtual environment's Python, but the pip command remains "stuck" pointing to your Global Python.
+
+By using python -m pip, you are explicitly telling the system: "Use the Python interpreter I'm currently using to run its own internal version of pip." This guarantees the package lands in your .venv folder.
+
+# Deactivate first
+
+```bash
+deactivate
+```
+
+# Re-activate using the full path
+
+```bash
+source ./.venv/Scripts/activate
+```
+
+Now, run this specific command to check:
+
+```bash
+python -c "import sys; print(sys.executable)"
+```
+
+If this still shows C:/Users/zoran.dasic/..., then your virtual environment is essentially "hollow."
+
+Delete the broken venv folder (physically delete the .venv folder in your project).
+
+Create a new one using the full path to your global Python:
+
+```bash
+/c/Users/zoran.dasic/AppData/Local/Programs/Python/Python313/python -m venv .venv
+```
+
+Activate it:
+
+```bash
+source .venv/Scripts/activate
+```
+
+Re-install your requirements:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+# -----------------------------------------------------------------------------------------------------------
 
 ```
 Host: db (if using Docker compose) or localhost (if local install)
@@ -71,29 +139,11 @@ Servers
 
 # Right-click users → View/Edit Data → All Rows
 
-# ---------------------IN LOCAL PRODUCTION DEVELOPMENT---------------
+# ---------------------IN LOCAL PRODUCTION ---------------
 
 # docker compose -f docker-compose.prod.localy.yml up -d --build
 
 # docker compose -f docker-compose.prod.localy.yml build --no-cache
-
-# -----------------------IN PRODUCTION----------
-
-# EXPORT DOCKER IMAGES:
-
-# docker save -o ~/Desktop/cpe-analiza-flask.tar cpe-analiza-flask:latest
-
-# scp docker-compose.prod.yml
-
-# scp cpe-sip-nextjs-app.tar
-
-# TOKOM DEVELOPMENTA
-
-# dockerizuje only postgres and pgadmin
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
 
 # dockerizuje flask, postgres and pgadmin
 
@@ -101,6 +151,16 @@ docker compose -f docker-compose.dev.yml up -d
 docker compose -f docker-compose.prod.localy.yml up -d
 docker compose -f docker-compose.prod.localy.yml up -d --build
 ```
+
+# -----------------------IN REMOTE PRODUCTION----------
+
+# EXPORT DOCKER IMAGES:
+
+# docker save -o ~/Desktop/cpe-analiza-flask.tar cpe-analiza-flask:latest
+
+# scp "docker-compose.prod.yml" root@10.198.3.92:5000:/
+
+# scp "cpe-sip-nextjs-app.tar" root@10.198.3.92:5000:/
 
 # NA SERVERU
 
@@ -155,51 +215,11 @@ The script runs exec gunicorn..., which starts the main Flask application.
 
 # docker compose -f docker-compose.dev.yml up -d --force-recreate
 
-# --------------export access------------------------
-
-# save as exel
-
-# export with formating
-
-# save exel as csv(utf-8)
-
-# vs code save as utf-8 without bom
-
-# define table
-
-# upload csv
-
 # ------------create table in pgadmin with sql----------------------
 
 # Click once on mydb so it becomes highlighted (this selects the database)
 
 # At the top menu click Tools → Query Tool
-
-```sql
-CREATE TABLE public.cpe (
-    id            integer PRIMARY KEY,
-    date_recorded date,
-    mjesto        text,
-    iad267        integer,
-    stbarr4205    integer,
-    stbarr5305    integer,
-    stbekt4805    integer,
-    stbekt7005    integer,
-    stbsky44      integer,
-    onthw         integer,
-    ontno         integer,
-    dth           integer,
-    antena        integer,
-    lnb           integer,
-    datum         text
-);
-```
-
-# refresh webbrowser
-
-# impor/export on empty table
-
-# upload .csv
 
 # --------------------RESTART DOCKER DEAMON NA SERVER-----------------------
 
@@ -219,18 +239,25 @@ sudo systemctl start docker
 
 # Bring up your Compose stack cleanly, recreating containers and networks
 docker compose -f /path/to/docker-compose.dev.yml up -d --force-recreate
+```
 
 #n modern cloud environments images are stripped down to be as small as possible.
 #Tools like ping, telnet, nc (netcat), or curl are often not installed for security and size reasons.
 #However, Bash is almost always available. This provides a "native" way to
-#check connectivity without installing extra packages.
+
+# check connectivity on linux without installing extra packages.
+
 #bash -c "..."This runs a new instance of the Bash shell
 #/dev/tcp/host/port: This is not a real file on the disk. It is a Bash built-in feature (a pseudo-device).
 #When you redirect input or output to this path, Bash attempts to open a TCP socket to the specified host and port.
 #The command following it (echo 'FAILED') runs only if the previous command sequence failed
+
+```sh
 bash -c "echo > /dev/tcp/db/5432 && echo 'OK' || echo 'FAILED'"
 
 ```
+
+# ------------------------------------------------------------
 
 # CREATE MODEL FROM POSTGRES TABLES:
 
@@ -240,31 +267,10 @@ bash -c "echo > /dev/tcp/db/5432 && echo 'OK' || echo 'FAILED'"
 sqlacodegen postgresql://postgres:mypassword@localhost:5431/mydb > models.py
 ```
 
-AND INSIDE models.py MAKE CHANGES:
+INSIDE models.py:
 
 ```python
-from typing import Optional
-import datetime
-
-from sqlalchemy import (
-    Boolean,
-    CheckConstraint,
-    Date,
-    DateTime,
-    ForeignKeyConstraint,
-    Integer,
-    PrimaryKeyConstraint,
-    String,
-    Text,
-    UniqueConstraint,
-    text,
-    Enum
-)
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from flask_sqlalchemy import SQLAlchemy
-import enum
 from flask_login import UserMixin
-
 
 db = SQLAlchemy()
 
@@ -279,55 +285,15 @@ db = SQLAlchemy()
 # Exactly what Flask-Login needs.
 class Users(db.Model, UserMixin):
 
-# 1. Define a Python Enum (this stays in sync with DB)
-class CpeTypeEnum(enum.Enum):
-    IAD = "IAD"
-    ONT = "ONT"
-    STB = "STB"
-    ANTENA = "ANTENA"
-    ROUTER = "ROUTER"
-    SWITCH = "SWITCH"
-    WIFI_EXTENDER = "WIFI EXTENDER"
-    WIFI_ACCESS_POINT = "WIFI ACCESS POINT"
-    PHONES = "PHONES"
-    SERVER = "SERVER"
-    PC = "PC"
-    IOT = "IOT"
-
-class CpeTypes(db.Model):
-    __tablename__ = "cpe_types"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    label: Mapped[Optional[str]] = mapped_column(String(200))
-
-    # 2. Use the Enum type here
-    # native_enum=True tells Postgres to create a custom TYPE
-    type: Mapped[Optional[CpeTypeEnum]] = mapped_column(
-        Enum(CpeTypeEnum, native_enum=True, name="cpe_type_enum")
-    )
-
-    is_active: Mapped[Optional[bool]] = mapped_column(
-        Boolean, server_default=text("true")
-    )
-
-    cpe_dismantle: Mapped[list["CpeDismantle"]] = relationship(
-        "CpeDismantle", back_populates="cpe_type"
-    )
-    cpe_inventory: Mapped[list["CpeInventory"]] = relationship(
-        "CpeInventory", back_populates="cpe_type"
-    )
-
-
 ```
 
 # --------------------------------------
 
-# CREATE ADMIN USER:
+# CREATE ADMIN USER VIA FLASK CLI SCRIPT:
 
 # --------------------------------------------------------
 
-1. CREATE CLI FLASK FILE create_admin_cli.py
+1. CREATE CLI FLASK SCRIPT TO create_admin_cli.py
 
 ```python
 @click.command("create-admin")  # Define the command name
@@ -340,9 +306,6 @@ def create_initial_admin(username="admin", plain_password="admin123"):
 # Flask will now register the 'create-admin' command
 
 ```python
-# --- NEW: Import the command function and register it ---
-
-1.
 from create_admin_cli import create_initial_admin_comman
 
 app.cli.add_command(create_initial_admin_comman)
@@ -377,10 +340,12 @@ When you run flask create-admin: The if condition is false, the development serv
 
 When you install Flask-Login and call:
 
+```python
 from flask_login import LoginManager
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+```
 
 Flask-Login automatically creates a global context-aware variable named:
 
@@ -412,8 +377,6 @@ Your current horizontal structure is a design pattern known as an anti-pattern f
 
 That's an excellent question that gets to the heart of database normalization and optimal data modeling! The choice between a horizontal (wide) table and a vertical (tall) table depends heavily on how your data naturally behaves and how you plan to query it.
 In your case, you should definitely switch to a vertical (normalized) table structure. Your current horizontal structure is a design pattern known as an anti-pattern for several reasons.
-
-❌ Why the Current Horizontal Table is ProblematicYour existing cpe_records table structure is:idcity_idiadsstb_arr_4205stb_ekt_4805...lnb_duocreated_at110151012...32025-01-01
 
 This design violates the principles of good database modeling:Schema Rigidity (Anti-Pattern):
 
@@ -458,626 +421,9 @@ Smarter Storage: You only store records for CPE types that actually have a posit
 
 Using Pivot Tables to Present Data
 
-```sql
-CREATE EXTENSION IF NOT EXISTS tablefunc;
-```
-
 Your vertical table is excellent for storage and analysis, but the horizontal format is often better for reporting and presentation in your Flask app.
 
 This is exactly where the PostgreSQL crosstab function becomes useful. You store the data vertically, and you use crosstab only for the final output step.
-
-The crosstab function typically takes one or two SQL queries as text arguments (passed inside $$-delimited strings) and returns the pivoted result. The structure you provided is the one-argument form:
-
-```sql
-
-SELECT * FROM crosstab(source_sql_query) AS pivot_table(output_column_definitions)
-```
-
-This is the SQL query passed as the first argument to crosstab. It's responsible for fetching the raw data in the vertical format needed for pivoting.
-
-```sql
-$$
-SELECT
-    c.name AS city, -- 1. Row Identifier (Row Header)
-    s.name AS stb_model, -- 2. Category (Column Header)
-    r.quantity -- 3. Value (Aggregation Value)
-FROM dismantle_records r
-JOIN cities c ON r.city_id=c.id
-JOIN stb_types s ON r.stb_type_id=s.id
-WHERE r.week_start = '2025-02-03'
-ORDER BY 1,2
-$$
-```
-
-THIS QUERY RETURN The source query must return exactly three columns
-
-Position Role in Pivot Your Query's Column Description
-1st Column Row Identifier city The value that remains constant on the left side (the new row header).
-2nd Column Category stb_model The value that will be rotated to become the new column headers.
-3rd Column Value quantity The aggregated value that goes into the intersection of the new row and column.
-
-# This is the part that defines the structure and data types of the final, pivoted resu
-
-AS pivot_table (
-city text,
-mag250 int,
-mag410 int,
-kaon int
-);
-
-# AS pivot_table: Assigns an alias to the result set returned by crosstab
-
-# city text: Defines the first output column. This must match the Row Identifier column (c.name AS city) from the source query.
-
-# mag250 int, mag410 int, kaon int: These are the new column headers. The crosstab function expects to find these exact values ('mag250', 'mag410', 'kaon') in the Category column (stb_model) of your source data. The type is int because it's aggregating the quantity (which must be an integer).
-
-# crosstab:
-
-```sql
---c, p, max_ts, are TABLES
-SELECT
-	c.name AS city_name, --iz c izberi name i nazovi ga city_name
-	p.*, -- iz p izaberi sve
-	max_ts.max_updated_at --iz max_ts izberi max_updated_at
-FROM
-	(
-	-- Your existing PIVOT QUERY goes here (aliased as p)
-		SELECT *
-		FROM crosstab(
-			$$
-			SELECT
-				city_id,
-			    cpe_model,
-			    quantity
-			FROM
-				(
-				-- (Your Window Function query to get rn=1 data)
-					SELECT
-						r.city_id,
-						s.name AS cpe_model,
-						r.quantity,
-						r.updated_at,
-						-- Assigns a rank (1, 2, 3...) to records within each group
-						ROW_NUMBER() OVER(
-						-- Define the group: A unique combination of city and cpe_model
-							PARTITION BY r.city_id, r.cpe_type_id
-							ORDER BY r.updated_at DESC
-						) AS rn -- rn IS NAME OF COLUMN
-					FROM cpe_inventory r
-					JOIN cpe_types s ON r.cpe_type_id=s.id
-				) AS ranked_records --KREIRA TABELU SA KOLONAMA: city: cpe_model, quantity, rn, updated_at
-			WHERE
-				-- Select only the record ranked #1 (the most recent one) for each group
-				rn=1
-			ORDER BY
-			    city_id,
-			    cpe_model
-			$$
-		) AS pivot_table (
-		city_id INTEGER, "H267N" int, "HG658V2" int, "Arris VIP4205" int, "Arris VIP1113" int, "ONT HUAWEI" int, "ONT NOKIA" int
-		)
-	)AS p
-	--to displays names of city instead of city_id in pivot table
-JOIN cities c ON c.id=p.city_id
---to add latest update_at COLUMN to pivot table
-LEFT JOIN (
-	-- Subquery to find the single latest update time for the entire city
-	SELECT
-		city_id,
-		MAX(updated_at) AS max_updated_at
-	FROM cpe_inventory
-	GROUP BY
-		city_id
-) AS max_ts ON max_ts.city_id=p.city_id;
-```
-
-PRVA SQL TABELA:
-
-```sql
-SELECT
-					R.CITY_ID,
-					S.NAME AS CPE_MODEL,
-					R.QUANTITY,
-					R.UPDATED_AT,
-					ROW_NUMBER() OVER (
-						PARTITION BY
-							R.CITY_ID,
-							R.CPE_TYPE_ID
-						ORDER BY
-							R.UPDATED_AT DESC
-					) AS RN
-				FROM
-					CPE_INVENTORY R
-					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
-			) AS RANKED_RECORDS
-```
-
-DRUGA SQL TABELA:
-
-```SQL
-SELECT
-			city_id,
-			cpe_model,
-			quantity
-		FROM
-			(
-				SELECT
-					R.CITY_ID,
-					S.NAME AS CPE_MODEL,
-					R.QUANTITY,
-					R.UPDATED_AT,
-					ROW_NUMBER() OVER (
-						PARTITION BY
-							R.CITY_ID,
-							R.CPE_TYPE_ID
-						ORDER BY
-							R.UPDATED_AT DESC
-					) AS RN
-				FROM
-					CPE_INVENTORY R
-					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
-			) AS RANKED_RECORDS
-		WHERE
-			RN = 1
-		ORDER BY
-			CITY_ID
-			$$
-			) AS PIVOT_TABLE (
-				CITY_ID INTEGER,
-				"IADS" INT,
-				"VIP4205_VIP4302_1113" INT,
-				"VIP5305" INT,
-				"DIN4805V" INT,
-				"DIN7005V" INT,
-				"HP44H" INT,
-				"ONT_HUA" INT,
-				"ONT_NOK" INT,
-				"STB_DTH" INT,
-				"ANTENA_DTH" INT,
-				"LNB_DUO_TWIN" INT
-			)
-```
-
-TRECA SQL TABELA:
-
-```SQL
-SELECT
-			*
-		FROM
-			CROSSTAB (
-				$$
-		SELECT
-			city_id,
-			cpe_model,
-			quantity
-		FROM
-			(
-				SELECT
-					R.CITY_ID,
-					S.NAME AS CPE_MODEL,
-					R.QUANTITY,
-					R.UPDATED_AT,
-					ROW_NUMBER() OVER (
-						PARTITION BY
-							R.CITY_ID,
-							R.CPE_TYPE_ID
-						ORDER BY
-							R.UPDATED_AT DESC
-					) AS RN
-				FROM
-					CPE_INVENTORY R
-					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
-			) AS RANKED_RECORDS
-		WHERE
-			RN = 1
-		ORDER BY
-			CITY_ID
-			$$
-			) AS PIVOT_TABLE (
-				CITY_ID INTEGER,
-				"IADS" INT,
-				"VIP4205_VIP4302_1113" INT,
-				"VIP5305" INT,
-				"DIN4805V" INT,
-				"DIN7005V" INT,
-				"HP44H" INT,
-				"ONT_HUA" INT,
-				"ONT_NOK" INT,
-				"STB_DTH" INT,
-				"ANTENA_DTH" INT,
-				"LNB_DUO_TWIN" INT
-			)
-	) AS P
-```
-
-CETVRTA I ZADNJA SQL TABELA:
-
-```SQL
-SELECT
-	C.NAME AS CITY_NAME, --DODAJ CITY NAME
-	P.*,--CIJELA PIVOT TABELA
-	MAX_TS.MAX_UPDATED_AT --DODAJ ZADNJE VRIJEME
-FROM
-	(
-		SELECT
-			*
-		FROM
-			CROSSTAB (
-				$$
-                -- 1. SOURCE QUERY (Input must provide the (row_name, category, value))
-		SELECT
-			city_id,
-			cpe_model,
-			quantity
-		FROM
-			(
-				SELECT
-					R.CITY_ID,
-					S.NAME AS CPE_MODEL,
-					R.QUANTITY,
-					R.UPDATED_AT,
-                    -- Assigns a rank (1, 2, 3...) to records within each group
-                    -- Window function to find the latest record per (city, cpe_model) group
-					ROW_NUMBER() OVER (
-                        -- Define the group: A unique combination of city and cpe_model
-						PARTITION BY
-							R.CITY_ID,
-							R.CPE_TYPE_ID
-                            -- Order the records within the group by most recent update firs
-						ORDER BY
-							R.UPDATED_AT DESC
-					) AS RN --KOLONA SE ZOVE RN
-				FROM
-					CPE_INVENTORY R
-					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
-			) AS RANKED_RECORDS
-		WHERE
-        -- Select only the record ranked #1 (the most recent one) for each group
-			RN = 1
-		ORDER BY
-			CITY_ID
-			$$
-			) AS PIVOT_TABLE (
-                -- 2. OUTPUT DEFINITION (Must define all columns and data types)
-				CITY_ID INTEGER,
-				"IADS" INT,
-				"VIP4205_VIP4302_1113" INT,
-				"VIP5305" INT,
-				"DIN4805V" INT,
-				"DIN7005V" INT,
-				"HP44H" INT,
-				"ONT_HUA" INT,
-				"ONT_NOK" INT,
-				"STB_DTH" INT,
-				"ANTENA_DTH" INT,
-				"LNB_DUO_TWIN" INT
-			)
-	) AS P
-	JOIN CITIES C ON C.ID = P.CITY_ID
-	LEFT JOIN (--DODAL KOLONU LASTA DATE
-		SELECT
-			CITY_ID,
-			MAX(UPDATED_AT) AS MAX_UPDATED_AT
-		FROM
-			CPE_INVENTORY
-		GROUP BY
-			CITY_ID
-	) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
-```
-
-Using Window Functions
-This query uses the ROW_NUMBER() window function to assign a rank to each record within a city/CPE group based on the latest updated_at timestamp.
-
-1. The Inner Query (Subquery)
-   The inner query performs the joins and applies the window function:
-
-PARTITION BY r.city_id, r.cpe_type_id: This tells PostgreSQL to treat every unique combination of city_id and cpe_type_id as a separate group (or "window").
-
-ORDER BY r.updated_at DESC: Within each group, the rows are ordered by the updated_at column in descending order. This ensures the most recent record is always placed first.
-
-ROW_NUMBER() OVER (...) AS rn: This function assigns the number 1 to the first record in the ordered partition (the latest update), 2 to the second, and so on.
-
-The outer query simply selects all columns (city, cpe_model, quantity, updated_at) from the result of the inner query, but only where the assigned rank (rn) is equal to 1.
-
-This effectively filters the dataset down to the single, most recent record for every combination of city and CPE model, giving you the current inventory snapshot.
-
-Step 1: Find the Latest Inventory Snapshot (Inner Query)
-
-The subquery aliased as ranked_records first retrieves all inventory records. The ROW_NUMBER() window function assigns rn=1 to the row that has the maximum updated_at time for every unique combination of city_id and cpe_type_id
-
-Result: A dataset containing only the current quantity for every CPE model in every city.
-
-Step 2: Prepare Data for Pivoting (Outer SELECT inside crosstab)
-
-The outer SELECT within the crosstab function takes the result of Step 1 and selects only the three columns needed for the one-argument crosstab function:
-
-Row Identifier: city
-
-Category: cpe_model
-
-Value: quantity
-
-Step 3: Execute the Pivot (The crosstab Function)
-
-The crosstab function receives the vertical data from Step 2 and performs the rotation:
-
-It uses city to create the rows.
-
-It takes the specific values listed in the output definition ("H267N", "HG658V2", etc.) from the cpe_model column and converts them into column headers.
-
-It places the corresponding quantity value into the cell where the row and model intersect. Since the input is already pre-aggregated to the latest record (thanks to the rn=1 filter), crosstab simply handles the rotation, not further aggregation.
-
-# ------------------------------------------------------
-
-# FINAL STATIC RAW SQL FOR GETTING PIVOT TABLE FROM VERTICAL DB:
-
-# ---------------------------------------------------
-
-# raw SQL statement, as crosstab isn't a standard, ORM-mappable function
-
-```PYTHON
-SQL_QUERY = """
-WITH latest_pivot AS (SELECT
-		P.CITY_ID, -- <--- ADDED: City ID for ordering
-		C.NAME AS CITY_NAME,
-        P."IADS",
-        P."VIP4205_VIP4302_1113",
-        P."VIP5305",
-        P."DIN4805V",
-        P."DIN7005V",
-        P."HP44H",
-        P."ONT_HUA",
-        P."ONT_NOK",
-        P."STB_DTH",
-        P."ANTENA_DTH",
-        P."LNB_DUO_TWIN",
-        MAX_TS.MAX_UPDATED_AT
-FROM
-	(
-		SELECT
-			*
-		FROM
-			CROSSTAB (
-				$$
-		SELECT
-			city_id,
-			cpe_model,
-			quantity
-		FROM
-			(
-				SELECT
-					R.CITY_ID,
-					S.NAME AS CPE_MODEL,
-					R.QUANTITY,
-					R.UPDATED_AT,
-					ROW_NUMBER() OVER (
-						PARTITION BY
-							R.CITY_ID,
-							R.CPE_TYPE_ID
-						ORDER BY
-							R.UPDATED_AT DESC
-					) AS RN
-				FROM
-					CPE_INVENTORY R
-					JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
-			) AS RANKED_RECORDS
-		WHERE
-			RN = 1
-		ORDER BY
-			CITY_ID
-			$$
-			) AS PIVOT_TABLE (
-				CITY_ID INTEGER,
-				"IADS" INT,
-				"VIP4205_VIP4302_1113" INT,
-				"VIP5305" INT,
-				"DIN4805V" INT,
-				"DIN7005V" INT,
-				"HP44H" INT,
-				"ONT_HUA" INT,
-				"ONT_NOK" INT,
-				"STB_DTH" INT,
-				"ANTENA_DTH" INT,
-				"LNB_DUO_TWIN" INT
-			)
-	) AS P
-	JOIN CITIES C ON C.ID = P.CITY_ID
-	LEFT JOIN (
-		SELECT
-			CITY_ID,
-			MAX(UPDATED_AT) AS MAX_UPDATED_AT
-		FROM
-			CPE_INVENTORY
-		GROUP BY
-			CITY_ID
-	) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
-)
------------------------------------------------------------
--- adding total row to end of pivot table
---PRVA TABELA
--- Data Rows
-SELECT * FROM latest_pivot
--- <--- FIX: Sort by ID (ASC), placing NULLs (the Total Row) at the end
---UNIRANA (NA ZACELJE PRVE TABLELE DODAJ ROWOVE OD DRUGE TABELE)
-UNION ALL --This appends a new row to the result set.
-
---SA DRUGOM TABLEOM koja sadrzi samo jedan row
-SELECT
-	NULL::INTEGER AS CITY_ID, -- <--- ADDED: City ID is NULL for the total row
-	'UKUPNO'::VARCHAR AS CITY_NAME,
-	SUM("IADS") AS "IADS",
-	SUM("VIP4205_VIP4302_1113") AS "VIP4205_VIP4302_1113",
-	SUM("VIP5305") AS "VIP5305",
-	SUM("DIN4805V") AS "DIN4805V",
-	SUM("DIN7005V") AS "DIN7005V",
-	SUM("HP44H") AS "HP44H",
-	SUM("ONT_HUA") AS "ONT_HUA",
-    SUM("ONT_NOK") AS "ONT_NOK",
-    SUM("STB_DTH") AS "STB_DTH",
-	SUM("ANTENA_DTH") AS "ANTENA_DTH",
-    SUM("LNB_DUO_TWIN") AS "LNB_DUO_TWIN",
-	NULL::TIMESTAMP AS MAX_UPDATE_AT-- Max_updated_at is NULL for the total row
-FROM latest_pivot
-ORDER BY
-	CITY_ID ASC NULLS LAST;
-```
-
-# ------------------------------------------------------
-
-# FINAL DYNAMIC RAW SQL FOR GETTING PIVOT TABLE FROM VERTICAL DB:
-
-# ---------------------------------------------------
-
-```python
-  SQL_QUERY = f"""
-    WITH latest_pivot AS (
-    SELECT
-        C.NAME AS CITY_NAME, -- Add CITY_NAME here for final result
-        P.CITY_ID, -- For ordering purposes
-        {selected_columns}, -- COMMA separated list of columns
-        MAX_TS.MAX_UPDATED_AT
-    FROM
-        (
-            SELECT
-                *
-            FROM
-                CROSSTAB (
-                    $$
-                    SELECT
-                        R.CITY_ID,
-                        S.NAME AS CPE_MODEL,
-                        R.QUANTITY
-                    FROM
-                        (
-                            SELECT
-                                CITY_ID,
-                            	CPE_TYPE_ID,
-                            	QUANTITY,
-                            	UPDATED_AT,
-                                ROW_NUMBER() OVER (
-                                    PARTITION BY CITY_ID, CPE_TYPE_ID
-                                    ORDER BY UPDATED_AT DESC
-                                ) AS RN
-                            FROM CPE_INVENTORY
-                        ) AS R
-                        JOIN CPE_TYPES S ON R.CPE_TYPE_ID = S.ID
-                    WHERE RN = 1
-                    ORDER BY R.CITY_ID
-                    $$
-                ) AS PIVOT_TABLE (
-                    CITY_ID INTEGER,
-                    {quoted_columns}
-                )
-        ) AS P
-        JOIN CITIES C ON C.ID = P.CITY_ID
-        LEFT JOIN (
-            SELECT
-                CITY_ID,
-                MAX(UPDATED_AT) AS MAX_UPDATED_AT
-            FROM
-                CPE_INVENTORY
-            GROUP BY
-                CITY_ID
-        ) AS MAX_TS ON MAX_TS.CITY_ID = P.CITY_ID
-    )
-
-    -- Data Rows
-    SELECT
-        CITY_ID,
-        CITY_NAME,
-        {selected_columns.replace('p.', '')}, -- Remove 'p.' alias as we are selecting directly from latest_pivot
-        MAX_UPDATED_AT
-    FROM latest_pivot
-
-    UNION ALL
-
-    -- Total Row
-    SELECT
-        NULL::INTEGER AS CITY_ID,
-        'UKUPNO'::VARCHAR AS CITY_NAME,
-        {sum_columns},
-        NULL::TIMESTAMP AS MAX_UPDATED_AT
-    FROM latest_pivot
-
-    ORDER BY
-        CITY_ID ASC NULLS LAST;
-    """
-```
-
-Final SELECT Correction: The SELECT \* FROM latest_pivot was replaced with an explicit SELECT to match the column names in the UNION ALL. Crucially, I had to remove the p. alias from the selected_columns list in the final SELECT because you are selecting from the latest_pivot CTE, not the aliased subquery P.
-
-# ---------ALL CITY HISTORY PIVOTING----------
-
-```PYTHON
- # THIS IS THE QUERY FOR CROSSTAB FUNCTION
-    # IT WILL FIND ALL PIVOTED DATAD FOR SELECTED CITY_ID
-    inner_crosstab_query = f"""
-    SELECT
-        R.UPDATED_AT,
-        S.NAME AS CPE_MODEL,
-        R.QUANTITY
-    FROM
-        CPE_INVENTORY R
-    JOIN
-        CPE_TYPES S ON R.CPE_TYPE_ID=S.ID
-    WHERE
-        R.CITY_ID={city_id}
-    ORDER BY
-        R.UPDATED_AT DESC, S.NAME
-    """
-
-    # CRITICAL: We need to figure out which UPDATED_AT timestamps belong to the current page.
-    # We do this using a subquery (distinct_updates) to find the timestamps, and then offset/limit.
-
-    # WE FIND ALL THE PIVOTED DATA IN CROSSTAB AND THEN JOIN WITH distinct_updates TABLE
-    # distinct_updates TABLE ACT AS A FILTER. DISPLAY ONLY PIVOTED DATA BUT FOR DATA IN
-    # LIMIT AND OFFSET.
-    # PAGINATION ON ALL PIVOTED DATA IS NOT PERFORMANT
-    SQL_QUERY = f"""
-    WITH distinct_updates AS (
-        SELECT DISTINCT UPDATED_AT
-        FROM CPE_INVENTORY
-        WHERE CITY_ID = {city_id}
-        ORDER BY UPDATED_AT DESC
-        LIMIT {per_page} OFFSET {offset}
-    )
-    SELECT
-        D.UPDATED_AT,
-        {selected_columns}
-    FROM
-        CROSSTAB (
-            $QUERY$
-            {inner_crosstab_query}
-            $QUERY$,
-            $CATEGORY$
-            SELECT NAME FROM CPE_TYPES WHERE NAME IN ({", ".join([f"'{name}'" for name in model_names])}) ORDER BY ID
-            $CATEGORY$
-        ) AS P (
-            UPDATED_AT TIMESTAMP,
-            {quoted_columns}
-        )
-    JOIN
-        distinct_updates D ON D.UPDATED_AT = P.UPDATED_AT
-    ORDER BY
-        P.UPDATED_AT DESC;
-    """
-```
-
-While the one-argument form is simpler to write, it can sometimes be slow or produce inconsistent results if not all categories (CPE names) appear in the source data for every single row ID (timestamp).
-
-The two-argument form of CROSSTAB fixes this by providing an explicit list of expected columns (categories). This guarantees that your output table always has the same column structure, even if some categories are missing in the data for a specific timestamp.
-
-```SQL
-CROSSTAB(
-    source_sql TEXT,  -- 1. The query that provides the data (Row ID, Category, Value)
-    category_sql TEXT -- 2. A separate query that provides the explicit list of columns
-)
-```
-
-Field Purpose Example
-Row ID What defines a unique output row (the pivot key). R.UPDATED_AT
-Category What defines the output columns. S.NAME ('IADS', 'VIP5305')
-Value The value to fill the cells with. R.QUANTITY
 
 # -------- class SimplePagination:---------
 
@@ -1118,27 +464,11 @@ Stvarnu iteraciju vrsis po {% for r in records.items %}
 
 # --------------------------------------------------------------------------
 
-RUCNI UNOS U CPE_INVENOTRI NOVOG ELEMENTA ILI POVECANJA POSTOJOCEG KVANTITETA:
-
-1. AKO JE UNOS KVANTITE ZA CPE ELEMNT KOJI NE POSTOJI U CPE_INVENOTRY ONDA
-   POPUNI SVE GRADOVE
-2. AKO JE UNOS KVANTITEA ZA VEC POCTOJECI CPE ELEMENT ONDA
-   NADJI ZADNJI UNOS ZA SVE GRADOVE I DODAJ NA NJEGA
-
 # ----------------------------------ABOUT APP DESIGN--------
 
 In practice, your app is designed to function as a pivoted inventory dashboard. It takes "tall" data (one row per date/type) and turns it into "wide" data (one row per type, with dates as columns).
 
-STB_INVENTORY, ONT_INVENTORY
-Database vs. Python: You are doing the "heavy lifting" (filtering the last 4 weeks) in SQL and the "formatting" (pivoting) in Python. This is a very efficient pattern for small-to-medium datasets.
-
 The defaultdict logic: Using defaultdict(int) in Python is a "defensive programming" win. It means if your template asks for a date that doesn't exist for a specific STB, it returns 0 instead of crashing your website.
-
-# ---for croostable in postgress------
-
-```sql
-CREATE EXTENSION IF NOT EXISTS tablefunc;
-```
 
 # CROSS JOIN vs INNER JOIN
 
@@ -1330,63 +660,6 @@ Query = selection
 Python = shaping
 HTML = grouping
 
-# -------------------------- RENDERNING HTML TABLE-----------
-
-Why “conditional colspan / conditional <td>” is a bad idea even if it looks OK
-1️⃣ HTML tables must be rectangular
-
-Browsers tolerate broken tables, but they do not guarantee behavior.
-
-What you are relying on:
-
-browser auto-correction
-
-undefined layout rules
-
-coincidence that column counts match
-
-This breaks easily when:
-
-you add sorting
-
-you add pagination
-
-you add sticky headers
-
-you export to Excel
-
-Bootstrap updates
-
-user uses different browser
-
-# What IS acceptable (even recommended)
-
-Conditional content, not conditional structure
-
-This is the key distinction.
-
-✔ Always render the same number of columns
-✔ Always keep the same colspan layout
-✔ Control meaning via content, style, or icons
-
-This is robust, readable, and future-proof.
-
-🧠 Think of it like this
-
-You are building a report, not a free-form layout.
-
-Reports must satisfy:
-
-consistency
-
-predictability
-
-exportability
-
-Conditional <td> violates all three.
-
-# ----------------------------------------------
-
 # ---------dismantle_types AS TABLE OR ENUM--------
 
 Your dismantle types are business data, not a programming constant
@@ -1553,6 +826,8 @@ Mixing structure with data leads to fragile templates.
 ✔ Treat it as table schema / metadata
 ✔ Do not infer structure from data
 
+# +----------------------------------------------------------------------
+
 # $ flask Endpoint Methods Rule
 
 ```bash
@@ -1588,6 +863,8 @@ CREATE INDEX ON cpe_inventory (city_id, week_end);
 CREATE INDEX ON cpe_inventory (cpe_type_id, week_end);
 
 If the table grows, this will matter a lot.
+
+# -----------------------------------------------------------------------
 
 # 1️⃣ What \_group_records() really is (important)
 
@@ -1652,6 +929,8 @@ Important rule for pivot queries
 
 Always filter rows in the CTE, not after pivoting.
 
+# --------------------------------------------------------------------------------------------------
+
 # csrf token
 
 Flask automatically checks CSRF token
@@ -1689,6 +968,8 @@ const res=await fetch("/cpe-records/update", {
             "X-CSRFToken": getCsrfToken()
       },
 ```
+
+# ------------------------------------------------------------------------------------------
 
 # report in pdf
 
@@ -1774,64 +1055,6 @@ If it’s pure Python → normal import.
 
 That rule alone will never betray you.
 
-# problem with pip in windows AND HOLOW VENV
-
-Activate: source .venv/Scripts/activate
-
-# Install: python -m pip install <package-name>
-
-python -m pip install -r requirements.txt
-
-Update Requirements: It is best practice to immediately update your file so your project stays reproducible:
-
-Bash
-python -m pip freeze > requirements.txt
-
-Why avoid just pip install?
-On Windows, pip is often an independent .exe file. Sometimes, your terminal might activate the virtual environment's Python, but the pip command remains "stuck" pointing to your Global Python.
-
-By using python -m pip, you are explicitly telling the system: "Use the Python interpreter I'm currently using to run its own internal version of pip." This guarantees the package lands in your .venv folder.
-
-# Deactivate first
-
-```bash
-deactivate
-```
-
-# Re-activate using the full path
-
-```bash
-source ./.venv/Scripts/activate
-```
-
-Now, run this specific command to check:
-
-```bash
-python -c "import sys; print(sys.executable)"
-```
-
-If this still shows C:/Users/zoran.dasic/..., then your virtual environment is essentially "hollow."
-
-Delete the broken venv folder (physically delete the .venv folder in your project).
-
-Create a new one using the full path to your global Python:
-
-```bash
-/c/Users/zoran.dasic/AppData/Local/Programs/Python/Python313/python -m venv .venv
-```
-
-Activate it:
-
-```bash
-source .venv/Scripts/activate
-```
-
-Re-install your requirements:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
 # WeasyPrint loads static assets from the filesystem, not Flask URLs.
 
 WRONG (for PDF)
@@ -1896,33 +1119,7 @@ Your database (ReportSetting) is the scheduler.
 
 ```
 
-# MAIL SERVER Auth done via IP whitelist
-
-MAIL_SERVER = "exchange.company.local"
-MAIL_PORT = 25
-MAIL_USE_TLS = False
-MAIL_USE_SSL = False
-MAIL_USERNAME = None
-MAIL_PASSWORD = None
-DEFAULT_FROM_EMAIL = "noreply@company.ba"
-
-# CONFIG FOR MAIL FOR GMAIL
-
-    MAIL_SERVER = "smtp.gmail.com"
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = "zorand666@gmail.com"
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "jcld ilxd erre pzvr")
-    MAIL_DEFAULT_SENDER = "zorand666@gmail.com"
-
-# CONFIG MAIL FOR WEBMAIL
-
-    MAIL_SERVER = "smtp.teol.net"
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = r"IN\Zoran.Dasic@mtel.ba"
-    MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
-    MAIL_DEFAULT_SENDER = r"IN\Zoran.Dasic@mtel.ba"
+# ------------------------------------------------------------------------------------------------------
 
 # when we have mutiple datatsets we need this:
 
@@ -1956,32 +1153,6 @@ You only need carry-forward when your table stores sparse changes instead of ful
 
 Your cpe_inventory table is an event log → needed reconstruction.
 
-Your stb_inventory table (as you described) is a weekly snapshot → no reconstruction needed.
-
-# reported_at
-
-Why you shouldn’t use created_at for freshness
-
-Because:
-
-• resubmits would change meaning
-• migrations could alter it
-• imports would distort it
-
-reported_at is explicit intent.
-
-✅ In many systems:
-
-created_at = rarely used after debugging
-reported_at = heavily used in reports
-updated_at = heavily used in admin
-
-🎯 Final clear rule for your app
-
-✔ Use reported_at to decide if week is “fresh”
-✔ Never change reported_at after first snapshot
-✔ Let updated_at change freely
-
 # Final recommended mental model
 
 Think of your system as:
@@ -1996,52 +1167,6 @@ Each snapshot has:
 • many CPE rows
 
 Even though stored flat in SQL.
-
-# But than in query i need to retrieve four values: missing_reported_at, missing_updated_at, complete_reported_at, complete_updated_at
-
-Yes — and that’s exactly what a well-designed temporal system does 👍
-It may feel like “too many timestamps”, but in analytics systems this is normal and even expected.
-
-You’re not complicating things — you’re making time explicit instead of ambiguous.
-
-Let’s lock it cleanly.
-
-🧠 Why four timestamps is correct (not overkill)
-
-You have two dimensions:
-
-📅 Snapshot existence (reported_at)
-✏ User activity (updated_at)
-
-And two business flows:
-
-• complete dismantle
-• missing dismantle
-
-So naturally:
-
-Flow snapshot time activity time
-complete complete_reported_at complete_updated_at
-missing missing_reported_at missing_updated_at
-
-That’s exactly right.
-
-# reported_at
-
-Used for:
-
-• history views
-• “week initialized”
-• audits
-• exports
-
-# ✔ updated_at
-
-Used for:
-
-• green/red operational status
-• detecting untouched flows
-• productivity tracking
 
 #--------------------------------------------------------------------------
 
@@ -2349,86 +1474,6 @@ Group for template
 
 Add presentation flags
 
-# -mitating ont_inventory to access_inventory
-
-ont_inventory
-(id, city_id, quantity, month_end)
-UNIQUE(city_id, month_end)
-
-access_types
-(id, name)
-
-access_inventory (renamed table)
-(id, city_id, access_type_id, quantity, month_end)
-UNIQUE(city_id, access_type_id, month_end)
-
-STEP 1 — Rename Table
-ALTER TABLE ont_inventory RENAME TO access_inventory;
-
-STEP 2 — Create access_types Table
-
-Use table (good choice, not enum).
-
-CREATE TABLE access_types (
-id SERIAL PRIMARY KEY,
-name VARCHAR(50) NOT NULL UNIQUE
-);
-
-STEP 3 — Insert First Access Type
-INSERT INTO access_types (id, name)
-VALUES (1, 'GPON-ONT');
-
-STEP 4 — Add access_type_id Column (Initially Nullable)
-
-⚠ Important: Do NOT immediately make it NOT NULL.
-
-ALTER TABLE access_inventory
-ADD COLUMN access_type_id INTEGER;
-
-STEP 5 — Populate Existing Rows
-
-Since old table only contained ONT data:
-
-UPDATE access_inventory
-SET access_type_id = 1;
-
-Now all rows are GPON.
-
-STEP 6 — Add Foreign Key Constraint
-ALTER TABLE access_inventory
-ADD CONSTRAINT fk_access_type
-FOREIGN KEY (access_type_id)
-REFERENCES access_types(id)
-
-STEP 7 — Make Column NOT NULL
-
-Now safe:
-
-ALTER TABLE access_inventory
-ALTER COLUMN access_type_id SET NOT NULL;
-
-🔹 STEP 8 — Drop Old Unique Constraint
-
-ALTER TABLE access_inventory
-DROP CONSTRAINT ont_inventory_city_id_month_end_key;
-
-STEP 9 — Add New Unique Constraint
-ALTER TABLE access_inventory
-ADD CONSTRAINT uq_city_access_month
-UNIQUE (city_id, access_type_id, month_end);
-
-Rename constraint names to match new table:
-
-ALTER TABLE access_inventory
-RENAME CONSTRAINT fk_access_type TO fk_access_inventory_type;
-
-STEP 10 — Add New check constraints must be last day of month
-ALTER TABLE access_inventory
-ADD CONSTRAINT ck_month_end_last_day
-CHECK (EXTRACT(DAY FROM (month_end + INTERVAL '1 day')) = 1);
-
-# ------------------------------------------------------------------
-
 # DUMP DB
 
 # -------------------------------------------------------------
@@ -2541,7 +1586,9 @@ session.permanent = True # ← IMPORTANT
 
 If you do:
 
+```python
 session.permanent = True
+```
 
 Then Flask:
 
@@ -2553,19 +1600,25 @@ Enforces timeout (e.g. 60 minutes in your case)
 
 Since you configured:
 
+```python
 PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+```
 
 PERMANENT_SESSION_LIFETIME does NOT automatically apply.
 
 Many developers assume this config alone is enough:
 
+```python
 PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+```
 
 It is not.
 
 It only works if:
 
+```python
 session.permanent = True
+```
 
 # ---------------------------------------------------------------------
 
