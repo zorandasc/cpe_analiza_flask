@@ -1,5 +1,5 @@
 from typing import Optional
-import datetime
+from datetime import datetime
 from app.extensions import db
 from sqlalchemy import (
     JSON,
@@ -105,14 +105,32 @@ class Users(db.Model, UserMixin):
         "Cities", secondary=user_cities, back_populates="users"
     )
 
-    created_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+    created_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP")
     )
-    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True),
         server_default=text("CURRENT_TIMESTAMP"),
         onupdate=text("CURRENT_TIMESTAMP"),
     )
+
+
+class UserActivity(db.Model):
+    __tablename__ = "user_activity"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    action: Mapped[str] = mapped_column(String(100))
+    table_name: Mapped[str] = mapped_column(String(50), nullable=True)
+    details: Mapped[dict] = mapped_column(JSON, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    # SQLAlchemy will now set user_id to None when the user is deleted
+    user = relationship("Users", backref="activities")
 
 
 class Cities(db.Model):
@@ -284,11 +302,11 @@ class CpeInventory(db.Model):
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
-    updated_at: Mapped[datetime.datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
@@ -319,7 +337,7 @@ class CpeDismantle(db.Model):
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
@@ -352,7 +370,7 @@ class DismantleCityWeekUpdate(db.Model):
         String(20), nullable=False
     )  # values: 'complete', 'missing'
 
-    updated_at: Mapped[datetime.datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         server_onupdate=func.now(),  # ✅ important
@@ -379,11 +397,11 @@ class CpeBroken(db.Model):
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
-    updated_at: Mapped[datetime.datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
@@ -416,11 +434,11 @@ class AccessInventory(db.Model):
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
-    updated_at: Mapped[datetime.datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
@@ -465,10 +483,10 @@ class StbInventory(db.Model):
 
     quantity: Mapped[Optional[int]] = mapped_column(Integer)
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
@@ -485,11 +503,11 @@ class IptvUsers(db.Model):
     # A column should be UNIQUE only if it fully identifies the row by itself.
     week_end: Mapped[datetime.date] = mapped_column(Date, nullable=False, unique=True)
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
-    updated_at: Mapped[datetime.datetime] = mapped_column(
+    updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),  # Recommended for Postgres
         server_default=func.now(),
         onupdate=func.now(),
@@ -507,14 +525,14 @@ class ReportSetting(db.Model):
 
     send_time: Mapped[datetime.time] = mapped_column(Time, nullable=False)
 
-    last_sent_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+    last_sent_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
 
-    updated_at: Mapped[datetime.datetime | None] = mapped_column(
+    updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now()
     )
 
@@ -527,26 +545,9 @@ class ReportRecipients(db.Model):
 
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
 
-    created_at: Mapped[datetime.datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-
-
-class UserActivity(db.Model):
-    __tablename__ = "user_activity"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    )
-    action: Mapped[str] = mapped_column(String(100))
-    table_name: Mapped[str] = mapped_column(String(50), nullable=True)
-    details: Mapped[dict] = mapped_column(JSON, nullable=True)
-    timestamp: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-
-    user = relationship("Users", backref="activities", passive_deletes=True)
 
 
 # DDL (Data Definition Language) listener in SQLAlchemy.

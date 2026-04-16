@@ -1,5 +1,5 @@
 import os
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from collections import defaultdict
 from flask import render_template, current_app
 from app.extensions import db
@@ -24,7 +24,7 @@ def run_weekly_report_job():
     if not settings or not settings.enabled:
         return "Disabled"
 
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.now(timezone.utc)
 
     # now.weekday() ide od 0
     if now.weekday() + 1 != settings.send_day:
@@ -48,7 +48,7 @@ def run_weekly_report_job():
 
         if success:
             # Only mark as sent if the email actually went out
-            settings.last_sent_at = datetime.datetime.now(datetime.timezone.utc)
+            settings.last_sent_at = datetime.now(timezone.utc)
             db.session.commit()
             return message
 

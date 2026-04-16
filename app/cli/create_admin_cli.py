@@ -4,7 +4,7 @@ import click
 from werkzeug.security import generate_password_hash
 from app.models import Users, UserRole
 from app.extensions import db
-import datetime
+from datetime import datetime
 
 
 @click.command("create-admin")  # Define the command name
@@ -26,8 +26,8 @@ def create_initial_admin():
         password_hash=password_hash,
         cities=[],
         role=UserRole.ADMIN,
-        created_at=datetime.datetime.now(),
-        updated_at=datetime.datetime.now(),
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
     )
 
     existing_user = db.session.query(Users).filter_by(username=username).first()

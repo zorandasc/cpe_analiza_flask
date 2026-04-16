@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 from flask import (
     Blueprint,
@@ -615,7 +615,7 @@ def update_stb_inventory(id):
         return redirect(url_for("admin.stb_inventory"))
 
     table_row.quantity = quantity
-    table_row.updated_at = datetime.datetime.now(datetime.timezone.utc)
+    table_row.updated_at = datetime.now(timezone.utc)
 
     try:
         db.session.commit()
@@ -702,7 +702,7 @@ def update_iptv_users_inventory(id):
         return redirect(url_for("admin.iptv_users_inventory"))
 
     table_row.total_users = total_users
-    table_row.updated_at = datetime.datetime.now(datetime.timezone.utc)
+    table_row.updated_at = datetime.now(timezone.utc)
 
     try:
         db.session.commit()
@@ -809,7 +809,7 @@ def update_access_inventory(id):
         return redirect(url_for("admin.access_inventory"))
 
     table_row.quantity = quantity
-    table_row.updated_at = datetime.datetime.now(datetime.timezone.utc)
+    table_row.updated_at = datetime.now(timezone.utc)
 
     try:
         db.session.commit()
@@ -1251,7 +1251,8 @@ def edit_user(id):
         user.username = username
         user.cities = cities_selected
         user.role = selected_role
-        user.updated_at = datetime.datetime.now(datetime.timezone.utc)
+        user.updated_at = datetime.now(timezone.utc)
+           
 
         try:
             db.session.commit()
