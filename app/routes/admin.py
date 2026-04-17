@@ -1128,7 +1128,11 @@ def users():
     # IF WE DO THIS users = Users.query.order_by(Users.id).all()
     # CITIES ARE Later (lazy load cities) WE ARE GENERATING 1+N PROBLEM
     # WITH selectinload PRELOAD cities, ONLY 2 QUERY USERS AND CITIES
-    users = Users.query.options(selectinload(Users.cities)).order_by(Users.id).all()
+    users = (
+        Users.query.options(selectinload(Users.cities), selectinload(Users.cpe_types))
+        .order_by(Users.id)
+        .all()
+    )
 
     return render_template("admin/users.html", users=users)
 
@@ -1145,6 +1149,8 @@ def add_user():
         plain_password = request.form.get("password")
         # CHOOSED FROM SELECTION IN ADD FORM
         city_ids = request.form.getlist("city_ids", type=int)
+
+        cpe_ids = request.form.getlist("cpe_ids", type=int)
         # CHOOSED FROM SELECTION IN ADD FORM
         role_string = request.form.get("role")
 
@@ -1167,6 +1173,8 @@ def add_user():
 
         cities_selected = Cities.query.filter(Cities.id.in_(city_ids)).all()
 
+        cpe_selected = CpeTypes.query.filter(CpeTypes.id.in_(cpe_ids)).all()
+
         password_hash = generate_password_hash(plain_password)
 
         user = Users(
@@ -1174,6 +1182,7 @@ def add_user():
             password_hash=password_hash,
             role=selected_role,  # SQLAlchemy handles the conversion to DB string
             cities=cities_selected,
+            cpe_types=cpe_selected,
         )
         try:
             db.session.add(user)
@@ -1188,10 +1197,14 @@ def add_user():
     # GET Request
     cities = Cities.query.order_by(Cities.name).all()
 
+    cpe_types = CpeTypes.query.order_by(CpeTypes.name).all()
+
     roles = [r.value for r in UserRole]
 
     # THIS IS FOR GET REQUEST WHEN OPENING BLANK ADD FORM
-    return render_template("admin/users_add.html", cities=cities, roles=roles)
+    return render_template(
+        "admin/users_add.html", cities=cities, cpe_types=cpe_types, roles=roles
+    )
 
 
 @admin_bp.route("/users/edit/<int:id>", methods=["GET", "POST"])
@@ -1200,7 +1213,11 @@ def edit_user(id):
     if not admin_required():
         return redirect(url_for("admin.users"))
 
-    user = Users.query.options(selectinload(Users.cities)).get_or_404(id)
+    user = (
+        Users.query.options(selectinload(Users.cities), selectinload(Users.cpe_types))
+        .filter_by(id=id)
+        .first_or_404()
+    )
 
     if request.method == "POST":
         username = request.form.get("username")
@@ -1208,6 +1225,9 @@ def edit_user(id):
         plain_password2 = request.form.get("password2")
         # CHOOSED FROM SELECTION IN ADD FORM
         city_ids = request.form.getlist("city_ids", type=int)
+
+        cpe_ids = request.form.getlist("cpe_ids", type=int)
+
         # CHOOSED FROM SELECTION IN ADD FORM
         role_string = request.form.get("role")
 
@@ -1249,11 +1269,13 @@ def edit_user(id):
 
         cities_selected = Cities.query.filter(Cities.id.in_(city_ids)).all()
 
+        cpe_selected = CpeTypes.query.filter(CpeTypes.id.in_(cpe_ids)).all()
+
         user.username = username
         user.cities = cities_selected
+        user.cpe_types = cpe_selected
         user.role = selected_role
         user.updated_at = datetime.now(timezone.utc)
-           
 
         try:
             db.session.commit()
@@ -1266,11 +1288,18 @@ def edit_user(id):
 
     # GET Request
     cities = Cities.query.order_by(Cities.name).all()
+
+    cpe_types = CpeTypes.query.order_by(CpeTypes.name).all()
+
     # Correct way to get all values from Enum for the dropdown
     roles = [r.value for r in UserRole]
 
     return render_template(
-        "admin/users_edit.html", user=user, roles=roles, cities=cities
+        "admin/users_edit.html",
+        user=user,
+        roles=roles,
+        cities=cities,
+        cpe_types=cpe_types,
     )
 
 

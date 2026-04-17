@@ -33,6 +33,16 @@ content %}
           {% endfor %}
         </select>
       </div>
+      <div class="mb-3">
+        <label class="form-label">Cpe oprema</label>
+        <select name="cpe_ids" class="form-control" multiple>
+          <option value="">--Izaberite opremu--</option>
+          {% for cpe in cpe_types %}
+          <option value="{{ cpe.id }}">{{ cpe.name }}</option>
+
+          {% endfor %}
+        </select>
+      </div>
       <button type="submit" class="btn btn-success">Save</button>
       <a href="{{ url_for('admin.users') }}" class="btn btn-secondary"
         >Cancel</a

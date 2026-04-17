@@ -28,6 +28,7 @@
       <th>Korisničko Ime</th>
       <th>Role</th>
       <th>Organizacija/e</th>
+      <th>Dozvoljena CPE oprema</th>
       <th style="width: 160px">Akcije</th>
     </tr>
     </thead>
@@ -39,11 +40,22 @@
       <td>{{ user.role }}</td>
       <td> 
       {% if user.cities %}
+      <div class="d-flex flex-wrap" style="gap: 0.375rem;">
           {% for city in user.cities %}
-            <span class="badge bg-info text-dark me-1">{{ city.name }}</span>
+            <span class="badge bg-info text-dark me-1" style="flex: 0 0 1; text-align: center;">{{ city.name }}</span>
+          {% endfor %}
+          </div>
+      {% else %}
+          <span class="badge bg-info text-dark me-1">Sva Skladišta</span>
+      {% endif %}
+      </td>
+      <td> 
+      {% if user.cpe_types %}
+          {% for cpe in user.cpe_types %}
+            <span class="badge bg-success me-1">{{ cpe.name }}</span>
           {% endfor %}
       {% else %}
-          —
+          <span class="badge bg-success me-1">Sva Oprema</span>
       {% endif %}
       </td>
       {% if admin_required() %}
