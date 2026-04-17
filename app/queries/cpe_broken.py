@@ -36,17 +36,54 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        WITH ranked_inventory AS (
-        -- ✅ Efficiently get the latest inventory record per city/cpe type
-        SELECT DISTINCT ON (city_id, cpe_type_id)
-            city_id,
-            cpe_type_id,
-            quantity,
-            updated_at
-        FROM cpe_broken
-        WHERE week_end <= :week_end
-        ORDER BY city_id, cpe_type_id, week_end DESC
+        WITH last_inventory AS (
+            -- ✅ Efficiently get the latest inventory record per city/cpe type
+            SELECT DISTINCT ON (city_id, cpe_type_id)
+                city_id,
+                cpe_type_id,
+                quantity,
+                updated_at
+            FROM cpe_broken
+            WHERE week_end <= :week_end
+            ORDER BY city_id, cpe_type_id, week_end DESC
         ),
+
+        city_last_update AS (
+            --✅ Get the table of the absolute latest 'Save' timestamp for every city
+            -- from cpe_broken, table(city_id, last_save)(This is for Last Save).
+            SELECT city_id, MAX(updated_at) as last_save
+            FROM cpe_broken
+            WHERE week_end <= :week_end
+            GROUP BY city_id
+        ),
+
+        city_health AS (
+            --✅ Determine the table with final 'updated_at' for the row
+            -- this table(city_id, major_city_id,final_updated_at)
+            -- (This is for updated_at Parent/Child relationship)
+            SELECT 
+                c.id AS city_id,
+                COALESCE(c.parent_city_id, c.id) AS major_city_id,
+                CASE 
+                    --✅ If this is a parent city (has subcities)
+                    WHEN EXISTS (SELECT 1 FROM cities WHERE parent_city_id = c.id) THEN (
+                        --✅  take the MIN of its children's cities last saves
+                        -- min of max updated_at of all cubbcities
+                        SELECT MIN(clu.last_save)
+                        FROM cities sub
+                        --✅ Use LEFT JOIN so if a subcity has NO data, MIN becomes NULL
+                        LEFT JOIN city_last_update clu ON clu.city_id = sub.id
+                        WHERE sub.parent_city_id = c.id
+                    )
+                    --✅ If it's a standalone or subcity, just take its own last save
+                    -- which is max updated_at
+                    ELSE clu_self.last_save
+                END AS final_updated_at
+            FROM cities c
+
+            LEFT JOIN city_last_update clu_self ON clu_self.city_id = c.id
+        ),
+
         weekly_data AS (
             SELECT
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
@@ -54,8 +91,7 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
                 mc.name AS city_name,
                 s.included_in_total_sum AS include_in_total,
                 ct.name AS cpe_name,
-                ri.quantity AS quantity,
-                ri.updated_at AS updated_at
+                ri.quantity AS quantity
             FROM cities c
 
             JOIN city_visibility_settings s
@@ -66,7 +102,7 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
                 ON mc.id = COALESCE(c.parent_city_id, c.id)
 
             -- ✅ Use the pre-filtered CTE instead of a correlated subquery
-            LEFT JOIN ranked_inventory ri
+            LEFT JOIN last_inventory ri
                 ON c.id = ri.city_id
 
             LEFT JOIN cpe_types ct
@@ -80,14 +116,10 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
                 parent_city_id AS major_city_id,
                 COUNT(*) AS subcity_count
             FROM cities c
-
             JOIN city_visibility_settings s
                 ON s.city_id =c.id
                 AND s.dataset_key = 'cpe_broken'
-
-            WHERE parent_city_id IS NOT NULL
-                AND s.is_visible = true
-
+            WHERE parent_city_id IS NOT NULL AND s.is_visible = true
             GROUP BY parent_city_id
         )
         SELECT
@@ -95,13 +127,15 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
             wd.city_name,
             COALESCE(sc.subcity_count,0) AS subcity_count,
             {", ".join(case_columns)},
-            MIN(updated_at) AS max_updated_at
+            ch.final_updated_at AS max_updated_at
         FROM weekly_data wd
 
         LEFT JOIN subcity_counts sc
             ON sc.major_city_id = wd.major_city_id
+        
+        JOIN city_health ch ON ch.city_id = wd.major_city_id
 
-        GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count
+        GROUP BY wd.major_city_id, wd.city_name, sc.subcity_count, ch.final_updated_at
 
         UNION ALL
 
@@ -168,7 +202,7 @@ def get_cpe_broken_subcities(
             cpe_type_id,
             quantity,
             updated_at
-        FROM cpe_inventory
+        FROM cpe_broken
         WHERE week_end <= :week_end
         ORDER BY city_id, cpe_type_id, week_end DESC
         ),

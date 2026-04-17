@@ -5,7 +5,7 @@ from app.extensions import db
 from app.models import Cities, CityTypeEnum
 from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday, get_passed_saturday
-from app.utils.permissions import can_access_city
+from app.utils.permissions import can_access_city, can_edit_cpe_type
 from app.utils.schemas import get_cpe_types_column_schema
 from app.queries.cpe_broken import (
     get_cpe_broken_pivoted,
@@ -95,11 +95,24 @@ def update_cpe_broken(data):
 
     current_week_end = get_current_week_friday()
 
+    applied_updates = []
+
     # We insert a new record for FOR ONE CITY_ID AND EVERY CPE type
     # UPSERT: INSERT IF city_id, cpe_type_id, week_end DONT EXSIST
     # UPDATE QUANTITY IF EXSIST
     try:
         for u in updates:
+            if "cpe_type_id" not in u or "quantity" not in u:
+                continue
+
+            cpe_type_id = int(u.get("cpe_type_id"))
+            quantity = max(0, int(u.get("quantity", 0)))
+
+            if not can_edit_cpe_type(cpe_type_id):
+                continue  # or return False, "Niste autorizovani za ovaj CPE tip."
+
+            applied_updates.append(u)
+
             stmt = text("""
                 INSERT INTO cpe_broken ( 
                             city_id,
@@ -122,9 +135,9 @@ def update_cpe_broken(data):
                 stmt,
                 {
                     "city_id": city_id,
-                    "cpe_type_id": u["cpe_type_id"],
+                    "cpe_type_id": cpe_type_id,
                     "week_end": current_week_end,
-                    "quantity": u["quantity"],
+                    "quantity": quantity,
                 },
             )
         log_user_action(
@@ -133,7 +146,7 @@ def update_cpe_broken(data):
             details={
                 "Sedmica": str(current_week_end),
                 "Skladiste": city_name,
-                "Unosi": updates,
+                "Unosi": applied_updates,
             },
         )
         db.session.commit()

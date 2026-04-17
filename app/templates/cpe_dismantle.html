@@ -549,7 +549,7 @@
                     data-bs-target="#brokenModal"
                     data-city-id="{{ r.city_id }}"
                     data-city-name="{{ r.city_name }}"
-                    data-payload='{{ r.cpe| tojson }}'
+                    data-payload='{{ r.cpe | tojson }}'
                   >
                     <span class="text-white fw-bold fs-6"
                       ><svg
@@ -938,7 +938,7 @@
         <div class="modal-body">
           <input type="hidden" id="modal-id" name="record_id" />
           <input type="hidden" name="city_id" id="modal-city-id" />
-
+          <input type="hidden" id="modal-group-name" value="broken" />
           <div class="row mb-4 border-bottom pb-3">
             <div class="col-md-6">
               <label class="form-label fw-bold">SKLADIŠTE</label>
@@ -965,13 +965,24 @@
             <div class="col-md-6">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Neispravna</span>
-                <input
-                  class="form-control input-cpe-count"
-                  data-cpe="{{item.name}}" 
-                  data-cpeTypeId="{{item.id}}"
-                  type="number"
-                  min="0"
-              />
+                {% if can_edit_cpe(item.id) %}
+                  <input
+                    class="form-control input-cpe-count"
+                    data-cpe="{{item.name}}" 
+                    data-cpeTypeId="{{item.id}}"
+                    type="number"
+                    min="0"
+                  />
+                {% else %}
+                  <input
+                      class="form-control input-cpe-count"
+                      data-cpe="{{item.name}}" 
+                      data-cpeTypeId="{{item.id}}"
+                      type="number"
+                      min="0"
+                      disabled
+                    />
+                {% endif %}
               </div>
             </div>
           </div>
@@ -1071,7 +1082,9 @@
     //2. Fill the opened modal input with values from btn attributes
     // Logic branching based on modal ID
     if (modal.id === 'brokenModal') {
+      //Handles brokenModal
       modal.querySelectorAll("[data-cpe]").forEach(input => {
+        
         const cpeName = input.dataset.cpe;
         input.value = cpeData?.[cpeName]?.quantity ?? 0;
       });
@@ -1107,9 +1120,11 @@
   ]}*/
   async function submitUpdate(modalId, endpoint) {
     const modal = document.getElementById(modalId);
+   
     const updates = [];
 
     modal.querySelectorAll(".input-cpe-count").forEach(input => {
+     
       const entry = {
         cpe_type_id: Number(input.dataset.cpetypeid),
         cpe_name: String(input.dataset.cpe),
@@ -1122,7 +1137,7 @@
       }
       updates.push(entry);
     });
-
+    
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
