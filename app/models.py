@@ -59,7 +59,6 @@ class UserRole(str, enum.Enum):
     USER_CPE = "user_cpe"
     USER_IPTV = "user_iptv"
     USER_FTTH = "user_ftth"
-    USER_DTH = "user_dth"
     VIEW = "view"
 
     def __str__(self):
@@ -74,11 +73,22 @@ class CityTypeEnum(str, enum.Enum):
         return self.value
 
 
+# FOR WHICH CITY USER HAVE PERMISIONS TO EDIT
 # bridge table FOR MANY TO MANY RELATIONSHIP BETWEEN USERS AND CITY
 user_cities = db.Table(
     "user_cities",
     db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
     db.Column("city_id", db.Integer, db.ForeignKey("cities.id"), primary_key=True),
+)
+
+# FOR WHICH CCPE_TYPE USER HAVE PERMISIONS TO EDIT
+# bridge table FOR MANY TO MANY RELATIONSHIP BETWEEN USERS AND CITY
+user_cpe_types = db.Table(
+    "user_cpe_types",
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+    db.Column(
+        "cpe_type_id", db.Integer, db.ForeignKey("cpe_types.id"), primary_key=True
+    ),
 )
 
 
@@ -102,11 +112,19 @@ class Users(db.Model, UserMixin):
         # Default must match the Enum value
         server_default=text("'user_cpe'"),
     )
+
     # These column des not exist in PGadmin or sql table
     # In SQLAlchemy, the relationship() function is a high-level abstraction
     # SQLAlchemy behind the scenes runs a SQL query to join users with user_cities and cities
     cities: Mapped[list["Cities"]] = relationship(
         "Cities", secondary=user_cities, back_populates="users"
+    )
+
+    # These column des not exist in PGadmin or sql table
+    # In SQLAlchemy, the relationship() function is a high-level abstraction
+    # SQLAlchemy behind the scenes runs a SQL query to join users and cpe_types with user_cpe_types
+    cpe_types: Mapped[list["CpeTypes"]] = relationship(
+        "CpeTypes", secondary=user_cpe_types, backref="users"
     )
 
     created_at: Mapped[Optional[datetime]] = mapped_column(

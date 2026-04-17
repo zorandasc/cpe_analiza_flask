@@ -2269,3 +2269,51 @@ ForeignKey("users.id", ondelete="SET NULL"), nullable=True
 # SQLAlchemy will now set user_id to None when the user is deleted
 user = relationship("Users", backref="activities")
 ```
+
+# --------------------------------------------------------------------------------
+
+# MANY TO MANY
+
+The short answer is no. You will not see a cities column in the users table, nor a users column in the cities table within PostgreSQL.
+
+In a relational database, Many-to-Many relationships are handled through a third table—the Association Table—rather than columns within the primary tables.
+
+How it works in Postgres
+When you look at your database schema via a tool like psql, pgAdmin, or DBeaver, here is what you will actually find:
+
+The users table: Contains only direct attributes like id, username, password_hash, role, etc.
+
+The cities table: Contains id, name, parent_city_id, type, etc.
+
+The user_cities table: This is the table you defined at the bottom of your code. This is the only place where the connection between a user and a city is stored.
+
+Why don't the columns exist?
+In SQLAlchemy, the relationship() function is a high-level abstraction.
+
+At the Python level: SQLAlchemy makes it look like user.cities is a property or a list. When you access it, SQLAlchemy behind the scenes runs a SQL query to join users with user_cities and cities.
+
+At the SQL level: Databases cannot store "lists" or "collections" inside a standard column effectively (without using complex types like JSONB or Arrays, which break standard relational rules).
+
+# -------------------------------------------------------------------------------------------
+
+# PERMISOONS FOR USERS:
+
+You currently have:
+
+Permission Behavior if empty
+cities ❌ NO access
+cpe_types ✅ FULL access
+
+Current meaning:
+Cities → restrictive (explicit assignment required)
+CPE types → permissive (optional restriction layer)
+
+It means:
+
+Cities = scope boundary (must always be defined)
+CPE types = fine-grained filter (optional)
+
+👉 This matches real-world roles like:
+
+“User works only in Banja Luka”
+“User can edit only routers, not modems”
