@@ -41,7 +41,8 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
 
     SQL_QUERY = f"""
         WITH last_inventory AS (
-            -- ✅ Efficiently get the latest inventory record per city/cpe type
+            -- ✅ Efficiently get the table of the latest inventory record per city/cpe type
+            -- from cpe_inventory table
             SELECT DISTINCT ON (city_id, cpe_type_id)
                 city_id,
                 cpe_type_id,
@@ -52,14 +53,16 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             ORDER BY city_id, cpe_type_id, week_end DESC
         ),
         city_last_update AS (
-            --✅ Get the absolute latest 'Save' timestamp for every city
+            --✅ Get the table of the absolute latest 'Save' timestamp for every city
+            -- from cpe_inventory table
             SELECT city_id, MAX(updated_at) as last_save
             FROM cpe_inventory
             WHERE week_end <= :week_end
             GROUP BY city_id
         ),
         city_health AS (
-            --✅ Determine the final 'updated_at' for the row
+            --✅ Determine the table with final 'updated_at' for the row
+            -- this table has 3 column: city_id, major_city_id,final_updated_at
             SELECT 
                 c.id AS city_id,
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
