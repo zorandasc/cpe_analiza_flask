@@ -395,7 +395,11 @@
             <div class="col-md-6">
               <div class="input-group">
                 <span class="input-group-text d-md-none">Kompletna</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="comp" type="number" min="0" />
+                {% if can_edit_cpe(item.id) %}
+                  <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="comp" type="number" min="0" />
+                 {% else %}
+                    <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="comp" type="number" min="0" disabled/>
+                  {% endif %}
               </div>
             </div>
           </div>
@@ -503,42 +507,78 @@
             <div style="--header-color: {{ item.header_color }}" class="col-md-6  custom-modal-label">
               <label class=" fw-bold p-2">{{item.label}}</label>
             </div>
-
-            <div class="col-md-2">
-              <div class="input-group">
-                <span class="input-group-text d-md-none">Adapter</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="na" type="number" min="0" />
+            {% if can_edit_cpe(item.id) %}
+              <div class="col-md-2">
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Adapter</span>
+                  <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="na" type="number" min="0" />
+                </div>
               </div>
-            </div>
 
-            <div class="col-md-2">
-              {% if item.has_remote %}
-              <div class="input-group">
-                <span class="input-group-text d-md-none">Remote</span>
-                <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="nd" type="number" min="0" />
+              <div class="col-md-2">
+                {% if item.has_remote %}
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Remote</span>
+                  <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="nd" type="number" min="0" />
+                </div>
+                {% else %}
+                <div class="text-start text-muted small">—</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-2">
+                {% if item.has_remote %}
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Both</span>
+                  <input 
+                    class="form-control input-cpe-count" 
+                    data-cpe="{{item.name}}" 
+                    data-cpeTypeId="{{item.id}}" 
+                    data-dismantle="ndia" 
+                    type="number" 
+                    min="0" />
+                </div>
+                {% else %}
+                <div class="text-start text-muted small">—</div>
+                {% endif %}
               </div>
               {% else %}
-              <div class="text-start text-muted small">—</div>
-              {% endif %}
-            </div>
-
-            <div class="col-md-2">
-              {% if item.has_remote %}
-              <div class="input-group">
-                <span class="input-group-text d-md-none">Both</span>
-                <input 
-                  class="form-control input-cpe-count" 
-                  data-cpe="{{item.name}}" 
-                  data-cpeTypeId="{{item.id}}" 
-                  data-dismantle="ndia" 
-                  type="number" 
-                  min="0" />
+                 <div class="col-md-2">
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Adapter</span>
+                  <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="na" type="number" min="0" disabled/>
+                </div>
               </div>
-              {% else %}
-              <div class="text-start text-muted small">—</div>
-              {% endif %}
-            </div>
 
+              <div class="col-md-2">
+                {% if item.has_remote %}
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Remote</span>
+                  <input class="form-control input-cpe-count" data-cpe="{{item.name}}" data-cpeTypeId="{{item.id}}" data-dismantle="nd" type="number" min="0" disabled/>
+                </div>
+                {% else %}
+                <div class="text-start text-muted small">—</div>
+                {% endif %}
+              </div>
+
+              <div class="col-md-2">
+                {% if item.has_remote %}
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Both</span>
+                  <input 
+                    class="form-control input-cpe-count" 
+                    data-cpe="{{item.name}}" 
+                    data-cpeTypeId="{{item.id}}" 
+                    data-dismantle="ndia" 
+                    type="number" 
+                    min="0"
+                    disabled />
+                </div>
+                {% else %}
+                <div class="text-start text-muted small">—</div>
+                {% endif %}
+              </div>
+             {% endif %}
           </div>
           {% endfor %}
         </div>

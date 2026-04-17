@@ -150,7 +150,7 @@ def export_cpe_records_excel():
         for cell in col:
             if cell.value:
                 lines = str(cell.value).split("\n")
-                max_length = max(max_length, max(len(l) for l in lines))
+                max_length = max(max_length, max(len(li) for li in lines))
 
         ws.column_dimensions[col_letter].width = max_length + 2
 

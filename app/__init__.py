@@ -10,6 +10,7 @@ from app.cli.create_report_settings_cli import create_initial_report
 from app.cli.sync_with_iptv_platform import sync_stb_and_iptv
 from app.utils.permissions import (
     can_access_city,
+    can_edit_cpe_type,
     admin_required,
     iptv_view_required,
     ftth_view_required,
@@ -63,11 +64,12 @@ def create_app():
     @app.context_processor
     def inject_permissions():
         return dict(
-            can_access_city=can_access_city,
             admin_required=admin_required,
+            view_required=view_required,
             iptv_required=iptv_view_required,
             ftth_required=ftth_view_required,
-            view_required=view_required,
+            can_access_city=can_access_city,
+            can_edit_cpe=can_edit_cpe_type,
         )
 
     return app

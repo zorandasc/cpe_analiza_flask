@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models import Cities, CityTypeEnum
 from app.services.user_activity_log import log_user_action
 from app.utils.dates import get_current_week_friday, get_passed_saturday
-from app.utils.permissions import can_access_city
+from app.utils.permissions import can_access_city, can_edit_cpe_type
 from datetime import date
 from app.utils.schemas import get_cpe_types_column_schema
 from app.queries.cpe_dismantle import (
@@ -91,10 +91,25 @@ def update_cpe_dismantle(data):
     if not updates:
         return False, "Neispravan payload."
 
+    applied_updates = []
+
     try:
         for u in updates:
-            if u["quantity"] is None:
+            if (
+                "cpe_type_id" not in u
+                or "quantity" not in u
+                or "dismantle_type_id" not in u
+            ):
                 continue
+
+            cpe_type_id = int(u.get("cpe_type_id"))
+            quantity = max(0, int(u.get("quantity", 0)))
+            dismantle_type_id = int(u.get("dismantle_type_id"))
+
+            if not can_edit_cpe_type(cpe_type_id):
+                continue  # or return False, "Niste autorizovani za ovaj CPE tip."
+
+            applied_updates.append(u)
 
             # 1. UPDATE THE MAIN TABLE (Quantities)
             stmt = text("""
@@ -112,10 +127,10 @@ def update_cpe_dismantle(data):
                 stmt,
                 {
                     "city_id": city_id,
-                    "cpe_type_id": u["cpe_type_id"],
-                    "dismantle_type_id": u["dismantle_type_id"],
+                    "cpe_type_id": cpe_type_id,
+                    "dismantle_type_id": dismantle_type_id,
                     "week_end": week_end,
-                    "quantity": u["quantity"],
+                    "quantity": quantity,
                 },
             )
         # 2. UPDATE THE HELPER TABLE (Turns the dashboard row GREEN)
@@ -137,7 +152,7 @@ def update_cpe_dismantle(data):
             details={
                 "Sedmica": str(week_end),
                 "Skladiste": city_name,
-                "Unosi": updates,
+                "Unosi": applied_updates,
             },
         )
 

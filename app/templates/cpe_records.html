@@ -395,13 +395,24 @@
             <div style="--header-color: {{ item.header_color }}"
               class="col-auto me-2 d-flex flex-column justify-content-between custom-modal-label">
               <label class="mb-1 cpe-label-wrap ">{{item.label}}</label>
-              <input
-                class="form-control input-cpe-count"
-                data-cpe="{{item.name}}" 
-                data-cpeTypeId="{{item.id}}"
-                type="number"
-                min="0"
-              />
+              {% if can_edit_cpe(item.id) %}
+                <input
+                  class="form-control input-cpe-count"
+                  data-cpe="{{item.name}}" 
+                  data-cpeTypeId="{{item.id}}"
+                  type="number"
+                  min="0"
+                />
+                {% else %}
+                  <input
+                  class="form-control input-cpe-count"
+                  data-cpe="{{item.name}}" 
+                  data-cpeTypeId="{{item.id}}"
+                  type="number"
+                  min="0"
+                  disabled
+                />
+              {% endif %}
             </div>
             {% endfor %}
           </div>

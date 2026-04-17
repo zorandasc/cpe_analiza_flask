@@ -62,6 +62,9 @@ admin_bp = Blueprint(
 @admin_bp.route("/dashboard")
 @login_required
 def dashboard():
+    if not admin_view_required():
+        flash("Niste Autorizovani.", "danger")
+        return redirect(url_for("main.home"))
     return render_template("admin.html")
 
 
