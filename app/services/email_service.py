@@ -20,7 +20,7 @@ BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
 # SEND EMAIL USING exchangelib: 
 # it uses the same HTTPS "pipeline" as your browser and Outlook,
-def send_email(pdf_path, link):
+def send_email(pdf_path, body_html):
     recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
 
     if not recipients:
@@ -28,51 +28,6 @@ def send_email(pdf_path, link):
         return False, "Nema primaoca."
 
     subject = "Sedmični izvještaj o CPE inventaru"
-
-    body_text = f"""
-        Dragi Svi,
-
-        U prilogu Vam dostavljamo sedmični izvještaj o inventaru CPE opreme.
-
-        Sažetak:
-        - Pregled stanja ukupne, raspoložive i demontirane CPE opreme
-        - Značajne sedmične promjene
-        - Analiza trendova
-
-        Više detalja na linku:
-        {link}
-
-        S poštovanjem,
-        Automatizovani sistem izvještavanja
-    """
-
-    body_html = f"""
-    <html>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <p>Dragi Svi,</p>
-            
-            <p>U prilogu Vam dostavljamo sedmični izvještaj o inventaru <strong>CPE opreme</strong>.</p>
-            
-            <p><strong>Sažetak:</strong></p>
-            <ul style="list-style-type: disc; margin-left: 20px;">
-                <li>Pregled stanja ukupne, raspoložive i demontirane CPE opreme</li>
-                <li>Značajne sedmične promjene</li>
-                <li>Analiza trendova</li>
-            </ul>
-
-            <p>Više detalja možete pogledati klikom na link ispod:</p>
-
-            <p>
-                <a href="{link}">
-                    Otvori Aplikaciju CPE izvještaj
-                </a>
-            </p>
-            
-            <p>S poštovanjem,<br>
-            <em>Automatizovani sistem izvještavanja</em></p>
-        </body>
-    </html>
-    """
 
     try:
         # 1. Setup Configuration (Keep these in your config or .env)
@@ -95,8 +50,7 @@ def send_email(pdf_path, link):
         message = Message(
             account=account,
             subject=subject,
-            # If body_html is provided, we use it; otherwise, we use body_text
-            body=HTMLBody(body_html) if body_html else body_text,
+            body=HTMLBody(body_html),
             to_recipients=to_recipients,
         )
 

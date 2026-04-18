@@ -38,13 +38,18 @@ def run_weekly_report_job():
     if settings.last_sent_at and settings.last_sent_at.date() == now.date():
         return "Already sent"
 
-    pdf_path = generate_pdf()
+    # report_data onlu summary data for embeding in email body
+    pdf_path, report_data = generate_pdf()
 
     try:
         magic_link = generate_link_for_view_user()
 
+        email_body_html = render_template(
+            "reports/email_body_report.html", link=magic_link, **report_data
+        )
+
         # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
-        success, message = send_email(pdf_path=pdf_path, link=magic_link)
+        success, message = send_email(pdf_path=pdf_path, body_html=email_body_html)
 
         if success:
             # Only mark as sent if the email actually went out
@@ -209,7 +214,7 @@ def generate_pdf():
         title="Trend ukupne demontirane ispravne opreme po tipu (Zadnjih 10 sedmica)",
     )
 
-        # "cpe_broken_chart_image": "static/reports/charts/cpe_broken_trend.png",
+    # "cpe_broken_chart_image": "static/reports/charts/cpe_broken_trend.png",
     data["cpe_broken_chart_image"] = build_report_chart(
         chart_data=cpe_broken_total,
         output_filename="cpe_broken_trend.png",
@@ -260,7 +265,7 @@ def generate_pdf():
         f.write(pdf)
 
     # RETRUN PATH OF SAVED PDF
-    return output_path
+    return output_path, data["summary"]
 
 
 # ---------------

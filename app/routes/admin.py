@@ -1216,6 +1216,7 @@ def edit_user(id):
     if not admin_required():
         return redirect(url_for("admin.users"))
 
+    # eager loading OF CITIES AND CEP_TYPES is applied
     user = (
         Users.query.options(selectinload(Users.cities), selectinload(Users.cpe_types))
         .filter_by(id=id)
@@ -1872,16 +1873,21 @@ def send_weekly_report():
     if not admin_required():  # AUTHORIZATION
         return redirect(url_for("admin.report_settings"))
 
-    pdf_path = generate_pdf()
+    # report_data onlu summary data for embeding in email body
+    pdf_path, report_data = generate_pdf()
 
     try:
         magic_link = generate_link_for_view_user()
+
+        email_body_html = render_template(
+            "reports/email_body_report.html", link=magic_link, **report_data
+        )
     except RuntimeError as e:
         flash(str(e), "danger")
         return redirect(url_for("admin.dashboard"))
 
     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOOLEAN and STRING REASON
-    success, message = send_email(pdf_path=pdf_path, link=magic_link)
+    success, message = send_email(pdf_path=pdf_path, body_html=email_body_html)
 
     flash(f"Status: {message}", "success" if success else "danger")
 
