@@ -403,6 +403,8 @@
           </div>
         </div>
         <div class="modal-footer">
+        <!--VIEW CANOT EDIT NOTHING-->
+         {% if not view_required() %}
           <button 
             type="button" 
             class="btn btn-custom-save" 
@@ -452,6 +454,7 @@
             </span>
             Sačuvaj
           </button>
+          {% endif %}
         </div>
       </form>
     </div>

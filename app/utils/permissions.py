@@ -33,7 +33,7 @@ def can_access_city(city_id):
         return False
 
     # Admin can access everything
-    if current_user.role == UserRole.ADMIN:
+    if current_user.role == UserRole.ADMIN or current_user.role == UserRole.VIEW:
         return True
 
     # If user has no assigment for city, than can not access nothing
