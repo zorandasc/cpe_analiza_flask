@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from app.config import Config
@@ -26,11 +28,15 @@ def create_app():
         template_folder="templates",
         # static_folder="../static",
     )
-    
-    # 1. Bypass SSL verification if m:tel uses internal self-signed certs
-    BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
     app.config.from_object(Config)
+
+    # Path to the certificate you just downloaded from https://webmail.mtel.ba/owa/
+    cert_path = os.path.abspath(os.path.join(app.root_path, "..", "owa.in.mtel.ba.crt"))
+
+    # Tell the environment to trust this specific file
+    # This affects urllib3 and requests used by exchangelib
+    os.environ["REQUESTS_CA_BUNDLE"] = cert_path
 
     # Flask automatically checks CSRF token
     # Every form that sends POST must include:
