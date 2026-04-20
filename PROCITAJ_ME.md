@@ -2241,7 +2241,7 @@ Result,|CITY HIDDEN,|CITY SHOWN (with 0s)
 
 # -------------------------------------------------------------------------------------------------
 
-# MODIFY ON LIVE USER ACTIVITY TABLE SO THAT DELETATION OF USER MAKE USER_ID=NULL
+# MODIFY ON LIVE USER ACTIVITY TABLE SO THAT DELETATION OF USER MAKE USER_ID=NULL in USER_ACTIVITY
 
 # --------------------------------------------------------------------------------------
 
@@ -2300,9 +2300,17 @@ At the SQL level: Databases cannot store "lists" or "collections" inside a stand
 
 # CPE AND CITY PERMISOONS FOR USERS:
 
+# -------------------------------------------------------------------------------------------
+
+# CPE AND CITY PERMISOONS FOR USERS IS ACHIEVE WITH TWO MANY TO MANY POSTGRES TABLE:
+
+# user_cities,
+
+# user_cpe_types
+
 You currently have:
 
-Permission Behavior if empty
+Permission Behavior if empty:
 cities ❌ NO access
 cpe_types ✅ FULL access
 
@@ -2355,7 +2363,7 @@ ON users (last_notified_at);
 2. CRON JOB ON HOST
 
 ```bash
-00 10 * * 4,5 docker exec -t <container_name_or_id> flask notify_stale_city 
+00 10 * * 4,5 docker exec -t <container_name_or_id> flask notify_stale_city
 
 ```
 
