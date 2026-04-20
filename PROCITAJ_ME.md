@@ -2355,7 +2355,7 @@ ON users (last_notified_at);
 2. CRON JOB ON HOST
 
 ```bash
-0 9 * * 1-5 docker exec your_container flask notify_stale_city
+00 10 * * 4,5 docker exec -t <container_name_or_id> flask notify_stale_city 
 
 ```
 
