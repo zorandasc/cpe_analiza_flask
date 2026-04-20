@@ -98,6 +98,9 @@ def get_stale_cities_dismantle(saturday, group):
     return query.all()
 
 
+EXCLUDED_NOTIFICATION_ROLES = {"admin", "view"}
+
+
 # JOIN ONE USER WHICH CAN HAVE MUTIPLE STALE CITIES FROM ONE CPE TABLE
 def map_cities_to_users(cities, source):
     """
@@ -137,6 +140,9 @@ def map_cities_to_users(cities, source):
         for user in city.users:
             # Skip users without email (optional safety)
             if not user.email:
+                continue
+
+            if user.role in EXCLUDED_NOTIFICATION_ROLES:
                 continue
 
             if user.id not in users_map:
