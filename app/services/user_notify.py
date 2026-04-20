@@ -199,7 +199,7 @@ def send_email_to_user(user_data, account):
     user = user_data["user"]
     cities = user_data["cities"]
 
-    subject = "[CPE] Obavještenje o neažuriranim podacima po gradovima"
+    subject = "[CPE Analiza] Obavještenje o neažuriranim podacima po gradovima"
 
     app_url = current_app.config["APP_BASE_URL"]
 

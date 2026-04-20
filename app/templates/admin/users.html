@@ -61,7 +61,7 @@
           <span class="badge bg-success me-1">Sva Oprema</span>
       {% endif %}
       </td>
-      <td>{{ user.last_notified_at}}</td>
+      <td>{% if user.last_notified_at %}{{ user.last_notified_at.strftime('%d-%m-%Y %H:%M:%S')}} {% endif %}</td>
       {% if admin_required() %}
       <td>
         <a
