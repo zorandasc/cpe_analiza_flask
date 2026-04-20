@@ -1150,6 +1150,13 @@ def add_user():
     if request.method == "POST":
         username = request.form.get("username")
         plain_password = request.form.get("password")
+        email = request.form.get("email")
+        # Normalize
+        if email:
+            email = email.strip().lower()
+        else:
+            # "" → None
+            email = None
         # CHOOSED FROM SELECTION IN ADD FORM
         city_ids = request.form.getlist("city_ids", type=int)
 
@@ -1170,6 +1177,12 @@ def add_user():
             flash("Korisnićko ime već postoji.", "danger")
             return redirect(url_for("admin.add_user"))
 
+        if email:
+            existing_email = Users.query.filter_by(email=email).first()
+            if existing_email:
+                flash("Email već postoji.", "danger")
+                return redirect(url_for("admin.add_user"))
+
         if selected_role == UserRole.USER_CPE and not city_ids:
             flash("Korisnik sa rolom 'user_cpe' mora imati izabran grad.", "danger")
             return redirect(url_for("admin.add_user"))
@@ -1183,6 +1196,7 @@ def add_user():
         user = Users(
             username=username,
             password_hash=password_hash,
+            email=email,
             role=selected_role,  # SQLAlchemy handles the conversion to DB string
             cities=cities_selected,
             cpe_types=cpe_selected,
@@ -1190,11 +1204,11 @@ def add_user():
         try:
             db.session.add(user)
             db.session.commit()
-            flash("User created successfully", "success")
+            flash("Korisnik kreiran uspiješno.", "success")
             return redirect(url_for("admin.users"))
         except Exception as e:
             db.session.rollback()
-            flash(f"Error creating user: {e}", "danger")
+            flash(f"Greška prilikom kreiranja korisnika: {e}", "danger")
             return redirect(url_for("admin.add_user"))
 
     # GET Request
@@ -1227,6 +1241,14 @@ def edit_user(id):
         username = request.form.get("username")
         plain_password1 = request.form.get("password1")
         plain_password2 = request.form.get("password2")
+
+        email = request.form.get("email")
+        # Normalize
+        if email:
+            email = email.strip().lower()
+        else:
+            # "" → None
+            email = None
         # CHOOSED FROM SELECTION IN ADD FORM
         city_ids = request.form.getlist("city_ids", type=int)
 
@@ -1249,6 +1271,15 @@ def edit_user(id):
         if existing_user:
             flash("Username već postoji!", "danger")
             return redirect(url_for("admin.edit_user", id=id))
+
+        if email:
+            existing_email = Users.query.filter(
+                Users.email == email,
+                Users.id != user.id,  # exclude current user
+            ).first()
+            if existing_email:
+                flash("Email već postoji.", "danger")
+                return redirect(url_for("admin.edit_user", id=id))
 
         if plain_password1 or plain_password2:
             if plain_password1 != plain_password2:
@@ -1276,6 +1307,7 @@ def edit_user(id):
         cpe_selected = CpeTypes.query.filter(CpeTypes.id.in_(cpe_ids)).all()
 
         user.username = username
+        user.email = email
         user.cities = cities_selected
         user.cpe_types = cpe_selected
         user.role = selected_role

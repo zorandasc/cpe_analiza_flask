@@ -26,9 +26,11 @@
     <tr>
       <th>ID</th>
       <th>Korisničko Ime</th>
+      <th>Email</th>
       <th>Role</th>
       <th>Organizacija/e</th>
       <th>Dozvoljena CPE oprema</th>
+      <th>Vrijeme notifikacije</th>
       <th style="width: 160px">Akcije</th>
     </tr>
     </thead>
@@ -37,6 +39,7 @@
     <tr>
       <td>{{ user.id }}</td>
       <td>{{ user.username }}</td>
+      <td> {% if user.email %}{{ user.email }}  {% else %} - {% endif %}</td>
       <td>{{ user.role }}</td>
       <td> 
       {% if user.cities %}
@@ -58,6 +61,7 @@
           <span class="badge bg-success me-1">Sva Oprema</span>
       {% endif %}
       </td>
+      <td>{{ user.last_notified_at}}</td>
       {% if admin_required() %}
       <td>
         <a
