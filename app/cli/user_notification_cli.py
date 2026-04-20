@@ -82,9 +82,10 @@ def notify_stale_city():
 
         if success:
             user.last_notified_at = datetime.now(timezone.utc)
-
-        current_app.logger.info(message) if success else current_app.logger.error(
-            message
-        )
+            # Commit after each success to prevent duplicate emails on script retry
+            db.session.commit()
+            current_app.logger.info(message)
+        else:
+            current_app.logger.error(message)
 
     db.session.commit()
