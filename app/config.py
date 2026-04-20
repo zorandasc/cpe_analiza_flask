@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def str_to_bool(value):
+    return str(value).lower() in ("true", "1", "yes", "on")
 
 # KADA NAPRAVIMO python app.py UNUTAR VS CODA, ODNOSNO IZ VANA
 # DOCKER MREZE, GADJAMO DOKERIZOVANI POSTGRES 5431
@@ -25,9 +27,12 @@ class Config:
     # "http://10.198.3.92:5000"
     APP_BASE_URL = os.environ.get("APP_BASE_URL", "http://10.198.3.92:5000")
 
-
-    REMOTE_STB_API=os.environ.get("REMOTE_STB_API", "http://10.152.0.17:8090/api/device-models")
-    REMOTE_IPTV_USER_API=os.environ.get("REMOTE_IPTV_USER_API", "http://10.152.0.17:8090/api/total-users")
+    REMOTE_STB_API = os.environ.get(
+        "REMOTE_STB_API", "http://10.152.0.17:8090/api/device-models"
+    )
+    REMOTE_IPTV_USER_API = os.environ.get(
+        "REMOTE_IPTV_USER_API", "http://10.152.0.17:8090/api/total-users"
+    )
 
     # Flask-login uses sessions to store temporary, user-specific data
     # (like the logged-in user's ID). To ensure this data can't be tampered with
@@ -40,3 +45,8 @@ class Config:
     # this will be respected only if session.permanent=True
     # which is deffined in auth service
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+
+    # FOR USER EMAIL NOTIFICATION
+    ENABLE_CPE_NOTIFICATIONS = str_to_bool(
+        os.environ.get("ENABLE_CPE_NOTIFICATIONS", "true")
+    )

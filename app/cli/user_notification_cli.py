@@ -24,7 +24,9 @@ from app.utils.dates import get_passed_saturday
 @with_appcontext
 def notify_stale_city():
 
+    # ENABLE/DISABLE NOTIFICATION SYSTEM VIA .ENV FILE
     if not current_app.config.get("ENABLE_CPE_NOTIFICATIONS", True):
+        current_app.logger.info("CPE notifications are disabled via config.")
         return
 
     saturday = get_passed_saturday()
