@@ -98,7 +98,8 @@ class Users(db.Model, UserMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
-
+    email: Mapped[str] = mapped_column(String(255), nullable=True, unique=True)
+    last_notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     # 2. Apply the Enum here
     role: Mapped[UserRole] = mapped_column(
         Enum(

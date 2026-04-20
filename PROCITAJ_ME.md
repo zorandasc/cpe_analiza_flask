@@ -2243,6 +2243,8 @@ Result,|CITY HIDDEN,|CITY SHOWN (with 0s)
 
 # MODIFY ON LIVE USER ACTIVITY TABLE SO THAT DELETATION OF USER MAKE USER_ID=NULL
 
+# --------------------------------------------------------------------------------------
+
 ```SQL
 ALTER TABLE user_activity
 ALTER COLUMN user_id DROP NOT NULL;
@@ -2296,7 +2298,7 @@ At the SQL level: Databases cannot store "lists" or "collections" inside a stand
 
 # -------------------------------------------------------------------------------------------
 
-# PERMISOONS FOR USERS:
+# CPE AND CITY PERMISOONS FOR USERS:
 
 You currently have:
 
@@ -2317,3 +2319,77 @@ CPE types = fine-grained filter (optional)
 
 “User works only in Banja Luka”
 “User can edit only routers, not modems”
+
+# ------------------------------------------------------------------------------
+
+# SISTEM EMAIL NOTIFIKACIJE ZA KORISNIKE
+
+# ------------------------------------------------------------------------------
+
+1. User model extend:
+
+```python
+email: Mapped[str] = mapped_column(String(255), nullable=True, unique=True)
+last_notified_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+
+```
+
+# Nedd also to ALTER POSTGRES TABLE
+
+```sql
+
+ALTER TABLE users
+ADD COLUMN email VARCHAR(255);
+
+ALTER TABLE users
+ADD CONSTRAINT uq_users_email UNIQUE (email);
+
+ALTER TABLE users
+ADD COLUMN last_notified_at TIMESTAMP WITH TIME ZONE;
+
+CREATE INDEX idx_users_last_notified_at
+ON users (last_notified_at);
+
+```
+
+2. CRON JOB ON HOST
+
+```bash
+0 9 * * 1-5 docker exec your_container flask notify_stale_city
+
+```
+
+# You already think in:
+
+Route → Service → DB
+
+Do same here:
+
+CLI → Service layer
+
+3. Flask CLI notification command script:
+   user_notification_cli.py
+
+4. Notification service layer:
+   user_notify.py
+
+Posible index:
+
+```sql
+
+CREATE INDEX idx_inventory_week_city
+ON cpe_inventory (week_end, city_id);
+
+```
+
+Logic flow
+
+DB (stale detection)
+↓
+Cities
+↓
+Users mapping (no N+1)
+↓
+Merge sources
+↓
+One email per user

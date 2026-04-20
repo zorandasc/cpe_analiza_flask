@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f6f6f6; padding: 20px;">
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 6px; overflow: hidden;">
+        
+        <!-- Header -->
+        <tr>
+            <td style="background-color: #0d6efd; color: white; padding: 15px; font-size: 18px;">
+                CPE Notifikacija
+            </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+            <td style="padding: 20px;">
+
+                <p>Poštovani {{ user.username }},</p>
+
+                <p>
+                    Sljedeći gradovi imaju neažurirane podatke za trenutnu sedmicu:
+                </p>
+
+                <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse: collapse; margin-top: 10px;">
+                    <thead>
+                        <tr style="background-color: #f0f0f0;">
+                            <th align="left" style="border: 1px solid #ddd;">Grad</th>
+                            <th align="left" style="border: 1px solid #ddd;">Tip podataka</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for city, sources in cities.items() %}
+                            <tr>
+                                <td style="border: 1px solid #ddd;">
+                                    {{ city }}
+                                </td>
+                                <td style="border: 1px solid #ddd;">
+                                    {{ sources | unique | join(", ") }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <p style="margin-top: 20px;">
+                    Molimo da izvršite ažuriranje podataka u aplikaciji.
+                </p>
+
+                <!-- Button -->
+                <p style="text-align: center; margin-top: 20px;">
+                    <a href="http://your-app-url"
+                       style="background-color: #0d6efd; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;">
+                        Otvori aplikaciju
+                    </a>
+                </p>
+
+                <p style="margin-top: 30px; font-size: 12px; color: #888;">
+                    Ovo je automatska poruka. Molimo ne odgovarajte na ovaj email.
+                </p>
+
+            </td>
+        </tr>
+
+    </table>
+
+</body>
+</html>
