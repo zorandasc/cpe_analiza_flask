@@ -5,7 +5,7 @@ from exchangelib import (
     Mailbox,
     Message,
 )
-from flask import render_template
+from flask import current_app, render_template
 from sqlalchemy import func, or_
 from sqlalchemy.orm import selectinload
 
@@ -48,6 +48,7 @@ def get_stale_cities_inventory(saturday):
         )
         .filter(CpeInventory.week_end == current_week_end)
         .group_by(CpeInventory.city_id)
+        .subquery()
     )
     # Main query: LEFT JOIN subq with cities (cities with no rows are still included)
     query = (
@@ -80,7 +81,6 @@ def get_stale_cities_dismantle(saturday, group):
             DismantleCityWeekUpdate.week_end == current_week_end,
             DismantleCityWeekUpdate.group_name == group,
         )
-        .group_by(DismantleCityWeekUpdate.city_id)
         .subquery()
     )
     # Main query: LEFT JOIN subq with cities (cities with no rows are still included)
@@ -201,8 +201,10 @@ def send_email_to_user(user_data, account):
 
     subject = "[CPE] Obavještenje o neažuriranim podacima po gradovima"
 
+    app_url = current_app.config["APP_BASE_URL"]
+
     body_html = render_template(
-        "notification/user_email.html", user=user, cities=cities
+        "notification/user_email.html", user=user, cities=cities, app_url=app_url
     )
 
     try:

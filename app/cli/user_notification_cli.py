@@ -1,6 +1,5 @@
-import datetime
 import os
-
+from datetime import datetime, timezone
 import click
 from flask.cli import with_appcontext
 from flask import current_app
@@ -27,6 +26,7 @@ def notify_stale_city():
     # ENABLE/DISABLE NOTIFICATION SYSTEM VIA .ENV FILE
     if not current_app.config.get("ENABLE_CPE_NOTIFICATIONS", True):
         current_app.logger.info("CPE notifications are disabled via config.")
+        print("CPE notifications are disabled via config.")
         return
 
     saturday = get_passed_saturday()
@@ -53,7 +53,7 @@ def notify_stale_city():
         users_inventory, users_dismantle_comp, users_dismantle_miss
     )
 
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
 
     # SENDER ACCOUNT SETTINGS
     credentials = Credentials(r"IN\cpe.reporting", os.environ.get("MAIL_PASSWORD"))
@@ -81,7 +81,7 @@ def notify_stale_city():
         success, message = send_email_to_user(user_data, account)
 
         if success:
-            user.last_notified_at = datetime.utcnow()
+            user.last_notified_at = datetime.now(timezone.utc)
 
         current_app.logger.info(message) if success else current_app.logger.error(
             message

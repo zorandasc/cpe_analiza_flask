@@ -2,6 +2,7 @@ from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from app.config import Config
 from app.extensions import db, login_manager
+from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter
 from app.models import Users
 from app.routes import register_routes
 from app.cli.create_admin_cli import create_initial_admin
@@ -25,6 +26,10 @@ def create_app():
         template_folder="templates",
         # static_folder="../static",
     )
+    
+    # 1. Bypass SSL verification if m:tel uses internal self-signed certs
+    BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
+
     app.config.from_object(Config)
 
     # Flask automatically checks CSRF token
@@ -33,6 +38,8 @@ def create_app():
     # all POST, PUT, PATCH, DELETE requests are protected
     # If token is missing or invalid → Flask returns 400 Bad Request.
     csrf = CSRFProtect(app)
+
+    # Configure exchange
 
     # Initialize SQLAlchemy with the app
     db.init_app(app)

@@ -1,6 +1,5 @@
 # from flask import current_app
 import os
-from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter
 from exchangelib import (
     Credentials,
     Account,
@@ -13,9 +12,6 @@ from exchangelib import (
 )
 
 from app.models import ReportRecipients
-
-# 1. Bypass SSL verification if m:tel uses internal self-signed certs
-BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 
 
 # SEND EMAIL USING exchangelib: 
