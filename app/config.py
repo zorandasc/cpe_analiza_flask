@@ -21,17 +21,6 @@ class Config:
     DB_PASS = os.environ.get("DB_PASS")
     DB_NAME = os.environ.get("DB_NAME", "mydb")
 
-    # Certificate for exchangelib
-    # Path to the certificate you just downloaded from https://webmail.mtel.ba/owa/
-    cert_path = os.path.join(
-        os.path.dirname(__file__), "..", "entrust_intermediate.crt"
-    )
-
-    # Tell the environment to trust this specific file
-    # This affects urllib3 and requests used by exchangelib
-    os.environ["REQUESTS_CA_BUNDLE"] = cert_path
-    os.environ["SSL_CERT_FILE"] = cert_path
-
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
