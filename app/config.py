@@ -4,8 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 def str_to_bool(value):
     return str(value).lower() in ("true", "1", "yes", "on")
+
 
 # KADA NAPRAVIMO python app.py UNUTAR VS CODA, ODNOSNO IZ VANA
 # DOCKER MREZE, GADJAMO DOKERIZOVANI POSTGRES 5431
@@ -18,6 +20,17 @@ class Config:
     DB_USER = os.environ.get("DB_USER", "postgres")
     DB_PASS = os.environ.get("DB_PASS")
     DB_NAME = os.environ.get("DB_NAME", "mydb")
+
+    # Certificate for exchangelib
+    # Path to the certificate you just downloaded from https://webmail.mtel.ba/owa/
+    cert_path = os.path.join(
+        os.path.dirname(__file__), "..", "entrust_intermediate.crt"
+    )
+
+    # Tell the environment to trust this specific file
+    # This affects urllib3 and requests used by exchangelib
+    os.environ["REQUESTS_CA_BUNDLE"] = cert_path
+    os.environ["SSL_CERT_FILE"] = cert_path
 
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"

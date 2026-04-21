@@ -2401,3 +2401,25 @@ Users mapping (no N+1)
 Merge sources
 ↓
 One email per user
+
+
+# -----------------------------------------------------------------------------------------------
+
+# ALL CRONTAB ON LINUX HOST
+
+[root@localhost ~]# crontab -l
+
+# Job za slanje sedmicnog izvjestaja top menadzeru (Svakih 10min poziva routu za provijeru slanja izvjestaja)
+*/10 * * * * curl -s -H "X-CRON-KEY:xxmtel123" http://localhost:5000/reports/weekly >> /var/log/weekly-report.log 2>&1
+
+# Job za backup postgres baze mydb (Svaki dan u 2:00am)
+0 2 * * * docker exec -i cpe-analiza-db-1 pg_dump -U postgres -F c -d mydb > /home/CPE-ANALIZA/mydb_backup.dump
+
+# Job za brisanje logova korisnickih aktivnosti u postgres tabeli user_activity starijih od 1 mjesec (Svaki dan u 3:00am)
+0 3 * * * docker exec -i cpe-analiza-db-1 psql -U postgres -d mydb -c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '1 month';"
+
+# Job za sinhrinizaciju stanja IPTV platforme i lokalne baze stb opreme (Svakih 4 sata poziva API)
+0 */4 * * * docker exec -i cpe-analiza-flask-1 python -m flask sync-with-iptv
+
+# Job za slanje notifikacija korisnicima o neosvijezenim stanjima skladista (Cetvrkom, Petkom u 10:00am)
+00 10 * * 4,5 docker exec -i cpe-analiza-flask-1 python -m flask notify_stale_city

@@ -1,10 +1,7 @@
-import os
-
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from app.config import Config
 from app.extensions import db, login_manager
-from exchangelib.protocol import BaseProtocol, NoVerifyHTTPAdapter
 from app.models import Users
 from app.routes import register_routes
 from app.cli.create_admin_cli import create_initial_admin
@@ -30,13 +27,6 @@ def create_app():
     )
 
     app.config.from_object(Config)
-
-    # Path to the certificate you just downloaded from https://webmail.mtel.ba/owa/
-    cert_path = os.path.abspath(os.path.join(app.root_path, "..", "owa.in.mtel.ba.crt"))
-
-    # Tell the environment to trust this specific file
-    # This affects urllib3 and requests used by exchangelib
-    os.environ["REQUESTS_CA_BUNDLE"] = cert_path
 
     # Flask automatically checks CSRF token
     # Every form that sends POST must include:
