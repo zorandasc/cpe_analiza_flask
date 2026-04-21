@@ -4,7 +4,6 @@
 services:
   db:
     image: postgres:16
-    container_name: my_postgres_db
     command: ["postgres", "-c", "timezone=Europe/Belgrade"]
     environment:
       TZ: Europe/Belgrade

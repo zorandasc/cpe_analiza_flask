@@ -4,7 +4,6 @@
 services:
   db:
     image: postgres:16
-    container_name: my_postgres_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
