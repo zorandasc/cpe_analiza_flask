@@ -122,23 +122,27 @@ styles %} {{ super() }}
     <thead>
       <tr>
         <th>Email</th>
-        <th>Active</th>
-        <th></th>
+        <th>Aktivan</th>
+        <th>Ukloni</th>
       </tr>
     </thead>
     <tbody>
       {% for r in recipients %}
       <tr>
         <td>{{ r.email }}</td>
-        <td>{% if r.active %} ✔ {% else %} ✖ {% endif %}</td>
+        <td>
+          <a
+            href="{{ url_for('admin.report_activate_recipient', id=r.id) }}"
+            class="btn btn-sm {{ 'btn-outline-success' if r.active else 'btn-outline-danger' }}"
+            >{% if r.active %} ✔ {% else %} ✖ {% endif %}</a>
+        </td>
          {% if admin_required() %}
         <td>
            <a
             href="{{ url_for('admin.report_remove_recipient', id=r.id) }}"
             class="btn btn-sm btn-light"
             onclick="return confirm('Obriši email?')"
-          >❌</a
-        >
+            >❌</a>
         </td>
          {%endif%}
       </tr>

@@ -1868,6 +1868,28 @@ def report_add_recipient():
     return redirect(url_for("admin.report_settings"))
 
 
+@admin_bp.route("/reports/recipients/activate/<int:id>")
+@login_required
+def report_activate_recipient(id):
+    if not admin_required():
+        return redirect(url_for("admin.report_settings"))
+
+    recipient = ReportRecipients.query.get_or_404(id)
+
+    recipient.active = not recipient.active
+
+    try:
+        db.session.commit()
+        status = "aktiviran" if recipient.active else "deaktiviran"
+        flash(f"Primaoc {status} uspiješno!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("An error occurred while updating.", "danger")
+
+    db.session.commit()
+    return redirect(url_for("admin.report_settings"))
+
+
 @admin_bp.route("/reports/recipients/remove/<int:id>")
 @login_required
 def report_remove_recipient(id):
@@ -1889,7 +1911,7 @@ def download_weekly_report():
     if not admin_view_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.report_settings"))
-    pdf_path,_ = generate_pdf()
+    pdf_path, _ = generate_pdf()
 
     return send_file(
         pdf_path,
