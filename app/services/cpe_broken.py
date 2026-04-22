@@ -170,8 +170,6 @@ def get_cpe_broken_history(
     if not city:
         return None, None, None, "Grad ne postoji."
 
-    if not can_access_city(city.id):
-        return None, None, None, "Niste autorizovani."
 
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")

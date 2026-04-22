@@ -169,9 +169,6 @@ def get_cpe_records_history(city_id: int, page: int, per_page: int, scope: str):
     if not city:
         return None, None, None, "Grad ne postoji."
 
-    if not can_access_city(city.id):
-        return None, None, None, "Niste autorizovani."
-
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("visible_in_total", "order_in_total")
 

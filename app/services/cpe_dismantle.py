@@ -173,9 +173,6 @@ def get_cpe_dismantle_history(
     if not city:
         return None, None, None, None, "Grad ne postoji."
 
-    if not can_access_city(city.id):
-        return None, None, None, None, "Niste autorizovani."
-
     match category:
         case "complete":
             list_of_dismantles = [1]
