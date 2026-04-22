@@ -1889,7 +1889,7 @@ def download_weekly_report():
     if not admin_view_required():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.report_settings"))
-    pdf_path = generate_pdf()
+    pdf_path,_ = generate_pdf()
 
     return send_file(
         pdf_path,
