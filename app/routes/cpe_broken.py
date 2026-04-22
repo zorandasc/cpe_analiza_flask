@@ -87,11 +87,24 @@ def cpe_broken_city_history(id):
         flash(error, "danger")
         return redirect(url_for("main.home"))
 
+    # For back button
+    if scope == "major":
+        back_url = url_for(
+            "cpe_dismantle_inventory.cpe_dismantle_records", _anchor="broken"
+        )
+    elif city.parent_city_id:
+        back_url = url_for(
+            "cpe_broken_inventory.cpe_broken_subcities", id=city.parent_city_id
+        )
+    else:
+        back_url = url_for("cpe_broken_inventory.cpe_broken_subcities", id=city.id)
+
     return render_template(
         "cpe_broken_history.html",
         records=records,
         schema=schema_list,
         city=city,
+        back_url=back_url,
     )
 
 
@@ -156,7 +169,7 @@ def export_cpe_broken_excel():
         for cell in col:
             if cell.value:
                 lines = str(cell.value).split("\n")
-                max_length = max(max_length, max(len(l) for l in lines))
+                max_length = max(max_length, max(len(li) for li in lines))
 
         ws.column_dimensions[col_letter].width = max_length + 2
 

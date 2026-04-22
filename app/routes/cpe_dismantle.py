@@ -77,13 +77,31 @@ def cpe_dismantle_city_history(id, category):
         flash(error, "danger")
         return redirect(url_for("main.home"))
 
+    # For back button
+    if scope == "major":
+        back_url = url_for(
+            "cpe_dismantle_inventory.cpe_dismantle_records", _anchor=category
+        )
+    elif city.parent_city_id:
+        back_url = url_for(
+            "cpe_dismantle_inventory.cpe_dismantle_subcities",
+            id=city.parent_city_id,
+            category=category,
+        )
+    else:
+        back_url = url_for(
+            "cpe_dismantle_inventory.cpe_dismantle_subcities",
+            id=city.id,
+            category=category,
+        )
+
     return render_template(
         "cpe_dismantle_history.html",
         records=records,
         category=category,
         schema=schema_list,
         city=city,
-        scope=scope,
+        back_url=back_url,
     )
 
 

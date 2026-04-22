@@ -75,25 +75,30 @@ def cpe_records_city_history(id):
 
     scope = request.args.get("scope", "city")
 
-    city, records, schema_list, error = get_cpe_records_history(id, page, per_page, scope)
-   
+    city, records, schema_list, error = get_cpe_records_history(
+        id, page, per_page, scope
+    )
+
     if error:
         flash(error, "danger")
         return redirect(url_for("main.home"))
-    
-    if scope == 'major':
-        back_url = url_for('cpe_inventory.cpe_records')
+
+    # For back button
+    if scope == "major":
+        back_url = url_for("cpe_inventory.cpe_records")
     elif city.parent_city_id:
-        back_url = url_for('cpe_inventory.cpe_records_subcities', id=city.parent_city_id)
+        back_url = url_for(
+            "cpe_inventory.cpe_records_subcities", id=city.parent_city_id
+        )
     else:
-        back_url = url_for('cpe_inventory.cpe_records_subcities', id=city.id)
+        back_url = url_for("cpe_inventory.cpe_records_subcities", id=city.id)
 
     return render_template(
         "cpe_records_history.html",
         records=records,
         schema=schema_list,
         city=city,
-        back_url=back_url
+        back_url=back_url,
     )
 
 

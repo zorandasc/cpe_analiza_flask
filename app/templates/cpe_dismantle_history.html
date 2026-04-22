@@ -245,19 +245,13 @@ styles %} {{ super() }}
 {% endblock %} {% block content%}
 <div class=" py-2">
   <div class="d-flex justify-content-between align-items-center">
-    {% if scope == "major" %}
-      <a
-        href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_records', _anchor=category) }}"
-        class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
-      >
-        <span class="me-2">⬅</span> Nazad
-      </a>
-    {% else %}
-     <a href="{{ url_for('cpe_dismantle_inventory.cpe_dismantle_subcities', id=city.parent_city_id, category=category) }}"
-       class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start">
+  <a
+      href="{{ back_url }}"
+      class="btn btn-outline-secondary w-10-flex align-items-center justify-content-start"
+    >
       <span class="me-2">⬅</span> Nazad
     </a>
-    {% endif %}
+   
   </div>
   {% if category == "complete" %}
     <h1 class="mb-4 text-center">
