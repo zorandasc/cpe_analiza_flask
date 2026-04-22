@@ -1860,10 +1860,15 @@ def report_add_recipient():
     if not admin_required():
         return redirect(url_for("admin.report_settings"))
 
-    email = request.form["email"].lower().strip()
+    recipient = request.form["email"].lower().strip()
 
-    db.session.add(ReportRecipients(email=email))
-    db.session.commit()
+    try:
+        db.session.add(ReportRecipients(email=recipient))
+        db.session.commit()
+        flash("Primalac uspiješno dodan!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("An error occurred while updating.", "danger")
 
     return redirect(url_for("admin.report_settings"))
 
@@ -1881,7 +1886,7 @@ def report_activate_recipient(id):
     try:
         db.session.commit()
         status = "aktiviran" if recipient.active else "deaktiviran"
-        flash(f"Primaoc {status} uspiješno!", "success")
+        flash(f"Primalac {status} uspiješno!", "success")
     except Exception as e:
         db.session.rollback()
         flash("An error occurred while updating.", "danger")
@@ -1896,11 +1901,16 @@ def report_remove_recipient(id):
     if not admin_required():
         return redirect(url_for("admin.report_settings"))
 
-    email = ReportRecipients.query.get_or_404(id)
+    recipient = ReportRecipients.query.get_or_404(id)
 
-    flash("Email obrisan!", "success")
-    db.session.delete(email)
-    db.session.commit()
+    try:
+        db.session.delete(recipient)
+        db.session.commit()
+        flash(f"Email {recipient.email}  obrisan!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("An error occurred while updating.", "danger")
+
     return redirect(url_for("admin.report_settings"))
 
 
