@@ -6,9 +6,11 @@ from flask import current_app
 from exchangelib import (
     DELEGATE,
     Account,
+    BaseProtocol,
     Configuration,
     Credentials,
 )
+import urllib3
 from app.extensions import db
 from app.services.user_notify import (
     get_stale_users_from_cpe_dismantle,
@@ -17,6 +19,12 @@ from app.services.user_notify import (
     send_email_to_user,
 )
 from app.utils.dates import get_passed_saturday
+
+# 2. Disable SSL Verification globally for exchangelib
+BaseProtocol.HTTP_ADAPTER_CLS.verify = False
+
+# 3. Optional: Silence the "InsecureRequestWarning" in your console output
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 @click.command("notify_stale_city")

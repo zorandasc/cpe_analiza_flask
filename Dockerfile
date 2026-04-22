@@ -51,9 +51,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libharfbuzz0b \
     && rm -rf /var/lib/apt/lists/*
 
-COPY entrust_intermediate.crt /usr/local/share/ca-certificates/entrust_intermediate.crt
-RUN update-ca-certificates
-
 # 2. Add the entrypoint scrip
 COPY entrypoint.sh /usr/local/bin/
 # make the script exsecutable
