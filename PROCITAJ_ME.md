@@ -2402,7 +2402,6 @@ Merge sources
 ↓
 One email per user
 
-
 # -----------------------------------------------------------------------------------------------
 
 # ALL CRONTAB ON LINUX HOST
@@ -2410,49 +2409,40 @@ One email per user
 [root@localhost ~]# crontab -l
 
 # Job za slanje sedmicnog izvjestaja top menadzeru (Svakih 10min poziva routu za provijeru slanja izvjestaja)
-*/10 * * * * curl -s -H "X-CRON-KEY:xxmtel123" http://localhost:5000/reports/weekly >> /var/log/weekly-report.log 2>&1
+
+_/10 _ \* \* \* curl -s -H "X-CRON-KEY:xxmtel123" http://localhost:5000/reports/weekly >> /var/log/weekly-report.log 2>&1
 
 # Job za backup postgres baze mydb (Svaki dan u 2:00am)
-0 2 * * * docker exec -i cpe-analiza-db-1 pg_dump -U postgres -F c -d mydb > /home/CPE-ANALIZA/mydb_backup.dump
+
+0 2 \* \* \* docker exec -i cpe-analiza-db-1 pg_dump -U postgres -F c -d mydb > /home/CPE-ANALIZA/mydb_backup.dump
 
 # Job za brisanje logova korisnickih aktivnosti u postgres tabeli user_activity starijih od 1 mjesec (Svaki dan u 3:00am)
-0 3 * * * docker exec -i cpe-analiza-db-1 psql -U postgres -d mydb -c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '1 month';"
+
+0 3 \* \* \* docker exec -i cpe-analiza-db-1 psql -U postgres -d mydb -c "DELETE FROM user_activity WHERE timestamp < NOW() - INTERVAL '1 month';"
 
 # Job za sinhrinizaciju stanja IPTV platforme i lokalne baze stb opreme (Svakih 4 sata poziva API)
-0 */4 * * * docker exec -i cpe-analiza-flask-1 python -m flask sync-with-iptv
+
+0 _/4 _ \* \* docker exec -i cpe-analiza-flask-1 python -m flask sync-with-iptv
 
 # Job za slanje notifikacija korisnicima o neosvijezenim stanjima skladista (Cetvrkom, Petkom u 10:00am)
-00 10 * * 4,5 docker exec -i cpe-analiza-flask-1 python -m flask notify_stale_city
+
+00 10 \* \* 4,5 docker exec -i cpe-analiza-flask-1 python -m flask notify_stale_city
 
 # --------------------------------------------------------------------------------------
-# CERTIFICATE za SLANJE EMAIL KORISTECI exchangelib EMBEDOVAN U DOCKERIMAGE:
 
-1.
+# CERTIFICATE za SLANJE EMAIL KORISTECI exchangelib
+
+1. mtel_bundle.pem
+
+2. This is not mandatory
+
 ```Dockerfile
 RUN cp mtel_bundle.pem /usr/local/share/ca-certificates/mtel_bundle.crt \
     && update-ca-certificates
 ```
 
-2.
+3. ssl_adapter.py
 
-But since the corporate server sends only the leaf cert, the most bulletproof fix is to use the BundleHttpAdapter approach in your Flask script — this forces requests to use your bundle which contains the full chain, bypassing the system store entirely:
-
-```python
-def get_ca_bundle_path(app):
-    if os.path.exists('/.dockerenv') or os.name == 'posix':
-        return "/app/mtel_bundle.pem"
-    else:
-        project_root = os.path.dirname(app.root_path)
-        return os.path.join(project_root, 'mtel_bundle.pem')
- ca_bundle = get_ca_bundle_path(current_app)
-
-    class MtelHttpAdapter(requests.adapters.HTTPAdapter):
-        def send(self, *args, **kwargs):
-            kwargs['verify'] = ca_bundle
-            return super().send(*args, **kwargs)
-
-    BaseProtocol.HTTP_ADAPTER_CLS = MtelHttpAdapter
-    ```
-
+But since the corporate server sends only the leaf cert, the most bulletproof fix is to use the MtelHttpAdapter approach in your Flask script — this forces requests to use your bundle which contains the full chain, bypassing the system store entirely:
 
 This works because requests with an explicit verify= path will use the intermediates from your bundle to complete the chain — even when the server doesn't send them. This i

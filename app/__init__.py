@@ -17,6 +17,7 @@ from app.utils.permissions import (
     ftth_view_required,
     view_required,
 )
+from app.utils.ssl_adapter import configure_exchangelib_ssl
 
 
 def create_app():
@@ -35,7 +36,8 @@ def create_app():
     # If token is missing or invalid → Flask returns 400 Bad Request.
     csrf = CSRFProtect(app)
 
-    # Configure exchange
+    # Configure exchangelib with our mtel_bundle.pem certificate
+    configure_exchangelib_ssl(app)
 
     # Initialize SQLAlchemy with the app
     db.init_app(app)
