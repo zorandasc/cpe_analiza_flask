@@ -2427,7 +2427,32 @@ One email per user
 # --------------------------------------------------------------------------------------
 # CERTIFICATE za SLANJE EMAIL KORISTECI exchangelib EMBEDOVAN U DOCKERIMAGE:
 
+1.
 ```Dockerfile
 RUN cp mtel_bundle.pem /usr/local/share/ca-certificates/mtel_bundle.crt \
     && update-ca-certificates
 ```
+
+2.
+
+But since the corporate server sends only the leaf cert, the most bulletproof fix is to use the BundleHttpAdapter approach in your Flask script — this forces requests to use your bundle which contains the full chain, bypassing the system store entirely:
+
+```python
+def get_ca_bundle_path(app):
+    if os.path.exists('/.dockerenv') or os.name == 'posix':
+        return "/app/mtel_bundle.pem"
+    else:
+        project_root = os.path.dirname(app.root_path)
+        return os.path.join(project_root, 'mtel_bundle.pem')
+ ca_bundle = get_ca_bundle_path(current_app)
+
+    class MtelHttpAdapter(requests.adapters.HTTPAdapter):
+        def send(self, *args, **kwargs):
+            kwargs['verify'] = ca_bundle
+            return super().send(*args, **kwargs)
+
+    BaseProtocol.HTTP_ADAPTER_CLS = MtelHttpAdapter
+    ```
+
+
+This works because requests with an explicit verify= path will use the intermediates from your bundle to complete the chain — even when the server doesn't send them. This i

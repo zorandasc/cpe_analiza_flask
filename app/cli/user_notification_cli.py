@@ -6,9 +6,11 @@ from flask import current_app
 from exchangelib import (
     DELEGATE,
     Account,
+    BaseProtocol,
     Configuration,
     Credentials,
 )
+import requests
 from app.extensions import db
 from app.services.user_notify import (
     get_stale_users_from_cpe_dismantle,
@@ -19,6 +21,14 @@ from app.services.user_notify import (
 from app.utils.dates import get_passed_saturday
 
 
+def get_ca_bundle_path(app):
+    if os.path.exists("/.dockerenv") or os.name == "posix":
+        return "/app/mtel_bundle.pem"
+    else:
+        project_root = os.path.dirname(app.root_path)
+        return os.path.join(project_root, "mtel_bundle.pem")
+
+
 @click.command("notify_stale_city")
 @with_appcontext
 def notify_stale_city():
@@ -26,6 +36,17 @@ def notify_stale_city():
     if not current_app.config.get("ENABLE_CPE_NOTIFICATIONS", True):
         current_app.logger.info("CPE notifications are disabled via config.")
         return
+    
+     # Force exchangelib to use our bundle which has the full intermediate chain.
+    # Needed because the internal Exchange server does NOT send intermediates.
+    ca_bundle = get_ca_bundle_path(current_app)
+
+    class MtelHttpAdapter(requests.adapters.HTTPAdapter):
+        def send(self, *args, **kwargs):
+            kwargs['verify'] = ca_bundle
+            return super().send(*args, **kwargs)
+
+    BaseProtocol.HTTP_ADAPTER_CLS = MtelHttpAdapter
 
     saturday = get_passed_saturday()
     users_inventory = get_stale_users_from_cpe_inventory(saturday)
