@@ -62,6 +62,10 @@ COPY --from=builder /install /usr/local
 # Copy project files
 COPY . .
 
+# CERTIFICATE FOR exchangelib FOR https://webmail.mtel.ba/owa
+RUN cp mtel_bundle.pem /usr/local/share/ca-certificates/mtel_bundle.crt \
+    && update-ca-certificates
+
 # Default port Flask/Gunicorn will listen on
 EXPOSE 5000
 # Environment variable for Flask

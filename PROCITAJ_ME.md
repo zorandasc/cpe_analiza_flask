@@ -2423,3 +2423,11 @@ One email per user
 
 # Job za slanje notifikacija korisnicima o neosvijezenim stanjima skladista (Cetvrkom, Petkom u 10:00am)
 00 10 * * 4,5 docker exec -i cpe-analiza-flask-1 python -m flask notify_stale_city
+
+# --------------------------------------------------------------------------------------
+# CERTIFICATE za SLANJE EMAIL KORISTECI exchangelib EMBEDOVAN U DOCKERIMAGE:
+
+```Dockerfile
+RUN cp mtel_bundle.pem /usr/local/share/ca-certificates/mtel_bundle.crt \
+    && update-ca-certificates
+```
