@@ -73,7 +73,8 @@ def get_cpe_broken_pivoted(schema_list: list, week_end: datetime.date):
                         FROM cities sub
                         --✅ Use LEFT JOIN so if a subcity has NO data, MIN becomes NULL
                         LEFT JOIN city_last_update clu ON clu.city_id = sub.id
-                        WHERE sub.parent_city_id = c.id
+                         -- ✅ Include childrens and the Parent itself!
+                        WHERE (sub.parent_city_id = c.id OR sub.id = c.id)
                     )
                     --✅ If it's a standalone or subcity, just take its own last save
                     -- which is max updated_at
