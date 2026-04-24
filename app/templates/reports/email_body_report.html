@@ -32,16 +32,16 @@
         /* Header Backgrounds */
         .head-total {  background-color: #008B8B; color: #ffffff !important;}
         .head-warehouse { background-color: #2980b9; color: #ffffff !important; }
-        .head-dismantle { background-color: #483D8B; color: #ffffff !important; }
+        .head-dismantle { background-color: #9932CC; color: #ffffff !important;  }
         .head-broken { background-color: #CD5C5C; color: #ffffff !important; }
-        .head-iptv { background-color: #9932CC; color: #ffffff !important; }
-        .head-access { background-color: #DAA520; color: #ffffff !important; }
+        .head-iptv { background-color: #483D8B; color: #ffffff !important;}
+        .head-access { background-color: #b87134; color: #ffffff !important; }
 
         .body-total { background-color: #cbedda; color: #201b1b !important; }
         .body-warehouse { background-color: #d2e4f0; color: #292424 !important; }
-        .body-dismantle { background-color: #d6dde5; color: #2b2525 !important; }
-        .body-broken { background-color: #f4bcb6; color: #363131 !important; }
-        .body-iptv { background-color: #e2c2ef; color: #151313 !important; }
+        .body-dismantle {  background-color: #e2c2ef; color: #151313 !important;}
+        .body-broken { background-color: #f8d7e2; color: #363131 !important; }
+        .body-iptv { background-color: #d6dde5; color: #2b2525 !important; }
         .body-access { background-color: #f3ddbd; color: #141313 !important; }
 
         /* Color Classes */
@@ -152,7 +152,7 @@
                     <td>{{ vals.previous }}</td>
                     <td>{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
-                        {{ vals.difference }}
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
@@ -175,7 +175,7 @@
                     <td>{{ vals.previous }}</td>
                     <td>{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
-                        {{ vals.difference }}
+                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
@@ -185,7 +185,7 @@
                     <td>{{ vals.previous }}</td>
                     <td>{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
-                        {{ vals.difference }}
+                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
@@ -208,7 +208,7 @@
                     <td>{{ vals.previous }}</td>
                     <td>{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
-                        {{ vals.difference }}
+                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
