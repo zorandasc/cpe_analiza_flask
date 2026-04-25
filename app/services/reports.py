@@ -2,11 +2,20 @@ import os
 from datetime import date, datetime, timezone
 from collections import defaultdict
 from flask import render_template, current_app
+from exchangelib import (
+    Credentials,
+    Account,
+    Configuration,
+    DELEGATE,
+    Message,
+    FileAttachment,
+    HTMLBody,
+    Mailbox,
+)
 from app.extensions import db
+from app.models import AccessTypes, ReportSetting, ReportRecipients, CpeTypeEnum
 from app.services.magic import generate_link_for_view_user
 from app.utils.dates import get_current_week_friday
-from app.models import AccessTypes, ReportSetting, CpeTypeEnum
-from app.services.email_service import send_email
 from app.services.charts import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
@@ -49,7 +58,9 @@ def run_weekly_report_job():
         )
 
         # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
-        success, message = send_email(pdf_path=pdf_path, body_html=email_body_html)
+        success, message = send_email_report(
+            pdf_path=pdf_path, body_html=email_body_html
+        )
 
         if success:
             # Only mark as sent if the email actually went out
@@ -115,13 +126,24 @@ def generate_pdf():
     # EXSTRACT FROM DATATSETS LAST 2 WEEKS AND DIFF THEM.
     # THIS IS FOR SUMMARY TABLES SECTION IN PDF REPORT
     # ------------------------------------------------
-    cpe_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
+    cpe_labels_total = [
+        CpeTypeEnum("IAD"),
+        CpeTypeEnum("STB"),
+        CpeTypeEnum("ONT"),
+        CpeTypeEnum("ANTENA"),
+        CpeTypeEnum("STB_DTH"),
+        CpeTypeEnum("LNB"),
+    ]
 
-    cpe_total_summary = extract_current_previous_diff(cpe_total["datasets"], cpe_labels)
+    cpe_total_summary = extract_current_previous_diff(
+        cpe_total["datasets"], cpe_labels_total
+    )
 
     cpe_warehouse_summary = extract_current_previous_diff(
-        cpe_warehouse_total["datasets"], cpe_labels
+        cpe_warehouse_total["datasets"], cpe_labels_total
     )
+
+    cpe_labels = [CpeTypeEnum("IAD"), CpeTypeEnum("STB"), CpeTypeEnum("ONT")]
 
     cpe_dismantle_summary = extract_current_previous_diff(
         cpe_dismantle_total["datasets"], cpe_labels
@@ -283,20 +305,24 @@ def extract_current_previous_diff(datasets: list, target_labels: list):
     target_labels:[CpeTypeEnum('IAD'),...]
 
     """
+
+    # 1. Create a lookup map for quick access: {label: data_list}
+    dataset_map = {item["label"]: item["data"] for item in datasets}
+
     extracted_stats = {}
 
-    for item in datasets:
-        label_name = item["label"]
+    # 2. Iterate through target_labels to preserve the incoming order
+    for label in target_labels:
+        if label in dataset_map:
+            data = dataset_map[label]
 
-        if label_name in target_labels:
-            data = item["data"]
             # Ensure we have at least 2 elements to avoid errors
-            if len(data) > 2:
+            if len(data) >= 2:
                 current = data[-1]  # Last element
                 previous = data[-2]  # Penultimate element
                 diff = current - previous
 
-                extracted_stats[label_name] = {
+                extracted_stats[label] = {
                     "current": current,
                     "previous": previous,
                     "difference": diff,
@@ -429,3 +455,58 @@ def group_changes_by_source(changes):
         grouped[change["source"]].append(change)
 
     return dict(grouped)
+
+
+# SEND EMAIL USING exchangelib:
+# it uses the same HTTPS "pipeline" as your browser and Outlook,
+def send_email_report(pdf_path, body_html):
+    recipients = [r.email for r in ReportRecipients.query.filter_by(active=True).all()]
+
+    if not recipients:
+        print("Weekly report: no active recipients")
+        return False, "Nema primaoca."
+
+    subject = "Sedmični izvještaj o CPE inventaru"
+
+    try:
+        # 1. Setup Configuration (Keep these in your config or .env)
+        credentials = Credentials(r"IN\cpe.reporting", os.environ.get("MAIL_PASSWORD"))
+
+        # We specify the server directly to bypass DNS 'autodiscover' issues
+        config = Configuration(server="webmail.mtel.ba", credentials=credentials)
+
+        account = Account(
+            primary_smtp_address="cpe.reporting@mtel.ba",
+            config=config,
+            autodiscover=False,
+            access_type=DELEGATE,
+        )
+
+        # 3. Convert string emails to Mailbox objects for exchangelib
+        to_recipients = [Mailbox(email_address=addr) for addr in recipients]
+
+        # 2. Create the Message
+        message = Message(
+            account=account,
+            subject=subject,
+            body=HTMLBody(body_html),
+            to_recipients=to_recipients,
+        )
+
+        # 3. Attach the PDF
+        if os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as f:
+                file_content = f.read()
+                message.attach(
+                    FileAttachment(
+                        name=os.path.basename(pdf_path), content=file_content
+                    )
+                )
+
+            # 4. Send
+        message.send_and_save()
+        return True, "Email poslan uspiješno."
+
+    except Exception as e:
+        print(f"Failed to send weekly report email via EWS: {str(e)}")
+        return False, "Dogodila se greška prilikom slanja email-a."

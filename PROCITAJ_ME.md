@@ -979,7 +979,7 @@ cron
 ↓
 generate_pdf() → file
 ↓
-send_email(file)
+send_email_report(file)
 
 # when istalling weasyprint for pdf generating
 

@@ -37,12 +37,12 @@
         .head-iptv { background-color: #483D8B; color: #ffffff !important;}
         .head-access { background-color: #b87134; color: #ffffff !important; }
 
-        .body-total { background-color: #cbedda; color: #201b1b !important; }
-        .body-warehouse { background-color: #d2e4f0; color: #292424 !important; }
-        .body-dismantle {  background-color: #e2c2ef; color: #151313 !important;}
-        .body-broken { background-color: #f8d7e2; color: #363131 !important; }
+        .body-total { background-color: #e1f1e8; color: #201b1b !important; }
+        .body-warehouse { background-color: #ecf4fa; color: #292424 !important; }
+        .body-dismantle {  background-color: #f3e5f9; color: #151313 !important;}
+        .body-broken { background-color: #f8e7ec; color: #363131 !important; }
         .body-iptv { background-color: #d6dde5; color: #2b2525 !important; }
-        .body-access { background-color: #f3ddbd; color: #141313 !important; }
+        .body-access { background-color: #f9f0e2; color: #141313 !important; }
 
         /* Color Classes */
         .pos { color: #1a7f37 !important; font-weight: bold; }
@@ -83,7 +83,7 @@
                     <td>{{ vals.previous }}</td>
                     <td>{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
-                        {{ vals.difference }}
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
@@ -106,7 +106,7 @@
                     <td>{{ vals.previous }}</td>
                     <td>{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
-                        {{ vals.difference }}
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
@@ -129,7 +129,7 @@
                     <td>{{ vals.previous }}</td>
                     <td>{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
-                        {{ vals.difference }}
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
@@ -221,7 +221,6 @@
     <p><a href="{{link}}" style="color: #1a73e8; text-decoration: none; font-weight: bold;">Otvori Aplikaciju CPE izvještaj &rarr;</a></p>
 
     <br>
-    <p>S poštovanjem,<br>
-    <strong>Automatizovani sistem izvještavanja</strong></p>
+    <p><strong>Automatizovani sistem izvještavanja</strong></p>
 </body>
 </html>

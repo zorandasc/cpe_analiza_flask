@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import requests
 import re
 from flask import (
     Blueprint,
@@ -12,14 +13,12 @@ from flask import (
     url_for,
 )
 from flask_login import login_required, current_user
-import requests
 from sqlalchemy.dialects.postgresql import insert
 from werkzeug.security import generate_password_hash
 from sqlalchemy.orm import selectinload
 from app.extensions import db
-from app.services.email_service import send_email
 from app.services.magic import generate_link_for_view_user
-from app.services.reports import generate_pdf
+from app.services.reports import generate_pdf, send_email_report
 from app.utils.permissions import admin_view_required, admin_required
 from app.services.admin import update_cpe_type
 from app.services.access_inventory import (
@@ -1951,7 +1950,7 @@ def send_weekly_report():
         return redirect(url_for("admin.dashboard"))
 
     # SEND EMAIL TO RECIPIENTS, RETUNRS: BOOLEAN and STRING REASON
-    success, message = send_email(pdf_path=pdf_path, body_html=email_body_html)
+    success, message = send_email_report(pdf_path=pdf_path, body_html=email_body_html)
 
     flash(f"Status: {message}", "success" if success else "danger")
 
