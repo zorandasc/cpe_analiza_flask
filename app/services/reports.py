@@ -261,7 +261,7 @@ def generate_pdf():
     data["access_chart_image"] = build_report_chart(
         chart_data=access_total,
         output_filename="access_trend.png",
-        title="Trend ukupne ONT/xDSL opreme, pristupn mreža (Zadnjih 5 mjeseci)",
+        title="Trend ukupne GPON/xDSL opreme, pristupna mreža (Zadnjih 5 mjeseci)",
     )
 
     # ----------------------------------------------
