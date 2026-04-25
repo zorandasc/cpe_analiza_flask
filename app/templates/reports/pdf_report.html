@@ -43,20 +43,20 @@
     <div class="page-break"></div>
 
     <section class="page summary">
-      <h1>Sažetak sedmice</h1>
+      <h2>Sažetak sedmice</h2>
 
       <table class="summary-table">
         <thead>
-          <tr>
-            <th>Tip CPE opreme ukupno u radu</th>
-            <th>Prošla sedmica</th>
-            <th>Ova sedmica</th>
-            <th>Promjena</th>
+          <tr class="head-total">
+            <th class="col-name">Tip CPE opreme ukupno u radu</th>
+            <th class="col-data-header">Prošla sedmica</th>
+            <th class="col-data-header">Ova sedmica</th>
+            <th class="col-data-header">Promjena</th>
           </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpetotal.items() %}
-          <tr>
+          <tr class="body-total">
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
             <td>{{ vals.current }}</td>
@@ -70,16 +70,16 @@
 
       <table class="summary-table">
         <thead>
-          <tr>
-            <th>Tip CPE opreme u raspoloživa oprema</th>
-            <th>Prošla sedmica</th>
-            <th>Ova sedmica</th>
-            <th>Promjena</th>
+          <tr class="head-warehouse">
+            <th class="col-name">Tip CPE opreme u raspoloživa oprema</th>
+            <th class="col-data-header">Prošla sedmica</th>
+            <th class="col-data-header">Ova sedmica</th>
+            <th class="col-data-header">Promjena</th>
           </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpewarehouse.items() %}
-          <tr>
+          <tr class="body-warehouse">
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
             <td>{{ vals.current }}</td>
@@ -93,16 +93,16 @@
 
       <table class="summary-table">
         <thead>
-          <tr>
-            <th>Tip CPE opreme demontaža ispravna</th>
-            <th>Prošla sedmica</th>
-            <th>Ova sedmica</th>
-            <th>Promjena</th>
+          <tr  class="head-dismantle">
+            <th class="col-name">Tip CPE opreme demontaža ispravna</th>
+            <th class="col-data-header">Prošla sedmica</th>
+            <th class="col-data-header">Ova sedmica</th>
+            <th class="col-data-header">Promjena</th>
           </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpedismantle.items() %}
-          <tr>
+          <tr class="body-dismantle">
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
             <td>{{ vals.current }}</td>
@@ -116,16 +116,16 @@
 
        <table class="summary-table">
         <thead>
-          <tr>
-            <th>Tip CPE opreme demontaža neispravna</th>
-            <th>Prošla sedmica</th>
-            <th>Ova sedmica</th>
-            <th>Promjena</th>
+          <tr class="head-broken">
+            <th  class="col-name">Tip CPE opreme demontaža neispravna</th>
+            <th  class="col-data-header">Prošla sedmica</th>
+            <th  class="col-data-header">Ova sedmica</th>
+            <th  class="col-data-header">Promjena</th>
           </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpebroken.items() %}
-          <tr>
+          <tr class="body-broken">
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
             <td>{{ vals.current }}</td>
@@ -139,11 +139,11 @@
 
       <table class="summary-table">
         <thead>
-          <tr>
-            <th>IPTV platforma</th>
-            <th>Prošla sedmica</th>
-            <th>Ova sedmica</th>
-            <th>Promjena</th>
+          <tr class="head-iptv">
+            <th class="col-name">IPTV platforma</th>
+            <th class="col-data-header">Prošla sedmica</th>
+            <th class="col-data-header">Ova sedmica</th>
+            <th class="col-data-header">Promjena</th>
           </tr>
         </thead>
         <tbody>
@@ -157,7 +157,7 @@
             </td>
           </tr>
           {% endfor %} {% for label, vals in summary.iptv.items() %}
-          <tr>
+          <tr class="body-iptv">
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
             <td>{{ vals.current }}</td>
@@ -171,16 +171,16 @@
 
       <table class="summary-table">
         <thead>
-          <tr>
-            <th>Pristupna mreža</th>
-            <th>Prošli mjesec</th>
-            <th>Ovaj mjesec</th>
-            <th>Promjena</th>
+          <tr  class="head-access">
+            <th class="col-name">Pristupna mreža</th>
+            <th class="col-data-header">Prošli mjesec</th>
+            <th class="col-data-header">Ovaj mjesec</th>
+            <th class="col-data-header">Promjena</th>
           </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.access.items() %}
-          <tr>
+          <tr class="body-access">
             <td>{{label}}</td>
             <td>{{ vals.previous }}</td>
             <td>{{ vals.current }}</td>
@@ -216,7 +216,7 @@
     <div class="page-break"></div>
 
     <section class="page charts">
-      <h1>Trendovi u inventaru</h1>
+      <h2>Trendovi u inventaru</h2>
       <img src="{{ cpe_chart_image }}" alt="CPE Trend Chart" />
       <img src="{{ cpe_warehouse_chart_image }}" alt="CPE Trend Chart" />
       <img
