@@ -49,6 +49,13 @@
         .neg { color: #b42318 !important; font-weight: bold; }
 
         h1 { font-size: 18pt; color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+   
+        th.bold-column,
+        td.bold-column {
+        border-left: 3px solid #495057;
+         border-right: 3px solid #495057;
+        }
+
     </style>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6;">
@@ -72,7 +79,7 @@
                 <tr class="head-total">
                     <th class="col-name">CPE oprema ukupno raspoloživa</th>
                     <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header">Ova sedmica</th>
+                    <th class="col-data-header bold-column">Ova sedmica</th>
                     <th class="col-data-header">Promjena</th>
                 </tr>
             </thead>
@@ -81,7 +88,7 @@
                 <tr class="body-total">
                     <td>{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td>{{ vals.current }}</td>
+                    <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -95,7 +102,7 @@
                 <tr class="head-warehouse">
                     <th class="col-name">CPE oprema raspoloživa u centralnom skladištu</th>
                     <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header">Ova sedmica</th>
+                    <th class="col-data-header bold-column">Ova sedmica</th>
                     <th class="col-data-header">Promjena</th>
                 </tr>
             </thead>
@@ -104,7 +111,7 @@
                 <tr class="body-warehouse">
                     <td>{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td>{{ vals.current }}</td>
+                    <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -118,7 +125,7 @@
                 <tr class="head-dismantle">
                     <th class="col-name">Demontirana ispravna CPE oprema (kompletna + nekompletna)</th>
                     <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header">Ova sedmica</th>
+                    <th class="col-data-header bold-column">Ova sedmica</th>
                     <th class="col-data-header">Promjena</th>
                 </tr>
             </thead>
@@ -127,7 +134,7 @@
                 <tr class="body-dismantle">
                     <td>{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td>{{ vals.current }}</td>
+                    <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -141,7 +148,7 @@
                 <tr class="head-broken">
                     <th class="col-name">Demontirana neispravna CPE oprema</th>
                     <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header">Ova sedmica</th>
+                    <th class="col-data-header bold-column">Ova sedmica</th>
                     <th class="col-data-header">Promjena</th>
                 </tr>
             </thead>
@@ -150,7 +157,7 @@
                 <tr class="body-broken">
                     <td>{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td>{{ vals.current }}</td>
+                    <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -164,7 +171,7 @@
                 <tr class="head-iptv">
                     <th class="col-name">IPTV platforma</th>
                     <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header">Ova sedmica</th>
+                    <th class="col-data-header bold-column">Ova sedmica</th>
                     <th class="col-data-header">Promjena</th>
                 </tr>
             </thead>
@@ -173,7 +180,7 @@
                 <tr class="body-iptv">
                     <td>{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td>{{ vals.current }}</td>
+                    <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                          {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -183,7 +190,7 @@
                 <tr class="body-iptv">
                     <td>{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td>{{ vals.current }}</td>
+                    <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                          {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -197,7 +204,7 @@
                 <tr class="head-access">
                     <th class="col-name">Pristupna mreža</th>
                     <th class="col-data-header">Prošli mjesec</th>
-                    <th class="col-data-header">Ovaj mjesec</th>
+                    <th class="col-data-header bold-column">Ovaj mjesec</th>
                     <th class="col-data-header">Promjena</th>
                 </tr>
             </thead>
@@ -206,7 +213,7 @@
                 <tr class="body-access">
                     <td>{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td>{{ vals.current }}</td>
+                    <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                          {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>

@@ -128,6 +128,12 @@ body {
   text-align: left;
 }
 
+th.bold-column,
+td.bold-column {
+  border-left: 3px solid #495057;
+  border-right: 3px solid #495057;
+}
+
 /* Header Backgrounds */
 .head-total {
   background: #008b8b;
@@ -146,11 +152,11 @@ body {
   color: #ffffff !important;
 }
 .head-iptv {
-  background: #483d8b!important;;
+  background: #483d8b !important;
   color: #ffffff !important;
 }
 .head-access {
-  background: #b87134!important;;
+  background: #b87134 !important;
   color: #ffffff !important;
 }
 
