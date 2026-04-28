@@ -46,12 +46,8 @@
 
                 <div class="col-md-2">
                     <label class="form-label">Korisnik</label>
-                    <select name="user_id" class="form-select">
-                        <option value="">Svi</option>
-                        {% for u in users %}
-                            <option value="{{ u.id }}" {% if (u.id | string) == pagination_args.get("user_id")%}selected{% endif %}>{{ u.username }}</option>
-                        {% endfor %}
-                    </select>
+                     <input type="text" name="username" class="form-control" 
+                        placeholder="Pretraži..." value="{{ request.args.get('username', '') }}">
                 </div>
 
                 <div class="col-md-2">

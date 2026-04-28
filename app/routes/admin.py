@@ -1125,18 +1125,71 @@ def users():
         flash("Niste Autorizovani.", "danger")
         return redirect(url_for("admin.dashboard"))
 
+    ## Initial Query with Eager Loading
     # WHY selectinload?
     # BECAUSE USERS AND CITIES ARE N0W MANY-TO-MANY RELATION
     # IF WE DO THIS users = Users.query.order_by(Users.id).all()
     # CITIES ARE Later (lazy load cities) WE ARE GENERATING 1+N PROBLEM
     # WITH selectinload PRELOAD cities, ONLY 2 QUERY USERS AND CITIES
-    users = (
-        Users.query.options(selectinload(Users.cities), selectinload(Users.cpe_types))
-        .order_by(Users.id)
-        .all()
-    )
+    query = Users.query.options(
+        selectinload(Users.cities), selectinload(Users.cpe_types)
+    ).order_by(Users.created_at)
 
-    return render_template("admin/users.html", users=users)
+    # 1. Capture Filter Inputs
+    username = request.args.get("username")
+    email = request.args.get("email")
+    role = request.args.get("role")
+    city_id = request.args.get("city")
+    page = request.args.get("page", 1, type=int)
+
+    # 2. Apply Filters
+    if username:
+        # Searches for usernames containing the string (case-insensitive)
+        query = query.filter(Users.username.ilike(f"%{username}%"))
+
+    if email and email.strip():
+        query = query.filter(Users.email == email)
+
+    if role:
+        query = query.filter(Users.role == role)
+
+    if city_id:
+        # Many-to-Many filter: "Does this user have ANY city with this ID?"
+        query = query.filter(Users.cities.any(Cities.id == int(city_id)))
+
+    # 3. Pagination Logic
+    # ovo je za paginacione linkove u template
+    args = request.args.to_dict()
+    # izbacujemo page jer njega unutar template saljemo odvojeno u odnosu na bunch
+    args.pop("page", None)
+
+    users_pagination = query.paginate(page=page, per_page=50, error_out=False)
+
+    # 4. Data for the Filter Dropdowns
+    users_filter = Users.query.order_by(Users.username).all()
+
+    # Fetch unique emails and roles from the User model
+    # We use db.session.query to get only the specific columns for performance
+    # Instead of loading all User objects just to get a list of emails (which creates a massive memory overhead),
+    # I used db.session.query(Users.email).distinct(). This runs a SELECT DISTINCT
+    # email FROM users on the database side, which is much faster.
+    emails_raw = db.session.query(Users.email).filter(Users.email.isnot(None)).order_by(Users.email).distinct().all()
+    emails_filter = [e[0] for e in emails_raw]
+
+    # Convert Enum class to a list of strings/tuples for the template
+    roles_filter = [r.value for r in UserRole]
+
+    cities_filter = Cities.query.order_by(Cities.name).all()
+
+    return render_template(
+        "admin/users.html",
+        users=users_pagination,
+        users_filter=users_filter,
+        roles=roles_filter,
+        emails=emails_filter,
+        cities=cities_filter,
+        pagination_args=args,
+    )
 
 
 @admin_bp.route("/users/add", methods=["GET", "POST"])
@@ -1968,15 +2021,18 @@ def activity_logs():
     query = UserActivity.query.join(Users)
 
     # Filters
-    user_id = request.args.get("user_id")
+    username = request.args.get("username")
     action = request.args.get("action")
     table_name = request.args.get("table_name")
     date_from = request.args.get("date_from")
     date_to = request.args.get("date_to")
     page = request.args.get("page", 1, type=int)
 
-    if user_id:
-        query = query.filter(UserActivity.user_id == int(user_id))
+    
+     # 2. Apply Filters
+    if username:
+        # Searches for usernames containing the string (case-insensitive)
+        query = query.filter(Users.username.ilike(f"%{username}%"))
 
     if action:
         query = query.filter(UserActivity.action == action)
