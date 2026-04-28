@@ -1256,7 +1256,7 @@ def add_user():
         try:
             db.session.add(user)
             db.session.commit()
-            flash("Korisnik kreiran uspiješno.", "success")
+            flash(f"Korisnik {username} kreiran uspiješno.", "success")
             return redirect(url_for("admin.users"))
         except Exception as e:
             db.session.rollback()
@@ -1407,7 +1407,7 @@ def delete_user(id):
 
     db.session.delete(user)
     db.session.commit()
-    flash("Korisnik obrisan", "success")
+    flash(f"Korisnik {user.username} obrisan", "success")
     return redirect(url_for("admin.users"))
 
 

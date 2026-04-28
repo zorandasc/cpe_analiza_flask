@@ -4,6 +4,12 @@
 {% block styles %}
 {{ super() }}
 <style>
+    thead {
+        position: sticky;
+        top: 60px;
+        z-index: 1020;
+        box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.6);
+    }
     .badge-login { background-color: #198754; }
     .badge-logout { background-color: #8fab10; }
     .badge-update { background-color: #0d6efd; }
@@ -26,7 +32,7 @@
 {% endblock %}
 
 {% block content %}
-<div >
+<div  class=" py-4">
     <div class="d-flex justify-content-between align-items-center">
         <a
                     href="{{ url_for('admin.dashboard') }}"
@@ -37,7 +43,7 @@
          <h2 class="mb-4 text-center">Aktivnosti korisnika</h2>
          <div style="width: 95px;" class="d-none d-md-block"></div>
     </div>
-    <div class="table-responsive">
+    
     <!-- FILTER CARD -->
     <div class="card shadow-sm bg-light">
         <div class="card-body">
@@ -137,33 +143,25 @@
         </div>  
     </div>
     <!-- TABLE CARD -->
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-
-            <div class="table-responsive">
-                <table class="table table-dark table-hover table-striped mb-0 align-middle">
+   
+    <table class="table table-striped table-bordered shadow-lg">
                     <thead class="table-danger">
                         <tr>
-                            <th>Vrijeme</th>
                             <th>Korisnik</th>
                             <th>Akcija</th>
                             <th>Tabela</th>
+                            <th>Vrijeme</th>
                             <th>Detalji</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for log in logs %}
                         <tr>
-                            <td class="text-nowrap">
-                                {{ log.timestamp.strftime("%Y-%m-%d %H:%M:%S") }}
-                            </td>
-
                             <td>
                                 <span class="fw-semibold">
                                     {{ log.user.username }}
                                 </span>
                             </td>
-
                             <td>
                                 {% if log.action == "login" %}
                                     <span class="badge badge-login">Login</span>
@@ -177,12 +175,13 @@
                                     <span class="badge bg-secondary">{{ log.action }}</span>
                                 {% endif %}
                             </td>
-
                             <td>{{ log.table_name or "-" }}</td>
-
+                            <td class="text-nowrap">
+                                {{ log.timestamp.strftime("%Y-%m-%d %H:%M:%S") }}
+                            </td>
                             <td>
                                 {% if log.details %}
-                                    <button class="btn btn-sm btn-outline-warning"
+                                    <button class="btn btn-sm btn-warning"
                                             data-bs-toggle="collapse"
                                             data-bs-target="#details-{{ log.id }}">
                                         Show
@@ -200,11 +199,7 @@
                         </tr>
                         {% endfor %}
                     </tbody>
-                </table>
-            </div>
-
-        </div>
-    </div>
-
+    </table>
+    
 </div>
 {% endblock %}
