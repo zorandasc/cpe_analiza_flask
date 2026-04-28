@@ -2,61 +2,67 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <style>
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt;
-            color: #222;
-        }
+   <style>
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11pt;
+        color: #222;
+    }
 
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            font-weight: 600;
-        }
+    .summary-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-weight: normal;
+    }
 
-        .summary-table th, .summary-table td {
-            border: 1px solid #ccc;
-            padding: 6px;
-        }
+    .summary-table th, .summary-table td {
+        border: 1px solid #ccc;
+        padding: 6px;
+    }
 
-        /* Column Width Alignment */
-        .col-name { width: 45%; text-align: left; }
-        .col-data-header { width: 18.3%; text-align: center; }
+    /* Column Width Alignment - Adjusted to make current week wider */
+    .col-name { width: 40%; text-align: left; font-weight: bold !important;}
+    .col-prev { width: 15%; text-align: center; }
+    .col-current { width: 30%; text-align: center; } /* Increased width */
+    .col-change { width: 15%; text-align: center; }
 
-        /* Align body cells automatically */
-        .summary-table td { text-align: center; }
-        .summary-table td:first-child { text-align: left; }
+    /* Align body cells automatically */
+    .summary-table td { text-align: center; }
+    .summary-table td:first-child { text-align: left; }
 
-        /* Header Backgrounds */
-        .head-total {  background-color: #008B8B; color: #ffffff !important;}
-        .head-warehouse { background-color: #2980b9; color: #ffffff !important; }
-        .head-dismantle { background-color: #9932CC; color: #ffffff !important;  }
-        .head-broken { background-color: #CD5C5C; color: #ffffff !important; }
-        .head-iptv { background-color: #483D8B; color: #ffffff !important;}
-        .head-access { background-color: #b87134; color: #ffffff !important; }
+    /* Header Backgrounds */
+    .head-total { background-color: #008B8B; color: #ffffff !important;}
+    .head-warehouse { background-color: #2980b9; color: #ffffff !important; }
+    .head-dismantle { background-color: #9932CC; color: #ffffff !important;  }
+    .head-broken { background-color: #CD5C5C; color: #ffffff !important; }
+    .head-iptv { background-color: #483D8B; color: #ffffff !important;}
+    .head-access { background-color: #b87134; color: #ffffff !important; }
 
-        .body-total { background-color: #e1f1e8; color: #201b1b !important; }
-        .body-warehouse { background-color: #ecf4fa; color: #292424 !important; }
-        .body-dismantle {  background-color: #f3e5f9; color: #151313 !important;}
-        .body-broken { background-color: #f8e7ec; color: #363131 !important; }
-        .body-iptv { background-color: #d6dde5; color: #2b2525 !important; }
-        .body-access { background-color: #f9f0e2; color: #141313 !important; }
+    /* Body Row Backgrounds */
+    .body-total { background-color: #e1f1e8; }
+    .body-warehouse { background-color: #ecf4fa; }
+    .body-dismantle { background-color: #f3e5f9; }
+    .body-broken { background-color: #f8e7ec; }
+    .body-iptv { background-color: #d6dde5; }
+    .body-access { background-color: #f9f0e2; }
 
-        /* Color Classes */
-        .pos { color: #1a7f37 !important; font-weight: bold; }
-        .neg { color: #b42318 !important; font-weight: bold; }
+    /* The Highlight Class */
+    .bold-column {
+        font-weight: bold !important;
+        font-size: 12pt; /* Slightly larger text */
+       /* background-color: rgba(255, 255, 255, 0.4);  Brightens the column against the row color */
+        border-left: 2px solid #444 !important;
+        border-right: 2px solid #444 !important;
+        
+    }
 
-        h1 { font-size: 18pt; color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; }
-   
-        th.bold-column,
-        td.bold-column {
-        border-left: 3px solid #495057;
-         border-right: 3px solid #495057;
-        }
+    /* Color Classes */
+    .pos { color: #1a7f37 !important; font-weight: normal; }
+    .neg { color: #b42318 !important; font-weight: normal; }
 
-    </style>
+    h1 { font-size: 18pt; color: #444; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+</style>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6;">
     <p>Poštovani,</p>
@@ -78,17 +84,17 @@
             <thead>
                 <tr class="head-total">
                     <th class="col-name">CPE oprema ukupno raspoloživa</th>
-                    <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header bold-column">Ova sedmica</th>
-                    <th class="col-data-header">Promjena</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
                 </tr>
             </thead>
             <tbody>
                 {% for label, vals in cpetotal.items() %}
                 <tr class="body-total">
-                    <td>{{label}}</td>
+                    <td class="col-name">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column">{{ vals.current }}</td>
+                    <td class="bold-column body-total">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -101,15 +107,15 @@
             <thead>
                 <tr class="head-warehouse">
                     <th class="col-name">CPE oprema raspoloživa u centralnom skladištu</th>
-                    <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header bold-column">Ova sedmica</th>
-                    <th class="col-data-header">Promjena</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
                 </tr>
             </thead>
             <tbody>
                 {% for label, vals in cpewarehouse.items() %}
                 <tr class="body-warehouse">
-                    <td>{{label}}</td>
+                    <td class="col-name">{{label}}</td>
                     <td>{{ vals.previous }}</td>
                     <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
@@ -124,15 +130,15 @@
             <thead>
                 <tr class="head-dismantle">
                     <th class="col-name">Demontirana ispravna CPE oprema (kompletna + nekompletna)</th>
-                    <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header bold-column">Ova sedmica</th>
-                    <th class="col-data-header">Promjena</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
                 </tr>
             </thead>
             <tbody>
                 {% for label, vals in cpedismantle.items() %}
                 <tr class="body-dismantle">
-                    <td>{{label}}</td>
+                    <td class="col-name">{{label}}</td>
                     <td>{{ vals.previous }}</td>
                     <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
@@ -147,15 +153,15 @@
             <thead>
                 <tr class="head-broken">
                     <th class="col-name">Demontirana neispravna CPE oprema</th>
-                    <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header bold-column">Ova sedmica</th>
-                    <th class="col-data-header">Promjena</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
                 </tr>
             </thead>
             <tbody>
                 {% for label, vals in cpebroken.items() %}
                 <tr class="body-broken">
-                    <td>{{label}}</td>
+                    <td class="col-name">{{label}}</td>
                     <td>{{ vals.previous }}</td>
                     <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
@@ -170,15 +176,15 @@
             <thead>
                 <tr class="head-iptv">
                     <th class="col-name">IPTV platforma</th>
-                    <th class="col-data-header">Prošla sedmica</th>
-                    <th class="col-data-header bold-column">Ova sedmica</th>
-                    <th class="col-data-header">Promjena</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
                 </tr>
             </thead>
             <tbody>
                 {% for label, vals in stb.items() %}
                 <tr class="body-iptv">
-                    <td>{{label}}</td>
+                    <td class="col-name">{{label}}</td>
                     <td>{{ vals.previous }}</td>
                     <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
@@ -188,7 +194,7 @@
                 {% endfor %}
                 {% for label, vals in iptv.items() %}
                 <tr class="body-iptv">
-                    <td>{{label}}</td>
+                    <td class="col-name">{{label}}</td>
                     <td>{{ vals.previous }}</td>
                     <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
@@ -203,15 +209,15 @@
             <thead>
                 <tr class="head-access">
                     <th class="col-name">Pristupna mreža</th>
-                    <th class="col-data-header">Prošli mjesec</th>
-                    <th class="col-data-header bold-column">Ovaj mjesec</th>
-                    <th class="col-data-header">Promjena</th>
+                    <th class="col-prev">Prošli mjesec</th>
+                    <th class="col-current bold-column">Ovaj mjesec</th>
+                    <th class="col-change">Promjena</th>
                 </tr>
             </thead>
             <tbody>
                 {% for label, vals in access.items() %}
                 <tr class="body-access">
-                    <td>{{label}}</td>
+                    <td class="col-name">{{label}}</td>
                     <td>{{ vals.previous }}</td>
                     <td class="bold-column">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
