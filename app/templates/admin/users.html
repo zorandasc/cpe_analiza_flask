@@ -147,7 +147,7 @@ thead {
         </div>  
     </div>
     <table class="table table-striped table-bordered shadow-lg">
-     <thead class="table-success">
+        <thead class="table-success">
         <tr>
         <th>ID</th>
         <th>Korisničko Ime</th>
@@ -156,10 +156,11 @@ thead {
         <th>Organizacija/e</th>
         <th>Dozvoljena CPE oprema</th>
         <th>Vrijeme notifikacije</th>
+        <th>Kreirano</th>
         <th style="width: 160px">Akcije</th>
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
     {% for user in users %}
     <tr>
       <td>{{ user.id }}</td>
@@ -187,6 +188,7 @@ thead {
       {% endif %}
       </td>
       <td>{% if user.last_notified_at %}{{ user.last_notified_at.strftime('%d-%m-%Y %H:%M:%S')}} {% endif %}</td>
+      <td>{{user.created_at.strftime('%d-%m-%Y')}}</td>
       {% if admin_required() %}
       <td>
         <a
@@ -204,7 +206,7 @@ thead {
       {%endif%}
     </tr>
     {% endfor %}
-    </tbody>
+        </tbody>
   </table>
 </div>
 {% endblock %}
