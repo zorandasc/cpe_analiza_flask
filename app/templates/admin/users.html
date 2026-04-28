@@ -31,6 +31,10 @@ thead {
   .filter{
         background-image: linear-gradient(to right, #5a3f37, #2c7744);
     }
+
+.created-at{
+    min-width: 100px;
+}
 </style>
 {% endblock %}
 
@@ -188,7 +192,7 @@ thead {
       {% endif %}
       </td>
       <td>{% if user.last_notified_at %}{{ user.last_notified_at.strftime('%d-%m-%Y %H:%M:%S')}} {% endif %}</td>
-      <td>{{user.created_at.strftime('%d-%m-%Y')}}</td>
+      <td class="created-at">{{user.created_at.strftime('%d-%m-%Y')}}</td>
       {% if admin_required() %}
       <td>
         <a
