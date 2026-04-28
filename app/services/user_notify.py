@@ -16,12 +16,12 @@ from app.utils.dates import get_current_week_friday
 
 def get_stale_users_from_cpe_inventory(saturday):
     cities = get_stale_cities_inventory(saturday)
-    return map_cities_to_users(cities, "Inventar CPE opreme")
+    return map_cities_to_users(cities, "Stanje ukupno raspoložive CPE opreme")
 
 
 label_map = {
-    "complete": "Kompletna demontaža",
-    "missing": "Nekompletna demontaža",
+    "complete": "Stanje demontirane kompletne CPE opreme",
+    "missing": "Stanje demontirane nekompletne CPE opreme",
 }
 
 
@@ -199,7 +199,7 @@ def send_email_to_user(user_data, account):
     user = user_data["user"]
     cities = user_data["cities"]
 
-    subject = "[CPE Analiza] Obavještenje o neažuriranim podacima po gradovima"
+    subject = "[CPE Analiza] Obavještenje o neažuriranim podacima"
 
     app_url = current_app.config["APP_BASE_URL"]
 

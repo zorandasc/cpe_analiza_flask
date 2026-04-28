@@ -9,7 +9,7 @@
         
         <!-- Header -->
         <tr>
-            <td style="background-color: #7bc6cc;  background-image: linear-gradient(to right, #be93c5, #7bc6cc); color: white; padding: 15px; font-size: 18px;">
+            <td style="background-color: #f74379;  background-image: linear-gradient(to right, #be93c5, #7bc6cc); color: white; padding: 15px; font-size: 18px;">
                 CPE Notifikacija
             </td>
         </tr>
@@ -21,38 +21,49 @@
                 <p>Poštovani {{ user.username }},</p>
 
                 <p>
-                    Sljedeći gradovi imaju neažurirane podatke za trenutnu sedmicu:
+                    Sljedeće tabele stanja imaju neažurirane podatke za trenutnu sedmicu:
                 </p>
 
                 <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse: collapse; margin-top: 10px;">
                     <thead>
-                        <tr style="background-color: #f0f0f0;">
-                            <th align="left" style="border: 1px solid #ddd;">Grad</th>
-                            <th align="left" style="border: 1px solid #ddd;">Tabela stanja</th>
+                        <tr style="background-color: #f0f0f0; ">
+                            <th align="left" style="border: 1px solid #ddd; width: 150px; text-align: center; ">Grad</th>
+                            <th align="left" style="border: 1px solid #ddd; text-align: center; ">Tabela stanja</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for city, sources in cities.items() %}
                             <tr>
-                                <td style="border: 1px solid #ddd;">
+                                <td style="border: 1px solid #ddd; text-align: center; font-weight: bold;">
                                     {{ city }}
                                 </td>
-                                <td style="border: 1px solid #ddd;">
-                                    {{ sources | unique | join(", ") }}
+                                <td style="text-align: center; border: 1px solid #ddd;">
+                                    <ul style="display: inline-block; text-align: left; margin: 0; padding: 10px 0 0 20px; list-style-type: square;">
+                                        {% for source in sources | unique %}
+                                            <li style="padding: 2px 0;">{{ source }}</li>
+                                        {% endfor %}
+                                    </ul>
                                 </td>
                             </tr>
                         {% endfor %}
                     </tbody>
                 </table>
 
-                <p style="margin-top: 20px;">
+                <p style="margin-top: 20px; ">
                     Molimo da izvršite ažuriranje podataka u aplikaciji.
                 </p>
 
                 <!-- Button -->
                 <p style="text-align: center; margin-top: 20px;">
                     <a href="{{app_url}}"
-                       style="background-color: #7bc6cc; background-image: linear-gradient(to right, #be93c5, #7bc6cc); color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;">
+                    style="background-color: #f74379; 
+                            color: #ffffff; 
+                            padding: 0; 
+                            text-decoration: none; 
+                            border-radius: 4px; 
+                            display: inline-block; 
+                            border: 12px solid #f74379; 
+                            font-weight: bold;">
                         Otvori aplikaciju
                     </a>
                 </p>
