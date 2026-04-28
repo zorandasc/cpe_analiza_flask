@@ -128,11 +128,14 @@ body {
   text-align: left;
 }
 
-th.bold-column,
-td.bold-column {
-  border-left: 3px solid #495057;
-  border-right: 3px solid #495057;
-}
+.bold-column {
+        font-weight: bold !important;
+        font-size: 12pt; /* Slightly larger text */
+       /* background-color: rgba(255, 255, 255, 0.4);  Brightens the column against the row color */
+        border-left: 2px solid #444 !important;
+        border-right: 2px solid #444 !important;
+        
+    }
 
 /* Header Backgrounds */
 .head-total {
@@ -160,14 +163,20 @@ td.bold-column {
   color: #ffffff !important;
 }
 
+ /* Column Width Alignment - Adjusted to make current week wider */
+    .col-name { width: 40%; text-align: left; font-weight: bold !important;}
+    .col-prev { width: 15%; text-align: center; }
+    .col-current { width: 30%; text-align: center; } /* Increased width */
+    .col-change { width: 15%; text-align: center; }
+
 .pos {
   color: green;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .neg {
   color: red;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .change-group {

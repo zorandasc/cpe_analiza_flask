@@ -47,23 +47,23 @@
 
       <table class="summary-table">
         <thead>
-          <tr class="head-total">
-            <th class="col-name">CPE oprema - ukupno raspoloživa (sva skladišta)</th>
-            <th class="col-data-header">Prošla sedmica</th>
-            <th class="col-data-header bold-column">Ova sedmica</th>
-            <th class="col-data-header">Promjena</th>
-          </tr>
+           <tr class="head-total">
+                    <th class="col-name">CPE oprema - ukupno raspoloživa (sva skladišta)</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
+            </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpetotal.items() %}
-          <tr class="body-total">
-            <td>{{label}}</td>
-            <td>{{ vals.previous }}</td>
-            <td class="bold-column">{{ vals.current }}</td>
-            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-              {{ vals.difference }}
-            </td>
-          </tr>
+          <tr class="">
+                    <td class="col-name" style="background-color: #e1f1e8">{{label}}</td>
+                    <td>{{ vals.previous }}</td>
+                    <td class="bold-column"  style="background-color: #e1f1e8">{{ vals.current }}</td>
+                    <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
+                    </td>
+                </tr>
           {% endfor %}
         </tbody>
       </table>
@@ -71,123 +71,123 @@
       <table class="summary-table">
         <thead>
           <tr class="head-warehouse">
-            <th class="col-name">CPE oprema - raspoloživa - Centralno skladište</th>
-            <th class="col-data-header">Prošla sedmica</th>
-            <th class="col-data-header bold-column">Ova sedmica</th>
-            <th class="col-data-header">Promjena</th>
-          </tr>
+                    <th class="col-name">CPE oprema - raspoloživa - Centralno skladište</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
+                </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpewarehouse.items() %}
-          <tr class="body-warehouse">
-            <td>{{label}}</td>
-            <td>{{ vals.previous }}</td>
-            <td class="bold-column">{{ vals.current }}</td>
-            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-              {{ vals.difference }}
-            </td>
-          </tr>
+           <tr class="">
+                    <td class="col-name" style="background-color: #ecf4fa; ">{{label}}</td>
+                    <td>{{ vals.previous }}</td>
+                    <td class="bold-column" style="background-color: #ecf4fa; ">{{ vals.current }}</td>
+                    <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
+                    </td>
+                </tr>
           {% endfor %}
         </tbody>
       </table>
 
       <table class="summary-table">
         <thead>
-          <tr  class="head-dismantle">
-            <th class="col-name">Demontirana ispravna CPE oprema (kompletna + nekompletna)</th>
-            <th class="col-data-header">Prošla sedmica</th>
-            <th class="col-data-header bold-column">Ova sedmica</th>
-            <th class="col-data-header">Promjena</th>
-          </tr>
+            <tr class="head-dismantle">
+                    <th class="col-name">Demontirana ispravna CPE oprema (kompletna + nekompletna)</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
+                </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpedismantle.items() %}
-          <tr class="body-dismantle">
-            <td>{{label}}</td>
-            <td>{{ vals.previous }}</td>
-            <td class="bold-column">{{ vals.current }}</td>
-            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-              {{ vals.difference }}
-            </td>
-          </tr>
+          <tr class="">
+                    <td class="col-name" style="background-color: #f3e5f9;">{{label}}</td>
+                    <td>{{ vals.previous }}</td>
+                    <td class="bold-column" style="background-color: #f3e5f9;">{{ vals.current }}</td>
+                    <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
+                    </td>
+                </tr>
           {% endfor %}
         </tbody>
       </table>
 
        <table class="summary-table">
         <thead>
-          <tr class="head-broken">
-            <th  class="col-name">Demontirana neispravna CPE oprema</th>
-            <th  class="col-data-header">Prošla sedmica</th>
-            <th  class="col-data-header bold-column">Ova sedmica</th>
-            <th  class="col-data-header">Promjena</th>
-          </tr>
+            <tr class="head-broken">
+                    <th class="col-name">Demontirana neispravna CPE oprema</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
+                </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.cpebroken.items() %}
-          <tr class="body-broken">
-            <td>{{label}}</td>
-            <td>{{ vals.previous }}</td>
-            <td class="bold-column">{{ vals.current }}</td>
-            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-              {{ vals.difference }}
-            </td>
-          </tr>
+          <tr class="">
+                    <td class="col-name" style="background-color: #f8e7ec;">{{label}}</td>
+                    <td>{{ vals.previous }}</td>
+                    <td class="bold-column" style="background-color: #f8e7ec;">{{ vals.current }}</td>
+                    <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
+                        {{ "+" if vals.difference > 0 }}{{ vals.difference }}
+                    </td>
+                </tr>
           {% endfor %}
         </tbody>
       </table>
 
       <table class="summary-table">
         <thead>
-          <tr class="head-iptv">
-            <th class="col-name">IPTV platforma</th>
-            <th class="col-data-header">Prošla sedmica</th>
-            <th class="col-data-header bold-column">Ova sedmica</th>
-            <th class="col-data-header">Promjena</th>
-          </tr>
+           <tr class="head-iptv">
+                    <th class="col-name">IPTV platforma</th>
+                    <th class="col-prev">Prošla sedmica</th>
+                    <th class="col-current bold-column">Ova sedmica</th>
+                    <th class="col-change">Promjena</th>
+                </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.stb.items() %}
-          <tr>
-            <td>{{label}}</td>
-            <td>{{ vals.previous }}</td>
-            <td class="bold-column">{{ vals.current }}</td>
-            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-              {{ vals.difference }}
-            </td>
-          </tr>
+            <tr class="">
+                    <td class="col-name" style="background-color: #d6dde5;">{{label}}</td>
+                    <td>{{ vals.previous }}</td>
+                    <td class="bold-column" style="background-color: #d6dde5;">{{ vals.current }}</td>
+                    <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
+                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
+                    </td>
+                </tr>
           {% endfor %} {% for label, vals in summary.iptv.items() %}
-          <tr class="body-iptv">
-            <td>{{label}}</td>
-            <td>{{ vals.previous }}</td>
-            <td class="bold-column">{{ vals.current }}</td>
-            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-              {{ vals.difference }}
-            </td>
-          </tr>
+          <tr class="">
+                    <td class="col-name" style="background-color: #d6dde5;">{{label}}</td>
+                    <td>{{ vals.previous }}</td>
+                    <td class="bold-column" style="background-color: #d6dde5;">{{ vals.current }}</td>
+                    <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
+                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
+                    </td>
+                </tr>
           {% endfor %}
         </tbody>
       </table>
 
       <table class="summary-table">
         <thead>
-          <tr  class="head-access">
-            <th class="col-name">Pristupna mreža</th>
-            <th class="col-data-header">Prošli mjesec</th>
-            <th class="col-data-header bold-column">Ovaj mjesec</th>
-            <th class="col-data-header">Promjena</th>
-          </tr>
+         <tr class="head-access">
+                    <th class="col-name">Pristupna mreža</th>
+                    <th class="col-prev">Prošli mjesec</th>
+                    <th class="col-current bold-column">Ovaj mjesec</th>
+                    <th class="col-change">Promjena</th>
+                </tr>
         </thead>
         <tbody>
           {% for label, vals in summary.access.items() %}
-          <tr class="body-access">
-            <td>{{label}}</td>
-            <td>{{ vals.previous }}</td>
-            <td class="bold-column">{{ vals.current }}</td>
-            <td class="{{ 'pos' if vals.difference > 0 else 'neg' }}">
-              {{ vals.difference }}
-            </td>
-          </tr>
+            <tr class="">
+                    <td class="col-name" style="background-color: #f9f0e2;">{{label}}</td>
+                    <td>{{ vals.previous }}</td>
+                    <td class="bold-column" style="background-color: #f9f0e2;">{{ vals.current }}</td>
+                    <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
+                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
+                    </td>
+                </tr>
           {% endfor %}
         </tbody>
       </table>
