@@ -83,7 +83,7 @@
         <table class="summary-table">
             <thead>
                 <tr class="head-total">
-                    <th class="col-name">CPE oprema ukupno raspoloživa</th>
+                    <th class="col-name">CPE oprema - ukupno raspoloživa (sva skladišta)</th>
                     <th class="col-prev">Prošla sedmica</th>
                     <th class="col-current">Ova sedmica</th>
                     <th class="col-change">Promjena</th>
@@ -91,10 +91,10 @@
             </thead>
             <tbody>
                 {% for label, vals in cpetotal.items() %}
-                <tr class="body-total">
-                    <td class="col-name">{{label}}</td>
+                <tr class="">
+                    <td class="col-name" style="background-color: #e1f1e8">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column body-total">{{ vals.current }}</td>
+                    <td class="bold-column"  style="background-color: #e1f1e8">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -106,7 +106,7 @@
         <table class="summary-table">
             <thead>
                 <tr class="head-warehouse">
-                    <th class="col-name">CPE oprema raspoloživa u centralnom skladištu</th>
+                    <th class="col-name">CPE oprema - raspoloživa - Centralno skladište</th>
                     <th class="col-prev">Prošla sedmica</th>
                     <th class="col-current bold-column">Ova sedmica</th>
                     <th class="col-change">Promjena</th>
@@ -114,10 +114,10 @@
             </thead>
             <tbody>
                 {% for label, vals in cpewarehouse.items() %}
-                <tr class="body-warehouse">
-                    <td class="col-name">{{label}}</td>
+                <tr class="">
+                    <td class="col-name" style="background-color: #ecf4fa; ">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column">{{ vals.current }}</td>
+                    <td class="bold-column" style="background-color: #ecf4fa; ">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -137,10 +137,10 @@
             </thead>
             <tbody>
                 {% for label, vals in cpedismantle.items() %}
-                <tr class="body-dismantle">
-                    <td class="col-name">{{label}}</td>
+                <tr class="">
+                    <td class="col-name" style="background-color: #f3e5f9;">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column">{{ vals.current }}</td>
+                    <td class="bold-column" style="background-color: #f3e5f9;">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -160,10 +160,10 @@
             </thead>
             <tbody>
                 {% for label, vals in cpebroken.items() %}
-                <tr class="body-broken">
-                    <td class="col-name">{{label}}</td>
+                <tr class="">
+                    <td class="col-name" style="background-color: #f8e7ec;">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column">{{ vals.current }}</td>
+                    <td class="bold-column" style="background-color: #f8e7ec;">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                         {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -183,20 +183,20 @@
             </thead>
             <tbody>
                 {% for label, vals in stb.items() %}
-                <tr class="body-iptv">
-                    <td class="col-name">{{label}}</td>
+                <tr class="">
+                    <td class="col-name" style="background-color: #d6dde5;">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column">{{ vals.current }}</td>
+                    <td class="bold-column" style="background-color: #d6dde5;">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                          {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
                 </tr>
                 {% endfor %}
                 {% for label, vals in iptv.items() %}
-                <tr class="body-iptv">
-                    <td class="col-name">{{label}}</td>
+                <tr class="">
+                    <td class="col-name" style="background-color: #d6dde5;">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column">{{ vals.current }}</td>
+                    <td class="bold-column" style="background-color: #d6dde5;">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                          {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
@@ -216,10 +216,10 @@
             </thead>
             <tbody>
                 {% for label, vals in access.items() %}
-                <tr class="body-access">
-                    <td class="col-name">{{label}}</td>
+                <tr class="">
+                    <td class="col-name" style="background-color: #f9f0e2;">{{label}}</td>
                     <td>{{ vals.previous }}</td>
-                    <td class="bold-column">{{ vals.current }}</td>
+                    <td class="bold-column" style="background-color: #f9f0e2;">{{ vals.current }}</td>
                     <td class="{{ 'pos' if vals.difference > 0 else 'neg' if vals.difference < 0 else '' }}">
                          {{ "+" if vals.difference > 0 }}{{ vals.difference }}
                     </td>
