@@ -10,12 +10,14 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import selectinload
 
 from app.extensions import db
-from app.models import Cities, CpeInventory, DismantleCityWeekUpdate
+from app.models import Cities, CpeBroken, CpeInventory, DismantleCityWeekUpdate
 from app.utils.dates import get_current_week_friday
 
 
 def get_stale_users_from_cpe_inventory(saturday):
+    # Find all cities that are stail or null from cpe_inventory
     cities = get_stale_cities_inventory(saturday)
+    # Form users structure from that cities to send emails
     return map_cities_to_users(cities, "Stanje ukupno raspoložive CPE opreme")
 
 
@@ -26,16 +28,25 @@ label_map = {
 
 
 def get_stale_users_from_cpe_dismantle(saturday, group):
+    # Find all cities that are stail or null from cpe_dismantle
     cities = get_stale_cities_dismantle(saturday, group)
     source = label_map[group]
+    # Form users structure from that cities to send emails
     return map_cities_to_users(cities, source)
 
 
-def get_stale_cities_inventory(saturday):
+def get_stale_users_from_cpe_broken(saturday):
+    # Find all cities that are stail or null from cpe_broken
+    cities = get_stale_cities_broken(saturday)
+    # Form users structure from that cities to send emails
+    return map_cities_to_users(cities, "Stanje demontirane neispravne CPE opreme")
 
-    # return list of city_ids or city objects
-    # If a city has no record at all for current week → it must still be marked stale.
-    # This means: you cannot query only cpe_inventory you must start from Cities table
+
+# return list of stale city_ids or city objects
+# If a city has no record at all for current week → it must still be marked stale.
+# This means: you cannot query only cpe_inventory you must start from Cities table
+# and on that perform left join
+def get_stale_cities_inventory(saturday):
 
     # DATE OF FRIDAY IN THIS WEEK
     current_week_end = get_current_week_friday()
@@ -50,7 +61,9 @@ def get_stale_cities_inventory(saturday):
         .group_by(CpeInventory.city_id)
         .subquery()
     )
-    # Main query: LEFT JOIN subq with cities (cities with no rows are still included)
+    # Main query: LEFT JOIN subq with cities
+    # return all cities with no rows or cities with stale updated_at
+    # in cpe_inventory tsble
     query = (
         db.session.query(Cities)
         .outerjoin(subq, Cities.id == subq.c.city_id)
@@ -98,7 +111,40 @@ def get_stale_cities_dismantle(saturday, group):
     return query.all()
 
 
-EXCLUDED_NOTIFICATION_ROLES = {"admin", "view"}
+def get_stale_cities_broken(saturday):
+
+    # DATE OF FRIDAY IN THIS WEEK
+    current_week_end = get_current_week_friday()
+
+    # Subquery: latest update for city for current week in cpe_broken
+    subq = (
+        db.session.query(
+            CpeBroken.city_id,
+            func.max(CpeBroken.updated_at).label("last_update"),
+        )
+        .filter(CpeBroken.week_end == current_week_end)
+        .group_by(CpeBroken.city_id)
+        .subquery()
+    )
+    # Main query: LEFT JOIN subq with cities
+    # return all cities with no rows or cities with stale updated_at
+    # in cpe_inventory tsble
+    query = (
+        db.session.query(Cities)
+        .outerjoin(subq, Cities.id == subq.c.city_id)
+        .filter(
+            or_(
+                subq.c.last_update.is_(None),  # no row or never updated
+                subq.c.last_update < saturday,
+            )
+        )
+    )
+
+    return query.all()
+
+
+
+EXCLUDED_NOTIFICATION_ROLES = {"admin", "view", "user_iptv", "user_ftth"}
 
 
 # JOIN ONE USER WHICH CAN HAVE MUTIPLE STALE CITIES FROM ONE CPE TABLE
