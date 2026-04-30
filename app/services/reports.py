@@ -1,5 +1,6 @@
 import os
 from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo
 from collections import defaultdict
 from flask import render_template, current_app
 from exchangelib import (
@@ -33,7 +34,7 @@ def run_weekly_report_job():
     if not settings or not settings.enabled:
         return "Disabled"
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(ZoneInfo("Europe/Belgrade"))
 
     # now.weekday() ide od 0
     if now.weekday() + 1 != settings.send_day:
