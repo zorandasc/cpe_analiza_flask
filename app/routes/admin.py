@@ -1154,8 +1154,13 @@ def users():
         query = query.filter(Users.role == role)
 
     if city_id:
-        # Many-to-Many filter: "Does this user have ANY city with this ID?"
-        query = query.filter(Users.cities.any(Cities.id == int(city_id)))
+        if city_id == "global":
+            # Filter for users who have NO associated cities (access to all)
+            # ~Users.cities.any() means "where NOT EXISTS any city relation"
+            query = query.filter(~Users.cities.any())
+        else:
+            # Many-to-Many filter: "Does this user have ANY city with this ID?"
+            query = query.filter(Users.cities.any(Cities.id == int(city_id)))
 
     # 3. Pagination Logic
     # ovo je za paginacione linkove u template

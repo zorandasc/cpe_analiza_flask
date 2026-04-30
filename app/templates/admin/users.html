@@ -87,7 +87,10 @@ thead {
                 <div class="col-md-2">
                     <label class="form-label">Organizacija</label>
                     <select name="city" class="form-select">
-                        <option value="">Sve</option>
+                        <option value="">-- Sve (Bez filtera) --</option>
+                        <option value="global" {% if request.args.get('city') == 'global' %}selected{% endif %}>
+                            Sva Skladišta
+                        </option>
                         {% for c in cities %}
                         <option value="{{ c.id }}" {% if pagination_args.get("city") == c.id|string %}selected{% endif %}>{{c.name}}</option>
                         {% endfor %}
@@ -160,7 +163,7 @@ thead {
         <th>Organizacija/e</th>
         <th>Dozvoljena CPE oprema</th>
         <th>Vrijeme notifikacije</th>
-        <th>Kreirano</th>
+        <th>Kreiran</th>
         <th style="width: 160px">Akcije</th>
         </tr>
         </thead>
