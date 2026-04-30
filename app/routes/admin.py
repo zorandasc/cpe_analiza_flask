@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import requests
 import re
 from flask import (
@@ -2007,7 +2007,10 @@ def send_weekly_report():
         magic_link = generate_link_for_view_user()
 
         email_body_html = render_template(
-            "reports/email_body_report.html", link=magic_link, **report_data
+            "reports/email_body_report.html",
+            today_day=date.today().strftime("%d.%m.%Y"),
+            link=magic_link,
+            **report_data,
         )
     except RuntimeError as e:
         flash(str(e), "danger")

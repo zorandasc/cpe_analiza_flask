@@ -55,7 +55,10 @@ def run_weekly_report_job():
         magic_link = generate_link_for_view_user()
 
         email_body_html = render_template(
-            "reports/email_body_report.html", link=magic_link, **report_data
+            "reports/email_body_report.html",
+            today_day=date.today().strftime('%d.%m.%Y'),
+            link=magic_link,
+            **report_data,
         )
 
         # SEND EMAIL TO RECIPIENTS, RETUNRS: BOLL and STRING REASON
@@ -467,7 +470,9 @@ def send_email_report(pdf_path, body_html):
         print("Weekly report: no active recipients")
         return False, "Nema primaoca."
 
-    subject = "Sedmični izvještaj o CPE inventaru"
+    subject = (
+        f"Sedmični izvještaj o CPE inventaru ({date.today().strftime('%d-%m-%Y')})"
+    )
 
     try:
         # 1. Setup Configuration (Keep these in your config or .env)
