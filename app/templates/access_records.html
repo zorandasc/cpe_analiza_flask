@@ -184,7 +184,7 @@ styles %} {{ super() }}
             {% endif %}
             <!-- last_updated-->
             <span class="info">
-              Posljedne ažurirano:{% if records[at.name].last_updated %} {{
+              Ažurirano:{% if records[at.name].last_updated %} {{
               records[at.name].last_updated.strftime('%d-%m-%Y %H:%M') }} {% endif %}
             </span>
             <a

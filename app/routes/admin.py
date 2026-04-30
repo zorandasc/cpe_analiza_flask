@@ -1173,7 +1173,13 @@ def users():
     # Instead of loading all User objects just to get a list of emails (which creates a massive memory overhead),
     # I used db.session.query(Users.email).distinct(). This runs a SELECT DISTINCT
     # email FROM users on the database side, which is much faster.
-    emails_raw = db.session.query(Users.email).filter(Users.email.isnot(None)).order_by(Users.email).distinct().all()
+    emails_raw = (
+        db.session.query(Users.email)
+        .filter(Users.email.isnot(None))
+        .order_by(Users.email)
+        .distinct()
+        .all()
+    )
     emails_filter = [e[0] for e in emails_raw]
 
     # Convert Enum class to a list of strings/tuples for the template
@@ -1920,7 +1926,7 @@ def report_add_recipient():
         flash("Primalac uspiješno dodan!", "success")
     except Exception as e:
         db.session.rollback()
-        flash("An error occurred while updating.", "danger")
+        flash(f"An error occurred while updating. {e}", "danger")
 
     return redirect(url_for("admin.report_settings"))
 
@@ -1941,7 +1947,7 @@ def report_activate_recipient(id):
         flash(f"Primalac {status} uspiješno!", "success")
     except Exception as e:
         db.session.rollback()
-        flash("An error occurred while updating.", "danger")
+        flash(f"An error occurred while updating. {e}", "danger")
 
     db.session.commit()
     return redirect(url_for("admin.report_settings"))
@@ -1961,7 +1967,7 @@ def report_remove_recipient(id):
         flash(f"Email {recipient.email}  obrisan!", "success")
     except Exception as e:
         db.session.rollback()
-        flash("An error occurred while updating.", "danger")
+        flash(f"An error occurred while updating. {e}", "danger")
 
     return redirect(url_for("admin.report_settings"))
 
@@ -2028,8 +2034,7 @@ def activity_logs():
     date_to = request.args.get("date_to")
     page = request.args.get("page", 1, type=int)
 
-    
-     # 2. Apply Filters
+    # 2. Apply Filters
     if username:
         # Searches for usernames containing the string (case-insensitive)
         query = query.filter(Users.username.ilike(f"%{username}%"))

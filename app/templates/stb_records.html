@@ -135,7 +135,7 @@ styles %} {{ super() }}
   
  
   <span class="info">
-      Posljedne ažurirano:
+      Ažurirano:
       {% if last_update %}
         {{ last_update.strftime('%d-%m-%Y %H:%M') }}
       {% else %}
@@ -187,7 +187,7 @@ styles %} {{ super() }}
   </button>
    {% endif %}
   <span class="info">
-    Posljednje ažurirano: {% if iptv_users[-1] %} {{
+    Ažurirano: {% if iptv_users[-1] %} {{
     iptv_users[-1]['updated_at'].strftime('%d-%m-%Y %H:%M') }} {% endif %}
   </span>
   </div>
