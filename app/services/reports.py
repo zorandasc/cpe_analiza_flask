@@ -56,7 +56,7 @@ def run_weekly_report_job():
 
         email_body_html = render_template(
             "reports/email_body_report.html",
-            today_day=date.today().strftime('%d.%m.%Y'),
+            today_day=date.today().strftime("%d.%m.%Y"),
             link=magic_link,
             **report_data,
         )
@@ -86,10 +86,10 @@ def generate_pdf():
     # Lazy Load this heavy library
     from weasyprint import HTML
 
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_friday().strftime("%d-%m-%Y")
 
     # data that will be passed to template (pdf)
-    data = {"week": current_week_end.strftime("%d-%m-%Y"), "today": date.today()}
+    data = {"week": current_week_end, "today": date.today()}
 
     # ----------------------------------------------
     # PULL DATA TO RENDER IN SUMMARY AND CHARTS SECTION OF PDF REPORT
@@ -290,7 +290,7 @@ def generate_pdf():
     with open(output_path, "wb") as f:
         f.write(pdf)
 
-    # RETRUN PATH OF SAVED PDF
+    # RETRUN PATH OF SAVED PDF AND DATA FOR BODY EMIAL
     return output_path, data["summary"]
 
 
@@ -503,9 +503,15 @@ def send_email_report(pdf_path, body_html):
         if os.path.exists(pdf_path):
             with open(pdf_path, "rb") as f:
                 file_content = f.read()
+
+                # Generate the dynamic filename for the recipient
+                # Result: CPE_weekly_report_05-05-2026.pdf
+                today_str = date.today().strftime('%d-%m-%Y')
+                attachment_filename = f"CPE_weekly_report_{today_str}.pdf"
+
                 message.attach(
                     FileAttachment(
-                        name=os.path.basename(pdf_path), content=file_content
+                        name=attachment_filename, content=file_content
                     )
                 )
 

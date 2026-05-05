@@ -1986,10 +1986,12 @@ def download_weekly_report():
         return redirect(url_for("admin.report_settings"))
     pdf_path, _ = generate_pdf()
 
+    today_day = date.today().strftime("%d.%m.%Y")
+
     return send_file(
         pdf_path,
         as_attachment=True,
-        download_name="weekly_report.pdf",
+        download_name=f"CPE_weekly_report_{today_day}.pdf",
         mimetype="application/pdf",
     )
 
