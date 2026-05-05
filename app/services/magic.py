@@ -18,7 +18,9 @@ def generate_link_for_view_user():
     view_user = Users.query.filter_by(username="view", role=UserRole.VIEW).first()
 
     if not view_user:
-        raise RuntimeError("Korisnika sa imenom view i rolom view, mora da postoji na sistemu.")
+        raise RuntimeError(
+            "Korisnika sa imenom view i rolom view, mora da postoji na sistemu."
+        )
 
     # EMBED USER IN TOKEN
     token = generate_login_token(view_user)
@@ -32,7 +34,8 @@ def generate_link_for_view_user():
 
 
 # USED IN ROUTE magic.magic_login  TO VERIFY TOKEN
-def verify_login_token(token, max_age=43200):  # 12h
+## 5 days in seconds = 432000
+def verify_login_token(token, max_age=432000): 
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     try:
         user_id = serializer.loads(token, salt="email-login", max_age=max_age)

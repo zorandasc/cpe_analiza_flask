@@ -27,8 +27,6 @@ def login_to_app(form_data):
         # Flask only respects expiration if the session is permanent.
         session.permanent = True
 
-        current_app.permanent_session_lifetime = timedelta(minutes=60)
-
         log_user_action(
             "login",
             user_id=user.id,

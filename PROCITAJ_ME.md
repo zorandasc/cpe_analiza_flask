@@ -2446,3 +2446,39 @@ RUN cp mtel_bundle.pem /usr/local/share/ca-certificates/mtel_bundle.crt \
 But since the corporate server sends only the leaf cert, the most bulletproof fix is to use the MtelHttpAdapter approach in your Flask script — this forces requests to use your bundle which contains the full chain, bypassing the system store entirely:
 
 This works because requests with an explicit verify= path will use the intermediates from your bundle to complete the chain — even when the server doesn't send them. This i
+
+# ---------------------------------------------------------------------------
+
+# SESSION DURATION
+
+1. Default Behavior: The "Sliding Window" (Inactivity)
+By default, Flask has SESSION_REFRESH_EACH_REQUEST = True.
+
+When this is True:
+
+Every time the user clicks a link, refreshes a page, or interacts with your app, the "clock" resets.
+
+In this case, timedelta(minutes=60) means 60 minutes of inactivity.
+
+# MAGIC LINK DURATION
+
+1. The Token Clock (Link Expiry)
+   When you call serializer.dumps(), Flask embeds a timestamp inside that long string of characters (the token).
+
+Start Time: The moment the email is generated.
+
+```PY
+## 5 days in seconds = 432000
+def verify_login_token(token, max_age=432000):
+```
+
+Expiration: When verify_login_token runs, it looks at that internal timestamp and compares it to the current time.
+
+If the difference is greater than your max_age (e.g., 12 hours), it throws a SignatureExpired error.
+
+2. The Session Clock (After Clicking)
+   The session clock only starts after a successful click. Once the user clicks the link within the 12-hour window, your magic_login route runs login_user(). At that point, the token has done its job and is no longer checked. The user is now governed by the PERMANENT_SESSION_LIFETIME.
+
+```PY
+PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+```

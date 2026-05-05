@@ -37,7 +37,4 @@ def magic_login(token):
     # Override the default 1h session for this specific login
     session.permanent = True
 
-    # Set a longer session for the "View" user (e.g., 120 hours)
-    current_app.permanent_session_lifetime = timedelta(hours=120)
-
     return redirect(url_for("charts.chart_home"))
