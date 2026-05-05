@@ -1,4 +1,6 @@
-from flask import session, request
+from datetime import timedelta
+
+from flask import current_app, session, request
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import (
     login_user,
@@ -24,6 +26,8 @@ def login_to_app(form_data):
 
         # Flask only respects expiration if the session is permanent.
         session.permanent = True
+
+        current_app.permanent_session_lifetime = timedelta(minutes=60)
 
         log_user_action(
             "login",

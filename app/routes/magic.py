@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from flask import (
     Blueprint,
+    current_app,
     flash,
     redirect,
     session,
@@ -18,6 +21,8 @@ magic_bp = Blueprint(
 )
 
 
+# This route will be hit by link embeded in email:
+# login_link = f"{base_url}/magic-login/{token}"
 @magic_bp.route("/<token>")
 def magic_login(token):
     user = verify_login_token(token)
@@ -28,7 +33,11 @@ def magic_login(token):
 
     login_user(user, remember=False)
 
-    # the same as regular login users which session will expired in 60min
+    # the same as regular login users
+    # Override the default 1h session for this specific login
     session.permanent = True
+
+    # Set a longer session for the "View" user (e.g., 120 hours)
+    current_app.permanent_session_lifetime = timedelta(hours=120)
 
     return redirect(url_for("charts.chart_home"))
