@@ -55,7 +55,17 @@
                      <input type="text" name="username" class="form-control" 
                         placeholder="Pretraži..." value="{{ request.args.get('username', '') }}">
                 </div>
-
+                <div class="col-md-2">
+                    <label class="form-label">Grad</label>
+                    <select name="city_id" class="form-select">
+                        <option value="">Svi gradovi</option>
+                        {% for city in cities %}
+                        <option value="{{ city.id }}" {% if request.args.get('city_id')|int == city.id %}selected{% endif %}>
+                            {{ city.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-md-2">
                     <label class="form-label">Akcija</label>
                     <select name="action" class="form-select">
@@ -86,14 +96,16 @@
                     <input type="date" name="date_to" class="form-control"  value="{{ pagination_args.get('date_to', '') }}">
                 </div>
 
-                <div class="col-md-2 d-grid">
-                    <button type="submit" class="btn btn-primary filter" >
-                        🔍 Filtriraj
-                    </button>
+                <div class="row g-3 align-items-end">
+
+                        <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-outline-secondary col-md-6">
+                            Reset
+                        </a>
+                        <button type="submit" class="btn btn-primary filter col-md-6" >
+                            🔍 Filtriraj
+                        </button>
                 </div>
-                <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-outline-secondary">
-                    Reset
-                </a>
+                
             </form>
         </div>
     </div>

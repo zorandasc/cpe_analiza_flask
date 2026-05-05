@@ -2034,9 +2034,11 @@ def send_weekly_report():
 @admin_bp.route("/activity")
 @login_required
 def activity_logs():
+    # Start the query and join Users immediately since you need it for the username filter/display
     query = UserActivity.query.join(Users)
 
     # Filters
+    city_id = request.args.get("city_id", type=int)
     username = request.args.get("username")
     action = request.args.get("action")
     table_name = request.args.get("table_name")
@@ -2045,6 +2047,9 @@ def activity_logs():
     page = request.args.get("page", 1, type=int)
 
     # 2. Apply Filters
+    if city_id:
+        query = query.filter(Users.cities.any(Cities.id == city_id))
+        
     if username:
         # Searches for usernames containing the string (case-insensitive)
         query = query.filter(Users.username.ilike(f"%{username}%"))
@@ -2067,7 +2072,8 @@ def activity_logs():
         page=page, per_page=50, error_out=False
     )
 
-    users = Users.query.order_by(Users.username).all()
+    # Fetch cities for the dropdown menu
+    all_cities = Cities.query.order_by(Cities.name).all()
 
     # ovo je za paginacione linkove u template
     # da ne bi srukali svaki argument u svaki paginacioni link
@@ -2088,7 +2094,7 @@ def activity_logs():
     return render_template(
         "admin/activity.html",
         logs=logs,
-        users=users,
+        cities=all_cities,
         tables=tables,
         actions=actions,
         pagination_args=args,
