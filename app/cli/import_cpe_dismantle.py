@@ -42,9 +42,6 @@ def import_cpe_dismantle_command(excel_path):
     with open(excel_path, "rb") as f:
         records = import_cpe_dismantle_from_excel(f)
 
-        # for r in records:
-        #    print(r, "/n")
-
         bulk_upsert_cpe_dismantle(records)
 
 
@@ -68,10 +65,14 @@ def import_cpe_dismantle_from_excel(file_stream):
 
     records = []
 
+    print(f"Workbook sheets: {len(workbook.worksheets)}")
+
     # 2. Iterate through sheets
     for sheet in workbook.worksheets:
         # Find week_end from sheet title
         sheet_title = sheet.title.strip().rstrip(".")
+
+        print(f"Processing: {sheet.title}")
 
         week_end = datetime.strptime(sheet_title, "%d.%m.%Y").date()
 
@@ -305,18 +306,26 @@ def bulk_upsert_cpe_dismantle(records):
         print("No records to import.")
         return
 
-    stmt = insert(CpeDismantle).values(records)
+    print(f"Prepared {len(records)} records")
+    try:
+        stmt = insert(CpeDismantle).values(records)
 
-    stmt = stmt.on_conflict_do_update(
-        constraint="uq_city_cpe_dismantle_week",
-        set_={
-            "quantity": stmt.excluded.quantity,
-            "updated_at": db.func.now(),
-        },
-    )
+        stmt = stmt.on_conflict_do_update(
+            constraint="uq_city_cpe_dismantle_week",
+            set_={
+                "quantity": stmt.excluded.quantity,
+                "updated_at": db.func.now(),
+            },
+        )
 
-    db.session.execute(stmt)
+        print("Executing bulk upsert...")
 
-    db.session.commit()
+        db.session.execute(stmt)
 
-    print(f"Upserted {len(records)} records.")
+        db.session.commit()
+
+        print(f"Upserted {len(records)} records.")
+
+    except Exception:
+        db.session.rollback()
+        raise

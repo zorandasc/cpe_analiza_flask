@@ -2452,7 +2452,7 @@ This works because requests with an explicit verify= path will use the intermedi
 # SESSION DURATION
 
 1. Default Behavior: The "Sliding Window" (Inactivity)
-By default, Flask has SESSION_REFRESH_EACH_REQUEST = True.
+   By default, Flask has SESSION_REFRESH_EACH_REQUEST = True.
 
 When this is True:
 
@@ -2481,4 +2481,52 @@ If the difference is greater than your max_age (e.g., 12 hours), it throws a Sig
 
 ```PY
 PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
+```
+
+# ------------------------------SCRIPT FOR IMPORT CPE DISMANTLE---------
+
+SCRIPT import_cpe_dismantle.py IS INSIDE FLASK PROJET:
+
+1. Copy excel file from pc to host server
+
+```bash
+scp 123.xlsx root@10.198.3.92:/
+```
+
+2. Copy file INTO FLASK container
+
+```bash
+docker cp /tmp/123.xlsx <container_id>:/tmp/123.xlsx
+```
+
+3. execute flask cli SCRIPT inside container
+
+```bash
+docker exec -it <container_id> flask import_cpe_dismantle /tmp/123.xlsx
+
+```
+
+RUN AFTER TO SE IS THERE DUPLICATES:
+
+```SQL
+SELECT
+    city_id,
+    cpe_type_id,
+    dismantle_type_id,
+    week_end,
+    COUNT(*)
+FROM cpe_dismantle
+GROUP BY
+    city_id,
+    cpe_type_id,
+    dismantle_type_id,
+    week_end
+HAVING COUNT(*) > 1;
+```
+
+AND
+
+```SQL
+SELECT COUNT(*)
+FROM cpe_dismantle;
 ```
