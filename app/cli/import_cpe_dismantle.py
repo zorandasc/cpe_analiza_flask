@@ -31,6 +31,7 @@ ROW_TO_CITY_ID = {
     8: 11,
 }
 
+
 # flask import_cpe_dismantle xxx.xlsx > output.log 2>&1
 @click.command("import_cpe_dismantle")
 @click.argument("excel_path")
@@ -40,6 +41,82 @@ def import_cpe_dismantle_command(excel_path):
         records = import_cpe_dismantle_from_excel(f)
 
         bulk_upsert_cpe_dismantle(records)
+
+
+# parse_quantity(5) 5
+# parse_quantity("10") 10
+# parse_quantity("10/20") 30
+# parse_quantity("10 / 20 / 5") 35
+# parse_quantity("-") 0
+# parse_quantity(None) 0
+def parse_complete_quantity(quantity_raw, _):
+    if quantity_raw is None:
+        return [{"quantity": 0, "dismantle_type_id": 1}]
+
+    # Excel sometimes returns floats
+    if isinstance(quantity_raw, (int, float)):
+        return [{"quantity": int(quantity_raw), "dismantle_type_id": 1}]
+
+    # Convert everything else to string
+    value = str(quantity_raw).strip()
+
+    if value in ["", "-", "/"]:
+        return [{"quantity": 0, "dismantle_type_id": 1}]
+
+    # Handle values like: 10/20
+    if "/" in value:
+        try:
+            parts = value.split("/")
+            total = sum(int(float(part.strip())) for part in parts if part.strip())
+            return [{"quantity": total, "dismantle_type_id": 1}]
+        except Exception:
+            return None
+
+    # Normal integer string
+    try:
+        return [{"quantity": int(float(value)), "dismantle_type_id": 1}]
+    except Exception:
+        return None
+
+
+# number NA, number ND, number NDIA, number, 
+# number NA/number NA,
+# number ND/number NDIA 
+# number/number
+def parse_missing_quantity(quantity_raw, cpe_type_id):
+    if quantity_raw is None:
+        return [{"quantity": 0, "dismantle_type_id": 1}]
+
+    # Excel sometimes returns floats
+    if isinstance(quantity_raw, (int, float)):
+        return [{"quantity": int(quantity_raw), "dismantle_type_id": 1}]
+
+    # Convert everything else to string
+    value = str(quantity_raw).strip()
+
+    if value in ["", "-", "/"]:
+        return [{"quantity": 0, "dismantle_type_id": 1}]
+
+    # Handle values like: 10/20
+    if "/" in value:
+        try:
+            parts = value.split("/")
+            total = sum(int(float(part.strip())) for part in parts if part.strip())
+            return [{"quantity": total, "dismantle_type_id": 1}]
+        except Exception:
+            return None
+
+    # Normal integer string
+    try:
+        return [{"quantity": int(float(value)), "dismantle_type_id": 1}]
+    except Exception:
+        return None
+
+
+TABLE_PARSERS = {
+    "COMP": parse_complete_quantity,
+    "MISS": parse_missing_quantity,
+}
 
 
 def import_cpe_dismantle_from_excel(file_stream):
@@ -74,101 +151,78 @@ def import_cpe_dismantle_from_excel(file_stream):
             for cell in row:
                 # FIND START OF COMPLETET TABLE
                 if cell.value == "Stanje demontirane ispravne i kompletne TO":
+                    table_type = "COMP"
+                    # ROW OF FIRST CITY
+                    data_start_row = cell.row + 3
+                elif cell.value == "Stanje demontirane ispravne i nekompletne TO":
+                    continue
+                    table_type = "MISS"
                     # ROW OF FIRST CITY
                     data_start_row = cell.row + 3
 
-                    # ROW OF LAST CITY
-                    data_end_row = data_start_row + len(ROW_TO_CITY_ID) - 1
+                else:
+                    continue
 
-                    # COLUMN OF FIRST CPE (C column in excel)
-                    start_col = 3
+                # ROW OF LAST CITY
+                data_end_row = data_start_row + len(ROW_TO_CITY_ID) - 1
 
-                    # COLUMN OF LAST CPE  (M column in excel)
-                    stop_col = 13
+                # COLUMN OF FIRST CPE (C column in excel)
+                start_col = 3
 
-                    for row_num in range(data_start_row, data_end_row + 1):
-                        # in first iteration row_num=data_start_row
-                        # This determines relative index in ROW_TO_CITY_ID from absolute excel row
-                        # Excel row     Relative row
-                        # --------------------------------
-                        # 12            1
-                        # 13            2
-                        # 14            3
-                        # 15            4
-                        relative_row = row_num - data_start_row + 1
+                # COLUMN OF LAST CPE  (M column in excel)
+                stop_col = 13
 
-                        city_id = ROW_TO_CITY_ID.get(relative_row)
+                for row_num in range(data_start_row, data_end_row + 1):
+                    # in first iteration row_num=data_start_row
+                    # This determines relative index in ROW_TO_CITY_ID from absolute excel row
+                    # Excel row     Relative row
+                    # --------------------------------
+                    # 12            1
+                    # 13            2
+                    # 14            3
+                    # 15            4
+                    relative_row = row_num - data_start_row + 1
 
-                        if not city_id:
-                            print(f"Unknown relative row: {relative_row}")
+                    city_id = ROW_TO_CITY_ID.get(relative_row)
+
+                    if not city_id:
+                        print(f"Unknown relative row: {relative_row}")
+                        continue
+
+                    for col_num in range(start_col, stop_col + 1):
+                        cpe_type_id = COLUMN_TO_CPE_ID.get(col_num)
+
+                        if not cpe_type_id:
                             continue
 
-                        for col_num in range(start_col, stop_col + 1):
-                            cpe_type_id = COLUMN_TO_CPE_ID.get(col_num)
+                        quantity_raw = sheet.cell(row=row_num, column=col_num).value
 
-                            if not cpe_type_id:
-                                continue
+                        parser = TABLE_PARSERS[table_type]
 
-                            quantity_raw = sheet.cell(row=row_num, column=col_num).value
+                        parsed_rows = parser(quantity_raw, cpe_type_id)
 
-                            quantity = parse_quantity(quantity_raw)
+                        if parsed_rows is None:
+                            print(
+                                f"Invalid quantity "
+                                f"Sheet={sheet.title}"
+                                f"at row={row_num}, "
+                                f"col={col_num}: "
+                                f"{quantity_raw}"
+                            )
+                            continue
 
-                            if quantity is None:
-                                print(
-                                    f"Invalid quantity "
-                                    f"at row={row_num}, "
-                                    f"col={col_num}: "
-                                    f"{quantity_raw}"
-                                )
-                                continue
-
+                        for parsed in parsed_rows:
                             row_data = {
                                 "city_id": city_id,
                                 "cpe_type_id": cpe_type_id,
-                                "dismantle_type_id": 1,
-                                "quantity": quantity,
+                                "dismantle_type_id": parsed["dismantle_type_id"],
+                                "quantity": parsed["quantity"],
                                 "week_end": week_end,
                             }
 
                             records.append(row_data)
 
     return records
-
-
-# parse_quantity(5) 5
-# parse_quantity("10") 10
-# parse_quantity("10/20") 30
-# parse_quantity("10 / 20 / 5") 35
-# parse_quantity("-") 0
-# parse_quantity(None) 0
-def parse_quantity(quantity_raw):
-    if quantity_raw is None:
-        return 0
-
-    # Excel sometimes returns floats
-    if isinstance(quantity_raw, (int, float)):
-        return int(quantity_raw)
-
-    # Convert everything else to string
-    value = str(quantity_raw).strip()
-
-    if value in ["", "-", "/"]:
-        return 0
-
-    # Handle values like: 10/20
-    if "/" in value:
-        try:
-            parts = value.split("/")
-            total = sum(int(float(part.strip())) for part in parts if part.strip())
-            return total
-        except Exception:
-            return None
-
-    # Normal integer string
-    try:
-        return int(float(value))
-    except Exception:
-        return None
 
 
 def bulk_upsert_cpe_dismantle(records):
