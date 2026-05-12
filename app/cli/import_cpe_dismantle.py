@@ -5,7 +5,7 @@ import re
 from collections import defaultdict
 from openpyxl import load_workbook
 from sqlalchemy.dialects.postgresql import insert
-from app.models import CpeDismantle
+from app.models import Cities, CpeDismantle
 from app.extensions import db
 
 # MAPIRANJE REDNOG BROJA EXCEL KOLONE U ID TOG CPE TIPA U POSTGRES DB
@@ -18,19 +18,6 @@ COLUMN_TO_CPE_ID = {
     11: 8,
     12: 4,
     13: 5,
-}
-
-# MAPIRANJE POZICIJE GRADA U EXCEL TABELI I ID TOG GRADA U POSTGRES DB
-ROW_TO_CITY_ID = {
-    # exce_relativ_table_row_number: city_id
-    1: 3,
-    2: 4,
-    3: 5,
-    4: 6,
-    5: 8,
-    6: 9,
-    7: 10,
-    8: 11,
 }
 
 
@@ -63,6 +50,9 @@ def import_cpe_dismantle_from_excel(file_stream):
     except Exception as e:
         return f"Error loading workbook: {e}"
 
+    # Imena i id gradova iz baze
+    CITY_MAP = {normalize(city.name): city.id for city in Cities.query.all()}
+
     records = []
 
     print(f"Workbook sheets: {len(workbook.worksheets)}")
@@ -91,32 +81,26 @@ def import_cpe_dismantle_from_excel(file_stream):
                 else:
                     continue
 
-                # ROW OF LAST CITY
-                data_end_row = data_start_row + len(ROW_TO_CITY_ID) - 1
+                # Start row row that hlds city + data
+                row_num = data_start_row
 
-                # COLUMN OF FIRST CPE (C column in excel)
-                start_col = 3
+                while True:
+                    # Get city name from excel
+                    city_name = sheet.cell(row=row_num, column=1).value
 
-                # COLUMN OF LAST CPE  (M column in excel)
-                stop_col = 13
+                    # Mapiranje izmedju grada excela i baze
+                    city_id = CITY_MAP.get(normalize(city_name))
 
-                for row_num in range(data_start_row, data_end_row + 1):
-                    # in first iteration row_num=data_start_row
-                    # This determines relative index in ROW_TO_CITY_ID from absolute excel row
-                    # Excel row     Relative row
-                    # --------------------------------
-                    # 12            1
-                    # 13            2
-                    # 14            3
-                    # 15            4
-                    relative_row = row_num - data_start_row + 1
+                    # table ended
+                    if city_id is None:
+                        print(f"End of table at row {row_num}: {city_name}")
 
-                    city_id = ROW_TO_CITY_ID.get(relative_row)
+                        break
 
-                    if not city_id:
-                        print(f"Unknown relative row: {relative_row}")
-                        continue
+                    print(f"city name/id: {city_name}/{city_id}")
 
+                    start_col = 3  # COLUMN OF FIRST CPE (C column in excel)
+                    stop_col = 13  # COLUMN OF LAST CPE  (M column in excel)
                     for col_num in range(start_col, stop_col + 1):
                         cpe_type_id = COLUMN_TO_CPE_ID.get(col_num)
 
@@ -151,15 +135,29 @@ def import_cpe_dismantle_from_excel(file_stream):
 
                             records.append(row_data)
 
+                    # NEXT CITY/ROW
+                    row_num += 1
+
     return records
 
 
-# parse_quantity(5) 5
-# parse_quantity("10") 10
-# parse_quantity("10/20") 30
-# parse_quantity("10 / 20 / 5") 35
-# parse_quantity("-") 0
-# parse_quantity(None) 0
+def normalize(value):
+
+    if not value:
+        return ""
+
+    value = str(value)
+
+    value = value.strip().lower()
+
+    value = value.replace("\n", " ")
+
+    value = re.sub(r"\s+", " ", value)
+
+    return value
+
+
+# parse_quantity:(5) 5, ("10") 10, ("10/20") 30, ("10 / 20 / 5") 35, ("-") 0, (None) 0
 def parse_complete_quantity(raw_cell, _):
     if raw_cell is None:
         return [{"quantity": 0, "dismantle_type_id": 1}]
@@ -254,8 +252,10 @@ def parse_tokens(value):
         if not match:
             raise ValueError(f"Invalid token: {part}")
 
+        # First part of value number
         quantity = int(match.group(1))
 
+        # Secon part FISMANTLE CODE WORD STRING
         code = match.group(2)
 
         result.append({"quantity": quantity, "code": code})
