@@ -112,10 +112,9 @@ def cpe_inventory():
 
     if city_id:
         query = query.filter(CpeInventory.city_id == city_id)
-    
+
     if cpe_id:
         query = query.filter(CpeInventory.cpe_type_id == cpe_id)
-
 
     order_column = getattr(CpeInventory, sort_by)
 
@@ -300,7 +299,7 @@ def cpe_dismantle():
         dismantle_types=dismantle_types,
         week_end=week_end,
         city_id=city_id,
-        cpe_id=cpe_id
+        cpe_id=cpe_id,
     )
 
 
@@ -419,6 +418,7 @@ def cpe_broken():
     # filters
     week_end = request.args.get("week_end", type=str)
     city_id = request.args.get("city_id", type=int)
+    cpe_id = request.args.get("cpe_id", type=int)
 
     # Whitelist allowed sort columns (prevents SQL injection)
     allowed_sorts = [
@@ -441,6 +441,9 @@ def cpe_broken():
     if city_id:
         query = query.filter(CpeBroken.city_id == city_id)
 
+    if cpe_id:
+        query = query.filter(CpeBroken.cpe_type_id == cpe_id)
+
     order_column = getattr(CpeBroken, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
@@ -451,9 +454,10 @@ def cpe_broken():
 
     cities = Cities.query.order_by(Cities.id).order_by(Cities.id).all()
 
-    cpe_types = (
-        CpeTypes.query.filter_by(visible_in_broken=True).order_by(CpeTypes.id).all()
-    )
+    # cpe_types = (
+    #    CpeTypes.query.filter_by(visible_in_broken=True).order_by(CpeTypes.id).all()
+    # )
+    cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
 
     return render_template(
         "admin/cpe_broken.html",
@@ -466,6 +470,7 @@ def cpe_broken():
         cpe_types=cpe_types,
         week_end=week_end,
         city_id=city_id,
+        cpe_id=cpe_id
     )
 
 

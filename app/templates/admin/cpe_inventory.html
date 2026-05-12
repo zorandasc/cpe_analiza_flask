@@ -158,7 +158,8 @@ styles %} {{ super() }}
               href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='cpe_type_id', direction='asc' if direction=='desc' else 'desc') }}"
               >Ime CPE opreme</a></th>
           <th>Količina</th>
-          <th><a href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='week_end', direction='asc' if direction=='desc' else 'desc') }}">Sedmica</a></th>
+          <th><a href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='week_end', direction='asc' if direction=='desc' else 'desc') }}">
+          Sedmica (dd-MM-YY)</a></th>
            <th>
             <a
               href="{{ url_for('admin.cpe_inventory',week_end=week_end, city_id=city_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"

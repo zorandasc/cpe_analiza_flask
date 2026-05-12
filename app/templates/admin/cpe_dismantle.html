@@ -164,7 +164,7 @@ styles %} {{ super() }}
           <th>Tip demontaže</th>
           <th> <a
               href="{{ url_for('admin.cpe_dismantle', week_end=week_end, city_id=city_id, sort='week_end', direction='asc' if direction=='desc' else 'desc') }}"
-              >Sedmica</a></th>
+              >Sedmica (dd-MM-YY)</a></th>
           <th>
             <a
               href="{{ url_for('admin.cpe_dismantle', week_end=week_end, city_id=city_id, sort='created_at', direction='asc' if direction=='desc' else 'desc') }}"
