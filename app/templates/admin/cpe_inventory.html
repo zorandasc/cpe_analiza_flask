@@ -71,38 +71,9 @@ styles %} {{ super() }}
  </div>
 </div>
 
- <div class="d-flex justify-content-between align-items-center mb-3">
-      <nav>
-          <ul class="pagination mb-0">
-              {% if pagination.has_prev %}
-              <li class="page-item">
-                  <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}">Previous</a>
-              </li>
-              {% endif %}
-
-              {% for p in pagination.iter_pages() %}
-                  {% if p %}
-                      <li class="page-item {% if p == pagination.page %}active{% endif %}">
-                          <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, page=p, sort=sort_by, direction=direction) }}">{{ p }}</a>
-                      </li>
-                  {% else %}
-                      <li class="page-item disabled"><span class="page-link">...</span></li>
-                  {% endif %}
-              {% endfor %}
-
-              {% if pagination.has_next %}
-              <li class="page-item">
-                  <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, page=pagination.next_num, sort=sort_by, direction=direction) }}">Next</a>
-              </li>
-              {% endif %}
-          </ul>
-      </nav>
-
-      <form method="get" class="row g-3 align-items-end">
-          <div class="col-auto">
-              <label class="form-label mb-1">Sedmica</label>
-              <input type="date" name="week_end" class="form-control" value="{{week_end}}">
-          </div>
+ 
+  <form method="get" class="row align-items-end justify-content-end mb-4">
+        
           <div class="col-auto">
               <label class="form-label mb-1">Skladište</label>
               <select name="city_id" class="form-select">
@@ -113,10 +84,58 @@ styles %} {{ super() }}
               </select>
           </div>
           <div class="col-auto">
-              <button type="submit" class="btn btn-primary btn-custom-filter">Filter</button>
+                    <label class="form-label">CPE uređaj</label>
+                    <select name="cpe_id" class="form-select shadow-sm">
+                         <option value="">-- Svi uređaji --</option>
+                        {% for cpe in cpe_types %}
+                        <option value="{{ cpe.id}}" {% if cpe_id == cpe.id %}selected{% endif %}>
+                            {{ cpe.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            <div class="col-auto">
+              <label class="form-label mb-1">Sedmica</label>
+              <input type="date" name="week_end" class="form-control" value="{{week_end}}">
           </div>
-      </form>
+          <div class="col-auto">
+              <button type="submit" class="btn btn-primary btn-custom-filter">Filter</button>
+               <a href="{{ url_for('admin.cpe_inventory') }}" class="btn btn-outline-secondary">
+                            Reset
+                </a>
+          </div>
+  </form>
+ 
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <nav>
+            <ul class="pagination mb-0">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, cpe_id=cpe_id, page=pagination.prev_num, sort=sort_by, direction=direction) }}">Previous</a>
+                </li>
+                {% endif %}
+
+                {% for p in pagination.iter_pages() %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, cpe_id=cpe_id, page=p, sort=sort_by, direction=direction) }}">{{ p }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin.cpe_inventory',  week_end=week_end, city_id=city_id, cpe_id=cpe_id, page=pagination.next_num, sort=sort_by, direction=direction) }}">Next</a>
+                </li>
+                {% endif %}
+            </ul>
+    </nav>
+    <div class=" text-muted">
+        Showing {{ records|length }} of {{ pagination.total }} logs
     </div>
+  </div>
   <div class="table-responsive">
     <table
       class="table table-bordered  table-striped table-hover align-middle shadow-lg table-sm"
@@ -242,9 +261,10 @@ styles %} {{ super() }}
 </div>
 <script>
 
+//WHEN OPENNING MODAL WITH CITY/WEEK_END COMBINATION 
 //CHECK IF CITY/WEEK_END COMBINATION ALREADY EXISIT
-//IF YES FILL WITH THAT VALUES
-//IF NO FILL WITH ALL ZERO
+//IF YES FILL MODAL WITH THAT VALUES
+//IF NO FILL MODAL WITH ALL ZERO
 function checkExistingData() {
     const cityId = document.getElementById('modal_city_id').value;
     const weekEnd = document.getElementById('modal_week_end').value;

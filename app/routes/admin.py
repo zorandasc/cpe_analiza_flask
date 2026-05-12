@@ -90,6 +90,7 @@ def cpe_inventory():
     # filters
     week_end = request.args.get("week_end", type=str)
     city_id = request.args.get("city_id", type=int)
+    cpe_id = request.args.get("cpe_id", type=int)
 
     # Whitelist allowed sort columns (prevents SQL injection)
     allowed_sorts = [
@@ -111,6 +112,10 @@ def cpe_inventory():
 
     if city_id:
         query = query.filter(CpeInventory.city_id == city_id)
+    
+    if cpe_id:
+        query = query.filter(CpeInventory.cpe_type_id == cpe_id)
+
 
     order_column = getattr(CpeInventory, sort_by)
 
@@ -122,9 +127,8 @@ def cpe_inventory():
     )
 
     cities = Cities.query.order_by(Cities.id).all()
-    cpe_types = (
-        CpeTypes.query.filter_by(visible_in_total=True).order_by(CpeTypes.id).all()
-    )
+
+    cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
 
     return render_template(
         "admin/cpe_inventory.html",
@@ -137,6 +141,7 @@ def cpe_inventory():
         cpe_types=cpe_types,
         week_end=week_end,
         city_id=city_id,
+        cpe_id=cpe_id,
     )
 
 
@@ -2049,7 +2054,7 @@ def activity_logs():
     # 2. Apply Filters
     if city_id:
         query = query.filter(Users.cities.any(Cities.id == city_id))
-        
+
     if username:
         # Searches for usernames containing the string (case-insensitive)
         query = query.filter(Users.username.ilike(f"%{username}%"))
