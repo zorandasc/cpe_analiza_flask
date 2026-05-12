@@ -247,6 +247,7 @@ def cpe_dismantle():
     # filters
     week_end = request.args.get("week_end", type=str)
     city_id = request.args.get("city_id", type=int)
+    cpe_id = request.args.get("cpe_id", type=int)
 
     # Whitelist allowed sort columns (prevents SQL injection)
     allowed_sorts = [
@@ -270,6 +271,9 @@ def cpe_dismantle():
     if city_id:
         query = query.filter(CpeDismantle.city_id == city_id)
 
+    if cpe_id:
+        query = query.filter(CpeDismantle.cpe_type_id == cpe_id)
+
     order_column = getattr(CpeDismantle, sort_by)
     if direction == "desc":
         order_column = order_column.desc()
@@ -281,9 +285,7 @@ def cpe_dismantle():
     # THIS IS DATA FOR SELECTION IN CITY FILTER
     cities = Cities.query.order_by(Cities.id).order_by(Cities.id).all()
 
-    cpe_types = (
-        CpeTypes.query.filter_by(visible_in_dismantle=True).order_by(CpeTypes.id).all()
-    )
+    cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
 
     dismantle_types = DismantleTypes.query.order_by(DismantleTypes.id).all()
 
@@ -298,6 +300,7 @@ def cpe_dismantle():
         dismantle_types=dismantle_types,
         week_end=week_end,
         city_id=city_id,
+        cpe_id=cpe_id
     )
 
 
