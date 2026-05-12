@@ -94,6 +94,17 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
+            zoom: {
+                zoom: {
+                    drag: {
+                      enabled: true,
+                      backgroundColor: 'rgba(225,225,225,0.5)', // The color of the selection rectangle
+                      borderColor: 'rgba(225,225,225,1)',
+                      borderWidth: 1
+                    },
+                    mode: 'xy'
+                }
+            },
             legend: { display: true },
             title: {
               display: true,
@@ -150,6 +161,16 @@
         link.click();
       });
     }
+
+    const resetChartBtn = document.getElementById("resetChart");
+
+    if (resetChartBtn ) {
+      resetChartBtn.addEventListener("click", () => {
+        // 1. Make sure the chart exists
+        if (chart) chart.resetZoom();
+      });
+    }
+
   })();
 </script>
 {% endif %}

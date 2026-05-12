@@ -97,7 +97,7 @@
                 </div>
 
                 <div class="col-md-2 d-flex align-items-end justify-content-end">
-                    <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline-secondary w-100">
+                    <a href="{{ url_for(request.endpoint) }}" class="btn btn-outline-danger w-100">
                         Poništi
                     </a>
                 </div>
@@ -135,7 +135,8 @@
         </div>
     </div>
         <div class="card-body">
-            <div style="position: relative; height: 500px;">
+            <button class="btn btn-outline-success" id="resetChart">Reset Zoom</button>
+            <div style="position: relative; height: 600px;">
                 <canvas id="ctxChart"></canvas>
             </div>
         </div>
