@@ -241,7 +241,7 @@ styles %} {{ super() }}
                 </tr>
               </thead>
               <tbody>
-                {% for type in modal_cpes %}
+                {% for type in visible_cpes %}
                 <tr>
                   <td>{{ type.label }}</td>
                    {% for dismantle in dismantle_types %}

@@ -130,8 +130,8 @@ def cpe_inventory():
     # This go to filter cpe types, we want to see all
     cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
 
-    # This go to modal for adding new record
-    modal_cpes = [cpe for cpe in cpe_types if cpe.visible_in_total]
+    # This go to modal for adding/editing new record
+    visible_cpes = [cpe for cpe in cpe_types if cpe.visible_in_total]
 
     return render_template(
         "admin/cpe_inventory.html",
@@ -142,7 +142,7 @@ def cpe_inventory():
         direction=direction,
         cities=cities,
         cpe_types=cpe_types,
-        modal_cpes=modal_cpes,
+        visible_cpes=visible_cpes,
         week_end=week_end,
         city_id=city_id,
         cpe_id=cpe_id,
@@ -293,7 +293,7 @@ def cpe_dismantle():
     cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
 
     # This go to modal for adding/editing record
-    modal_cpes = [cpe for cpe in cpe_types if cpe.visible_in_dismantle]
+    visible_cpes = [cpe for cpe in cpe_types if cpe.visible_in_dismantle]
 
     dismantle_types = DismantleTypes.query.order_by(DismantleTypes.id).all()
 
@@ -305,7 +305,7 @@ def cpe_dismantle():
         direction=direction,
         cities=cities,
         cpe_types=cpe_types,
-        modal_cpes=modal_cpes,
+        visible_cpes=visible_cpes,
         dismantle_types=dismantle_types,
         week_end=week_end,
         city_id=city_id,
@@ -468,7 +468,7 @@ def cpe_broken():
     cpe_types = CpeTypes.query.order_by(CpeTypes.id).all()
 
     # This go to modal for adding/editing new record
-    modal_cpes = [cpe for cpe in cpe_types if cpe.visible_in_broken]
+    visible_cpes = [cpe for cpe in cpe_types if cpe.visible_in_broken]
 
     return render_template(
         "admin/cpe_broken.html",
@@ -479,7 +479,7 @@ def cpe_broken():
         direction=direction,
         cities=cities,
         cpe_types=cpe_types,
-        modal_cpes=modal_cpes,
+        visible_cpes=visible_cpes,
         week_end=week_end,
         city_id=city_id,
         cpe_id=cpe_id,
