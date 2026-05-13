@@ -40,9 +40,9 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
+        -- ✅ Efficiently get the table of the latest inventory record per city/cpe type
+        -- from cpe_inventory table. (This is for Quantities).
         WITH last_inventory AS (
-            -- ✅ Efficiently get the table of the latest inventory record per city/cpe type
-            -- from cpe_inventory table. (This is for Quantities).
             SELECT DISTINCT ON (city_id, cpe_type_id)
                 city_id,
                 cpe_type_id,
@@ -52,42 +52,48 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             WHERE week_end <= :week_end
             ORDER BY city_id, cpe_type_id, week_end DESC
         ),
+        --✅ Get the table of the absolute latest 'Save' timestamp for every city
+        -- from cpe_inventory, table(city_id, last_save)(This is for Last Save).
         city_last_update AS (
-            --✅ Get the table of the absolute latest 'Save' timestamp for every city
-            -- from cpe_inventory, table(city_id, last_save)(This is for Last Save).
             SELECT city_id, MAX(updated_at) as last_save
             FROM cpe_inventory
             WHERE week_end <= :week_end
             GROUP BY city_id
         ),
+        --✅ Determine the table with final 'updated_at' for the city-row in regard to Parent/Child relationship
+        -- city_health is table(city_id, major_city_id,final_updated_at)
         city_health AS (
-            --✅ Determine the table with final 'updated_at' for the row
-            -- this table(city_id, major_city_id,final_updated_at)
-            -- (This is for updated_at Parent/Child relationship)
             SELECT 
                 c.id AS city_id,
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
                 CASE 
                     --✅ If this is a parent city (has subcities)
                     WHEN EXISTS (SELECT 1 FROM cities WHERE parent_city_id = c.id) THEN (
-                        --✅  take the MIN of its children's cities last saves
-                        -- min of max updated_at of all cubbcities
+                        --✅  take the MIN of its children's cities last saves, min of max updated_at of all cubbcities
+                        -- bubbles up the "oldest" date to the Parent.
                         SELECT MIN(clu.last_save)
                         FROM cities sub
-                        --✅ Use LEFT JOIN so if a subcity has NO data, MIN becomes NULL
+
+                        -- ✅ Join visibility here so we ignore hidden "Ghost" subcities
+                        -- this is the same as in main query, if city is not visible dont includit
+                        JOIN city_visibility_settings vs 
+                            ON vs.city_id = sub.id 
+                            AND vs.dataset_key = 'cpe_inventory'
+
+                        --✅ Use LEFT JOIN (city and city_last_update) so if a subcity has NO data, MIN becomes NULL
                         LEFT JOIN city_last_update clu ON clu.city_id = sub.id
                         -- ✅ Include childrens and the Parent itself!
                         WHERE (sub.parent_city_id = c.id OR sub.id = c.id)
+                            AND vs.is_visible = true -- ✅ Only count visible children
                     )
-                    --✅ If it's a standalone or subcity, just take its own last save
-                    -- which is max updated_at
+                    --✅ If it's a standalone or subcity, just take its own last save, which is max updated_at
                     ELSE clu_self.last_save
                 END AS final_updated_at
             FROM cities c
 
             LEFT JOIN city_last_update clu_self ON clu_self.city_id = c.id
         ),
-        -- ✅ enriched last_inventory table with other atributes
+        -- ✅ enriched last_inventory table with other atributes, Gathers the actual quantities for the table.
         weekly_data AS (
             SELECT
                 COALESCE(c.parent_city_id, c.id) AS major_city_id,
