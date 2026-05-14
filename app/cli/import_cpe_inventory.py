@@ -8,7 +8,7 @@ from app.models import Cities, CpeInventory, CpeTypes
 from app.extensions import db
 
 
-# flask import_cpe_dismantle xxx.xlsx > output.log 2>&1
+# flask import_cpe_inventory xxx.xlsx > output.log 2>&1
 @click.command("import_cpe_inventory")
 @click.argument("excel_path")
 @with_appcontext
@@ -16,7 +16,7 @@ def import_cpe_inventory_command(excel_path):
     with open(excel_path, "rb") as f:
         records = import_cpe_inventory_from_excel(f)
 
-        bulk_upsert_cpe_dismantle(records)
+        # bulk_upsert_cpe_dismantle(records)
 
 
 def import_cpe_inventory_from_excel(file_stream):
@@ -40,7 +40,13 @@ def import_cpe_inventory_from_excel(file_stream):
     # Imena i id gradova iz baze
     CITY_MAP = {normalize(city.name): city.id for city in Cities.query.all()}
 
-    CPE_MAP = {normalize(cpe.name): cpe.id for cpe in CpeTypes.query.all()}
+    CPE_MAP = {normalize(cpe.label): cpe.id for cpe in CpeTypes.query.all()}
+
+    CPE_MAP[normalize("IAD-a H267N /  HG658V2 / Zyxel")] = 1
+
+    CPE_MAP[normalize("STB-ova Arris VIP4205/ VIP4302")] = 2
+
+    print("CPE_MAP", CPE_MAP)
 
     records = []
 
@@ -62,17 +68,20 @@ def import_cpe_inventory_from_excel(file_stream):
                 if cell.value == "Stanje":
                     # ROW OF FIRST CITY
                     data_start_row = cell.row + 3
-                    start_col = 3  # COLUMN OF FIRST CPE (C column in excel)
-                    stop_col = 17  # COLUMN OF LAST CPE  (Q column in excel)
+
                 # FIND START OF COMPLETET TABLE
                 else:
                     continue
 
+                start_col = 3  # COLUMN OF FIRST CPE (C column in excel)
+                stop_col = 17  # COLUMN OF LAST CPE  (Q column in excel)
                 # for every sheet build dinamicaly cpe column
                 # column_to_cpe_id Holds dynamic mappings of excel_colums:cpe_type_id
                 column_to_cpe_id = dynamic_build_cpe_id(
                     CPE_MAP, sheet, cell.row, start_col, stop_col
                 )
+
+                print("column_to_cpe_id", column_to_cpe_id)
 
                 # Start row row that hlds city + data
                 row_num = data_start_row
@@ -83,7 +92,8 @@ def import_cpe_inventory_from_excel(file_stream):
 
                     normalize_city = normalize(city_name)
 
-                    if normalize_city == "UKUPNO":
+                    if normalize_city == normalize("UKUPNO"):
+                        row_num += 1
                         continue
 
                     # Mapiranje izmedju grada excela i baze
@@ -95,7 +105,7 @@ def import_cpe_inventory_from_excel(file_stream):
 
                         break
 
-                    print(f"city name/id: {city_name}/{city_id}")
+                    # print(f"city name/id: {city_name}/{city_id}")
 
                     for col_num in range(start_col, stop_col + 1):
                         cpe_type_id = column_to_cpe_id.get(col_num)
@@ -143,7 +153,6 @@ def dynamic_build_cpe_id(cpe_map, sheet, header_row, start_col, stop_col):
         # Get name of cpe from columns in headers
         cpe_name = sheet.cell(row=header_row, column=col_num).value
 
-        # If name found
         if not cpe_name:
             continue
 
@@ -168,9 +177,10 @@ def normalize(value):
 
     value = str(value)
 
-    value = value.strip().lower()
-
     value = value.replace("\n", " ")
+    value = value.replace("\xa0", " ")
+
+    value = value.strip().lower()
 
     value = re.sub(r"\s+", " ", value)
 
@@ -179,21 +189,21 @@ def normalize(value):
 
 def parse_excel_cell(raw_cell):
     if raw_cell is None:
-        return [{"quantity": 0}]
+        return 0
 
     # Excel sometimes returns floats
     if isinstance(raw_cell, (int, float)):
-        return [{"quantity": int(raw_cell)}]
+        return int(raw_cell)
 
     # Convert everything else to string
     value = str(raw_cell).strip()
 
     if value in ["", "-", "/", "*"]:
-        return [{"quantity": 0}]
+        return 0
 
     # Normal integer string
     try:
-        return [{"quantity": int(float(value))}]
+        return int(float(value))
     except Exception:
         return None
 
@@ -208,7 +218,7 @@ def bulk_upsert_cpe_dismantle(records):
         stmt = insert(CpeInventory).values(records)
 
         stmt = stmt.on_conflict_do_update(
-            constraint="uq_city_cpe_dismantle_week",
+            constraint="uq_city_cpe_week",
             set_={
                 "quantity": stmt.excluded.quantity,
                 "updated_at": db.func.now(),

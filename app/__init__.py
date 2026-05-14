@@ -10,6 +10,7 @@ from app.cli.create_report_settings_cli import create_initial_report
 from app.cli.sync_with_iptv_platform import sync_stb_and_iptv
 from app.cli.user_notification_cli import notify_stale_city
 from app.cli.import_cpe_dismantle import import_cpe_dismantle_command
+from app.cli.import_cpe_inventory import import_cpe_inventory_command
 from app.utils.permissions import (
     can_access_city,
     can_edit_cpe_type,
@@ -65,6 +66,7 @@ def create_app():
     app.cli.add_command(sync_stb_and_iptv)
     app.cli.add_command(notify_stale_city)
     app.cli.add_command(import_cpe_dismantle_command)
+    app.cli.add_command(import_cpe_inventory_command)
 
     # Register routes
     register_routes(app)
