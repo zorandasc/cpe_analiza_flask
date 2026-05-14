@@ -184,12 +184,16 @@ def upsert_cpe_inventory():
 
         # SQLALCHEMY Upsert Logic
         stmt = insert(CpeInventory).values(
-            city_id=city_id, week_end=week_end, cpe_type_id=cpe.id, quantity=qty
+            city_id=city_id,
+            week_end=week_end,
+            cpe_type_id=cpe.id,
+            quantity=qty,
+            updated_at=db.func.now(),
         )
 
         upsert_stmt = stmt.on_conflict_do_update(
             constraint="uq_city_cpe_week",
-            set_={"quantity": qty, "updated_at": db.func.now()},
+            set_={"quantity": qty},
         )
 
         db.session.execute(upsert_stmt)
@@ -366,7 +370,7 @@ def upsert_cpe_dismantle():
 
             upsert_stmt = stmt.on_conflict_do_update(
                 constraint="uq_city_cpe_dismantle_week",
-                set_={"quantity": qty, "updated_at": db.func.now()},
+                set_={"quantity": qty},
             )
 
             db.session.execute(upsert_stmt)
@@ -521,12 +525,16 @@ def upsert_cpe_broken():
 
         # SQLALCHEMY Upsert Logic
         stmt = insert(CpeBroken).values(
-            city_id=city_id, week_end=week_end, cpe_type_id=cpe.id, quantity=qty
+            city_id=city_id,
+            week_end=week_end,
+            cpe_type_id=cpe.id,
+            quantity=qty,
+            updated_at=db.func.now(),
         )
 
         upsert_stmt = stmt.on_conflict_do_update(
             constraint="uqb_city_cpe_week",
-            set_={"quantity": qty, "updated_at": db.func.now()},
+            set_={"quantity": qty},
         )
 
         db.session.execute(upsert_stmt)
