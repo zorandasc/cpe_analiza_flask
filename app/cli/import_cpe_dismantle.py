@@ -1,6 +1,6 @@
 import click
 from flask.cli import with_appcontext
-from datetime import datetime
+from datetime import datetime, time
 import re
 from collections import defaultdict
 from openpyxl import load_workbook
@@ -131,6 +131,8 @@ def import_cpe_dismantle_from_excel(file_stream):
                                 "dismantle_type_id": parsed["dismantle_type_id"],
                                 "quantity": parsed["quantity"],
                                 "week_end": week_end,
+                                "created_at": datetime.combine(week_end, time.min),
+                                "updated_at": datetime.combine(week_end, time.min),
                             }
 
                             records.append(row_data)
