@@ -6,11 +6,17 @@ from exchangelib import (
     Message,
 )
 from flask import current_app, render_template
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, and_
 from sqlalchemy.orm import selectinload
 
 from app.extensions import db
-from app.models import Cities, CpeBroken, CpeInventory, DismantleCityWeekUpdate
+from app.models import (
+    Cities,
+    CpeBroken,
+    CpeInventory,
+    DismantleCityWeekUpdate,
+    CityVisibilitySettings,
+)
 from app.utils.dates import get_current_week_friday
 
 
@@ -66,15 +72,28 @@ def get_stale_cities_inventory(saturday):
     # in cpe_inventory tsble
     query = (
         db.session.query(Cities)
+        # INNER JOIN ONLY THE ACTIVE CITIES
+        .join(
+            CityVisibilitySettings,
+            and_(
+                CityVisibilitySettings.city_id == Cities.id,
+                CityVisibilitySettings.dataset_key == "cpe_inventory",
+            ),
+        )
         .outerjoin(subq, Cities.id == subq.c.city_id)
         .filter(
+            CityVisibilitySettings.is_visible.is_(True),
             or_(
                 subq.c.last_update.is_(None),  # no row or never updated
                 subq.c.last_update < saturday,
-            )
+            ),
         )
     )
-
+    # What this query now means
+    # Return all cities where:
+    # ✅ city is visible in cpe_inventory dataset
+    # AND
+    # ✅ city has no update this week OR last update older than saturday
     return query.all()
 
 
@@ -99,12 +118,20 @@ def get_stale_cities_dismantle(saturday, group):
     # Main query: LEFT JOIN subq with cities (cities with no rows are still included)
     query = (
         db.session.query(Cities)
+        .join(
+            CityVisibilitySettings,
+            and_(
+                CityVisibilitySettings.city_id == Cities.id,
+                CityVisibilitySettings.dataset_key == "cpe_dismantle",
+            ),
+        )
         .outerjoin(subq, Cities.id == subq.c.city_id)
         .filter(
+            CityVisibilitySettings.is_visible.is_(True),
             or_(
                 subq.c.last_update.is_(None),  # no row or never updated
                 subq.c.last_update < saturday,
-            )
+            ),
         )
     )
 
@@ -131,8 +158,16 @@ def get_stale_cities_broken(saturday):
     # in cpe_inventory tsble
     query = (
         db.session.query(Cities)
+        .join(
+            CityVisibilitySettings,
+            and_(
+                CityVisibilitySettings.city_id == Cities.id,
+                CityVisibilitySettings.dataset_key == "cpe_broken",
+            ),
+        )
         .outerjoin(subq, Cities.id == subq.c.city_id)
         .filter(
+            CityVisibilitySettings.is_visible.is_(True),
             or_(
                 subq.c.last_update.is_(None),  # no row or never updated
                 subq.c.last_update < saturday,
@@ -141,7 +176,6 @@ def get_stale_cities_broken(saturday):
     )
 
     return query.all()
-
 
 
 EXCLUDED_NOTIFICATION_ROLES = {"admin", "view", "user_iptv", "user_ftth"}

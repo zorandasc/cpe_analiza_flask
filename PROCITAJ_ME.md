@@ -2497,12 +2497,18 @@ scp 123.xlsx root@10.198.3.92:/
 
 ```bash
 docker cp /tmp/123.xlsx <container_id>:/tmp/123.xlsx
+
+docker cp 34.xlsx cpe-analiza-flask_test-1:/tmp/34.xlsx
+docker cp 5.xlsx cpe-analiza-flask_test-1:/tmp/5.xlsx
 ```
 
 3. execute flask cli SCRIPT inside container
 
 ```bash
 docker exec -it <container_id> flask import_cpe_dismantle /tmp/123.xlsx
+
+docker exec -it cpe-analiza-flask_test-1 flask import_cpe_dismantle /tmp/34.xlsx
+docker exec -it cpe-analiza-flask_test-1 flask import_cpe_dismantle /tmp/5.xlsx
 
 ```
 
