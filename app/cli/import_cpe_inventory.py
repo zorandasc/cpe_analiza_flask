@@ -233,10 +233,7 @@ def bulk_upsert_cpe_dismantle(records):
 
         stmt = stmt.on_conflict_do_update(
             constraint="uq_city_cpe_week",
-            set_={
-                "quantity": stmt.excluded.quantity,
-                "updated_at": db.func.now(),
-            },
+            set_={"quantity": stmt.excluded.quantity},
         )
 
         print("Executing bulk upsert...")
