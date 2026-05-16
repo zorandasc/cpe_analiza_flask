@@ -823,14 +823,18 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
                 totals_by_type[type_key][i] += val
 
     # pprint.pprint(totals_by_type, width=1)
-    # {'GPON':[1,2,3,4,5........len(timeline)], 'XDSL':[1,2,3,4,5........len(timeline)]}
+    # {
+    # 'GPON':[1,2,3,4,5........len(timeline)],
+    # 'XDSL':[1,2,3,4,5........len(timeline)]
+    #}
 
     # ---------------------------------------
     # Handle "Ukupna suma" aggregation explicitly
     # ---------------------------------------
     if access_id == "total":
-        total_sum_series = [0] * len(timeline)
-        for series in totals_by_type.values():  # [1,2,3,4,5........len(timeline)]
+        total_sum_series = [0] * len(timeline)  # Define placeholder for sum
+        for series in totals_by_type.values():
+            # series is=[1,2,3,4,5........len(timeline)]
             for i, val in enumerate(series):
                 total_sum_series[i] += val
 
