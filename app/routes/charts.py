@@ -88,11 +88,18 @@ def iptv_inventory_charts():
 
 
 # GET REQUEST + query parameter FOR FILTERS
+# → submit GET params, GET + query parameter
 @chart_bp.route("/access-charts", methods=["GET"])
 @login_required
 def access_inventory_charts():
-    # But still → submit GET params, GET + query parameter
-    selected_access_id = request.args.get("access_id", type=int)
+
+    # access_id_raw can capture INT, 'total' or empty string strings
+    access_id_raw = request.args.get("access_id", "")
+
+    # Convert to integer only if it's purely a numeric ID
+    selected_access_id = (
+        int(access_id_raw) if access_id_raw.isdigit() else access_id_raw
+    )
 
     selected_city_id = request.args.get("city_id", type=int)
 
@@ -118,23 +125,22 @@ def access_inventory_charts():
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     # ---------------------------------------
     selected_city = None
-    if selected_city_id:
-        selected_city= next(
-            (c for c in cities if c.id == selected_city_id), None
-        )
+    if isinstance(selected_city_id, int):
+        selected_city = next((c for c in cities if c.id == selected_city_id), None)
 
     selected_access = None
-    if selected_access_id:
-        selected_access = next(
-            (a for a in access if a.id == selected_access_id), None
-        )
+    if selected_access_id == "total":
+        # Create a mock selected_access object or dictionary to easily pass to your template title
+        selected_access = {"id": "total", "name": "Ukupna suma"}
+    elif isinstance(selected_access_id, int):
+        selected_access = next((a for a in access if a.id == selected_access_id), None)
 
     return render_template(
         "charts/access_dashboard.html",
         chart_data=chart_data,
         access=access,
-        selected_access=selected_access,
         cities=cities,
+        selected_access=selected_access,
         selected_city=selected_city,
         selected_months=selected_months,
     )
@@ -270,14 +276,12 @@ def cpe_dismantle_inventory_charts():
     # -----------------------------------
     # FOR BUILDING DYNAMIC TITLE IN CHART.JS
     # ---------------------------------------
-    selected_cpe= None
-    selected_city= None
+    selected_cpe = None
+    selected_city = None
     selected_dismantle = None
 
     if selected_cpe_id:
-        selected_cpe= next(
-            (c for c in cpes if c["id"] == selected_cpe_id), None
-        )
+        selected_cpe = next((c for c in cpes if c["id"] == selected_cpe_id), None)
 
     if selected_dismantle_id:
         selected_dismantle = next(
@@ -285,9 +289,7 @@ def cpe_dismantle_inventory_charts():
         )
 
     if selected_city_id:
-        selected_city = next(
-            (c for c in cities if c.id == selected_city_id), None
-        )
+        selected_city = next((c for c in cities if c.id == selected_city_id), None)
 
     # ---------------------------------------
     # GET CHART DATA
@@ -367,14 +369,10 @@ def cpe_broken_inventory_charts():
     selected_city = None
 
     if selected_cpe_id:
-        selected_cpe = next(
-            (c for c in cpes if c["id"] == selected_cpe_id), None
-        )
+        selected_cpe = next((c for c in cpes if c["id"] == selected_cpe_id), None)
 
     if selected_city_id:
-        selected_city = next(
-            (c for c in cities if c.id == selected_city_id), None
-        )
+        selected_city = next((c for c in cities if c.id == selected_city_id), None)
 
     # ---------------------------------------
     # GET CHART DATA

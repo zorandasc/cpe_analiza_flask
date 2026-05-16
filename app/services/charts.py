@@ -1,3 +1,4 @@
+# import pprint
 from collections import defaultdict
 from dateutil.relativedelta import relativedelta
 from datetime import timedelta
@@ -749,7 +750,8 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
         .filter(CityVisibilitySettings.is_visible)
     )
 
-    if access_id:
+    # access_is=" "", and access_is="total" not included
+    if isinstance(access_id, int):
         base = base.filter(AccessTypes.id == access_id)
     if city_id:
         base = base.filter(Cities.id == city_id)
@@ -770,7 +772,7 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     # BUILD CONTINUOUS TIMELINE OF MONTHS
     timeline = build_month_timeline(months, min_month, max_month)
 
-     # 1. SQL: Group by City and Week
+    # 1. SQL: Group by City and Week
     base_agg = base.with_entities(
         AccessInventory.city_id,
         AccessInventory.month_end,
@@ -795,6 +797,16 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     for city_id_, month_end, type_key, qty in rows:
         state[city_id_][type_key][month_end] = qty
 
+    # pprint.pprint(state, width=1)
+    # { city_id1:
+    #   {'GPON':{date1:qty1,date2:qty2,date3:qty3,....}},
+    #   {'xdsl':{date1:qty1,date2:qty2,date3:qty3,....}}}
+    #    city_id2:
+    #   {'GPON':{date1:qty1,date2:qty2,date3:qty3,....}},
+    #   {'xdsl':{date1:qty1,date2:qty2,date3:qty3,....}}}
+    #    ...
+    # }
+
     # ---------------------------------------
     # 4. Aggregate into chart datasets USING CARRY FORWARD
     # ---------------------------------------
@@ -803,10 +815,27 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     # FOR EVERY CITY
     for city_id, city_data in state.items():
         for type_key, month_map in city_data.items():
-            # This keeps the 'Line' steady for each city individually
+            # type_key is 'GPON', 'XDSL'
+            # month_map is {date:quantity} structurre from db
             series = interpolate_series(timeline, month_map, method="linear")
             for i, val in enumerate(series):
+                # i is postion in totals_by_type
                 totals_by_type[type_key][i] += val
+
+    # pprint.pprint(totals_by_type, width=1)
+    # {'GPON':[1,2,3,4,5........len(timeline)], 'XDSL':[1,2,3,4,5........len(timeline)]}
+
+    # ---------------------------------------
+    # Handle "Ukupna suma" aggregation explicitly
+    # ---------------------------------------
+    if access_id == "total":
+        total_sum_series = [0] * len(timeline)
+        for series in totals_by_type.values():  # [1,2,3,4,5........len(timeline)]
+            for i, val in enumerate(series):
+                total_sum_series[i] += val
+
+        # Override totals_by_type to contain just our single total line
+        totals_by_type = {"Ukupna suma": total_sum_series}
 
     # ---------------------------------------
     # 4.5 Dynamic Y-axis scaling (ALL datasets)
@@ -837,15 +866,19 @@ def get_access_inventory_chart_data(access_id=None, city_id=None, months=None):
     # 5. Format output
     # ---------------------------------------
     # MODE 1 — single device
-    if access_id:
+    if isinstance(access_id, int) or access_id == "total":
+        label_key = (
+            "Ukupna suma" if access_id == "total" else list(totals_by_type.keys())[0]
+        )
         values = list(totals_by_type.values())[0]
         return {
             "labels": [w.strftime("%d-%m-%Y") for w in timeline],
-            "datasets": [{"label": "Total", "data": values}],
+            "datasets": [{"label": label_key, "data": values}],
             "y_min": y_min,
             "y_max": y_max,
         }
 
+    # Otherwise return multi-line dataset ("Sve tehnologije")
     datasets = [{"label": k, "data": v} for k, v in totals_by_type.items()]
 
     return {

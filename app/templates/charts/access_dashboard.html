@@ -29,12 +29,13 @@
                  <div class="col-md-4">
                     <label class="form-label fw-bold">Pristupne tehnologije</label>
                     <select name="access_id" class="form-select shadow-sm" onchange="this.form.submit()">
-                        <option value="">--Ukupno Sve tehnologije --</option>
+                        <option value="">-- Sve tehnologije --</option>
                         {% for ac in access %}
                         <option value="{{ ac.id }}" {% if ac.id == selected_access.id %}selected{% endif %}>
                             {{ ac.name }}
                         </option>
                         {% endfor %}
+                        <option value="total" {% if selected_access.id == 'total' %}selected{% endif %}>Ukupna suma korisnika</option>
                     </select>
                 </div>
 
