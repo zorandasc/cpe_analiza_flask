@@ -3,7 +3,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.models import Cities, CityTypeEnum
 from app.services.user_activity_log import log_user_action
-from app.utils.dates import get_current_week_friday, get_passed_saturday
+from app.utils.dates import get_current_week_bounds
 from app.utils.permissions import can_access_city, can_edit_cpe_type
 from datetime import date
 from app.utils.schemas import get_cpe_types_column_schema
@@ -16,10 +16,14 @@ from app.queries.cpe_dismantle import (
 
 def get_cpe_dismantle_view_data():
     # to display today date on title
-    today = date.today()
+    # Get all synchronized bounds for this week
+    week_bounds = get_current_week_bounds()
 
-    # date of friday in week
-    current_week_end = get_current_week_friday()
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
+
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     # list of all cpe_types object in db but only if visible_in_dismantle
     schema_list = get_cpe_types_column_schema(
@@ -36,7 +40,8 @@ def get_cpe_dismantle_view_data():
     )
 
     return {
-        "today": today.strftime("%d-%m-%Y"),
+        "today": date.today().strftime("%d-%m-%Y"),
+        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "complete_data": _group_records(complete_records, schema_list),
@@ -45,11 +50,15 @@ def get_cpe_dismantle_view_data():
 
 
 def get_cpe_dismantle_subcities_view(major_city_id: int, group_name: str):
-    # to display today date on title
-    today = date.today()
+  
 
-    # date of friday in week
-    current_week_end = get_current_week_friday()
+    week_bounds = get_current_week_bounds()
+
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
+
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     # list of all cpe_types object in db but only if visible_in_dismantle
     schema_list = get_cpe_types_column_schema(
@@ -64,7 +73,8 @@ def get_cpe_dismantle_subcities_view(major_city_id: int, group_name: str):
     records_grouped = _group_records(records, schema_list)
 
     return {
-        "today": today.strftime("%d-%m-%Y"),
+        "today": date.today().strftime("%d-%m-%Y"),
+        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "dismantle": records_grouped,
@@ -80,7 +90,7 @@ def update_cpe_dismantle(data):
     if not can_access_city(city_id):
         return False, "Niste autorizovani."
 
-    week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     city_name = data["city"]
 
@@ -129,7 +139,7 @@ def update_cpe_dismantle(data):
                     "city_id": city_id,
                     "cpe_type_id": cpe_type_id,
                     "dismantle_type_id": dismantle_type_id,
-                    "week_end": week_end,
+                    "week_end": current_week_end,
                     "quantity": quantity,
                 },
             )
@@ -143,14 +153,14 @@ def update_cpe_dismantle(data):
 
         db.session.execute(
             helper_stmt,
-            {"city_id": city_id, "week_end": week_end, "group_name": group_name},
+            {"city_id": city_id, "week_end": current_week_end, "group_name": group_name},
         )
 
         log_user_action(
             action="update",
             table_name="CPE Demontirana",
             details={
-                "Sedmica": str(week_end),
+                "Sedmica": str(current_week_end),
                 "Skladiste": city_name,
                 "Unosi": applied_updates,
             },
@@ -202,7 +212,7 @@ def get_cpe_dismantle_history(
 
 
 def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "missing"
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     schema_list = get_cpe_types_column_schema(
         "visible_in_dismantle", "order_in_dismantle"
@@ -284,8 +294,6 @@ def _group_records(records, schema_list):
                 "city_name": row["city_name"],
                 "subcity_count": row.get("subcity_count"),
                 "updated_at": row["updated_at"],
-                "is_stale": row["updated_at"] is None
-                or row["updated_at"].date() < get_passed_saturday(),
                 "data": {},  # key will be dismantle_code (e.g., 'COMP', 'ND')
             }
 

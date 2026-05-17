@@ -17,7 +17,7 @@ from app.services.user_notify import (
     group_users,
     send_email_to_user,
 )
-from app.utils.dates import get_passed_saturday
+from app.utils.dates import get_current_week_bounds
 
 
 @click.command("notify_stale_city")
@@ -32,12 +32,14 @@ def notify_stale_city():
     # ---------------------------------------------
     # 2. Get users for stale cities across all cpe tables
     # --------------------------------------------
-    saturday = get_passed_saturday()
+    # Monday is now your baseline for freshness
+    freshness_threshold = get_current_week_bounds()["monday"]
 
-    users_inventory = get_stale_users_from_cpe_inventory(saturday)
-    users_dismantle_comp = get_stale_users_from_cpe_dismantle(saturday, "complete")
-    users_dismantle_miss = get_stale_users_from_cpe_dismantle(saturday, "missing")
-    users_broken = get_stale_users_from_cpe_broken(saturday)
+
+    users_inventory = get_stale_users_from_cpe_inventory(freshness_threshold)
+    users_dismantle_comp = get_stale_users_from_cpe_dismantle(freshness_threshold, "complete")
+    users_dismantle_miss = get_stale_users_from_cpe_dismantle(freshness_threshold, "missing")
+    users_broken = get_stale_users_from_cpe_broken(freshness_threshold)
 
     users_to_notify = group_users(
         users_inventory, users_dismantle_comp, users_dismantle_miss, users_broken

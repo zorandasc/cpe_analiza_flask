@@ -4,7 +4,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.models import Cities
 from app.services.user_activity_log import log_user_action
-from app.utils.dates import get_current_week_friday, get_passed_saturday
+from app.utils.dates import get_current_week_bounds
 from app.utils.permissions import can_access_city, can_edit_cpe_type
 from app.utils.schemas import get_cpe_types_column_schema
 from app.queries.cpe_inventory import (
@@ -15,15 +15,15 @@ from app.queries.cpe_inventory import (
 
 
 def get_cpe_records_view_data():
-    # to display today date on title
-    today = date.today()
 
-    # SATURDAY BEFORE MONDAY OF THIS WEEK
-    # to mark row (red) if updated_at less than saturday
-    saturday = get_passed_saturday()
+    # Get all synchronized bounds for this week
+    week_bounds = get_current_week_bounds()
 
-    # DATE OF FRIDAY IN THIS WEEK
-    current_week_end = get_current_week_friday()
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
+
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("visible_in_total", "order_in_total")
@@ -40,8 +40,8 @@ def get_cpe_records_view_data():
     records_grouped = _reorder_cpe_records(records_grouped)
 
     return {
-        "today": today.strftime("%d-%m-%Y"),
-        "saturday": saturday,
+        "today": date.today().strftime("%d-%m-%Y"),
+        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "records": records_grouped,
@@ -49,15 +49,14 @@ def get_cpe_records_view_data():
 
 
 def get_cpe_records_subcities(city_id: int):
-    # to display today date on title
-    today = date.today()
+    # Get all synchronized bounds for this week
+    week_bounds = get_current_week_bounds()
 
-    # SATURDAY BEFORE MONDAY OF THIS WEEK
-    # to mark row (red) if updated_at less than saturday
-    saturday = get_passed_saturday()
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
 
-    # DATE OF FRIDAY IN THIS WEEK
-    current_week_end = get_current_week_friday()
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("visible_in_total", "order_in_total")
@@ -71,8 +70,8 @@ def get_cpe_records_subcities(city_id: int):
     records_grouped = _group_records(records, schema_list)
 
     return {
-        "today": today.strftime("%d-%m-%Y"),
-        "saturday": saturday,
+        "today": date.today().strftime("%d-%m-%Y"),
+        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "records": records_grouped,
@@ -96,7 +95,7 @@ def update_cpe_records(data):
     if not updates:
         return False, "Neispravan payload."
 
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     applied_updates = []
 
@@ -185,7 +184,9 @@ def get_cpe_records_history(city_id: int, page: int, per_page: int, scope: str):
 
 
 def get_cpe_records_excel_export():
-    current_week_end = get_current_week_friday()
+
+    # Get all synchronized bounds for this week
+    current_week_end = get_current_week_bounds()["friday"]
 
     schema_list = get_cpe_types_column_schema("visible_in_total", "order_in_total")
 

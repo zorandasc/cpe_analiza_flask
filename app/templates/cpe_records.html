@@ -251,7 +251,7 @@
           <tbody>
             {% for r in records %}
             <tr class="{% if not r.city_id %}fw-bold total-row {% elif r.city_id == 13 %}ras-row fw-bold{% endif %}">
-              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
+              <td class="{% if r.max_updated_at %}{% if r.max_updated_at.date()  < freshness_threshold %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
                   {{ r.city_name }}
                   {% if r.subcity_count and r.subcity_count > 0 %}
                     <span class="badge bg-info">({{ r.subcity_count }})</span>
@@ -261,7 +261,7 @@
               <td class="text-center">{{ r.cpe[item.name]['quantity'] }}</td>
               {% endfor %}
               
-                <td class="text-center {% if r.max_updated_at %}{% if r.max_updated_at.date()  < saturday %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
+                <td class="text-center {% if r.max_updated_at %}{% if r.max_updated_at.date()  < freshness_threshold %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
                   {% if r.max_updated_at %}
                   {{ r.max_updated_at.strftime('%d-%m-%Y %H:%M:%S') }} 
                   {% endif %}

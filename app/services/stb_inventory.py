@@ -3,7 +3,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.models import StbTypes
 from app.services.user_activity_log import log_user_action
-from app.utils.dates import get_current_week_friday
+from app.utils.dates import get_current_week_bounds
 from app.utils.permissions import iptv_view_required
 from app.queries.stb_inventory import (
     get_last_4_weeks,
@@ -18,7 +18,7 @@ TOTAL_KEY = "__TOTAL__"
 
 def get_stb_iptv_records_view_data():
     # calculate current week week_end date
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     # covert datetime.date to date string
     # label → presentation (used only in the template
@@ -62,7 +62,7 @@ def update_recent_stb_inventory(form_data):
     if not iptv_view_required():
         return False, "Niste autorizovani."
 
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     # For logging in activity
     stb_types = {s.id: s.label for s in StbTypes.query.all()}
@@ -119,7 +119,7 @@ def update_recent_stb_inventory(form_data):
 
 
 def update_iptv_users_count(form_data):
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     qty = form_data.get("qty")
     if not qty or not qty.isdigit():
@@ -162,7 +162,7 @@ def update_iptv_users_count(form_data):
 
 def get_stb_records_excel_export():
     # calculate current week week_end date
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     weeks = [
         {"key": w.isoformat(), "label": w.strftime("%d-%m-%Y")}

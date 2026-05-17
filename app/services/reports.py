@@ -16,7 +16,6 @@ from exchangelib import (
 from app.extensions import db
 from app.models import AccessTypes, ReportSetting, ReportRecipients, CpeTypeEnum
 from app.services.magic import generate_link_for_view_user
-from app.utils.dates import get_current_week_friday
 from app.services.charts import (
     get_cpe_inventory_chart_data,
     get_cpe_dismantle_chart_data,
@@ -25,6 +24,7 @@ from app.services.charts import (
     get_iptv_inventory_chart_data,
     get_access_inventory_chart_data,
 )
+from app.utils.dates import get_current_week_bounds
 
 
 def run_weekly_report_job():
@@ -86,7 +86,7 @@ def generate_pdf():
     # Lazy Load this heavy library
     from weasyprint import HTML
 
-    current_week_end = get_current_week_friday().strftime("%d-%m-%Y")
+    current_week_end = get_current_week_bounds()["friday"].strftime("%d-%m-%Y")
 
     # data that will be passed to template (pdf)
     data = {"week": current_week_end, "today": date.today()}
@@ -506,13 +506,11 @@ def send_email_report(pdf_path, body_html):
 
                 # Generate the dynamic filename for the recipient
                 # Result: CPE_weekly_report_05-05-2026.pdf
-                today_str = date.today().strftime('%d-%m-%Y')
+                today_str = date.today().strftime("%d-%m-%Y")
                 attachment_filename = f"CPE_weekly_report_{today_str}.pdf"
 
                 message.attach(
-                    FileAttachment(
-                        name=attachment_filename, content=file_content
-                    )
+                    FileAttachment(name=attachment_filename, content=file_content)
                 )
 
             # 4. Send

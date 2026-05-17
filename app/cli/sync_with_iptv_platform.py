@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.models import STBExternalMap
 from app.services.user_activity_log import log_user_action
-from app.utils.dates import get_current_week_friday
+from app.utils.dates import get_current_week_bounds
 
 
 @click.command("sync-with-iptv")
@@ -34,7 +34,7 @@ def sync_stb_types_and_inventory():
     response = requests.get(REMOTE_STB_API)
     data = response.json()
 
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     # preload mappings
     mappings = {m.external_id: m for m in STBExternalMap.query.all()}
@@ -102,7 +102,7 @@ def sync_iptv_users():
     response = requests.get(REMOTE_IPTV_USER_API)
     data = response.json()
 
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
     # If external system is source of truth → its time is also source of truth
     ## week_end = parse_api_date(data["week_end"])
 

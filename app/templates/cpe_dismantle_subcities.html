@@ -270,7 +270,7 @@
       <tbody>
         {% for r in dismantle %}
           <tr class="{{ 'fw-bold total-row' if not r.city_id else '' }}">
-            <td class="text-center {{ 'green-bcg' if not r.is_stale else 'red-bcg' }}">
+            <td class="text-center {% if r.updated_at %}{% if r.updated_at.date()  < freshness_threshold %}red-bcg{% else %}green-bcg{% endif %}{% endif %}">
               {{ r.city_name }}
             </td>
 
@@ -288,7 +288,7 @@
               {% endfor %}
             {% endif %}
 
-            <td class="text-center {{ 'azur-row-green' if not r.is_stale else 'azur-row-red' }}">
+            <td class="text-center {% if r.updated_at %}{% if r.updated_at.date()  < freshness_threshold %}azur-row-red{% else %}azur-row-green{% endif %}{% endif %}">
               {{ r.updated_at.strftime('%d-%m-%Y %H:%M:%S') if r.updated_at else '' }}
             </td>
 

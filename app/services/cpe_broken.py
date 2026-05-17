@@ -4,7 +4,7 @@ from sqlalchemy import text
 from app.extensions import db
 from app.models import Cities, CityTypeEnum
 from app.services.user_activity_log import log_user_action
-from app.utils.dates import get_current_week_friday, get_passed_saturday
+from app.utils.dates import get_current_week_bounds
 from app.utils.permissions import can_access_city, can_edit_cpe_type
 from app.utils.schemas import get_cpe_types_column_schema
 from app.queries.cpe_broken import (
@@ -15,15 +15,14 @@ from app.queries.cpe_broken import (
 
 
 def get_cpe_broken_view_data():
-    # to display today date on title
-    today = date.today()
+    # Get all synchronized bounds for this week
+    week_bounds = get_current_week_bounds()
 
-    # SATURDAY BEFORE MONDAY OF THIS WEEK
-    # to mark row (red) if updated_at less than saturday
-    saturday = get_passed_saturday()
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
 
-    # DATE OF FRIDAY IN THIS WEEK
-    current_week_end = get_current_week_friday()
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")
@@ -37,8 +36,8 @@ def get_cpe_broken_view_data():
     records_grouped = _group_records(records, schema_list)
 
     return {
-        "today": today.strftime("%d-%m-%Y"),
-        "saturday": saturday,
+        "today": date.today().strftime("%d-%m-%Y"),
+        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "records": records_grouped,
@@ -46,15 +45,14 @@ def get_cpe_broken_view_data():
 
 
 def get_cpe_broken_subcities_view(major_city_id: int):
-    # to display today date on title
-    today = date.today()
+    # Get all synchronized bounds for this week
+    week_bounds = get_current_week_bounds()
 
-    # SATURDAY BEFORE MONDAY OF THIS WEEK
-    # to mark row (red) if updated_at less than saturday
-    saturday = get_passed_saturday()
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
 
-    # DATE OF FRIDAY IN THIS WEEK
-    current_week_end = get_current_week_friday()
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")
@@ -68,8 +66,8 @@ def get_cpe_broken_subcities_view(major_city_id: int):
     records_grouped = _group_records(records, schema_list)
 
     return {
-        "today": today.strftime("%d-%m-%Y"),
-        "saturday": saturday,
+        "today": date.today().strftime("%d-%m-%Y"),
+        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "records": records_grouped,
@@ -93,7 +91,7 @@ def update_cpe_broken(data):
     if not updates:
         return False, "Neispravan payload."
 
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     applied_updates = []
 
@@ -170,7 +168,6 @@ def get_cpe_broken_history(
     if not city:
         return None, None, None, "Grad ne postoji."
 
-
     # list of all cpe_types object in db THAT ARE ACTIVE
     schema_list = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")
 
@@ -187,7 +184,7 @@ def get_cpe_broken_history(
 
 
 def get_cpe_broken_excel_export():
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     schema_list = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")
 

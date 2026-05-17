@@ -17,12 +17,12 @@ from app.models import (
     DismantleCityWeekUpdate,
     CityVisibilitySettings,
 )
-from app.utils.dates import get_current_week_friday
+from app.utils.dates import get_current_week_bounds
 
 
-def get_stale_users_from_cpe_inventory(saturday):
+def get_stale_users_from_cpe_inventory(freshness_threshold):
     # Find all cities that are stail or null from cpe_inventory
-    cities = get_stale_cities_inventory(saturday)
+    cities = get_stale_cities_inventory(freshness_threshold)
     # Form users structure from that cities to send emails
     return map_cities_to_users(cities, "Stanje ukupno raspoložive CPE opreme")
 
@@ -33,17 +33,17 @@ label_map = {
 }
 
 
-def get_stale_users_from_cpe_dismantle(saturday, group):
+def get_stale_users_from_cpe_dismantle(freshness_threshold, group):
     # Find all cities that are stail or null from cpe_dismantle
-    cities = get_stale_cities_dismantle(saturday, group)
+    cities = get_stale_cities_dismantle(freshness_threshold, group)
     source = label_map[group]
     # Form users structure from that cities to send emails
     return map_cities_to_users(cities, source)
 
 
-def get_stale_users_from_cpe_broken(saturday):
+def get_stale_users_from_cpe_broken(freshness_threshold):
     # Find all cities that are stail or null from cpe_broken
-    cities = get_stale_cities_broken(saturday)
+    cities = get_stale_cities_broken(freshness_threshold)
     # Form users structure from that cities to send emails
     return map_cities_to_users(cities, "Stanje demontirane neispravne CPE opreme")
 
@@ -52,10 +52,10 @@ def get_stale_users_from_cpe_broken(saturday):
 # If a city has no record at all for current week → it must still be marked stale.
 # This means: you cannot query only cpe_inventory you must start from Cities table
 # and on that perform left join
-def get_stale_cities_inventory(saturday):
+def get_stale_cities_inventory(freshness_threshold):
 
     # DATE OF FRIDAY IN THIS WEEK
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     # Subquery: latest update per city for current week in cpe_inventory
     subq = (
@@ -85,7 +85,7 @@ def get_stale_cities_inventory(saturday):
             CityVisibilitySettings.is_visible.is_(True),
             or_(
                 subq.c.last_update.is_(None),  # no row or never updated
-                subq.c.last_update < saturday,
+                subq.c.last_update < freshness_threshold,
             ),
         )
     )
@@ -93,15 +93,15 @@ def get_stale_cities_inventory(saturday):
     # Return all cities where:
     # ✅ city is visible in cpe_inventory dataset
     # AND
-    # ✅ city has no update this week OR last update older than saturday
+    # ✅ city has no update this week OR last update older than freshness_threshold
     return query.all()
 
 
-def get_stale_cities_dismantle(saturday, group):
+def get_stale_cities_dismantle(freshness_threshold, group):
     # ONLY query cpe_inventory
     # return list of city_ids or city objects
     # DATE OF FRIDAY IN THIS WEEK
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     # Subquery: latest update per city for current week in cpe_inventory
     subq = (
@@ -130,7 +130,7 @@ def get_stale_cities_dismantle(saturday, group):
             CityVisibilitySettings.is_visible.is_(True),
             or_(
                 subq.c.last_update.is_(None),  # no row or never updated
-                subq.c.last_update < saturday,
+                subq.c.last_update < freshness_threshold,
             ),
         )
     )
@@ -138,10 +138,10 @@ def get_stale_cities_dismantle(saturday, group):
     return query.all()
 
 
-def get_stale_cities_broken(saturday):
+def get_stale_cities_broken(freshness_threshold):
 
     # DATE OF FRIDAY IN THIS WEEK
-    current_week_end = get_current_week_friday()
+    current_week_end = get_current_week_bounds()["friday"]
 
     # Subquery: latest update for city for current week in cpe_broken
     subq = (
@@ -170,7 +170,7 @@ def get_stale_cities_broken(saturday):
             CityVisibilitySettings.is_visible.is_(True),
             or_(
                 subq.c.last_update.is_(None),  # no row or never updated
-                subq.c.last_update < saturday,
+                subq.c.last_update < freshness_threshold,
             )
         )
     )

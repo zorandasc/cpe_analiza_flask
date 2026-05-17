@@ -1,21 +1,26 @@
 from datetime import date, timedelta
 
-
-# A business week that runs from Saturday 00:00 → Friday 23:59
-# vraca datum petka za svaku sedmicu
-# If today is Monday (weekday=0): (4-0) % 7 = 4 → add 4 days → Friday
-# If today is Friday (weekday=4): (4-4) % 7 = 0 → add 0 days → today (Friday)
-# If today is Saturday (weekday=5): (4-5) % 7 = -1 % 7 = 6 → add 6 days → next Friday
-def get_current_week_friday(today=None):
+# determine the current week's Monday, and build everything from there.
+def get_current_week_bounds(today=None):
+    """
+    Returns the strict Monday-to-Sunday bounds and the Friday stamp
+    for the ISO week containing 'today'.
+    """
     today = today or date.today()
-    # Friday = 4
-    return today + timedelta(days=(4 - today.weekday()) % 7)
 
+    # .weekday() returns 0 for Monday, 6 for Sunday
+    # This gives us the Monday of the current week
+    current_monday = today - timedelta(days=today.weekday())
 
-def get_passed_saturday(today=None):
-    today = today or date.today()
-    # Friday = 4
-    return today - timedelta(days=(2 + today.weekday()) % 7)
+    current_friday = current_monday + timedelta(days=4)
+
+    current_sunday = current_monday + timedelta(days=6)
+
+    return {
+        "monday": current_monday,
+        "friday": current_friday,
+        "sunday": current_sunday,
+    }
 
 
 # return date of last day of current month
