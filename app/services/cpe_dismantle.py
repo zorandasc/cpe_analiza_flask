@@ -39,18 +39,25 @@ def get_cpe_dismantle_view_data():
         schema_list, current_week_end, group_name="missing"
     )
 
+    # 2. Group records for jinja template representation
+    complete_data_grouped = _group_records(
+        complete_records, schema_list, freshness_threshold
+    )
+
+    missing_data_grouped = _group_records(
+        missing_records, schema_list, freshness_threshold
+    )
+
     return {
         "today": date.today().strftime("%d-%m-%Y"),
-        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
-        "complete_data": _group_records(complete_records, schema_list),
-        "missing_data": _group_records(missing_records, schema_list),
+        "complete_data": complete_data_grouped,
+        "missing_data": missing_data_grouped,
     }
 
 
 def get_cpe_dismantle_subcities_view(major_city_id: int, group_name: str):
-  
 
     week_bounds = get_current_week_bounds()
 
@@ -70,11 +77,10 @@ def get_cpe_dismantle_subcities_view(major_city_id: int, group_name: str):
         schema_list, current_week_end, major_city_id, group_name
     )
 
-    records_grouped = _group_records(records, schema_list)
+    records_grouped = _group_records(records, schema_list, freshness_threshold)
 
     return {
         "today": date.today().strftime("%d-%m-%Y"),
-        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "dismantle": records_grouped,
@@ -153,7 +159,11 @@ def update_cpe_dismantle(data):
 
         db.session.execute(
             helper_stmt,
-            {"city_id": city_id, "week_end": current_week_end, "group_name": group_name},
+            {
+                "city_id": city_id,
+                "week_end": current_week_end,
+                "group_name": group_name,
+            },
         )
 
         log_user_action(
@@ -212,7 +222,13 @@ def get_cpe_dismantle_history(
 
 
 def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "missing"
-    current_week_end = get_current_week_bounds()["friday"]
+    week_bounds = get_current_week_bounds()
+
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
+
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     schema_list = get_cpe_types_column_schema(
         "visible_in_dismantle", "order_in_dismantle"
@@ -222,7 +238,7 @@ def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "mi
         schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
     )
 
-    grouped = _group_records(records, schema_list)
+    grouped = _group_records(records, schema_list, freshness_threshold)
 
     # APPLY Excel adapter
     headers_main = ["Skladišta"]
@@ -282,18 +298,27 @@ def get_cpe_dismantle_excel_export(mode: str):  # mode: str,  # "complete" | "mi
 # -------------------------
 # _group_records Treat it as canonical domain model:
 # data modeling, reporting needs, future exports
-def _group_records(records, schema_list):
+def _group_records(records, schema_list, freshness_threshold):
     grouped = {}
 
     for row in records:
         cid = row["city_id"]
 
         if cid not in grouped:
+            max_updated = row.get("updated_at")
+
+            is_stale = (
+                True
+                if max_updated is None
+                else max_updated.date() < freshness_threshold
+            )
+
             grouped[cid] = {
                 "city_id": cid,
                 "city_name": row["city_name"],
                 "subcity_count": row.get("subcity_count"),
-                "updated_at": row["updated_at"],
+                "updated_at": max_updated,
+                "is_stale": is_stale,
                 "data": {},  # key will be dismantle_code (e.g., 'COMP', 'ND')
             }
 

@@ -187,8 +187,7 @@ styles %} {{ super() }}
   </button>
    {% endif %}
   <span class="info">
-    Ažurirano: {% if iptv_users[-1] %} {{
-    iptv_users[-1]['updated_at'].strftime('%d-%m-%Y %H:%M') }} {% endif %}
+    Ažurirano: {% if iptv_users[-1] %} {{iptv_users[-1]['updated_at'].strftime('%d-%m-%Y %H:%M') }} {% endif %}
   </span>
   </div>
   <table class="table table-bordered table-striped shadow">

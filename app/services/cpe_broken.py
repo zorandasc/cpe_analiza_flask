@@ -33,11 +33,10 @@ def get_cpe_broken_view_data():
     records = get_cpe_broken_pivoted(schema_list, current_week_end)
 
     # list of grouped dicts for sending to template
-    records_grouped = _group_records(records, schema_list)
+    records_grouped = _group_records(records, schema_list, freshness_threshold)
 
     return {
         "today": date.today().strftime("%d-%m-%Y"),
-        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "records": records_grouped,
@@ -63,11 +62,10 @@ def get_cpe_broken_subcities_view(major_city_id: int):
     records = get_cpe_broken_subcities(schema_list, current_week_end, major_city_id)
 
     # list of grouped dicts for sending to template
-    records_grouped = _group_records(records, schema_list)
+    records_grouped = _group_records(records, schema_list, freshness_threshold)
 
     return {
         "today": date.today().strftime("%d-%m-%Y"),
-        "freshness_threshold": freshness_threshold,
         "current_week_end": current_week_end.strftime("%d-%m-%Y"),
         "schema": schema_list,
         "records": records_grouped,
@@ -184,7 +182,13 @@ def get_cpe_broken_history(
 
 
 def get_cpe_broken_excel_export():
-    current_week_end = get_current_week_bounds()["friday"]
+    week_bounds = get_current_week_bounds()
+
+    # Monday is now your baseline for freshness
+    freshness_threshold = week_bounds["monday"]
+
+    # Friday remains your database lookup query stamp
+    current_week_end = week_bounds["friday"]
 
     schema_list = get_cpe_types_column_schema("visible_in_broken", "order_in_broken")
 
@@ -192,7 +196,7 @@ def get_cpe_broken_excel_export():
         schema_list, current_week_end, city_type=CityTypeEnum.IJ.value
     )
 
-    records_grouped = _group_records(records, schema_list)
+    records_grouped = _group_records(records, schema_list, freshness_threshold)
 
     # ---- HEADERS ----
     headers = ["Stanje"] + [s["label"] for s in schema_list] + ["Ažurirano"]
@@ -224,7 +228,7 @@ def get_cpe_broken_excel_export():
 # -------------------------
 # _group_records Treat it as canonical domain model:
 # data modeling, reporting needs, future exports
-def _group_records(records, schema_list):
+def _group_records(records, schema_list, freshness_threshold):
     grouped = {}
 
     for row in records:
@@ -232,13 +236,22 @@ def _group_records(records, schema_list):
         cid = row["city_id"]
 
         if cid not in grouped:
+            max_updated = row.get("max_updated_at")
+
+            is_stale = (
+                True
+                if max_updated is None
+                else max_updated.date() < freshness_threshold
+            )
+
+            subcity_count = row.get("subcity_count", 0) if cid is not None else None
+
             grouped[cid] = {
                 "city_id": row["city_id"],
                 "city_name": row["city_name"],
-                "subcity_count": row.get("subcity_count", 0)
-                if cid is not None
-                else None,
-                "max_updated_at": row["max_updated_at"],
+                "subcity_count": subcity_count,
+                "max_updated_at": max_updated,
+                "is_stale": is_stale,
                 "cpe": {
                     cpe["name"]: {
                         "cpe_type_id": cpe["id"],
