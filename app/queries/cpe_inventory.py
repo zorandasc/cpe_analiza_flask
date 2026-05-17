@@ -40,8 +40,8 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
         params[place_holder] = model["name"]
 
     SQL_QUERY = f"""
-        -- ✅ Efficiently get the table of the latest inventory record per city/cpe type
-        -- from cpe_inventory table. (This is for Quantities).
+        --✅ Efficiently get from cpe_inventory table tabl of the latest inventory record per city/cpe type
+        --✅ (This is for Quantities).
         WITH last_inventory AS (
             SELECT DISTINCT ON (city_id, cpe_type_id)
                 city_id,
@@ -53,15 +53,16 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
             ORDER BY city_id, cpe_type_id, week_end DESC
         ),
         --✅ Get the table of the absolute latest 'Save' timestamp for every city
-        -- from cpe_inventory, table(city_id, last_save)(This is for Last Save).
+        --✅ table(city_id, last_save)(This is for Last Save).
         city_last_update AS (
             SELECT city_id, MAX(updated_at) as last_save
             FROM cpe_inventory
             WHERE week_end <= :week_end
             GROUP BY city_id
         ),
-        --✅ Determine the table with final 'updated_at' for the city-row in regard to Parent/Child relationship
-        -- city_health is table(city_id, major_city_id,final_updated_at)
+        --✅ Determine the final 'updated_at' for the city-row in regard to Parent/Child relationship
+        --✅ city_health is table(city_id, major_city_id,final_updated_at)
+        --✅ final_updated_at CAN BE: 1.NULL, 2.MIN(clu.last_save), 3.clu_self.last_save
         city_health AS (
             SELECT 
                 c.id AS city_id,
@@ -69,25 +70,35 @@ def get_cpe_inventory_pivoted(schema_list: list, week_end: datetime.date):
                 CASE 
                     --✅ If this is a parent city (has subcities)
                     WHEN EXISTS (SELECT 1 FROM cities WHERE parent_city_id = c.id) THEN (
-                        --✅  take the MIN of its children's cities last saves, min of max updated_at of all cubbcities
-                        -- bubbles up the "oldest" date to the Parent.
-                        SELECT MIN(clu.last_save)
+                        --✅  take the MIN of its children's cities last saves, min of max_updated_at of all cubbcities, bubbles up the "oldest" date to the Parent.
+                        SELECT 
+                            CASE 
+                                -- ✅Check if the number of actual dates found is less than the number of visible subcities/parent
+                                -- ✅1. If the counts does not match, some subcity has null value.
+                                WHEN COUNT(clu.last_save) < COUNT(sub.id) THEN NULL
+                                
+                                -- ✅2. If the counts match, everyone has data! Safe to take the oldest.
+                                ELSE MIN(clu.last_save)
+                            END
                         FROM cities sub
 
                         -- ✅ Join visibility here so we ignore hidden "Ghost" subcities
-                        -- this is the same as in main query, if city is not visible dont includit
+                        -- ✅ this is the same as in main query, if city is not visible dont includit
                         JOIN city_visibility_settings vs 
                             ON vs.city_id = sub.id 
                             AND vs.dataset_key = 'cpe_inventory'
 
                         --✅ Use LEFT JOIN (city and city_last_update) so if a subcity has NO data, MIN becomes NULL
                         LEFT JOIN city_last_update clu ON clu.city_id = sub.id
+
                         -- ✅ Include childrens and the Parent itself!
                         WHERE (sub.parent_city_id = c.id OR sub.id = c.id)
                             AND vs.is_visible = true -- ✅ Only count visible children
                     )
-                    --✅ If it's a standalone or subcity, just take its own last save, which is max updated_at
+                    --✅3. If it's a standalone or subcity, just take its own last save, which is max updated_at
                     ELSE clu_self.last_save
+
+                 --✅ name the column final_updated_at
                 END AS final_updated_at
             FROM cities c
 
