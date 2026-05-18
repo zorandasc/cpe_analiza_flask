@@ -19,6 +19,7 @@ from sqlalchemy.orm import selectinload
 from app.extensions import db
 from app.services.magic import generate_link_for_view_user
 from app.services.reports import generate_pdf, send_email_report
+from app.services.user_activity_log import log_user_action
 from app.utils.permissions import admin_view_required, admin_required
 from app.services.admin import update_cpe_type
 from app.services.access_inventory import (
@@ -178,9 +179,13 @@ def upsert_cpe_inventory():
         CpeTypes.query.filter_by(visible_in_total=True).order_by(CpeTypes.id).all()
     )
 
+    applied_updates = []
+
     for cpe in cpe_types:
         # Get the quantity for this specific type from the form
         qty = request.form.get(f"cpe_{cpe.id}", 0, type=int)
+
+        applied_updates.append({"label": cpe.label, "quantity": qty})
 
         # SQLALCHEMY Upsert Logic
         stmt = insert(CpeInventory).values(
@@ -197,6 +202,16 @@ def upsert_cpe_inventory():
         )
 
         db.session.execute(upsert_stmt)
+
+    log_user_action(
+        action="update",
+        table_name="CPE Oprema",
+        details={
+            "Sedmica": date_obj.strftime("%d-%m-%Y"),
+            "Skladiste": city.name,
+            "Unosi": applied_updates,
+        },
+    )
 
     db.session.commit()
 
@@ -348,6 +363,8 @@ def upsert_cpe_dismantle():
 
     dismantle_types = DismantleTypes.query.order_by(DismantleTypes.id).all()
 
+    applied_updates = []
+
     for cpe in cpe_types:
         for d_type in dismantle_types:
             # Look for the specific coordinate in form data
@@ -357,6 +374,10 @@ def upsert_cpe_dismantle():
             # To ime mora da odgovara name u input html elementu u request sa frontenda
             # da bi dobili kvantitet sa frontenda koji je korisnik izabrao
             qty = request.form.get(field_name, 0, type=int)
+
+            applied_updates.append(
+                {"label": cpe.label, "dismantle_type": d_type.code, "quantity": qty}
+            )
 
             # SQLALCHEMY Upsert Logic
             stmt = insert(CpeDismantle).values(
@@ -374,6 +395,16 @@ def upsert_cpe_dismantle():
             )
 
             db.session.execute(upsert_stmt)
+
+    log_user_action(
+        action="update",
+        table_name="CPE Demontirana",
+        details={
+            "Sedmica": date_obj.strftime("%d-%m-%Y"),
+            "Skladiste": city.name,
+            "Unosi": applied_updates,
+        },
+    )
 
     db.session.commit()
 
@@ -519,9 +550,13 @@ def upsert_cpe_broken():
         CpeTypes.query.filter_by(visible_in_broken=True).order_by(CpeTypes.id).all()
     )
 
+    applied_updates = []
+
     for cpe in cpe_types:
         # Get the quantity for this specific type from the form
         qty = request.form.get(f"cpe_{cpe.id}", 0, type=int)
+
+        applied_updates.append({"label": cpe.label, "quantity": qty})
 
         # SQLALCHEMY Upsert Logic
         stmt = insert(CpeBroken).values(
@@ -538,6 +573,16 @@ def upsert_cpe_broken():
         )
 
         db.session.execute(upsert_stmt)
+
+    log_user_action(
+        action="update",
+        table_name="CPE Neispravna",
+        details={
+            "Sedmica": date_obj.strftime("%d-%m-%Y"),
+            "Skladiste": city.name,
+            "Unosi": applied_updates,
+        },
+    )
 
     db.session.commit()
 

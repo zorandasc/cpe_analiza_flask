@@ -166,14 +166,19 @@ block styles %} {{ super() }}
         </ul>
       </nav>
       <form method="get" class="row g-3 align-items-end">
-        <div class="col-auto">
-          <label class="form-label mb-1">Mjesec</label>
-          <input
-            type="date"
-            name="month_end"
-            class="form-control"
-            value="{{month_end}}"
-          />
+       <div class="col-auto">
+          <label class="form-label mb-1">Izvršna Jedinica</label>
+          <select name="city_id" class="form-select">
+            <option>Sve</option>
+            {% for city in cities %}
+            <option
+              value="{{city.id}}"
+              {%if city_id=="city.id"%}selected{%endif%}
+            >
+              {{city.name}}
+            </option>
+            {% endfor %}
+          </select>
         </div>
         <div class="col-auto">
           <label class="form-label mb-1">Pristupna Tehnologija</label>
@@ -188,19 +193,14 @@ block styles %} {{ super() }}
             {% endfor %}
           </select>
         </div>
-        <div class="col-auto">
-          <label class="form-label mb-1">Skladište</label>
-          <select name="city_id" class="form-select">
-            <option>Sve</option>
-            {% for city in cities %}
-            <option
-              value="{{city.id}}"
-              {%if city_id=="city.id"%}selected{%endif%}
-            >
-              {{city.name}}
-            </option>
-            {% endfor %}
-          </select>
+       <div class="col-auto">
+          <label class="form-label mb-1">Mjesec</label>
+          <input
+            type="date"
+            name="month_end"
+            class="form-control"
+            value="{{month_end}}"
+          />
         </div>
         <div class="col-auto">
           <button type="submit" class="btn btn-primary btn-custom-filter">
@@ -223,7 +223,7 @@ block styles %} {{ super() }}
           <th>
             <a
               href="{{ url_for('admin.access_inventory',month_end=month_end, city_id=city_id, sort='city_id', direction='asc' if direction=='desc' else 'desc') }}"
-              >IJ</a
+              >Izvršna Jedinica</a
             >
           </th>
           <th>Pristupna Tehnologija</th>

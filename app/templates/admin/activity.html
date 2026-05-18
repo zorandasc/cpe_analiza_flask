@@ -98,10 +98,10 @@
 
                 <div class="row g-3 align-items-end">
 
-                        <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-outline-secondary col-md-6">
+                        <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-outline-secondary col-md-6 shadow">
                             Reset
                         </a>
-                        <button type="submit" class="btn btn-primary filter col-md-6" >
+                        <button type="submit" class="btn btn-primary filter col-md-6 shadow" >
                             🔍 Filtriraj
                         </button>
                 </div>
@@ -162,7 +162,7 @@
                             <th>Korisnik</th>
                             <th>Akcija</th>
                             <th>Tabela</th>
-                            <th>Vrijeme</th>
+                            <th>Vrijeme (dd-mm-YY)</th>
                             <th>Detalji</th>
                         </tr>
                     </thead>
@@ -189,11 +189,11 @@
                             </td>
                             <td>{{ log.table_name or "-" }}</td>
                             <td class="text-nowrap">
-                                {{ log.timestamp.strftime("%Y-%m-%d %H:%M:%S") }}
+                                {{ log.timestamp.strftime("%d-%m-%Y %H:%M:%S") }}
                             </td>
                             <td>
                                 {% if log.details %}
-                                    <button class="btn btn-sm btn-warning"
+                                    <button class="btn btn-sm btn-warning shadow"
                                             data-bs-toggle="collapse"
                                             data-bs-target="#details-{{ log.id }}">
                                         Show
