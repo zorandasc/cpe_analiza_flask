@@ -230,36 +230,82 @@ styles %} {{ super() }}
               <p>Provjera postojećih podataka...</p>
           </div>
 
-          <div class="table-responsive">
-            <table class="table table-sm align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>Tip Opreme</th>
-                   {% for dismantle in dismantle_types %}
-                    <th>{{dismantle["label"]}}</th>
-                   {% endfor %}
-                </tr>
-              </thead>
-              <tbody>
-                {% for type in visible_cpes %}
-                <tr>
-                  <td>{{ type.label }}</td>
-                   {% for dismantle in dismantle_types %}
-                    <td>
-                      <input  type="number"
-                              name="cpe_{{type.id}}_{{ dismantle.id }}"
-                              id="cpe_{{type.id}}_{{ dismantle.id }}"
-                              class="form-control cpe-input"
-                              value="0"
-                              min="0"
-                              required>
-                    </td>
-                    {% endfor %}
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+         
+           <div class="row fw-bold text-center mb-2 d-none d-md-flex">
+            <div class="col-md-4 text-start">Terminalna Oprema</div>
+            <div class="col-md-2 text-start">Kompletna</div>
+            <div class="col-md-2 text-start">Nema Daljinski</div>
+            <div class="col-md-2 text-start">Nema Adapter</div>         
+            <div class="col-md-2 text-start">Nema Oboje</div>
           </div>
+          {% for cpe in visible_cpes %}
+            <div class="row mb-2 align-items-center border-bottom">
+              <div style="" class="col-md-4">
+                <label class=" fw-bold p-2">{{cpe.label}}</label>
+              </div>
+              <div class="col-md-2">
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Kompletna</span>
+                    <input 
+                      class="form-control input-cpe-count" 
+                      name="cpe_{{cpe.id}}_1"
+                      id="cpe_{{cpe.id}}_1"
+                      value="0"
+                      type="number" 
+                      min="0" />
+                </div>
+              </div>
+              <div class="col-md-2">
+                {% if cpe.has_remote %}
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Remote</span>
+                  <input 
+                    class="form-control input-cpe-count" 
+                    name="cpe_{{cpe.id}}_2"
+                    id="cpe_{{cpe.id}}_2"
+                    value="0"
+                    type="number" 
+                    min="0" />
+                </div>
+                {% else %}
+                <div class="text-start text-muted small">—</div>
+                {% endif %}
+              </div>
+              <div class="col-md-2">
+                {% if cpe.has_adapter %}
+                  <div class="input-group">
+                    <span class="input-group-text d-md-none">Adapter</span>
+                    <input 
+                      class="form-control input-cpe-count" 
+                      name="cpe_{{cpe.id}}_3"
+                      id="cpe_{{cpe.id}}_3"
+                      value="0"
+                      type="number" 
+                      min="0" />
+                  </div>
+                {% else %}
+                  <div class="text-start text-muted small">—</div>
+                {% endif %}
+              </div>
+              <div class="col-md-2">
+                {% if cpe.has_remote and cpe.has_adapter %}
+                <div class="input-group">
+                  <span class="input-group-text d-md-none">Both</span>
+                  <input 
+                    class="form-control input-cpe-count" 
+                    name="cpe_{{cpe.id}}_4"
+                    id="cpe_{{cpe.id}}_4"
+                    value="0"
+                    type="number" 
+                    min="0" />
+                </div>
+                {% else %}
+                <div class="text-start text-muted small">—</div>
+                {% endif %}
+              </div>
+
+            </div>
+          {% endfor %}
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
