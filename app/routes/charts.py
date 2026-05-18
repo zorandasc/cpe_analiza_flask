@@ -131,7 +131,7 @@ def access_inventory_charts():
     selected_access = None
     if selected_access_id == "total":
         # Create a mock selected_access object or dictionary to easily pass to your template title
-        selected_access = {"id": "total", "name": "Ukupna suma"}
+        selected_access = {"id": "total", "name": "Ukupna suma korisnika"}
     elif isinstance(selected_access_id, int):
         selected_access = next((a for a in access if a.id == selected_access_id), None)
 
